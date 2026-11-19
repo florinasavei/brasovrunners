@@ -37,6 +37,8 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   GROUP_RUN_DECLARATION_TRAIL: "TRAIL",
   // The volunteer agreement (§758): one word, the same in both languages.
   VOLUNTEER_AGREEMENT: "VOLUNTEER",
+  // «Regulamentul tombolei» (§984): one word, the same in both languages.
+  RAFFLE_RULES: "RAFFLE",
 };
 
 /** What the screen shows and the server expects, e.g. `GDPR 2`. One string per version. */

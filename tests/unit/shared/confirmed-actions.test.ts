@@ -174,6 +174,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   removePlanPointAction: [],
   // «Șterge» on a thing of «Lucruri de adus» (§979): the thing and its tick leave the list — asked first, naming the thing.
   removeRaceDayItemAction: [],
+  // «Șterge înscrierea» on a row of «Ziua cursei» → «Tombolă» (§984): a person's raffle sign-up taken off — asked first, naming the person.
+  raffleDeleteEntryAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.
@@ -302,10 +304,19 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
   // «Categorii de vârstă» (§850): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
   setResultAgeBandsAction: "an editorial save of the race's age groups, undone by saving the old ages (or an empty box) again; it tells nobody, deletes nothing and only ranks the saved results again",
-  // «Sosire» (§850): a finish line cannot ask before every runner; the stamped time is one line of the results, corrected or deleted on «Clasament».
   // «Premii» (§850): a setting of the card alone, undone by saving the old values again; nothing of the results moves.
   setResultAwardsAction: "an editorial save of how many places the podium lists and whether the categories are listed, undone by saving the old values again; it tells nobody and moves no result",
-  recordFinishAction: "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone on «Clasament»; it tells nobody and deletes nothing",
+  // «Cronometrare» (§986, in «Sosire»'s place, §850): a finish line cannot ask before every runner — many arrive at once; the stamped time is one line of the results, the volunteer's own «Anulează» for ten minutes, then corrected or deleted on «Clasament».
+  recordFinishPressAction:
+    "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone by the press's own «Anulează» or on «Clasament»; it tells nobody and deletes nothing, a second press of the number only writes the trail",
+  recordFinishFormAction: "the same press with scripts off: one finisher's time stamped at the line, undone by «Anulează» or on «Clasament»; it tells nobody and deletes nothing",
+  undoFinishPressAction:
+    "takes back the volunteer's own press of the last ten minutes, nobody having changed it — the press undone, the runner recorded again by pressing again; it tells nobody and touches nobody else's line",
+  undoFinishFormAction: "the same undo with scripts off: the volunteer's own unchanged press of the last ten minutes; pressing the number again records the runner again",
+  setRaceGunAction:
+    "«Start» pressed at the gun — its moment is the tap, so it cannot wait on a question — moved by another press, and taken off only after one («Anulează startul», a ConfirmSubmitButton); fixed after the first finisher; it tells nobody and changes nothing public",
+  // The server's clock «Cronometrare»'s island asks as the page wakes (§986): a read, no press.
+  readFinishClockAction: "reads the server's clock for the page's stamps and writes nothing; nobody presses it, the page asks it as it wakes",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.
   saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
   saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",
@@ -370,6 +381,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // The same tick on a row of the «Voluntari» list (§949).
   setVolunteerRaffleAction:
     "a mark on the club's own raffle list for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count",
+  // «Prezent» on a row of the «Voluntari» list and on the person's page (§983): the organizers' mark that a volunteer came on the day.
+  setVolunteerPresentAction:
+    "a mark of who came on the day for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count but «Prezenți» and «Absenți»",
   // «Decizie pentru ziua cursei» on a row of the «Voluntari» list and on the person's page (§954): the organizers' one line about a volunteer on race day.
   setVolunteerDecisionAction:
     "one line of the organizers' own about one volunteer, replaced by writing another or cleared by saving the box empty; it emails nobody and moves no state, role, point, number or tick",
@@ -408,6 +422,18 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "adds a thing to the organizers' own checklist, undone by «Șterge», which asks; it tells nobody and is on no public page",
   editRaceDayItemAction:
     "the organizers' own words for a thing to bring, replaced by saving them again; it tells nobody, is on no public page and keeps its tick",
+  // «Înscrie la tombolă» on «Ziua cursei» → «Tombolă» and on a volunteer's page (§984): the organizers record a person's sign-up.
+  raffleSignUpAction:
+    "records one person's raffle sign-up, the acceptance of the rules ticked by its own box, undone by «Șterge înscrierea», which asks; it emails nobody, is on no public page and changes no state, place, number or count but the raffle's",
+  // The same at the race-day desk, on the desk's view of a person (§984).
+  raffleDeskSignUpAction:
+    "records one person's raffle sign-up at the desk, the acceptance of the rules ticked by its own box, undone on «Tombolă» by «Șterge înscrierea», which asks; it emails nobody and changes no state, place, number or count but the raffle's",
+  // «Scoate» / «Pune înapoi» on a row of «Tombolă» (§984): the organizers' exclusion, through each kind's own tick.
+  raffleExclusionAction:
+    "the organizers' own mark of who is in the raffle for one person, posting the state it wants and undone by the same press; it tells nobody and changes no state, place, number or count but the raffle's",
+  // «Prezent» on a line of the elite list, on «Tombolă» (§984): the organizers' mark that the line's person came.
+  raffleElitePresentAction:
+    "a mark of who came on the day for one line of the elite list, undone by the same tick; it tells nobody and changes nothing but the raffle's «Doar prezenții»",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

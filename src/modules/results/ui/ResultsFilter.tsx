@@ -8,13 +8,26 @@ import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { FILTER_OPTION_SX } from "@/modules/events/ui/filter-chip-sx";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { type CategoryGlyph, rowMatches } from "./results-filter";
 
 /** The chip glyphs by the names the server passes (§370): «Toate» a group, the two sexes their signs. */
 const CATEGORY_GLYPH = { all: GroupsIcon, female: FemaleIcon, male: MaleIcon } as const satisfies Record<CategoryGlyph, unknown>;
+
+/** Hide the rows of the table that do not match, and count those left — null when the table is not there. */
+function applyFilter(tableId: string, category: string | null, bib: string): number | null {
+  const table = document.getElementById(tableId);
+  if (!table) return null;
+  let shown = 0;
+  for (const row of table.querySelectorAll<HTMLElement>("tbody tr[data-bib]")) {
+    const matches = rowMatches({ category: row.dataset.category || null, bib: Number(row.dataset.bib) }, { category, bib });
+    row.hidden = !matches;
+    if (matches) shown += 1;
+  }
+  return shown;
+}
 
 /**
  * The «Clasament» section's filter: a chip per category present and a box for the race number (§809, race results part 2).
@@ -47,16 +60,28 @@ export default function ResultsFilter({
 
   /** Hide the rows that do not match and say how many are left (for the «none» line and a screen reader). */
   const apply = (nextCategory: string | null, nextBib: string) => {
-    const table = document.getElementById(tableId);
-    if (!table) return;
-    let shown = 0;
-    for (const row of table.querySelectorAll<HTMLElement>("tbody tr[data-bib]")) {
-      const matches = rowMatches({ category: row.dataset.category || null, bib: Number(row.dataset.bib) }, { category: nextCategory, bib: nextBib });
-      row.hidden = !matches;
-      if (matches) shown += 1;
-    }
-    setVisible(shown);
+    const shown = applyFilter(tableId, nextCategory, nextBib);
+    if (shown !== null) setVisible(shown);
   };
+
+  // While the race runs the server redraws the rows every 30 seconds (`ResultsLiveRefresh`, §985): a row it adds or changes is
+  // narrowed by the chip and the number already chosen, never shown whatever they say. Only `hidden` is written, which is not watched.
+  const chosen = useRef<{ category: string | null; bib: string }>({ category: null, bib: "" });
+  useEffect(() => {
+    chosen.current = { category, bib };
+  }, [category, bib]);
+  useEffect(() => {
+    const body = document.getElementById(tableId)?.querySelector("tbody");
+    if (!body) return;
+    const observer = new MutationObserver(() => {
+      const { category: nextCategory, bib: nextBib } = chosen.current;
+      if (nextCategory === null && nextBib === "") return;
+      const shown = applyFilter(tableId, nextCategory, nextBib);
+      if (shown !== null) setVisible(shown);
+    });
+    observer.observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-category", "data-bib"] });
+    return () => observer.disconnect();
+  }, [tableId]);
 
   return (
     <Box

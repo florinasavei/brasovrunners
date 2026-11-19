@@ -914,6 +914,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
+      "live": "Updates itself every 30 seconds.",
       "caption": "The race results: first those who finished, in order of arrival, then those who did not.",
       "columnPlace": "Place",
       "columnName": "Name",
@@ -1022,6 +1023,38 @@
         "few": "{count} coming",
         "other": "{count} coming",
         "go": "say if you're coming"
+      }
+    },
+    "raffle": {
+      "title": "Sign up for the raffle",
+      "metaTitle": "The raffle — {event}",
+      "intro": "At {event} we draw prizes among those signed up for the raffle. Sign up with your race number and the name you registered with.",
+      "introVolunteer": "Are you a volunteer? Tick “I'm a volunteer” and type your volunteer number.",
+      "number": "Race number",
+      "numberHelp": "The number on your bib, digits only.",
+      "name": "Name",
+      "nameHelp": "The name you registered with, for example “Ana Popescu”.",
+      "volunteer": "I'm a volunteer",
+      "volunteerHelp": "Then type your volunteer number above.",
+      "rules": "Read the raffle rules",
+      "accept": "I have read and accept the raffle rules",
+      "notice": "What we keep about the sign-up is in the <privacy>privacy notice</privacy>. You receive no email for it.",
+      "submit": "Enter the raffle",
+      "submitting": "Signing you up…",
+      "done": "Done: you are in the raffle. Good luck at the draw!",
+      "noMatch": "We found no confirmed registration with this number and name. Check the number on your bib and type the name you registered with — or ask at the organisers' desk.",
+      "limited": "Too many tries. Try again in an hour or ask at the organisers' desk.",
+      "captcha": "The anti-bot check did not pass. Try again.",
+      "fix": "Check what you typed below.",
+      "errors": {
+        "number": "Type the race number, digits only.",
+        "name": "Type the name, at most 120 characters.",
+        "accept": "Tick that you accept the raffle rules."
+      },
+      "back": "Back to the event",
+      "callout": {
+        "line": "We hold a raffle! Sign up with your race number.",
+        "button": "Sign up for the raffle"
       }
     }
   },
@@ -1380,12 +1413,14 @@
       },
       "raffle": {
         "column": "Raffle",
-        "columnHint": "Ticked: the person's number is on \"The raffle list\", when the registration is confirmed and has a number. Untick to take them out. Internal: the person is not told.",
+        "columnHint": "Ticked: in; untick to take the person out. Under it: whether they take part now — by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
         "tick": "In the raffle",
         "takeOutFor": "Take out of the raffle: {name}",
         "putInFor": "Put in the raffle: {name}",
         "button": "Raffle list (CSV)",
-        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number and are in the raffle, with the number, the name, the category and whether the runner is present",
+        "buttonLabel": "Raffle list (CSV): the runners, elites and volunteers taking part, with the number, the name, the group and whether the person is present",
+        "presentButton": "Raffle list — present only (CSV)",
+        "presentButtonLabel": "Raffle list — present only (CSV): those taking part who were present — the runners checked in at the desk or with “I have arrived” from their own link, the volunteers and elites ticked “Present”",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -1398,7 +1433,8 @@
         },
         "kinds": {
           "RUNNER": "Runner",
-          "VOLUNTEER": "Volunteer"
+          "VOLUNTEER": "Volunteer",
+          "ELITE": "Elite"
         }
       },
       "export": "Download CSV",
@@ -2803,7 +2839,6 @@
       "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
       "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
-      "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
       "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
@@ -2818,7 +2853,6 @@
       "VINVITE_NOT_FOUND": "The invitation no longer exists.",
       "RESULTS_AGE_BANDS": "The age categories were not saved: {problem}.",
       "RESULT_BIB_UNKNOWN": "Number {bib} has no confirmed registration. Its time: {time} — write it down and enter it under «Results», under “Runners who did not register”.",
-      "RESULT_ALREADY_FINISHED": "Number {bib} has already finished, at {time}. A correction is made under «Results».",
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
@@ -2832,7 +2866,14 @@
       "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
       "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
       "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner».",
-      "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add."
+      "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add.",
+      "RAFFLE_SIGN_UP_CLOSED": "Raffle sign-ups are closed now — or the rules or the privacy notice are not approved. Nothing was written.",
+      "RAFFLE_NOT_ELIGIBLE": "The person cannot take part in the raffle: they must be confirmed, with a number, in a ticked group. Nothing was written.",
+      "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written.",
+      "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own unchanged finish, in its first 10 minutes. Correct it under «Results».",
+      "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
+      "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
+      "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is."
     },
     "editor": {
       "draftPreview": {
@@ -3038,7 +3079,7 @@
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
       "hasRaffle": "We hold a raffle",
-      "hasRaffleHelp": "For the organizers only: nothing shows on the site. Ticked, the registrations' and the volunteers' lists show the \"Raffle\" column, where you take out whoever is not in it.",
+      "hasRaffleHelp": "For the organizers: the registrations' and volunteers' lists show the “Raffle” column, and “Race day” the “Raffle” tab. The site shows only the form, with an open separate sign-up.",
       "askHealthNote": "Medical information",
       "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
@@ -4065,6 +4106,23 @@
           "few": "{count} members confirmed",
           "other": "{count} members confirmed"
         }
+      },
+      "raffle": {
+        "who": "Who may take part in the raffle",
+        "runners": "The runners",
+        "elites": "The elites",
+        "volunteers": "The volunteers",
+        "runnersHelp": "The confirmed registrations with a race number, not marked “Elite” — ambassadors too.",
+        "elitesHelp": "The registrations marked “Elite” and the people on the race's elite list. In the rules: “the race's top athletes”.",
+        "volunteersHelp": "The confirmed volunteers with a volunteer number.",
+        "whoHelp": "The ticks count in both modes below.",
+        "how": "How people take part",
+        "howAutomatic": "Automatically: everybody ticked above",
+        "howSignUp": "With a separate sign-up: only those who sign up",
+        "howHelp": "With a separate sign-up, people sign up from their registration's page, from the form on the event's page or at the desk on race day, and accept the raffle rules.",
+        "howHelpMore": "The sign-up opens only once the raffle rules are approved and a privacy notice describes it — see “Tasks”. Until then keep “Automatically”: otherwise nobody takes part.",
+        "open": "Raffle sign-ups are open",
+        "openHelp": "Counts only “With a separate sign-up”. Untick it at the draw: the form and the sign-up buttons go."
       }
     },
     "preview": {
@@ -4112,9 +4170,9 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
-      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see the desk only.",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day only: the desk and «Timing».",
       "roles": {
-        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
+        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number, signs up for the raffle; under «Timing», records finishes and undoes their own press. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
@@ -4273,7 +4331,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration.",
-        "VOLUNTEER_AGREEMENT": "The agreement every volunteer of an event accepts: unpaid help, what the volunteer does, what the club does. Until you approve it, no page shows the volunteer form."
+        "VOLUNTEER_AGREEMENT": "The agreement every volunteer of an event accepts: unpaid help, what the volunteer does, what the club does. Until you approve it, no page shows the volunteer form.",
+        "RAFFLE_RULES": "The rules a person accepts to sign up for the raffle of an event with a separate sign-up. Until you approve them, the raffle's sign-up does not open; an automatic raffle needs none."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version.",
@@ -4292,7 +4351,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
         "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event",
-        "VOLUNTEER_AGREEMENT": "Volunteer agreement"
+        "VOLUNTEER_AGREEMENT": "Volunteer agreement",
+        "RAFFLE_RULES": "Raffle rules"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -4428,7 +4488,9 @@
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
         "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
-        "rsvpMember": "Only in the privacy notice: the mark “{short}”, in quotes. With it in force, “I'm coming!” has the tick “I am a member of the … group” and “Who's coming” marks the shown names of members"
+        "rsvpMember": "Only in the privacy notice: the mark “{short}”, in quotes. With it in force, “I'm coming!” has the tick “I am a member of the … group” and “Who's coming” marks the shown names of members",
+        "raffleGroups": "Only in the raffle rules: who may take part, by the event's ticks under “Who may take part in the raffle”",
+        "raffle": "Only in the privacy notice: the raffle form's name, in quotes. With it in the notice in force, the raffle's sign-up may open"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4555,7 +4617,8 @@
         "general": "General documents",
         "race": "Race declarations",
         "groupRun": "Group run declarations",
-        "volunteers": "The volunteers' agreement"
+        "volunteers": "The volunteers' agreement",
+        "raffle": "The raffle rules"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -4564,7 +4627,8 @@
         "EVENT_DECLARATION_ROAD": "Road / park event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Group trail",
-        "VOLUNTEER_AGREEMENT": "Volunteers"
+        "VOLUNTEER_AGREEMENT": "Volunteers",
+        "RAFFLE_RULES": "Raffle"
       },
       "filter": {
         "label": "Filter the versions",
@@ -5590,6 +5654,25 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes only to those whose answer was given under the new notice or a newer one.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages. If you do not want this group, in “Settings” → “Emails” choose “The newsletter's subscribers” again."
           ]
+        },
+        "raffleRules": {
+          "title": "The raffle rules",
+          "todo": "An event's raffle asks a separate sign-up, but no raffle rules are in force: the sign-up does not open and nobody takes part. Until then, set “How people take part” to “Automatically”.",
+          "done": "The raffle rules are in force: whoever signs up for the raffle accepts them.",
+          "how": [
+            "/admin/legal → the “Raffle rules” card → “Regenerate from template” → confirm.",
+            "Read the text: the organiser, who may take part, how to sign up, the draw, the prizes, the winners, the data. A lawyer should read it first.",
+            "Fill in the club's facts left in angle brackets, “Save draft”, then “Approve and publish”, in both languages."
+          ]
+        },
+        "raffleNotice": {
+          "title": "Privacy notice: the raffle sign-up",
+          "todo": "An event's raffle asks a separate sign-up, but the notice in force does not describe it: the sign-up does not open and nobody takes part. Until then, set “How people take part” to “Automatically”.",
+          "done": "The notice in force describes the raffle's sign-up: what we keep, why, who sees it and for how long.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from template” → confirm. The paragraph “The raffle”, in section 5, describes the sign-up.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
         }
       },
       "freeVerdict": {
@@ -6423,7 +6506,7 @@
         "raffleOut": "Not in the raffle",
         "columnRaffle": "Raffle",
         "raffleTick": "In the raffle",
-        "raffleHint": "Ticked: the volunteer's number is on \"The raffle list\", when they are confirmed and have a number. Untick to take them out. Internal: the person is not told.",
+        "raffleHint": "Ticked: in; untick to take the person out. Under it: whether they take part now — by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "columnNotes": "Internal notes",
@@ -6447,6 +6530,18 @@
         "agreements": "Agreements (PDF)",
         "agreementsToSign": "To sign on paper (PDF)",
         "agreementsHelp": "Every volunteer not cancelled, each from a new page: those who accepted, with the accepted agreement; the others, with the sheet to sign on paper. Anyone with no agreement in force is left out."
+      },
+      "presence": {
+        "column": "Present",
+        "hint": "Ticked: came; unticked: absent. “Present only” takes, of the confirmed with a number taking part, the volunteers ticked here and runners checked in at the desk or by “I have arrived”. Internal.",
+        "tick": "Present",
+        "summaryPresent": "Present: {count}",
+        "summaryAbsent": "Absent: {count}",
+        "filter": "Presence",
+        "all": "Everyone, present or absent",
+        "yes": "Present",
+        "no": "Absent",
+        "chip": "Present"
       },
       "decision": {
         "column": "Race-day decision",
@@ -7712,7 +7807,11 @@
       "eventInvitationsEraseBody": "Open invitations are withdrawn first, as with “Withdraw”: their place passes through the waiting list. Then unaccepted ones are erased; accepted ones stay with their registration. Cannot be undone.",
       "eventInvitationsErased": "This address's invitations were withdrawn and erased; accepted ones stay with their registrations.",
       "eventInvitationsAcceptedKept": "An accepted invitation is part of its registration: it is erased with the registration, from the registration's page.",
-      "reconfirmations": "Reconfirmations ({count})"
+      "reconfirmations": "Reconfirmations ({count})",
+      "raffleEntries": "Raffle sign-ups ({count})",
+      "raffleEntry": "{event} · {method} · {when} · the rules, version {version}",
+      "raffleTyped": "name typed: {name}",
+      "raffleRecorded": "recorded by {role}"
     },
     "desk": {
       "title": "Number pickup desk",
@@ -7789,7 +7888,9 @@
         "checkinUndone": "Check-in undone.",
         "eliteMarked": "Marked as elite: their bib prints the label where the number goes.",
         "eliteUnmarked": "No longer elite: their bib prints the number again.",
-        "eliteLabelSaved": "The bib label was saved."
+        "eliteLabelSaved": "The bib label was saved.",
+        "raffleSignedUp": "Done: the person is signed up for the raffle.",
+        "raffleAlready": "The person was signed up for the raffle already."
       },
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
       "guardian": "Minor — parent/guardian: {name}",
@@ -9415,6 +9516,16 @@
               ]
             },
             {
+              "title": "At the finish line: «Timing»",
+              "steps": [
+                "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
+                "An elite crosses: press their button at the top (the bib's label, with the name under it). Anyone else crosses: type the number on the bib and press «Finished». The box empties at once for the next one.",
+                "Several at once: press «Catch the time» once for each, then type the numbers in order.",
+                "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
+                "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
+              ]
+            },
+            {
               "title": "What you do not do at the desk (and that is fine)",
               "steps": [
                 "You see no email addresses, and you do not cancel, erase or export lists. For those, call an Administrator."
@@ -9666,8 +9777,8 @@
               "title": "The race's results: how to register the finishers",
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
-                "At the finish line open «Finish» (from «Results», or «Events» → the race → the card «Registrations received», at the end of the editor → «Results» → «Finish»), on a phone. The page shows the clock since the start. When a runner crosses the line, type their race number and press «Finished»: the site stamps the time since the start, and «Latest finishers» shows what you recorded. No stopwatch needed.",
-                "A number with no confirmed registration is refused, with its time in the sentence: write it on paper and enter it after the race under «Results», under «Runners who did not register». Somebody marked dropped out by mistake becomes finished when you type their number. If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
+                "Several arriving at once? Press «Catch the time» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -10067,8 +10178,10 @@
             {
               "title": "Publish the results on the event's page",
               "steps": [
-                "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
+                "The results appear on the site only once you publish them, only from the start of the race and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
+                "You can tick it before the race too: the card says «Public from the start», with the start's day and hour. Before the start nothing shows on the site; from the start every result you save appears, and while the race runs the page updates itself every 30 seconds.",
+                "Under each “On the site: Participant #…” it says why the name does not show, and at the top «Named on the site…» says how many of those in the results appear by name. For a registered runner, only their own tick puts a name there; an administrator can only hide it.",
                 "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
                 "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
               ]
@@ -12221,7 +12334,8 @@
       "intro": "Type the times, import them from a CSV and save everything at once. The places work themselves out.",
       "introMore": "One line per runner, by race number. Places are overall, by sex and by category; equal times share a place. A line with only a note means did not start.",
       "notRace": "Only a race has results. Group runs and the other events have none.",
-      "notStarted": "The race has not started yet. You can type results already.",
+      "notStarted": "The race has not started yet. You can type results and tick the results public already; nothing shows on the site before the start.",
+      "notStartedEnterOnly": "The race has not started yet. You can type results already; nothing shows on the site before the start.",
       "summary": {
         "FINISHED": "Finished: {count}",
         "DNF": "Dropped out: {count}",
@@ -12279,6 +12393,17 @@
         "outOfRanking": "On the site: not shown — an elite out of the results",
         "outOfRankingAmbassador": "On the site: not shown — an ambassador out of the results"
       },
+      "namedCount": "Named on the site: {named} of {shown}",
+      "publicWhy": {
+        "noResultsNotice": "The privacy notice in force does not describe the results: nobody appears by name.",
+        "noName": "Has no name to show.",
+        "typedNoAgreement": "A runner entered by hand: no agreement to the name was recorded.",
+        "notTicked": "Did not tick “I want to appear on the participants & results list”.",
+        "hiddenByClub": "An administrator unticked “On the site”.",
+        "notConfirmed": "The registration is not confirmed.",
+        "hiddenGuest": "A special guest: the event does not show its special guests publicly.",
+        "olderNotice": "Registered under an older privacy notice: appears by name only if they ask from their registration's page, once the notice allows it."
+      },
       "outOfRanking": "out of the results",
       "nameless": "No name: the registration was erased. The result stays, nameless.",
       "addRow": "Add a runner who did not register",
@@ -12287,6 +12412,8 @@
       "agreedHelp": "Tick only if the person told you so; for a minor, the parent or guardian. Who ticked it and when stay in the log.",
       "noPlace": "no place yet",
       "noPlaceSettled": "no place",
+      "placeHint": "“Place” is the place in the results: overall and, under it, by sex and by category. The site works it out from the times; until a time is typed, the line says “no place yet”.",
+      "placeHelp": "Equal times share a place and the next is skipped (1, 2, 2, 4). The category is the sex and the age group on the race's day. “No place” stays for dropped out, did not start and disqualified.",
       "place": {
         "sex": "by sex: {position}",
         "category": "in the category ({category}): {position}"
@@ -12304,17 +12431,22 @@
         "help": "The page shows place, number, time and category. A name appears only for those who ticked the list, or for a runner added by hand who agreed; the rest are “Participant #number”.",
         "confirmOnTitle": "Make the results public?",
         "confirmOnBody": "Anyone can read the results on the event's page, with the name only of those who ticked or agreed.",
+        "confirmOnBodyFromStart": "From the start, anyone can read the results on the event's page as the runners arrive, with the name only of those who ticked or agreed. Nothing shows before the start.",
         "confirmOffTitle": "Take the results off the site?",
         "confirmOffBody": "The event's page no longer shows the results. They stay saved.",
         "gate": "The privacy notice in force does not describe the results yet, so you cannot publish them.",
         "gateTerms": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms to publish.",
-        "gateStart": "You can publish the results after the race has started.",
+        "beforeStart": "You can tick it already: on the site, the results appear from the start, {start}, as the runners arrive.",
+        "beforeStartUnannounced": "You can tick it already: on the site, the results appear from the start, once you announce the start's hour, as the runners arrive.",
+        "fromStart": "The results appear on the site from the start, {start}, as the runners arrive.",
+        "fromStartUnannounced": "The results appear on the site from the start, once you announce the start's hour, as the runners arrive.",
         "gateLink": "Legal documents",
         "adminOnly": "Only an administrator can publish the results.",
         "empty": "No result is saved yet.",
         "save": "Save",
         "saving": "Saving…",
         "stateOn": "Public",
+        "stateFromStart": "Public from the start",
         "stateOff": "Not public"
       },
       "export": "Download the results (CSV)",
@@ -12399,25 +12531,48 @@
         "saving": "Saving…"
       },
       "finish": {
-        "title": "Finish: {event}",
-        "link": "Finish",
-        "backToResults": "Back to the results",
-        "intro": "Type the race number as the runner crosses the line and press «Finished»: the site stamps the time since the start. Corrections are made under «Results».",
-        "more": "A number with no confirmed registration is refused with the time in the sentence: write it down and enter it under «Results». Somebody marked dropped out by mistake becomes finished.",
-        "gun": "Start: {time}",
-        "elapsed": "Since the start: {time}",
-        "notStarted": "The race has not started yet. Finishes are recorded after the start.",
-        "bibLabel": "Race number",
-        "record": "Finished",
-        "recording": "Recording…",
-        "recorded": "Finished: #{bib} {name} · {time} · place {position}",
-        "recordedNameless": "Finished: #{bib} · {time} · place {position}",
-        "recent": {
-          "title": "Latest finishers",
-          "aside": "{finished} finished of {withNumber} with a number",
-          "empty": "Nobody has finished yet.",
-          "line": "#{bib} {name} · {time} · place {position}",
-          "lineNameless": "#{bib} · {time} · place {position}"
+        "link": "Timing"
+      },
+      "history": {
+        "title": "Finish history",
+        "count": {
+          "one": "{count} line",
+          "few": "{count} lines",
+          "other": "{count} lines"
+        },
+        "intro": "Every write of the results, newest first: when, who, what and from where. The name beside a number is today's: the history keeps only the number.",
+        "empty": "Nothing written yet.",
+        "limited": "The newest {count} are shown.",
+        "line": "{when} · {by} {what} · {where}",
+        "where": {
+          "timing": "Timing",
+          "results": "Results"
+        },
+        "what": {
+          "finish": "entered {runner} at {time}",
+          "finishTurned": "entered {runner} at {time} (was marked as not finished)",
+          "duplicate": "entered {runner} again at {time} — {stored} stays",
+          "kept": "entered {runner} at {time} — {status} stays, as under «Results»",
+          "undo": "undid {runner} ({time})",
+          "created": "added {runner}: {status}",
+          "updated": "changed {runner}: {status}",
+          "updatedBoxes": "changed {runner}: {status} ({boxes})",
+          "deleted": "deleted the result of {runner} ({status})",
+          "gunSet": "started the race at {time}",
+          "gunMoved": "moved the start to {time} (was {previous})",
+          "gunCleared": "cancelled the start (was {previous})"
+        },
+        "box": {
+          "bib": "number",
+          "status": "status",
+          "time": "time",
+          "chip": "chip time",
+          "note": "note",
+          "name": "name",
+          "sex": "sex",
+          "birthDate": "birth date",
+          "registration": "registration",
+          "nameAgreed": "name consent"
         }
       }
     },
@@ -12673,7 +12828,10 @@
         "desk": "Attendance",
         "results": "Results",
         "items": "Things to bring",
-        "itemsShort": "Things"
+        "itemsShort": "Things",
+        "raffle": "Raffle",
+        "timing": "Timing",
+        "timingShort": "Timing"
       },
       "items": {
         "title": "Things to bring",
@@ -12712,6 +12870,233 @@
           "FORBIDDEN": "Your role does not allow this.",
           "NOT_FOUND": "The thing is no longer on the list — a colleague may have deleted it.",
           "VALIDATION_ERROR": "The name takes 1 to 120 characters, and the note at most 200."
+        }
+      }
+    },
+    "raffle": {
+      "title": "Raffle",
+      "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "noEvent": "No event to show.",
+      "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
+      "event": "Event",
+      "show": "Show",
+      "settings": {
+        "who": "Taking part: {groups}",
+        "nobody": "no group",
+        "groups": {
+          "RUNNER": "the runners",
+          "ELITE": "the elites",
+          "VOLUNTEER": "the volunteers"
+        },
+        "automatic": "automatically",
+        "signUp": "with a separate sign-up",
+        "open": "sign-ups open",
+        "closed": "sign-ups closed",
+        "why": "Closed because: {why}",
+        "closedWhy": {
+          "noRaffle": "the event holds no raffle",
+          "notSignUpMode": "the raffle is automatic",
+          "signUpClosed": "“Raffle sign-ups are open” is not ticked",
+          "notARace": "only a race takes raffle sign-ups",
+          "notPublished": "the event is not published",
+          "notScheduled": "the event is cancelled or completed",
+          "ended": "the event is over",
+          "noRules": "the raffle rules are not approved yet",
+          "noNotice": "the privacy notice does not describe the raffle yet",
+          "groupNotAllowed": "no group is ticked"
+        },
+        "edit": "Change in the editor"
+      },
+      "counts": {
+        "total": "Taking part: {count}",
+        "RUNNER": "Runners: {count}",
+        "ELITE": "Elites: {count}",
+        "VOLUNTEER": "Volunteers: {count}",
+        "present": "Present among them: {count}"
+      },
+      "filters": {
+        "label": "Filter",
+        "all": "Everybody: {count}",
+        "in": "Taking part: {count}",
+        "out": "Not taking part: {count}",
+        "present": "Present only: {count}",
+        "presentHint": "“Present only”: those taking part who were present — the same as in the “present only” file."
+      },
+      "columns": {
+        "number": "No.",
+        "name": "Name",
+        "kind": "Group",
+        "in": "Taking part",
+        "how": "Signed up",
+        "present": "Present",
+        "actions": "Actions"
+      },
+      "yes": "Yes",
+      "no": "No",
+      "reasons": {
+        "groupNotAllowed": "group not ticked",
+        "notConfirmed": "not confirmed",
+        "noNumber": "no number",
+        "takenOut": "taken out by the organisers",
+        "notSignedUp": "did not sign up"
+      },
+      "standing": {
+        "in": "Raffle: taking part",
+        "out": "Raffle: not taking part",
+        "why": "Why: {reason}"
+      },
+      "methods": {
+        "LINK": "from the registration's page",
+        "FORM": "on the form",
+        "DESK": "at the desk",
+        "STAFF": "by the organisers"
+      },
+      "signedUpAt": "{method} · {when}",
+      "accepted": "Accepted the rules",
+      "acceptedHelp": "The person accepted the raffle rules, on paper or aloud.",
+      "signUp": "Sign up for the raffle",
+      "signUpShort": "Sign up",
+      "signUpFor": "Sign up for the raffle: {name}",
+      "takeOut": "Take out",
+      "putBack": "Put back",
+      "takeOutFor": "Take out of the raffle: {name}",
+      "putBackFor": "Put back in the raffle: {name}",
+      "present": "Present",
+      "presentFor": "Present: {name}",
+      "delete": "Delete the sign-up",
+      "deleteFor": "Delete the raffle sign-up: {name}",
+      "deleteTitle": "Delete the raffle sign-up of {name}?",
+      "deleteBody": "The person no longer takes part in the raffle until they sign up again. No email is sent to them.",
+      "cancel": "Cancel",
+      "print": "Print",
+      "empty": "Nobody to show here."
+    },
+    "timing": {
+      "title": "Timing",
+      "show": "Show",
+      "intro": "When someone crosses the line: for an elite, press their button; for anyone else, type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
+      "more": "Several at once? Press «Catch the time» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
+      "clock": "Since the start: {time}",
+      "notStarted": "The race has not started yet.",
+      "boxLabel": "Number on the bib",
+      "bibHint": "Digits only: the number on the bib.",
+      "record": "Finished",
+      "place": "place {position}",
+      "accountGone": "account deleted",
+      "enteredBy": "entered by {name}",
+      "changedBy": "changed by {name}",
+      "offline": "No connection to the site: what you pressed waits on the phone and goes by itself when the signal is back.",
+      "session": "Your session has ended: sign in again. What you pressed stays on the phone and goes once you are back in.",
+      "reload": "The site was updated: reload the page. What you pressed waits on the phone and goes after the reload.",
+      "elsewhere": {
+        "one": "{count} press is waiting at {event}: it is sent only from that event's page.",
+        "few": "{count} presses are waiting at {event}: they are sent only from that event's page.",
+        "other": "{count} presses are waiting at {event}: they are sent only from that event's page."
+      },
+      "elsewhereOpen": "Open its page",
+      "elsewhereUnnamed": "another event",
+      "elites": {
+        "title": "Elites",
+        "help": "Press the elite as they cross the line: their bib carries the label alone, no number.",
+        "aria": "Finished: {label} — {name}",
+        "finished": "✓ {time}",
+        "noNumberLine": "No number: an Administrator gives the line one on the elite list (the bib still prints none). Until then, write the time on paper.",
+        "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper."
+      },
+      "keep": {
+        "button": "Catch the time",
+        "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
+        "kept": "Times caught",
+        "drop": "Remove the caught time {time}",
+        "ageSeconds": "{count} s ago",
+        "ageMinutes": "{count} min ago",
+        "stale": {
+          "one": "A time caught more than 10 minutes ago was removed and goes to no number: {times} — write it on paper.",
+          "few": "{count} times caught more than 10 minutes ago were removed and go to no number: {times} — write them on paper.",
+          "other": "{count} times caught more than 10 minutes ago were removed and go to no number: {times} — write them on paper."
+        },
+        "staleDone": "Written down"
+      },
+      "entries": {
+        "title": "On this phone",
+        "waiting": "saving…",
+        "saved": "saved",
+        "waitingCount": "to send: {count}",
+        "duplicate": "was already entered by {by} at {time} — it stays; your press ({mine}) is in «Finish history».",
+        "decided": "is marked «{status}» by {by} under «Results» — it stays; your press ({mine}) is in «Finish history».",
+        "otherAccount": "pressed under another account on this phone — not sent from here; write it on paper: {time}"
+      },
+      "refused": {
+        "RESULT_BIB_UNKNOWN": "no confirmed registration and no elite has this number — write it on paper: {time}",
+        "RESULT_FINISH_NOT_STARTED": "the race has not started yet — write down the time of day: {clock}",
+        "RESULT_FINISH_CLOSED": "the start was more than a day ago — the time is entered under «Results»: {time}",
+        "RESULTS_NOT_OPEN": "only a race has timing — write it on paper: {time}",
+        "VALIDATION_ERROR": "the number is not valid — write it on paper: {time}",
+        "FORBIDDEN": "your role cannot record finishes — write it on paper: {time}",
+        "NOT_FOUND": "the event is no longer on the site — write it on paper: {time}",
+        "RESULT_PRESS_UNDONE": "undone since — see «Results»",
+        "other": "not saved — write it on paper: {time}"
+      },
+      "recent": {
+        "title": "Latest finishers",
+        "aside": "{finished} finished of {withNumber} with a number",
+        "empty": "Nobody has finished yet."
+      },
+      "undo": {
+        "button": "Undo",
+        "aria": "Undo the finish of {who}",
+        "done": "undone",
+        "refused": {
+          "RESULT_UNDO_NOT_ALLOWED": "cannot be undone here any more: correct it under «Results»",
+          "NOT_FOUND": "no longer in the results",
+          "FORBIDDEN": "your role cannot undo",
+          "other": "not undone: correct it under «Results»"
+        },
+        "pressedAgain": {
+          "other": "another volunteer entered it after you too: it can no longer be undone here — correct it under «Results»",
+          "self": "you entered it once more afterwards: it can no longer be undone here — correct it under «Results»"
+        }
+      },
+      "gun": {
+        "start": "Start",
+        "move": "Move the start to now",
+        "sending": "Sending…",
+        "clear": "Cancel the start",
+        "clearTitle": "Cancel the start?",
+        "clearBody": "Finishes will count from the planned start again ({time}).",
+        "pressed": "Start: {time} · pressed by {by}",
+        "planned": "Planned start: {time} (from the editor). Until «Start» is pressed, finishes count from it.",
+        "startHelp": "Press «Start» right at the gun: the times count from then.",
+        "moveHelp": "Pressed early or late? Press again right at the gun, more than ten seconds after the first press. After the first finisher, the start no longer moves.",
+        "fixed": "The start is fixed: runners have finished. A correction of the times is made under «Results».",
+        "window": "The «Start» button shows from 3 hours before the planned start until 6 hours after."
+      },
+      "banner": {
+        "recorded": "Finished: {who} · {time}",
+        "recordedShort": "Finished: {who}.",
+        "duplicate": "{who} was already entered by {by} at {time} — it stays; your press ({mine}) is in «Finish history».",
+        "duplicateShort": "{who} was already entered — the first time stays; your press ({mine}) is in «Finish history».",
+        "decided": "{who} is marked «{status}» under «Results» — it stays; your press ({mine}) is in «Finish history».",
+        "undone": "Undone: {who}.",
+        "gun": {
+          "set": "The start was set: {time}.",
+          "cleared": "The start was cancelled: finishes count from the planned start.",
+          "unchanged": "The start had not been set: nothing to cancel.",
+          "repeat": "The start stays at {time}: a second press within ten seconds of the first does not move it.",
+          "changed": "The start was already given by {by} at {time}: your press did not move it.",
+          "changedCleared": "The start was cancelled meanwhile: your press did not set it. Press «Start» right at the gun."
+        },
+        "refused": {
+          "RESULT_BIB_UNKNOWN": "{who}: no confirmed registration and no elite has this number. Its time: {time} — write it on paper.",
+          "RESULT_FINISH_NOT_STARTED": "{who}: the race has not started yet — a finish cannot be before the start.",
+          "RESULT_FINISH_CLOSED": "{who}: the start was more than a day ago — the times are entered under «Results».",
+          "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own finish pressed here, unchanged and not entered again by anybody, in its first 10 minutes. Correct it under «Results».",
+          "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
+          "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
+          "RESULTS_NOT_OPEN": "Only a race has timing.",
+          "VALIDATION_ERROR": "Type the number on the bib, digits only.",
+          "FORBIDDEN": "Your role cannot do this.",
+          "NOT_FOUND": "It is gone: the event or the line was deleted meanwhile."
         }
       }
     }
@@ -12754,7 +13139,13 @@
     "termsTitle": "Terms and conditions",
     "privacyTitle": "Privacy notice",
     "volunteerAgreementTitle": "Volunteer agreement",
-    "volunteerAgreementBlanks": "One text for every event: the name, the role, the event, its date and place are filled in when you accept, and the PDF you receive shows them."
+    "volunteerAgreementBlanks": "One text for every event: the name, the role, the event, its date and place are filled in when you accept, and the PDF you receive shows them.",
+    "raffleGroups": {
+      "RUNNER": "the registered and confirmed runners with a race number",
+      "ELITE": "the race's top athletes",
+      "VOLUNTEER": "the confirmed volunteers with a volunteer number",
+      "and": "and"
+    }
   },
   "Registration": {
     "title": "Register: {event}",
@@ -13639,6 +14030,22 @@
       "cannot": "Can't make it any more? Use “Cancel the registration” below.",
       "done": "We have noted that you are coming — you told us on {date}.",
       "failed": "Your answer was not recorded for this registration."
+    },
+    "raffle": {
+      "title": "The raffle",
+      "intro": "The event holds a raffle with a separate sign-up: you take part only if you sign up.",
+      "rules": "Read the raffle rules",
+      "accept": "I have read and accept the raffle rules",
+      "signUp": "Enter the raffle",
+      "signingUp": "Signing you up…",
+      "signedUp": "You are signed up for the raffle.",
+      "withdraw": "I'm no longer taking part",
+      "done": "Done: you are signed up for the raffle.",
+      "withdrawn": "You no longer take part in the raffle.",
+      "failed": "It did not work: the raffle's sign-ups have closed, or the person can no longer take part.",
+      "needAccept": "First tick that you accept the raffle rules.",
+      "otherAdult": "The person signs up for the raffle themselves, from their own registration's page.",
+      "withdrawing": "Taking you out…"
     }
   },
   "Devs": {
@@ -13748,7 +14155,7 @@
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",
     "roleSummary": {
-      "CONTRIBUTOR": "the race-number desk, and nothing else",
+      "CONTRIBUTOR": "the race-number desk and the raffle sign-up, plus «Timing»: records finishes and undoes their own press; nothing else",
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
       "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, keeps the gallery; changes no event",
       "DEV": "the configuration page; changes no event, no participant data",
@@ -14375,7 +14782,8 @@
       "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person.",
       "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email.",
       "volunteerSent": "Your volunteer offer reached the organizers.",
-      "volunteerGuardianAccepted": "Your consent is recorded."
+      "volunteerGuardianAccepted": "Your consent is recorded.",
+      "raffleEntered": "You are in the raffle. Good luck!"
     },
     "toast": {
       "saved": "Saved.",
@@ -14590,6 +14998,8 @@
       "volunteerDecisionCleared": "The decision for race day was cleared. Nothing was sent to anybody.",
       "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
       "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
+      "volunteerPresentOn": "Ticked: present.",
+      "volunteerPresentOff": "Cleared: absent.",
       "volunteerPlaced": "Stands at the chosen point: on the volunteers' plan.",
       "volunteerUnplaced": "No longer at any point: back under \"At no point\".",
       "eventTodoDone": "Ticked. The row is under “Done”.",
@@ -14826,6 +15236,7 @@
       },
       "resultDeleted": "Result deleted. The others' places were worked out again.",
       "resultsPublished": "The results are now public on the event's page.",
+      "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
       "rsvpAskAudience": "The choice for the “Coming?” question was saved.",
@@ -14884,7 +15295,15 @@
       "raceDayItemRemoved": "Thing deleted.",
       "raceDayItemBrought": "Ticked as brought.",
       "raceDayItemUnbrought": "Unticked.",
-      "raceDayItemUnchanged": "It already was; nothing to change."
+      "raceDayItemUnchanged": "It already was; nothing to change.",
+      "raffleSignedUp": "Done: the person is signed up for the raffle.",
+      "raffleAlready": "The person was signed up for the raffle already.",
+      "raffleDeleted": "The raffle sign-up is deleted.",
+      "raffleTakenOut": "Taken out of the raffle.",
+      "rafflePutBack": "Put back in the raffle.",
+      "rafflePresentOn": "Ticked: present.",
+      "rafflePresentOff": "Cleared: absent.",
+      "raffleUnchanged": "It was already so; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

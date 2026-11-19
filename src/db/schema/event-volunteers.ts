@@ -288,6 +288,16 @@ export const eventVolunteers = pgTable(
      */
     inRaffle: boolean("in_raffle").notNull().default(true),
     /**
+     * «Prezent» (migration `0215`, §983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec
+     * prezent/absent ca să pot face tombola doar pentru cei prezenți»): the organizers' own mark that the person came on the day —
+     * one press on the «Voluntari» list's row or on the person's page, by whoever works the volunteers, audited as every edit of a
+     * person's boxes. Unticked is absent: there is no third state, so every volunteer from before reads not present. It decides one
+     * thing: «Lista pentru tombolă — doar prezenții» takes the volunteers ticked here (beside the runners the desk checked in), and the
+     * full file says it in its «Prezent» column. Never on a public page, in an email, on a badge or at the desk
+     * (`tests/unit/volunteers/presence-never-leaves.test.ts`). Kept and deleted with the row.
+     */
+    present: boolean("present").notNull().default(false),
+    /**
      * The volunteer's number (migration `0203`, §948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de
      * concurs"»): drawn from the event's volunteers' series (`events.volunteer_bib_start`) the moment the organizers
      * confirm the person, under the event row's lock, and never drawn twice — a cancelled volunteer keeps theirs, as a

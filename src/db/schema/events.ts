@@ -228,6 +228,19 @@ export const events = pgTable(
      */
     raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),
 
+    /**
+     * «Start» on «Cronometrare» (§986; the owner, 2026-11-18: «un buton „Start" pe pagină, pe care îl apasă un
+     * organizator la pistol»): the moment the gun actually went, pressed at the start line by whoever enters results,
+     * and who pressed it. Null until pressed — then the planned gun (`race_starts_at`, else `starts_at`) is what the
+     * finish line counts from. **Read by the results alone** (`results/results.ts#gunOf`): the public page, the
+     * checkpoints' limits, the emails, iCal and the editor keep the planned times, so pressing it changes nothing a
+     * visitor or a runner reads. Moved by a second press and cleared by «Anulează startul» only while no «Sosit» result
+     * is stored; audited `event.race_gun_set` / `event.race_gun_cleared`. Never carried by a duplicate, a repeat, a
+     * series edit or the JSON file: a gun belongs to the one race that heard it.
+     */
+    raceGunAt: timestamp("race_gun_at", { withTimezone: true }),
+    raceGunByStaffUserId: uuid("race_gun_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+
     timezone: text("timezone").notNull().default("Europe/Bucharest"),
 
     /**
@@ -952,6 +965,30 @@ export const events = pgTable(
     hasRaffle: boolean("has_raffle").notNull().default(false),
 
     /**
+     * «Cine poate participa» (migration `0217`, §984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
+     * alergătorii și elitele și voluntarii»): the three groups of a raffle, each ticked by default — «Alergătorii» (the confirmed real
+     * registrations with a race number not marked «Elită»; one marked «Ambasador» runs as a runner), «Elitele» (the registrations marked «Elită»
+     * and the lines of the race's elite list) and «Voluntarii» (the confirmed volunteers with a number). They decide in both modes
+     * below (`volunteers/domain/raffle.ts#raffleParticipation`). Boxes of the editor beside «Avem tombolă», saved with the event — the
+     * Administrator's save (§542); one edition's own, like `has_raffle`: no series edit, copy or event file carries them, and no public
+     * query reads them but the sign-up's gate (`raffleSignUpGate`).
+     */
+    raffleRunners: boolean("raffle_runners").notNull().default(true),
+    raffleElites: boolean("raffle_elites").notNull().default(true),
+    raffleVolunteers: boolean("raffle_volunteers").notNull().default(true),
+    /**
+     * «Cum» (§984; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere separată»): false is
+     * «Din oficiu» — everybody of the ticked groups is in, as since §949 — and true «Cu înscriere separată»: only those who signed up
+     * (`event_raffle_entries`), having accepted «Regulamentul tombolei». False by default, so no event changes by itself.
+     */
+    raffleSignUp: boolean("raffle_sign_up").notNull().default(false),
+    /**
+     * «Înscrierile la tombolă sunt deschise» (§984): while ticked — and only in the sign-up mode, with the rules and the notice in
+     * force — the doors take sign-ups; the organizers untick it at the draw. False by default.
+     */
+    raffleSignUpOpen: boolean("raffle_sign_up_open").notNull().default(false),
+
+    /**
      * «Condiții de participare» → «Informații medicale» (§557; the owner, 2026-09-29: «trebuie să am
      * o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»): the event asks
      * the optional health note (BR-REQ-031-05), GDPR art. 9 data the club collects only when it
@@ -1089,6 +1126,9 @@ export const events = pgTable(
           OR (${t.raceStartsAt} >= ${t.startsAt}
               AND (${t.endsAt} IS NULL OR ${t.raceStartsAt} <= ${t.endsAt}))`,
     ),
+
+    // «Start» (§986): who pressed it only beside the moment — the account may be removed (`SET NULL`), the moment stays.
+    check("events_race_gun_actor", sql`${t.raceGunByStaffUserId} IS NULL OR ${t.raceGunAt} IS NOT NULL`),
 
     /**
      * https only, at the database.

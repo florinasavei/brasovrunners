@@ -1,7 +1,8 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventRaffleEntries } from "@/db/schema/event-raffle-entries";
 import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -31,7 +32,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   keeping roles and number;
  * - every refusal writes nothing; both are the Administrator's and nobody else's;
  * - «Participă la tombolă» travels with the person, both ways (§953, amending §948 and §949): somebody an organizer took
- *   out of the raffle is not put back in it by a press that was about something else.
+ *   out of the raffle is not put back in it by a press that was about something else;
+ * - «Prezent» travels one way (§983): a runner the desk had checked in is ticked present as a volunteer, in the press's own
+ *   transaction, so the present-only raffle file keeps them; a volunteer turned runner carries nothing — checking a runner
+ *   in is the desk's verb;
+ * - a raffle sign-up travels both ways (§984): the same row, its door and its acceptance, moved to the row the person becomes
+ *   in the press's own transaction and named in its trail row — a restarted registration that holds one keeps its own.
  */
 const NOW = new Date("2026-11-15T10:00:00.000Z");
 const STARTS = new Date("2026-12-13T08:00:00.000Z");
@@ -49,6 +55,7 @@ const { pickBibNumber } = await import("@/modules/registrations/bibs");
 const { changeVolunteer, setVolunteerNumbersStart } = await import("@/modules/volunteers/volunteers");
 const { RUNNER_TO_VOLUNTEER_MINOR, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS } = await import("@/modules/volunteers/transform");
 const { setRegistrationInRaffle } = await import("@/modules/registrations/raffle-mark");
+const { checkInByStaff } = await import("@/modules/registrations/admin-service");
 const { exportRaffleList } = await import("@/modules/volunteers/raffle-list");
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 
@@ -319,13 +326,61 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     expect(rows.find((row) => row.id === out.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", bibNumber: 500, inRaffle: false });
     expect(rows.find((row) => row.id === stays.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", bibNumber: 501, inRaffle: true });
     // The press that was about something else did not put him back: the file has Elena, the volunteer, and never Radu.
-    expect((await exportRaffleList(db, admin, event.id, at(40))).rows).toEqual([{ number: 501, name: "Elena Munteanu", kind: "VOLUNTEER", present: null }]);
+    expect((await exportRaffleList(db, admin, event.id, at(40))).rows).toEqual([{ number: 501, name: "Elena Munteanu", kind: "VOLUNTEER", present: false }]);
     // Said in the trail as the volunteers' own tick says it: once, for Radu alone, by the Administrator who pressed.
     const ticks = (await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("inRaffle"));
     expect(ticks).toEqual([{ entityId: event.id, actor: admin.id, metadata: expect.objectContaining({ volunteerId: out.volunteerId, fields: ["inRaffle"], inRaffle: false }) }]);
     // The cancelled registration keeps what it held, and nobody was written to about a raffle: the transform's own emails alone.
     expect((await rowOf("Radu")).inRaffle).toBe(false);
     expect((await db.select().from(emailOutbox)).map((row) => row.messageType).filter((type) => !["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED", "REGISTRATION_CANCELLED", "VOLUNTEER_ROLE_ASSIGNED"].includes(type))).toEqual([]);
+  });
+
+  it("carries «Prezent» one way: a runner the desk had checked in is ticked present as a volunteer, by the volunteers' own tick — one who was not stays absent (§983)", async () => {
+    const { event, roleId } = await createRace(150);
+    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
+    const radu = await registered(event, "Radu", 1, true);
+    const elena = await registered(event, "Elena", 3, true);
+    // Radu was checked in at the desk on the morning of the race; Elena was not.
+    await checkInByStaff(db, admin, radu.id, "in", at(20));
+    expect((await rowOf("Radu")).checkedInAt).toEqual(at(20));
+
+    const here = await toVolunteer(radu.id, roleId);
+    const away = await toVolunteer(elena.id, roleId);
+
+    const rows = await volunteersOf(event.id);
+    expect(rows.find((row) => row.id === here.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", bibNumber: 500, present: true, inRaffle: true });
+    expect(rows.find((row) => row.id === away.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", bibNumber: 501, present: false });
+    // Said in the trail as the volunteers' own tick says it: once, for Radu alone, by the Administrator who pressed, at the press.
+    const ticks = (await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"));
+    expect(ticks).toEqual([{ entityId: event.id, actor: admin.id, metadata: { volunteerId: here.volunteerId, fields: ["present"], present: true, assignedRoleIds: [roleId] } }]);
+    // The press about something else kept him on the present-only raffle file; Elena, who never came to the desk, is not on it.
+    expect((await exportRaffleList(db, admin, event.id, at(40), { onlyPresent: true })).rows).toEqual([{ number: 500, name: "Radu Munteanu", kind: "VOLUNTEER", present: true }]);
+    expect((await exportRaffleList(db, admin, event.id, at(41))).rows.map((row) => [row.number, row.present])).toEqual([[500, true], [501, false]]);
+    // Nobody was written to about it: the transform's own emails alone.
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType).filter((type) => !["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED", "REGISTRATION_CANCELLED", "VOLUNTEER_ROLE_ASSIGNED", "BIB_ASSIGNED"].includes(type))).toEqual([]);
+  });
+
+  it("ticks «Prezent» inside the transform's own transaction: a press refused after the tick leaves no volunteer, no tick and no trail of it (§983)", async () => {
+    const { event, roleId } = await createRace(150);
+    const radu = await registered(event, "Radu", 1, true);
+    await checkInByStaff(db, admin, radu.id, "in", at(20));
+    // The press's last write — the row that ties the two — refused by the database, after the volunteer was entered and ticked.
+    await db.execute(sql`CREATE FUNCTION refuse_became_volunteer() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action = 'registration.became_volunteer' THEN RAISE EXCEPTION 'refused for the test'; END IF; RETURN NEW; END $$`);
+    await db.execute(sql`CREATE TRIGGER refuse_became_volunteer BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION refuse_became_volunteer()`);
+    try {
+      const before = await snapshot();
+      await expect(toVolunteer(radu.id, roleId)).rejects.toThrow();
+      expect(await snapshot()).toEqual(before);
+      expect(await volunteersOf(event.id)).toEqual([]);
+      expect((await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"))).toEqual([]);
+      expect((await rowOf("Radu")).status).toBe("CONFIRMED");
+    } finally {
+      await db.execute(sql`DROP TRIGGER refuse_became_volunteer ON audit_logs`);
+      await db.execute(sql`DROP FUNCTION refuse_became_volunteer()`);
+    }
+    // Pressed again once nothing refuses it, the person is a volunteer, present.
+    const { volunteerId } = await toVolunteer(radu.id, roleId);
+    expect((await volunteersOf(event.id)).map((row) => [row.id, row.present])).toEqual([[volunteerId, true]]);
   });
 
   it("BR-REQ-060-01: is the Administrator's — the Organizer, who manages volunteers, and every other role are refused, and nothing is written", async () => {
@@ -488,6 +543,29 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
     expect((await exportRaffleList(db, admin, event.id, at(60))).rows.map((row) => [row.number, row.name, row.kind])).toEqual([[8, "Dan Ionescu", "RUNNER"]]);
   });
 
+  it("carries no «Prezent»: a volunteer ticked present becomes a runner nobody checked in — the desk's verb, with its own conditions (§983)", async () => {
+    const { event, roleId } = await createRace(150);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+    // The Organizer ticked her «Prezent» on the «Voluntari» list.
+    await changeVolunteer(db, await staff("MODERATOR"), { kind: "setPresent", eventId: event.id, id: ana, present: true }, at(10));
+    const ticksBefore = (await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"));
+    expect(ticksBefore).toHaveLength(1);
+
+    const result = await toRunner(event.id, ana);
+
+    const [registration] = await db.select().from(registrations).where(eq(registrations.id, result.registrationId));
+    // A place held for the declaration she signs herself: not confirmed, so not one the desk could check in — and nobody did.
+    expect(registration).toMatchObject({ status: "PENDING_DECLARATION", checkedInAt: null, checkedInByStaffUserId: null });
+    expect(await trail("registration.checked_in")).toEqual([]);
+    // The cancelled volunteer keeps what she held, and no tick of anybody's was written by the press.
+    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, ana)))[0]).toMatchObject({ state: "CANCELLED", present: true });
+    expect((await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"))).toEqual(ticksBefore);
+    // Confirmed with a number later, she is on the whole raffle file as a runner nobody checked in — and on no present-only one.
+    await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: at(50), bibNumber: 7, holdExpiresAt: null }).where(eq(registrations.id, result.registrationId));
+    expect((await exportRaffleList(db, admin, event.id, at(60))).rows).toEqual([{ number: 7, name: "Ana Pop", kind: "RUNNER", present: false }]);
+    expect((await exportRaffleList(db, admin, event.id, at(61), { onlyPresent: true })).rows).toEqual([]);
+  });
+
   it("BR-REQ-060-01: is the Administrator's — the Organizer and every other role are refused, and nothing is written", async () => {
     const { event, roleId } = await createRace(10);
     const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
@@ -567,5 +645,90 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
     expect(back.registrationId).toBe(radu.id);
     expect((await rowOf("Radu"))).toMatchObject({ id: radu.id, status: "PENDING_DECLARATION", inRaffle: true });
     expect(await trail("registration.raffle_included")).toEqual([{ entityId: radu.id, actor: admin.id, metadata: { inRaffle: true } }]);
+  });
+});
+
+describe("§984 «Transformă în …» moves the person's raffle sign-up with them", () => {
+  /** «Regulamentul tombolei» approved: the version a sign-up's acceptance names. */
+  async function rules(): Promise<string> {
+    const text: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Regulamentul tombolei", body: { sections: [{ paragraphs: ["Tombola."] }] } },
+      { locale: "en", title: "Raffle rules", body: { sections: [{ paragraphs: ["The raffle."] }] } },
+    ];
+    return insertLegalDocumentVersion(db, { key: "RAFFLE_RULES", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(text), translations: text, now: NOW });
+  }
+  /** A sign-up as the public form writes one, put straight in the store: what the transform does with it is the question, not the door. */
+  async function signUp(eventId: string, person: { registrationId: string } | { volunteerId: string }, rulesDocumentId: string, typedName: string) {
+    const [row] = await db
+      .insert(eventRaffleEntries)
+      .values({ eventId, ...person, method: "FORM", rulesDocumentId, rulesAcceptedAt: at(2), rulesLocale: "ro", rulesTextHash: "a".repeat(64), rulesFacts: { event: "Crosul" }, typedName, ip: "203.0.113.7", userAgent: "Test", privacyNoticeVersion: 1, createdAt: at(2) })
+      .returning();
+    return row;
+  }
+  const entriesOf = (eventId: string) => db.select().from(eventRaffleEntries).where(eq(eventRaffleEntries.eventId, eventId));
+  const signUpMode = (eventId: string) => db.update(events).set({ hasRaffle: true, raffleSignUp: true, raffleSignUpOpen: true }).where(eq(events.id, eventId));
+
+  it("a runner turned volunteer keeps theirs — the same row, door and acceptance, now the volunteer's — and takes part as one", async () => {
+    const { event, roleId } = await createRace(150);
+    await signUpMode(event.id);
+    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
+    const radu = await registered(event, "Radu", 1, true);
+    const entry = await signUp(event.id, { registrationId: radu.id }, await rules(), "Radu Munteanu");
+
+    const { volunteerId } = await toVolunteer(radu.id, roleId);
+
+    expect(await entriesOf(event.id)).toEqual([{ ...entry, registrationId: null, volunteerId }]);
+    expect((await trail("registration.became_volunteer"))[0].metadata).toEqual({ volunteerId, roleId, from: "CONFIRMED", raffleEntryId: entry.id });
+    const { readRaffleLine } = await import("@/modules/volunteers/raffle-roster");
+    expect(await readRaffleLine(db, { table: "volunteer", id: volunteerId }, at(40))).toMatchObject({ reason: "in", signedUp: true });
+    // The cancelled registration holds none: nobody is in the raffle twice.
+    expect(await readRaffleLine(db, { table: "registration", id: radu.id }, at(40))).toMatchObject({ signedUp: false });
+  });
+
+  it("a volunteer turned runner keeps theirs too, on the registration the entry wrote", async () => {
+    const { event, roleId } = await createRace(150);
+    await signUpMode(event.id);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+    const entry = await signUp(event.id, { volunteerId: ana }, await rules(), "Ana Pop");
+
+    const result = await toRunner(event.id, ana);
+
+    expect(await entriesOf(event.id)).toEqual([{ ...entry, volunteerId: null, registrationId: result.registrationId }]);
+    expect((await trail("volunteer.became_runner"))[0].metadata).toEqual({ volunteerId: ana, registrationId: result.registrationId, to: "PENDING_DECLARATION", raffleEntryId: entry.id });
+  });
+
+  it("there and back, a restarted registration that holds a sign-up of its own keeps it, and the other stays with its cancelled row", async () => {
+    const { event, roleId } = await createRace(150);
+    await signUpMode(event.id);
+    const rulesId = await rules();
+    const radu = await registered(event, "Radu", 1, true);
+    const first = await signUp(event.id, { registrationId: radu.id }, rulesId, "Radu Munteanu");
+    const { volunteerId } = await toVolunteer(radu.id, roleId);
+    // A sign-up on the cancelled registration meanwhile: the store holds one per person row, and this row has none since the move.
+    const kept = await signUp(event.id, { registrationId: radu.id }, rulesId, "Radu Munteanu");
+
+    const back = await turnVolunteerIntoRunner(db, admin, { eventId: event.id, volunteerId, firstName: "Radu", lastName: "Munteanu", relayedByParticipantRequest: true }, at(60));
+
+    expect(back.registrationId).toBe(radu.id);
+    const where = Object.fromEntries((await entriesOf(event.id)).map((row) => [row.id, [row.registrationId, row.volunteerId]]));
+    expect(where).toEqual({ [first.id]: [null, volunteerId], [kept.id]: [radu.id, null] });
+    expect((await trail("volunteer.became_runner"))[0].metadata).not.toHaveProperty("raffleEntryId");
+  });
+
+  it("moves it inside the transform's own transaction: a press refused at its last row leaves the sign-up on the registration", async () => {
+    const { event, roleId } = await createRace(150);
+    await signUpMode(event.id);
+    const radu = await registered(event, "Radu", 1, true);
+    const entry = await signUp(event.id, { registrationId: radu.id }, await rules(), "Radu Munteanu");
+    await db.execute(sql`CREATE FUNCTION refuse_became_volunteer() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action = 'registration.became_volunteer' THEN RAISE EXCEPTION 'refused for the test'; END IF; RETURN NEW; END $$`);
+    await db.execute(sql`CREATE TRIGGER refuse_became_volunteer BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION refuse_became_volunteer()`);
+    try {
+      await expect(toVolunteer(radu.id, roleId)).rejects.toThrow();
+      expect(await entriesOf(event.id)).toEqual([entry]);
+      expect(await volunteersOf(event.id)).toEqual([]);
+    } finally {
+      await db.execute(sql`DROP TRIGGER refuse_became_volunteer ON audit_logs`);
+      await db.execute(sql`DROP FUNCTION refuse_became_volunteer()`);
+    }
   });
 });

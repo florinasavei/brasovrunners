@@ -16,6 +16,10 @@ import DeskRow from "@/modules/registrations/ui/DeskRow";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
+import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
+import { raffleDeskSignUpAction } from "../tombola/actions";
 
 type Props = {
   params: Promise<{ locale: string; code: string }>;
@@ -51,6 +55,8 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const spares = row ? await spareStates(db, [row.eventId]) : {};
   // Who came with this runner (§543), as on the desk's list: names only.
   const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
+  // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
+  const raffle = row ? await readRaffleLine(db, { table: "registration", id: row.id }, new Date()) : null;
 
   return (
     <Stack spacing={3}>
@@ -66,7 +72,10 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
       </div>
       {row ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role} />
+          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role}>
+            {raffle &&
+              (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) }))}
+          </DeskRow>
         </Stack>
       ) : (
         <Alert severity="warning">{t("desk.unknownCode")}</Alert>

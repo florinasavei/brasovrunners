@@ -1,4 +1,5 @@
 import { catalogueOf } from "@/i18n/catalogue";
+import { raffleClause } from "./raffle-words";
 
 // The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
@@ -61,13 +62,17 @@ export function volunteersListClause(locale: string): string {
   return locale === "en" ? `“${en.Event.volunteers.list.tick}”` : `„${ro.Event.volunteers.list.tick}”`;
 }
 
-/** The notice's merge values, beside the other features' on the legal pages. */
+/**
+ * The notice's merge values, beside the other features' on the legal pages — the raffle's sign-up (§984, `raffleClause`) among
+ * them: the raffle lives in this module, and every page that fills the volunteers' markers fills its marker too.
+ */
 export function volunteersMergeValues(locale: string): {
   volunteers: string;
   volunteerAgreement: string;
   volunteerProfile: string;
   volunteerMinors: string;
   volunteersList: string;
+  raffle: string;
 } {
   return {
     volunteers: volunteersClause(locale),
@@ -75,5 +80,6 @@ export function volunteersMergeValues(locale: string): {
     volunteerProfile: volunteerProfileClause(locale),
     volunteerMinors: volunteerMinorsClause(locale),
     volunteersList: volunteersListClause(locale),
+    raffle: raffleClause(locale),
   };
 }

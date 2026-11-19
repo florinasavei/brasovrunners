@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
@@ -86,8 +87,14 @@ export default async function DeskRow({
   spare = { kind: "none" },
   family = [],
   role,
+  children,
 }: {
   row: DeskRegistration;
+  /**
+   * What the page draws under the row, inside it: the event's raffle (§984) — «Tombolă: participă / nu participă» and, in the open
+   * sign-up mode, «Înscrie la tombolă» (`RaffleLines.tsx#raffleDeskLine`) — read by the page for every row it shows in one read.
+   */
+  children?: ReactNode;
   /**
    * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end, and a role that reads the registrations
    * «Descarcă BIB-ul (PDF)» in the BIB fold (§980); any other role — or none given — gets the row as it always was. A drawing decision only: the actions and the services assert the role again.
@@ -502,6 +509,8 @@ export default async function DeskRow({
           )}
         </Stack>
       </Stack>
+      {/* The event's raffle (§984), the page's to read and draw: under the row's own buttons, above the Administrator's fold. */}
+      {children ? <Box sx={{ mt: 1.5 }}>{children}</Box> : null}
       {/*
         «Elită și BIB» (§975, amending §897; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva e elită și cum apare pe
         BIB»): the Administrator's alone (`canManageRegistrations`, the elite mark's own gate) — never drawn for another role, and

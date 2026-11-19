@@ -17,6 +17,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { isVolunteerMinor, VOLUNTEER_AGE_MAX, VOLUNTEER_CITY_MAX, VOLUNTEER_MINIMUM_AGE, volunteerAgeOn, volunteerEventDay } from "./domain/volunteer";
+import { moveRaffleEntry } from "./raffle-entries";
 import { changeVolunteer } from "./volunteers";
 
 /*
@@ -46,7 +47,20 @@ import { changeVolunteer } from "./volunteers";
   event's raffle is out of it on the other list too — the new row would otherwise start in, the column's default, and the
   person would be back on «Lista pentru tombolă» by a press that was about something else. Each way through the tick's own
   writer (`changeVolunteer`'s `setRaffle`, `raffle-mark.ts`'s `setRegistrationInRaffle`), in the same transaction, so the
-  trail says it as it says every tick; nobody is told, and nothing else of either row moves.
+  trail says it as it says every tick; nobody is told, and nothing else of either row moves but «Prezent» and a raffle sign-up (below).
+
+  **«Prezent» travels one way** (§983): a runner the desk had checked in (`checked_in_at` set) is there, so the volunteer they
+  become is ticked «Prezent» by the volunteers' own tick (`changeVolunteer`'s `setPresent`), in the same transaction and with its
+  trail row — otherwise the new row would start absent, the column's default, and a press about something else would drop a
+  person who is there from «Lista pentru tombolă — doar prezenții» (the §953 lesson). A volunteer turned runner carries nothing:
+  checking a runner in is the desk's verb, with its own conditions — a confirmed registration, an event neither over nor
+  cancelled — and the entry here makes a registration that waits or holds a place, which the desk does not check in.
+
+  **A raffle sign-up travels both ways** (§984): where the event's raffle asks a sign-up of its own, the person's sign-up — the same
+  row, its door and its acceptance of the same rules for the same event — moves to the row they become, in the same transaction
+  (`raffle-entries.ts#moveRaffleEntry`), and the transform's own trail row names the entry's id. Otherwise the cancelled row would
+  keep it and the new row would read «nu s-a înscris»: a press about something else would drop a person who signed up. A row the
+  entry restarted that holds a sign-up already keeps its own.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -109,10 +123,12 @@ export type RunnerToVolunteerResult = {
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
  * 3. the person is confirmed, which draws their number from the volunteers' series (§948) — and a runner an organizer had
- *    taken out of the raffle is taken out as a volunteer too (§953), by the volunteers' own tick;
- * 4. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
+ *    taken out of the raffle is taken out as a volunteer too (§953), and a runner the desk had checked in is ticked «Prezent»
+ *    as a volunteer (§983), each by the volunteers' own tick;
+ * 4. the person's raffle sign-up, when they hold one, moves to the volunteer (`moveRaffleEntry`, §984);
+ * 5. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
  *    trail row — a printed bib named in it (§311);
- * 5. one row ties the two: `registration.became_volunteer`, ids only.
+ * 6. one row ties the two: `registration.became_volunteer`, ids only — the moved sign-up's among them.
  *
  * Any refusal writes nothing.
  */
@@ -190,6 +206,13 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
     if (!registration.inRaffle) {
       await changeVolunteer(tx, actor, { kind: "setRaffle", eventId: registration.eventId, id: volunteerId, inRaffle: false }, now);
     }
+    // A runner the desk had checked in is there (§983): the row entered a moment ago starts absent, the column's default, so the
+    // volunteers' own tick says «Prezent» — with its trail row — and the present-only raffle file keeps the person.
+    if (registration.checkedInAt !== null) {
+      await changeVolunteer(tx, actor, { kind: "setPresent", eventId: registration.eventId, id: volunteerId, present: true }, now);
+    }
+    // The runner's raffle sign-up is the volunteer's now (§984): the same row and acceptance, so nobody who signed up drops out.
+    const raffleEntryId = await moveRaffleEntry(tx, { table: "registration", id: registration.id }, { table: "volunteer", id: volunteerId });
     await cancelRegistrationByStaff(tx, actor, registration.id, input.reason, now, { sendEmail });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
@@ -197,7 +220,7 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
       action: "registration.became_volunteer",
       entityType: "registration",
       entityId: registration.id,
-      metadata: { volunteerId, roleId, from: registration.status },
+      metadata: { volunteerId, roleId, from: registration.status, ...(raffleEntryId ? { raffleEntryId } : {}) },
       now,
     });
     const [volunteer] = await tx.select({ bibNumber: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, volunteerId)).limit(1);
@@ -230,10 +253,11 @@ export type VolunteerToRunnerResult = WaitlistEntryByStaffResult & { eventId: st
  *    for, the row through the one allocator under this same lock — a counted free place with the declaration to sign, or
  *    the back of the line — in the language the club already writes to them in, with that state's ordinary email. Every
  *    refusal of that entry stands: after the start, a full line, this person already on the address. The registration
- *    takes the volunteer's raffle tick (§953), by the registrations' own tick;
+ *    takes the volunteer's raffle tick (§953), by the registrations' own tick, and the volunteer's raffle sign-up when they
+ *    hold one (`moveRaffleEntry`, §984);
  * 3. the volunteer is cancelled by the volunteers' own verb — the row, its roles and its number stay, retired; the role
  *    email a press queued a moment ago is withdrawn at the send, as for any cancelled person;
- * 4. one row ties the two: `volunteer.became_runner`, ids only.
+ * 4. one row ties the two: `volunteer.became_runner`, ids only — the moved sign-up's among them.
  *
  * Nothing of what the person told the organizers as a volunteer is copied onto the registration: its answers and its
  * declaration are the person's own, given from their link — the raffle tick is the organizers' mark, no answer of the
@@ -280,13 +304,15 @@ export async function turnVolunteerIntoRunner<T extends Record<string, unknown>>
     // raffle (neither the allocator nor the staff entry reads the column), so the registrations' own writer says it here:
     // a row that already holds the value is left alone and no trail row is written.
     await setRegistrationInRaffle(tx, actor, placed.registrationId, volunteer.inRaffle, now);
+    // The volunteer's raffle sign-up is the registration's now (§984) — unless the row the entry restarted holds its own.
+    const raffleEntryId = await moveRaffleEntry(tx, { table: "volunteer", id: volunteer.id }, { table: "registration", id: placed.registrationId });
     await changeVolunteer(tx, actor, { kind: "setState", eventId: input.eventId, id: volunteer.id, state: "CANCELLED" }, now, { sendEmail: false });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "volunteer.became_runner",
       entityType: "event",
       entityId: input.eventId,
-      metadata: { volunteerId: volunteer.id, registrationId: placed.registrationId, to: placed.status },
+      metadata: { volunteerId: volunteer.id, registrationId: placed.registrationId, to: placed.status, ...(raffleEntryId ? { raffleEntryId } : {}) },
       now,
     });
     return { ...placed, eventId: input.eventId, volunteerId: volunteer.id };

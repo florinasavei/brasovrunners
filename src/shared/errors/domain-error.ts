@@ -78,21 +78,30 @@ export type DomainErrorCode =
   // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§808, `{{results}}`): approve one first.
   | "RESULTS_NOTICE"
   // «Clasamentul e public» ticked while the terms in force do not describe the results (§808): the older terms promised to ask separately first.
+  // (Ticked before the race is accepted since §985: set then, shown from the start — there is no refusal for it.)
   | "RESULTS_TERMS"
-  // «Clasamentul e public» ticked before the race has started (§808): the notice says the results appear only after the race. Entering them stays open.
-  | "RESULTS_NOT_STARTED"
   // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN"
   // The «Categorii de vârstă» box of a race's results cannot be read (§850): the sentence names what is wrong; nothing was saved.
   | "RESULTS_AGE_BANDS"
-  // «Sosire» (§850): the number typed at the line belongs to no confirmed registration; the sentence carries the stamped time to write down.
+  // «Cronometrare» (§850, §986): the number pressed at the line belongs to no confirmed registration and no line of the race's elite
+  // list; the line carries the stamped time to write down. (A number already «Sosit» is no refusal since §986: a duplicate, in the trail.)
   | "RESULT_BIB_UNKNOWN"
-  // «Sosire»: the number already has a «Sosit» time; a correction is «Clasament»'s.
-  | "RESULT_ALREADY_FINISHED"
-  // «Sosire» pressed before the gun: a finish cannot be before the start.
+  // «Cronometrare» pressed before the gun: a finish cannot be before the start.
   | "RESULT_FINISH_NOT_STARTED"
-  // «Sosire» pressed more than a day after the gun: the results are written on «Clasament» by then.
+  // «Cronometrare» pressed more than a day after the gun: the results are written on «Clasament» by then.
   | "RESULT_FINISH_CLOSED"
+  // «Anulează» at the line (§986) on a row that is not the viewer's own unchanged press of the last ten minutes: «Clasament» corrects it.
+  | "RESULT_UNDO_NOT_ALLOWED"
+  // A press sent again whose row is gone since — undone at the line, deleted on «Clasament» (§986): told so, never recorded again.
+  | "RESULT_PRESS_UNDONE"
+  // «Start» outside its window (§986): from three hours before the planned gun to six hours after.
+  | "RACE_GUN_WINDOW"
+  // «Start» moved or taken off once a runner is «Sosit» (§986): the gun is fixed; a correction of the times is «Clasament»'s.
+  | "RACE_GUN_FIXED"
+  // «Start» from a page that saw another gun than the one stored (§986): another organizer gave it, moved it or took it off since;
+  // the page drawn again says who and when, and only a «Mută startul acum» from a page that saw the gun as it stands moves it.
+  | "RACE_GUN_CHANGED"
   // «Adaugă un lucru» on an event whose «Lucruri de adus» already holds the most a list may (§979): the sentence says how many.
   | "RACE_DAY_ITEMS_FULL"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
@@ -108,7 +117,12 @@ export type DomainErrorCode =
   // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
   // staff press sends», slice 4; its question offers no «… fără email», §976): the terms promise the person is told the ground,
   // so the refusal never goes without its email.
-  | "REFUSAL_NEEDS_EMAIL";
+  | "REFUSAL_NEEDS_EMAIL"
+  // The raffle's sign-up (§984): the gate is shut (`raffleSignUpClosedFor`); the person is not one the raffle takes — not
+  // confirmed, no number, a test registration, a group not ticked; the rules' acceptance missing. Each writes nothing.
+  | "RAFFLE_SIGN_UP_CLOSED"
+  | "RAFFLE_NOT_ELIGIBLE"
+  | "RAFFLE_RULES_NOT_ACCEPTED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

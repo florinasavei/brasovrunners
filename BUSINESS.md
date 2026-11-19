@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.66-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.67-2026-11-19 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.67-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -66,6 +66,7 @@ They can:
 - accept a time-limited waiting-list offer;
 - unregister through a secure email link before the event starts;
 - request or receive a replacement management link;
+- sign up for an event's raffle, where the club asks a sign-up of its own, and withdraw before the draw (BR-BUS-053);
 - optionally create and publish a small public runner profile with selected social links.
 
 ### Author
@@ -683,6 +684,20 @@ in them can be mistaken for a decision the club made. Each one says so at the to
 page, in both languages. Production carries none, and registration there correctly refuses
 everyone until the approved text is loaded.
 
+**An event's raffle** (2026-11-18) is the organizers' to run, and by default everybody of the groups the club ticks —
+the confirmed runners with a race number, the race's elites, the confirmed volunteers with a number — is in it «din
+oficiu», with nothing to do. Where the club asks **a sign-up of its own** for it, only those who sign up take part, and
+a participant signs up in one of three ways while the club keeps the sign-ups open: from their own registration's page
+(the link in the emails), on the raffle's form on the event's page — their race number, or their volunteer number with
+«Sunt voluntar», and the name they registered with — or at the desk on race day. Each way asks them to accept the
+club's **«Regulamentul tombolei»** (the raffle's rules), a legal text like the others: the platform's template, approved
+by the club, never by the platform. Until the rules are approved and the privacy notice in force describes the sign-up,
+no way of signing up opens — and with a sign-up of its own nobody takes part who has not signed up, so until then the
+club leaves the raffle «din oficiu». A sign-up sends no email, publishes no name and is
+deleted thirty days after the event; a participant withdraws before the draw from the same page, or by telling the
+organizers. The form never says whether a number exists: a number and a name that do not belong together get one
+neutral answer. The draw itself happens at the event, outside the site, among those signed up.
+
 ### BR-BUS-060 — Staff roles and least privilege
 
 Five roles, and **they nest**: each can do everything the one below it can, plus one thing more.
@@ -691,9 +706,9 @@ list of roles, so adding a role later cannot silently take one away.
 
 | Staff role | Adds, on top of the role below |
 | --- | --- |
-| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number. Nothing else (`DECISIONS.md` §103) |
+| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number; and the finish line, «Cronometrare»: records a finisher by the bib's number or an elite's button, and undoes their own press for ten minutes (`DECISIONS.md` §986). Nothing else (`DECISIONS.md` §103) |
 | Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
-| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants |
+| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §986) |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Every event — creating, configuring, publishing, cancelling, a series (§542); changing registrations, participants, waiting lists, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |

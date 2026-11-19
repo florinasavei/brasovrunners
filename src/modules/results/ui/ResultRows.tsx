@@ -73,6 +73,8 @@ export type RegisteredLine = {
   present: boolean;
   /** «Public: Participant #101» or «Public: cu numele» — what the published list would say of this runner. */
   publicLine: string;
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §985); absent when named, or said once for the page. */
+  publicReason?: string;
   values: LineValues;
   place: PlaceView | null;
   /** A result is stored for this number: the line offers «Șterge». */
@@ -84,6 +86,8 @@ export type RegisteredLine = {
    * result this is. Staff-only: this page is the backoffice's, and the published results carry neither.
    */
   marks?: readonly ResultMark[];
+  /** Who last wrote the stored result (§986): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
+  writtenBy?: string;
 };
 
 /** One of the club's two marks on a registration, as a line of «Clasament» and a row of «Premii» draw it. */
@@ -95,10 +99,14 @@ export type TypedLine = {
   agreed: boolean;
   /** «Pe site: cu numele» or «Pe site: Participant #900» — what the published ranking would say of the stored line (`publicResultName`'s own answer), the registered lines' caption. */
   publicLine: string;
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §985); absent when named, or said once for the page. */
+  publicReason?: string;
   place: PlaceView | null;
   hasResult: boolean;
   /** A separate-list elite's line left out of the ranking (§910), recognised by its number or its name: «în afara clasamentului». */
   outOfRanking?: boolean;
+  /** Who last wrote the stored result (§986), as a registered line says it. */
+  writtenBy?: string;
 };
 
 /** The one delete form of the page (`ActionForm`, `id` below): a line's «Șterge» names it with `form=` and posts the number as its own value. */
@@ -320,6 +328,17 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                   {line.publicLine}
                 </Typography>
               </Box>
+              {/* Right under «Pe site: Participant #…», why the site shows no name (§985); then who last wrote the result (§986). */}
+              {line.publicReason && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-public-reason">
+                  {line.publicReason}
+                </Typography>
+              )}
+              {line.writtenBy && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-written-by">
+                  {line.writtenBy}
+                </Typography>
+              )}
             </Box>
             <PlaceCell place={line.place} words={words} settled={line.hasResult} outOfRanking={line.outOfRanking} />
             <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} />
@@ -397,6 +416,16 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 {line && (
                   <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-line">
                     {line.publicLine}
+                  </Typography>
+                )}
+                {line?.publicReason && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-reason">
+                    {line.publicReason}
+                  </Typography>
+                )}
+                {line?.writtenBy && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="result-written-by">
+                    {line.writtenBy}
                   </Typography>
                 )}
               </Box>
