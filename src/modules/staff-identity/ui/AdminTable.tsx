@@ -115,6 +115,11 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * hidden by CSS rather than chosen in JavaScript: the server cannot know the viewport, and
  * guessing it is how a desktop table gets shipped to a phone for one frame.
  *
+ * A block lists its lines in the columns' order, but for the few a column puts first on a phone
+ * (`phoneFirst`): right under the headline, in their own order, the rest after them. The «Voluntari»
+ * list's state and its «Prezent» tick (§NNN) — what race morning reads and presses on a phone — would
+ * otherwise sit a dozen lines down a card; the wide table keeps every column where it stands.
+ *
  * ## A table on one page, and on paper (§974)
  *
  * Two things a list never asks and «Planul voluntarilor»'s «Punctele, pe scurt» does — a handful
@@ -158,6 +163,12 @@ export type AdminColumn<Row> = {
    * its line on every row.
    */
   omitEmptyOnPhone?: boolean;
+  /**
+   * On a phone, this column's line comes first in the row's block — right under the headline, before every column that does not
+   * say so, the columns that do in their own order (§NNN). The wide table, the «Coloane» menu and the exports keep the columns'
+   * order. Off by default: a block reads in the columns' order.
+   */
+  phoneFirst?: boolean;
   render: (row: Row) => ReactNode;
 };
 
@@ -423,7 +434,8 @@ export default function AdminTable<Row>({
 
   const pages = pageCount(total, query.perPage);
   const primary = columns.find((column) => column.primary) ?? columns[0];
-  const secondary = columns.filter((column) => column !== primary);
+  // A phone's block: the lines a column puts first (`phoneFirst`) right under the headline, then the rest, each in the columns' order.
+  const secondary = [...columns.filter((column) => column !== primary && column.phoneFirst), ...columns.filter((column) => column !== primary && !column.phoneFirst)];
   const hinted = columns.filter((column) => column.hint);
   // What the «Coloane» menu offers (§661): strings and a flag per column, never a row.
   const menuColumns = columns.map((column, index) => ({

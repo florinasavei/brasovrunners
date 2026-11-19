@@ -409,6 +409,8 @@ describe("§NNN the raffle's two files on the «Voluntari» list's toolbar", () 
       expect(present.props.href, role).toBe(`/api/admin/events/${raceId}/raffle?present=1&lang=ro`);
       expect([whole.props.children, present.props.children], role).toEqual(["Lista pentru tombolă (CSV)", "Lista pentru tombolă — doar prezenții (CSV)"]);
       expect(present.props["aria-label"], role).toBe(ro.Admin.registrations.raffle.presentButtonLabel);
+      // Label in name: each accessible name starts with the words the button shows, «(CSV)» included.
+      for (const button of [whole, present]) expect(String(button.props["aria-label"]).startsWith(`${button.props.children}:`), role).toBe(true);
     }
     const english = await listTree({ eventId: raceId }, "en");
     expect(byTestId(english, "volunteers-raffle-present")[0].props).toMatchObject({ href: `/api/admin/events/${raceId}/raffle?present=1&lang=en`, children: "Raffle list — present only (CSV)" });
@@ -487,7 +489,7 @@ describe("§NNN setVolunteerPresentAction — the press", () => {
       const toasts = catalogue.Feedback.toast as Record<string, unknown>;
       for (const code of ["volunteerPresentOn", "volunteerPresentOff", "volunteerUnchanged"]) expect(typeof toasts[code], code).toBe("string");
     }
-    expect(ro.Feedback.toast.volunteerPresentOn).toBe("Bifat: prezent. Se numără la „Prezenți”.");
+    expect(ro.Feedback.toast.volunteerPresentOn).toBe("Bifat: prezent.");
     expect(ro.Feedback.toast.volunteerPresentOff).toBe("Debifat: absent.");
     expect(en.Feedback.toast.volunteerPresentOn).not.toBe(en.Feedback.toast.volunteerPresentOff);
   });

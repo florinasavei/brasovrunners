@@ -3038,12 +3038,14 @@ share the purpose. Steps 3–8 remain M4.
 «Lista pentru tombolă» (§948, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
 one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
 with one of the volunteers' series — by the number, as four columns: the number, the name, «Alergător», «Elită» or «Voluntar»,
-and «Prezent» — «Da» or «Nu»: whether the desk checked the runner in and, since 2026-11-18 (`DECISIONS.md` §NNN), whether
+and «Prezent» — «Da» or «Nu»: whether the runner was checked in — at the desk, or by «Am ajuns» from their own link — and,
+since 2026-11-18 (`DECISIONS.md` §NNN), whether
 the organizers ticked the volunteer «Prezent» on the «Voluntari» list (§15.11), where the cell was empty before (§949:
 the raffle is among who is there, and the club filters by it; a column rather than a condition, so a desk that did not
 check everybody in never empties the file). Beside it, never in place of it, a second file: **«Lista pentru tombolă —
 doar prezenții»** (`?present=1`, named `tombola-prezenti-<day>.csv`) — the same people by the same rules, of whom only
-the runners the desk checked in and the volunteers ticked «Prezent», in the same four columns: the organizers' explicit
+the runners checked in (at the desk, or by «Am ajuns» from their own link) and the volunteers ticked «Prezent», in the
+same four columns: the organizers' explicit
 second download, on the registrations list beside the whole file and, with one event chosen that holds a raffle, on
 the «Voluntari» list's toolbar with it. Never a test registration, anybody without a number, a cancelled person, or
 anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
@@ -3409,11 +3411,10 @@ time and in any state, audited (`registration.raffle_included` / `registration.r
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
 (`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
-(§15.10), which also says, beside each person, whether they were there — a runner the desk checked in, a volunteer
-ticked «Prezent» (below). Read by those two lists, that file, the raffle's one answer below — the «Tombolă» tab, the
-person's pages and the desk — its list and its view of a person — say what it decides — and «Toate datele unei persoane»; never by a public
-page, an email, another export, the allocator or the
-capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
+(§15.10), which also says, beside each person, whether they were there — a runner checked in at the desk or by «Am
+ajuns» from their own link, a volunteer ticked «Prezent» (below). Read by those two lists, that file, «Toate datele unei persoane» and the raffle's one answer
+below, which the «Tombolă» tab, the person's pages and the desk (its list and its view of a person) put into words; never
+by a public page, an email, another export, the allocator or the capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
 
 **A raffle with a sign-up of its own** (2026-11-18, `DECISIONS.md` §NNN; the owner: «Dar pentru tombolă trebuie să am o
@@ -3477,8 +3478,9 @@ before «Are kit» — or beside the name on the person's page, by whoever works
 asserted by `setVolunteerPresentAction` and again by `volunteers.ts#changeVolunteer`, kind `setPresent`), for a person in
 any state, as «Are kit» is, and audited as every edit of a person's boxes (`volunteer.edited`: the box's name and the new
 value, never a name). The list's strip says «Prezenți: N» and «Absenți: K» beside «Cu kit» — always, a nought too — over
-«Înscris» and «Confirmat» (a cancelled person is neither present nor missing), each a pill that filters the list to exactly
-those people (`present=yes|no`). The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
+the event's and the search's «Înscris» and «Confirmat» (a cancelled person is neither present nor missing), each a pill
+that filters the list to those people (`present=yes|no`), combined with the list's other filters as «Cu kit» is: with
+«Doar membrii» or a state chosen it lists the ones that filter keeps too, fewer than the figure. The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
 them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
 (below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
 never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
@@ -3551,7 +3553,7 @@ writer's audit row: the volunteers' `setRaffle` for a runner who was out; `raffl
 the registration the entry wrote, which takes the volunteer's tick whichever it is — the entry may restart a
 registration of that person cancelled earlier, and that row keeps what it once held. Neither the allocator nor the staff
 entry reads the column (`raffle-never-leaves.test.ts`), which is why the transform says it and not the entry. Nobody is
-told, and nothing else of either row moves.
+told, and nothing else of either row moves but «Prezent» and a raffle sign-up (below).
 
 **«Prezent» moves one way** (2026-11-18, `DECISIONS.md` §NNN): a runner the desk had checked in is there, so «Transformă
 în voluntar» ticks the new volunteer «Prezent» — through the volunteers' own `setPresent`, in the transform's transaction

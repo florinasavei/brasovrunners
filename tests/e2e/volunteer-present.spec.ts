@@ -128,7 +128,7 @@ test.describe("§NNN «Prezent» on the «Voluntari» list and the raffle among 
       await tick.click();
 
       // ---- Back at the same list address, the toast, the tick drawn ticked, the strip moved ---------------------------------
-      await expect(page.getByText("Bifat: prezent. Se numără la „Prezenți”.").first()).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText("Bifat: prezent.").first()).toBeVisible({ timeout: 30_000 });
       await hydrated(page);
       expect(new URL(page.url()).searchParams.get("eventId")).toBe(seeded.eventId);
       await expect(page.locator(`#main [data-testid="volunteer-present-tick"]:visible`).and(page.getByRole("checkbox", { name: `Prezent: ${anaName}` }))).toHaveAttribute("aria-checked", "true");

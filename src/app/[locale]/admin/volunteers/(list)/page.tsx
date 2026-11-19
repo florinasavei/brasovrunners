@@ -586,6 +586,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       sortable: true,
       initialDir: "asc",
       essential: true,
+      // On a phone's card, right under the name, with «Prezent» after it (§NNN): what race morning reads first.
+      phoneFirst: true,
       render: (row) => (
         <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
           <StatusChip glyph={STATE_CHIP[row.state].glyph} color={STATE_CHIP[row.state].color} label={t(`volunteers.states.${row.state}`)} testId="volunteer-state" />
@@ -687,6 +689,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       key: "present",
       label: t("volunteers.presence.column"),
       hint: t("volunteers.presence.hint"),
+      // On a phone's card the tick comes right after the name and the state, not a dozen lines down (§NNN): one press per person who came.
+      phoneFirst: true,
       render: presentTick,
     },
     {

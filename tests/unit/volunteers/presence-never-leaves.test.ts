@@ -32,8 +32,11 @@ const SRC = path.join(ROOT, "src");
 const NAMES_THE_PRESENCE =
   /eventVolunteers\.present\b|event_volunteers\.present\b|boolean\("present"\)|\bsetPresent\b|VolunteerPresent|volunteerPresent|volunteer-(?:page-)?present|\bonlyPresent\b|presentFilterOf|volunteers\.presence\.|raffle\?present=/;
 
-/** A read of the field however the row was fetched — `row.present`, `{ present }` — which the surfaces that read volunteers never make. */
-const READS_A_PRESENT_FIELD = /\.present\b|[{,]\s*present\s*[,}]/;
+/**
+ * A read of the field however the row was fetched — `row.present`, `{ present }`, `{ present: here } = row`, `row["present"]`, and a
+ * raw query's `present FROM` — which the surfaces that read volunteers never make.
+ */
+const READS_A_PRESENT_FIELD = /\.present\b|[{,]\s*present\s*[,}:]|\[\s*["'`]present["'`]\s*\]|\bpresent\s+FROM\b/;
 
 /** The «Voluntari» screen's actions, whose file name says nothing of a presence: the module a leak would be imported from. */
 const ACTIONS_MODULE = path.join(SRC, "app", "[locale]", "admin", "volunteers", "actions");
@@ -90,12 +93,24 @@ function readsVolunteers(at: string): boolean {
   // «Ziua cursei» → «Tombolă» (§NNN) is the organizers' raffle tab, not the desk: who was there is what its «Doar prezenții» filters by.
   if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
   return (
-    // The event's pages, its volunteers' page and its public form.
+    // The event's pages, its volunteers' page and its public form; the event page's own module and the public cache that feeds it.
     at.startsWith("src/app/[locale]/events/") ||
-    // The volunteers' public list, its view and the public form's own module.
+    at.startsWith("src/app/[locale]/volunteers/") ||
+    at.startsWith("src/modules/events/") ||
+    at.startsWith("src/modules/public-cache/") ||
+    // The volunteers' public list, its view, the public form's own module and the public volunteer screens beside it.
     at === "src/modules/volunteers/public-list.ts" ||
     at === "src/modules/volunteers/domain/public-list.ts" ||
     at === "src/modules/volunteers/offer.ts" ||
+    at === "src/modules/volunteers/ui/VolunteersList.tsx" ||
+    at === "src/modules/volunteers/ui/VolunteerBox.tsx" ||
+    at === "src/modules/volunteers/ui/VolunteerCallout.tsx" ||
+    at === "src/modules/volunteers/ui/VolunteerDone.tsx" ||
+    // The volunteer's agreement, its PDF, the guardian's agreement and the invitation link: what a volunteer reads and signs.
+    at === "src/modules/volunteers/agreement.ts" ||
+    at === "src/modules/volunteers/agreement-pdf.ts" ||
+    at === "src/modules/volunteers/guardian.ts" ||
+    at === "src/modules/volunteers/invitation-link.ts" ||
     // Every email, and the point's email that reads the plan.
     at.startsWith("src/modules/notifications/") ||
     at === "src/modules/volunteers/point-mail.ts" ||
@@ -148,6 +163,8 @@ describe("§NNN a volunteer's «Prezent» stays with the organizers", () => {
     expect(surfaces.length).toBeGreaterThan(60);
     for (const kind of [
       "src/app/[locale]/events/",
+      "src/modules/events/ui/EventPageView.tsx",
+      "src/modules/volunteers/ui/VolunteersList.tsx",
       "src/app/api/",
       "src/modules/notifications/",
       "src/modules/volunteers/badges/",
@@ -205,15 +222,26 @@ describe("§NNN a volunteer's «Prezent» stays with the organizers", () => {
     ]) {
       expect(NAMES_THE_PRESENCE.test(named), named).toBe(true);
     }
-    // A field read, on a surface that reads volunteers: the row's field, a destructured one, a shorthand object.
-    for (const read of ["if (row.present) count += 1;", "const { name, present } = volunteer;", "rows.map(({ present }) => present)", "return { id, present };"]) {
+    // A field read, on a surface that reads volunteers: the row's field, a destructured one — renamed too —, a shorthand object, the
+    // field by its quoted name, and a raw query's column.
+    for (const read of [
+      "if (row.present) count += 1;",
+      "const { name, present } = volunteer;",
+      "rows.map(({ present }) => present)",
+      "return { id, present };",
+      "const { present: here } = row;",
+      "const { name, present: wasThere, kit } = volunteer;",
+      'if (row["present"]) count += 1;',
+      "const ticked = row['present'];",
+      "sql`SELECT name, present FROM event_volunteers WHERE event_id = ${id}`",
+    ]) {
       expect(READS_A_PRESENT_FIELD.test(read), read).toBe(true);
     }
     // What only looks like one: the word in prose, a local of that name, the desk's own words, the registrations' raffle cell words.
     for (const other of ["// present only when the club ticked it", "const present = new Set(kinds);", "present.has(group)", "checkedIn", "registrations.raffle.present.yes", "the present-day rules"]) {
       expect(NAMES_THE_PRESENCE.test(other), other).toBe(false);
     }
-    for (const other of ["// present only when the club ticked it", "const present = new Set(kinds);", "present.has(group)"]) {
+    for (const other of ["// present only when the club ticked it", "const present = new Set(kinds);", "present.has(group)", "// shown from the start, present from the first finisher", "presentWords"]) {
       expect(READS_A_PRESENT_FIELD.test(other), other).toBe(false);
     }
   });

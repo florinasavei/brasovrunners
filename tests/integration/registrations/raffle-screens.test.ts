@@ -280,9 +280,12 @@ describe("§NNN «Lista pentru tombolă — doar prezenții» on the registratio
       expect(whole?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?lang=ro`);
       expect(present?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=ro`);
       expect(present?.props.children, role).toBe("Lista pentru tombolă — doar prezenții (CSV)");
-      // Its accessible name begins with the words it shows, and says who is in the file.
-      expect(String(present?.props["aria-label"]).toLowerCase(), role).toContain("lista pentru tombolă — doar prezenții");
+      // Each accessible name begins with the very words it shows, «(CSV)» included (label in name), and says who is in the file.
+      expect(String(present?.props["aria-label"]).startsWith(`${present?.props.children}:`), role).toBe(true);
+      expect(String(whole?.props["aria-label"]).startsWith(`${whole?.props.children}:`), role).toBe(true);
       expect(present?.props["aria-label"], role).toBe(ro.Admin.registrations.raffle.presentButtonLabel);
+      // A runner who pressed «Am ajuns» from their own link is there as much as one the desk checked in.
+      expect(present?.props["aria-label"], role).toContain("„Am ajuns”");
       // The house's 44-pixel target, as every toolbar link.
       expect(present?.props.sx, role).toEqual(whole?.props.sx);
       // Right after the whole file: the two raffle files side by side.
@@ -312,6 +315,7 @@ describe("§NNN «Lista pentru tombolă — doar prezenții» on the registratio
     expect(present?.props.href).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=en`);
     expect(present?.props.children).toBe("Raffle list — present only (CSV)");
     expect(present?.props["aria-label"]).toBe(en.Admin.registrations.raffle.presentButtonLabel);
+    expect(String(present?.props["aria-label"]).startsWith("Raffle list — present only (CSV):")).toBe(true);
   });
 });
 

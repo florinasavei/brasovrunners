@@ -21,7 +21,7 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
   Since the decision of 2026-11-18 titled «Prezent» on a volunteer, and «Lista pentru tombolă — doar prezenții»: a volunteer's
   «Prezent» is the organizers' own tick on the «Voluntari» list (`event_volunteers.present`), and beside the full file, never in
   place of it, a second one: **«Lista pentru tombolă — doar prezenții»** (`onlyPresent`) — the same people, of whom only the
-  runners the desk checked in and the volunteers ticked «Prezent».
+  runners checked in — at the desk, or by «Am ajuns» from their own link — and the volunteers ticked «Prezent».
 
   Since §NNN (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «tombolă
   din oficiu vs tombolă cu înscriere separată»): who is in the file is the one function's answer (`domain/raffle.ts#raffleParticipation`,
@@ -38,14 +38,14 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
 
 export type { RaffleKind };
 
-/** `present`: whether the person was there — a registration the desk checked in, a volunteer or an elite line ticked «Prezent». */
+/** `present`: whether the person was there — a registration checked in (at the desk or by «Am ajuns»), a volunteer or an elite line ticked «Prezent». */
 export type RaffleRow = { number: number | null; name: string; kind: RaffleKind; present: boolean };
 
 export type RaffleList = { rows: RaffleRow[]; runners: number; elites: number; volunteers: number };
 
 /**
- * Which of the two files: `onlyPresent` keeps only the people there — the runners the desk checked in, the volunteers and the elite
- * lines ticked «Prezent» — everything else as for the whole file. Absent or false is the whole file.
+ * Which of the two files: `onlyPresent` keeps only the people there — the runners checked in at the desk or by «Am ajuns» from their
+ * own link, the volunteers and the elite lines ticked «Prezent» — everything else as for the whole file. Absent or false is the whole file.
  */
 export type RaffleListOptions = { onlyPresent?: boolean };
 

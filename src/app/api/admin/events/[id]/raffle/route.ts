@@ -13,8 +13,8 @@ import { isUuid } from "@/shared/ids";
  * «Lista pentru tombolă» on an event's registrations list (§948; the owner, 2026-11-15: «vreau să fac o tombolă și
  * trebuie să pot exporta toți voluntarii și toți participanții»): everybody who wears a number at one event — the
  * confirmed runners and the confirmed volunteers — by the number, as a UTF-8 file with a BOM in the reader's language
- * (`lang`): the number, the name, «Alergător» or «Voluntar», and «Prezent» — a runner checked in at the desk, a volunteer
- * ticked «Prezent» on the «Voluntari» list (`modules/volunteers/raffle-list.ts`).
+ * (`lang`): the number, the name, «Alergător» or «Voluntar», and «Prezent» — a runner checked in at the desk or by «Am ajuns»
+ * from their own link, a volunteer ticked «Prezent» on the «Voluntari» list (`modules/volunteers/raffle-list.ts`).
  *
  * `?present=1` (§NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți») is the second file,
  * «Lista pentru tombolă — doar prezenții», beside the whole one on the registrations and the «Voluntari» lists: the same
@@ -24,7 +24,8 @@ import { isUuid } from "@/shared/ids";
  * Whoever reads the registrations and works the volunteers may take it — the Organizer and the Administrators —
  * asserted here and again by the service (BR-REQ-060-01): the Tehnic role, a Redactor, a volunteer and a member are
  * refused whatever the link. Nothing is written on the server but one audit row, as the other exports write theirs
- * (§322): who, which event and how many of each, never a name. A GET that mutates nothing else.
+ * (§322): who, which event, how many of each group, which of the two files was taken (`onlyPresent`) and whether the raffle
+ * asked a sign-up (`signUp`), never a name. A GET that mutates nothing else.
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;
@@ -57,7 +58,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const csv = buildRaffleCsv(
     // The three groups (§NNN): «Elită» is a registration marked «Elită» and a line of the race's elite list.
     { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), ELITE: t("registrations.raffle.kinds.ELITE"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
-      // «Prezent» (§949, §NNN): whether the person was there — the desk's check-in for a runner, the «Voluntari» list's tick for a volunteer.
+      // «Prezent» (§949, §NNN): whether the person was there — a runner's check-in (the desk's, or «Am ajuns»), the «Voluntari» list's tick for a volunteer.
       present: t("registrations.raffle.columns.present"),
       presentYes: t("registrations.raffle.present.yes"),
       presentNo: t("registrations.raffle.present.no"),

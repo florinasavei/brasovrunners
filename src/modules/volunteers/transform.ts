@@ -47,7 +47,7 @@ import { changeVolunteer } from "./volunteers";
   event's raffle is out of it on the other list too — the new row would otherwise start in, the column's default, and the
   person would be back on «Lista pentru tombolă» by a press that was about something else. Each way through the tick's own
   writer (`changeVolunteer`'s `setRaffle`, `raffle-mark.ts`'s `setRegistrationInRaffle`), in the same transaction, so the
-  trail says it as it says every tick; nobody is told, and nothing else of either row moves.
+  trail says it as it says every tick; nobody is told, and nothing else of either row moves but «Prezent» and a raffle sign-up (below).
 
   **«Prezent» travels one way** (§NNN): a runner the desk had checked in (`checked_in_at` set) is there, so the volunteer they
   become is ticked «Prezent» by the volunteers' own tick (`changeVolunteer`'s `setPresent`), in the same transaction and with its

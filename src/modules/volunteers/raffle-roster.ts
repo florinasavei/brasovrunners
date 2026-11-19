@@ -241,7 +241,7 @@ export type RaffleRosterRow = {
   number: number | null;
   name: string;
   reason: RaffleReason;
-  /** Whether the person was there: a registration the desk checked in, a volunteer or a line ticked «Prezent». */
+  /** Whether the person was there: a registration checked in (at the desk or by «Am ajuns»), a volunteer or a line ticked «Prezent». */
   present: boolean;
   inRaffle: boolean;
   /** The sign-up, in the sign-up mode: how and when, and the entry's id for «Șterge înscrierea». */
