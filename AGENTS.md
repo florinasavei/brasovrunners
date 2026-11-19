@@ -1624,8 +1624,9 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 
 ### 10.11 The finish line: «Cronometrare»
 
-A race's finishers are recorded at the line on «Cronometrare» (`/admin/checkin/cronometrare`, the fourth tab of «Ziua
-cursei», `DECISIONS.md` §NNN, in the place of §850's «Sosire», whose address now sends its reader on). The results
+A race's finishers are recorded at the line on «Cronometrare» (`/admin/checkin/cronometrare`, the third of «Ziua
+cursei»'s tabs — «Prezența», «Clasament», «Cronometrare», «Tombolă», «Lucruri de adus», a row that scrolls on a phone —,
+`DECISIONS.md` §NNN, in the place of §850's «Sosire», whose address now sends its reader on). The results
 themselves are §808's: one row per race number, ranked from the live answers, published only by an Administrator.
 
 - **Who.** Every staff role that works the desk records a finish and undoes its own press (`canRecordFinishes`, defined
@@ -1644,10 +1645,15 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   Audited `event.race_gun_set` / `event.race_gun_cleared` with the instants alone; no email; no public cache.
 - **The clock.** The islands stamp on the server's clock read through the phone's **wall clock** (`Date.now()`, which
   keeps time while the screen is locked — `performance.now()` does not on most phones) plus an offset measured over a
-  round trip as NTP measures one: the clock's own question as the page wakes (`readFinishClockAction`, again when the
-  page is shown after five minutes) and every answer, each carrying the server's instants at the arrival and at the
-  answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`; `ui/server-clock.ts`, kept on the phone for half a
-  day). The page's own `now` is read after every read and only seeds it.
+  round trip as NTP measures one: the clock's own question as the page wakes (`readFinishClockAction`, again every time
+  it is shown, comes back from the browser's memory or finds its signal) and every answer, each carrying the server's
+  instants at the arrival and at the answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`;
+  `ui/server-clock.ts`, kept on the phone for half a day). The page's own `now` is read after every read and only seeds
+  it. **The clock's question carries the gun** (`results.ts#readFinishGun`, one indexed read of the event's row behind
+  `canRecordFinishes`): «Start» is pressed on the organizer's phone, so a volunteer's page drawn before it learns of it
+  from the next question — asked, besides, every thirty seconds while the page is shown and no finisher is stored
+  (`FINISH_GUN_ASK_MS`), never after —, and the line counts from the newer of that gun and the last press's answer
+  (`lineGunAt`): «De la start», «Cursa nu a pornit încă» and the paper times of waiting lines follow.
 - **A press.** A number — typed, or an elite's button: a registration marked «Elită» with a number, or a line of the
   race's elite list, whose press writes a *typed* row with the line's name and number and nothing else of a person —
   stamped with the moment the island claims (`domain/finish-line.ts#finishStamp`: at least a second, at most the
@@ -1661,11 +1667,18 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   order — each the press of the account signed in when it was pressed, sent only from that account's page (the action
   answers `session` to another's), so the trail never names somebody who did not press. A press the server could not
   record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
-  it — never given up, a later press of its number waiting behind it; a site deployed under the page asks for a reload.
+  it — never given up, a later press of its number waiting behind it; one whose request hangs, neither answered nor
+  failed, is still awaited, and after ten seconds the line says the signal is weak (`FINISH_PRESS_SLOW_MS`); a site
+  deployed under the page asks for a reload. **«⏱ Prinde timpul»** keeps one moment a press, each account its own, each
+  chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
+  (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
+  line says its time, to be written on paper.
 - **The same number twice.** The first stored wins and its row is never touched (`domain/finish-line.ts#pressMeets`). A
   retry — the same press sent again, known by its id in the trail's metadata (`results.ts#loadSavedPress`,
-  `domain/finish-line.ts#savedPressOf`) — is answered as it was answered the first time and writes nothing; only a press
-  with no id (the plain form) is guessed a retry by the same actor at the same second. Any other press of a number already
+  `domain/finish-line.ts#savedPressOf`) — is answered as it was answered the first time and writes nothing, but a retry
+  whose row is gone since (undone at the line, deleted on «Clasament») is refused `RESULT_PRESS_UNDONE`, «anulat între
+  timp — vezi «Clasament»», never recorded again and never shown saved; only a press with no id (the plain form) is
+  guessed a retry by the same actor at the same second. Any other press of a number already
   «Sosit» is a duplicate: answered with who stored it and when, and written to the trail as
   `event_result.finish_duplicate` (`{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId, finishLine:
   true, pressId }`, the actor the row's own column), never as a refusal. **A decision of «Clasament» stays** the same way: a row
@@ -1689,8 +1702,9 @@ MUST NOT: a finish recorded by a member or a page that only hides the box; a sec
 (the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
 a runner another press recorded without a time; a press recorded under another account than the one that pressed it;
 stamping on `performance.now()`; a claim before the gun stamped with its arrival's time; a retry written to the trail a
-second time; a press given up for a passing server error; a press doubled into a second «Start»; the public page, an email
-or iCal counting from the pressed gun; a runner's name in the trail.
+second time; a retry recording again a press whose row was undone or deleted since; a press given up for a passing server
+error; a press doubled into a second «Start»; a page left counting from a gun «Start» moved; a kept moment older than ten
+minutes given to a number; the public page, an email or iCal counting from the pressed gun; a runner's name in the trail.
 
 ---
 

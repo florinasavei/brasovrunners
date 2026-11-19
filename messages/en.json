@@ -12547,7 +12547,7 @@
           "created": "added {runner}: {status}",
           "updated": "changed {runner}: {status}",
           "updatedBoxes": "changed {runner}: {status} ({boxes})",
-          "deleted": "deleted the result {runner} ({status})",
+          "deleted": "deleted the result of {runner} ({status})",
           "gunSet": "started the race at {time}",
           "gunMoved": "moved the start to {time} (was {previous})",
           "gunCleared": "cancelled the start (was {previous})"
@@ -12995,9 +12995,17 @@
       },
       "keep": {
         "button": "Catch the time",
-        "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught.",
+        "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
         "kept": "Times caught",
-        "drop": "Remove the caught time {time}"
+        "drop": "Remove the caught time {time}",
+        "ageSeconds": "{count} s ago",
+        "ageMinutes": "{count} min ago",
+        "stale": {
+          "one": "A time caught more than 10 minutes ago was removed and goes to no number: {times} — write it on paper.",
+          "few": "{count} times caught more than 10 minutes ago were removed and go to no number: {times} — write them on paper.",
+          "other": "{count} times caught more than 10 minutes ago were removed and go to no number: {times} — write them on paper."
+        },
+        "staleDone": "Written down"
       },
       "entries": {
         "title": "On this phone",
@@ -13010,12 +13018,13 @@
       },
       "refused": {
         "RESULT_BIB_UNKNOWN": "no confirmed registration and no elite has this number — write it on paper: {time}",
-        "RESULT_FINISH_NOT_STARTED": "the race has not started yet — write the hour on paper: {clock}",
+        "RESULT_FINISH_NOT_STARTED": "the race has not started yet — write down the time of day: {clock}",
         "RESULT_FINISH_CLOSED": "the start was more than a day ago — the time is entered under «Results»: {time}",
         "RESULTS_NOT_OPEN": "only a race has timing — write it on paper: {time}",
         "VALIDATION_ERROR": "the number is not valid — write it on paper: {time}",
         "FORBIDDEN": "your role cannot record finishes — write it on paper: {time}",
         "NOT_FOUND": "the event is no longer on the site — write it on paper: {time}",
+        "RESULT_PRESS_UNDONE": "undone since — see «Results»",
         "other": "not saved — write it on paper: {time}"
       },
       "recent": {
@@ -13025,7 +13034,7 @@
       },
       "undo": {
         "button": "Undo",
-        "aria": "Undo the finish {who}",
+        "aria": "Undo the finish of {who}",
         "done": "undone",
         "refused": {
           "RESULT_UNDO_NOT_ALLOWED": "cannot be undone here any more: correct it under «Results»",
@@ -13034,8 +13043,8 @@
           "other": "not undone: correct it under «Results»"
         },
         "pressedAgain": {
-          "other": "another volunteer entered it after you too: it is no longer undone here — correct it under «Results»",
-          "self": "you entered it once more afterwards: it is no longer undone here — correct it under «Results»"
+          "other": "another volunteer entered it after you too: it can no longer be undone here — correct it under «Results»",
+          "self": "you entered it once more afterwards: it can no longer be undone here — correct it under «Results»"
         }
       },
       "gun": {

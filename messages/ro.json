@@ -12995,9 +12995,17 @@
       },
       "keep": {
         "button": "Prinde timpul",
-        "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins.",
+        "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
         "kept": "Timpi prinși",
-        "drop": "Șterge timpul prins {time}"
+        "drop": "Șterge timpul prins {time}",
+        "ageSeconds": "acum {count} s",
+        "ageMinutes": "acum {count} min",
+        "stale": {
+          "one": "Un timp prins acum mai bine de 10 minute s-a șters, nu mai e dat unui număr: {times} — notează-l pe hârtie.",
+          "few": "{count} timpi prinși acum mai bine de 10 minute s-au șters, nu mai sunt dați unui număr: {times} — notează-i pe hârtie.",
+          "other": "{count} de timpi prinși acum mai bine de 10 minute s-au șters, nu mai sunt dați unui număr: {times} — notează-i pe hârtie."
+        },
+        "staleDone": "Am notat"
       },
       "entries": {
         "title": "Pe telefonul acesta",
@@ -13016,6 +13024,7 @@
         "VALIDATION_ERROR": "numărul nu e bun — notează pe hârtie: {time}",
         "FORBIDDEN": "rolul tău nu poate trece sosiri — notează pe hârtie: {time}",
         "NOT_FOUND": "evenimentul nu mai e pe site — notează pe hârtie: {time}",
+        "RESULT_PRESS_UNDONE": "anulat între timp — vezi «Clasament»",
         "other": "nu s-a salvat — notează pe hârtie: {time}"
       },
       "recent": {

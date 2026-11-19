@@ -1006,7 +1006,9 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  * **A retry is the same press (the owner asked that the history be exact).** The island sends each press with its own id
  * (`pressId`), which every row of the trail the press writes keeps; a press whose id the trail already holds — the answer lost on the
  * way, the phone sending it again — is answered as it was the first time, from the trail (`loadSavedPress`,
- * `domain/finish-line.ts#savedPressOf`), and writes nothing: no second row, no second line in «Istoricul sosirilor». A press with no id
+ * `domain/finish-line.ts#savedPressOf`), and writes nothing: no second row, no second line in «Istoricul sosirilor». One whose row is
+ * gone since — undone at the line, deleted on «Clasament» — is refused (`RESULT_PRESS_UNDONE`, «anulat între timp — vezi
+ * «Clasament»»), never recorded again and never shown saved. A press with no id
  * (the plain form, a page of before) falls back to the guess: the number already «Sosit» from **the same viewer at the same second** is
  * taken for its retry.
  *
@@ -1053,7 +1055,10 @@ export async function recordFinish<T extends Record<string, unknown>>(
     const saved = pressId === null ? null : await loadSavedPress(tx, event.id, actor.id, pressId, bibNumber);
     if (saved?.kind === "recorded") {
       const row = stored.find((candidate) => candidate.id === saved.resultId);
-      const ranked = row ? rankingOf(stored, runners, event).get(row.bibNumber) : undefined;
+      // The row the press wrote is gone since — undone at the line, or deleted on «Clasament»: the retry is told so, never recorded again
+      // (a runner whose result somebody took away is not put back by a phone that missed the answer) and never shown saved.
+      if (!row) throw new DomainError("RESULT_PRESS_UNDONE", "the press's row was undone or deleted since");
+      const ranked = rankingOf(stored, runners, event).get(row.bibNumber);
       return { kind: "recorded", resultId: saved.resultId, bibNumber, name, label, gunTimeMs: saved.gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
     }
     if (saved?.kind === "duplicate") {
@@ -1263,6 +1268,19 @@ export async function setRaceGun<T extends Record<string, unknown>>(
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event.race_gun_set", entityType: "event", entityId: event.id, metadata: { at: gunAt.toISOString(), previous }, now });
     return { changed: true, gunAt };
   });
+}
+
+/**
+ * The gun the finish line counts from (`gunOf`: «Start» as pressed, else the plan), for the island's clock question (§NNN): «Start» is
+ * pressed on the organizer's phone, so a volunteer's page drawn before it learns of it here — as it wakes, when it is shown again and,
+ * while no finisher is stored, every half minute. Whoever records finishes (`canRecordFinishes`); one indexed read of the event's row
+ * (its primary key), nothing written; null for an id that is no event.
+ */
+export async function readFinishGun<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<Date | null> {
+  assertMayRecord(actor);
+  if (!isUuid(eventId)) return null;
+  const [row] = await db.select({ startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, raceGunAt: events.raceGunAt }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row ? gunOf(row) : null;
 }
 
 /** «Start» as the page says it: the gun counted from, whether it was pressed and by whom, the plan, and whether a finisher fixed it. */

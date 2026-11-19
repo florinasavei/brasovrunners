@@ -13,7 +13,7 @@ import {
   isInstant,
   RECENT_FINISHERS,
 } from "@/modules/results/domain/finish-line";
-import { FinishError, type FinishLineView, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
+import { FinishError, type FinishLineView, readFinishGun, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
 import { canEnterResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
 import type { StaffAccount } from "@/modules/staff-identity/repository";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -26,7 +26,7 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
   the answer (`…PressAction`: the outcome, the page's state for the island to keep, the server's clock at the request's arrival and
   at its answer), and once for the plain form a page with scripts off posts (`…FormAction`: back to the page with the outcome in its
   address, numbers and codes only, never a name) — «Start» / «Anulează startul», a plain form the island only stamps, and the
-  server's clock the island asks as it wakes (`readFinishClockAction`). Each asks its capability here, at the door
+  server's clock the island asks as it wakes (`readFinishClockAction`), with the gun. Each asks its capability here, at the door
   (`requireStaffCapability`: the finish, the undo and the clock `canRecordFinishes`, the gun `canEnterResults`), and the service
   asks again (BR-REQ-060-01). None of them emails anybody.
 */
@@ -148,16 +148,29 @@ export async function undoFinishPressAction(input: unknown): Promise<FinishUndoA
 }
 
 /**
- * The server's clock, which the island asks as the page wakes — and when it is shown again after a while — so a press is stamped on
- * it (`domain/finish-line.ts#sampleOfRoundTrip`): when the request arrived and when it was answered. Nothing is read but the
- * session's door, nothing written. A session that ended answers `session`, so the page says so before the first press.
+ * The server's clock, which the island asks as the page wakes, every time it is shown again and, while no finisher is stored, every
+ * half minute — so a press is stamped on it (`domain/finish-line.ts#sampleOfRoundTrip`): when the request arrived and when it was
+ * answered. **With the gun** (§NNN, `readFinishGun`: one indexed read of the event's row, behind the same door): «Start» is pressed on
+ * the organizer's phone, and a volunteer's page drawn before it counts from it at the next answer. Nothing written. A session that
+ * ended answers `session`, so the page says so before the first press; a gun that could not be read is null — the page keeps its own.
  */
-export async function readFinishClockAction(): Promise<FinishClockAnswer> {
+export async function readFinishClockAction(input?: unknown): Promise<FinishClockAnswer> {
   const receivedAtMs = Date.now();
+  const raw = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const eventId = typeof raw.eventId === "string" && isUuid(raw.eventId) ? raw.eventId : "";
   const door = await doorOf(canRecordFinishes);
   if ("session" in door) return { kind: "session" };
   if ("refused" in door) return { kind: "refused" };
-  return { kind: "clock", clock: { receivedAtMs, answeredAtMs: Date.now() } };
+  let gunAtMs: number | null = null;
+  if (eventId) {
+    try {
+      gunAtMs = (await readFinishGun(getDb(), door.actor, eventId))?.getTime() ?? null;
+    } catch (error) {
+      // The clock is answered all the same: the page counts from the gun it has until the next question reads one.
+      if (!isDomainError(error)) console.error("[timing] the gun could not be read for the clock", error);
+    }
+  }
+  return { kind: "clock", clock: { receivedAtMs, answeredAtMs: Date.now() }, gunAtMs };
 }
 
 /** Back to the page for its event, with the outcome in the address: numbers and codes only, never a name. */

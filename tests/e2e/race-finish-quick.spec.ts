@@ -190,7 +190,7 @@ test.describe("§NNN «Cronometrare»", () => {
     const duplicate = page.locator('[data-testid="finish-entry"][data-bib="101"][data-state="duplicate"]');
     await expect(duplicate).toContainText(/#101 era deja trecut de Dev Contributor la 0:\d\d:\d\d/, { timeout: 15_000 });
     await expect(page.locator('[data-testid="finish-recent-row"][data-bib="101"]')).toHaveCount(1);
-    // Pressed twice, 101 is no longer undone here: which press was right is «Clasament»'s to say.
+    // Pressed twice, 101 can no longer be undone here: which press was right is «Clasament»'s to say.
     await expect(recent101.getByTestId("finish-undo")).toHaveCount(0);
     await expect(recent101.getByTestId("finish-undo-closed")).toContainText("l-ai mai trecut o dată");
 

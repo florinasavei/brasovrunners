@@ -55,7 +55,7 @@ const BANNER_REFUSALS = [
   "NOT_FOUND",
 ] as const;
 /** The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. */
-const LINE_REFUSALS = ["RESULT_BIB_UNKNOWN", "RESULT_FINISH_NOT_STARTED", "RESULT_FINISH_CLOSED", "RESULTS_NOT_OPEN", "VALIDATION_ERROR", "FORBIDDEN", "NOT_FOUND"] as const;
+const LINE_REFUSALS = ["RESULT_BIB_UNKNOWN", "RESULT_FINISH_NOT_STARTED", "RESULT_FINISH_CLOSED", "RESULT_PRESS_UNDONE", "RESULTS_NOT_OPEN", "VALIDATION_ERROR", "FORBIDDEN", "NOT_FOUND"] as const;
 const UNDO_REFUSALS = ["RESULT_UNDO_NOT_ALLOWED", "NOT_FOUND", "FORBIDDEN"] as const;
 
 const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.test(raw) ? Number(raw) : null);
@@ -244,6 +244,10 @@ export default async function TimingPage({ params, searchParams }: Props) {
     keepHelp: t("timing.keep.help"),
     keptTitle: t("timing.keep.kept"),
     keptDrop: t.raw("timing.keep.drop") as string,
+    keptAgeSeconds: t.raw("timing.keep.ageSeconds") as string,
+    keptAgeMinutes: t.raw("timing.keep.ageMinutes") as string,
+    keptStale: { one: t.raw("timing.keep.stale.one") as string, few: t.raw("timing.keep.stale.few") as string, other: t.raw("timing.keep.stale.other") as string },
+    keptStaleDone: t("timing.keep.staleDone"),
     entriesTitle: t("timing.entries.title"),
     waiting: t("timing.entries.waiting"),
     saved: t("timing.entries.saved"),

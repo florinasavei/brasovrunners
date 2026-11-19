@@ -15,7 +15,7 @@ import { importsModule } from "../../helpers/module-imports";
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
 
-/** The two columns, as code and as SQL. `results.finish.bibLabel` — a message key, preceded by a dot — is not one. */
+/** The two columns, as code and as SQL. A message key's last part (`….bibLabel`, preceded by a dot) is not one. */
 const NAMES_THE_LABEL = /eliteBibLabel|elite_bib_label|\bbib_label\b|(?<![.\w])bibLabel\b|registrations\/elite-label/;
 const WRITER = path.join(SRC, "modules", "registrations", "elite-label");
 

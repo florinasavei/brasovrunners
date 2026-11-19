@@ -259,6 +259,28 @@ describe("§NNN the same number twice: the first stored wins", () => {
     expect((await trail()).filter((row) => row.action === "event_result.finish_duplicate")).toHaveLength(3);
   });
 
+  it("refuses a retry whose row is gone since — undone at the line, or deleted on «Clasament» —, never recording it again (§NNN)", async () => {
+    const pressId = "5d6e7f80-91a2-4b3c-8d4e-5f6071829304";
+    const press = (id: string, bib: number, claimedAt: Date, now: Date) => recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: bib, claimedAtMs: claimedAt.getTime(), pressId: id }, now);
+    expect(await press(pressId, 101, at(40), at(40, 1))).toMatchObject({ kind: "recorded", again: false });
+    const [row] = await stored();
+    await undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(41));
+    revalidate.mockClear();
+    const before = await trail();
+    // The answer to the first send was lost; the phone sends it again after the undo: told it was undone since, nothing written.
+    await expect(press(pressId, 101, at(40), at(42))).rejects.toMatchObject({ code: "RESULT_PRESS_UNDONE" });
+    expect(await stored()).toEqual([]);
+    expect(await trail()).toEqual(before);
+    expect(revalidate).not.toHaveBeenCalled();
+    // A press deleted on «Clasament» since, the same.
+    const otherId = "6e7f8091-a2b3-4c4d-9e5f-607182930415";
+    expect(await press(otherId, 102, at(43), at(43, 1))).toMatchObject({ kind: "recorded", again: false });
+    const [second] = await stored();
+    await db.delete(eventResults).where(eq(eventResults.id, second.id));
+    await expect(press(otherId, 102, at(43), at(44))).rejects.toMatchObject({ code: "RESULT_PRESS_UNDONE" });
+    expect(await stored()).toEqual([]);
+  });
+
   it("says «cont șters» — no name — for a stored row whose account is gone", async () => {
     const [gone] = await db.insert(staffUsers).values({ email: "gone@example.test", displayName: "Fost Voluntar", role: "CONTRIBUTOR" }).returning();
     await finish(102, at(44), gone);

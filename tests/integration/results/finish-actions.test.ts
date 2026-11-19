@@ -155,15 +155,41 @@ describe("§NNN the island's press", () => {
 
   it("answers the server's clock to the island as it wakes, and «sign in again» for a session that ended", async () => {
     const before = Date.now();
-    const answer = await readFinishClockAction();
-    expect(answer).toMatchObject({ kind: "clock" });
+    const answer = await readFinishClockAction({ eventId: raceId });
+    expect(answer).toMatchObject({ kind: "clock", gunAtMs: gun.getTime() });
     if (answer.kind !== "clock") throw new Error("no clock");
     expect(answer.clock.receivedAtMs).toBeGreaterThanOrEqual(before);
     expect(answer.clock.answeredAtMs).toBeGreaterThanOrEqual(answer.clock.receivedAtMs);
+    // No event named, or one that is no event: the clock all the same, no gun — the page keeps its own.
+    expect(await readFinishClockAction()).toMatchObject({ kind: "clock", gunAtMs: null });
+    expect(await readFinishClockAction({ eventId: "not-an-id" })).toMatchObject({ kind: "clock", gunAtMs: null });
+    expect(await readFinishClockAction({ eventId: "0b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" })).toMatchObject({ kind: "clock", gunAtMs: null });
     state.actor = staff.MEMBER;
-    expect(await readFinishClockAction()).toEqual({ kind: "refused" });
+    expect(await readFinishClockAction({ eventId: raceId })).toEqual({ kind: "refused" });
     state.actor = undefined;
-    expect(await readFinishClockAction()).toEqual({ kind: "session" });
+    expect(await readFinishClockAction({ eventId: raceId })).toEqual({ kind: "session" });
+  });
+
+  it("carries «Start» pressed on another account's phone to a page drawn before it: the clock's answer moves the island's gun (§NNN)", async () => {
+    // The volunteer's page, drawn before the gun: it counts from the plan.
+    const { readFinishLine } = await import("@/modules/results/results");
+    const { lineGunAt } = await import("@/modules/results/domain/finish-line");
+    const drawnAt = new Date();
+    const page = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, drawnAt, 20);
+    const drawn = { serverNowMs: drawnAt.getTime(), gunAtMs: page.gun.at.getTime() };
+    expect(drawn.gunAtMs).toBe(gun.getTime());
+    // The Organizer presses «Start» on their own phone, an hour after the planned gun: the race went late.
+    state.actor = staff.MODERATOR;
+    await post(setRaceGunAction, form({ intent: "start", claimedAtMs: String(Date.now()) }));
+    const [row] = await db.select({ raceGunAt: events.raceGunAt }).from(events).where(eq(events.id, raceId));
+    expect(row.raceGunAt).not.toBeNull();
+    expect(row.raceGunAt!.getTime()).not.toBe(gun.getTime());
+    // The volunteer's island asks the clock: the answer carries the gun as pressed, and the line counts from it.
+    state.actor = staff.CONTRIBUTOR;
+    const answer = await readFinishClockAction({ eventId: raceId });
+    if (answer.kind !== "clock") throw new Error("no clock");
+    expect(answer.gunAtMs).toBe(row.raceGunAt!.getTime());
+    expect(lineGunAt(drawn, { gunAtMs: answer.gunAtMs!, serverMs: answer.clock.answeredAtMs })).toBe(row.raceGunAt!.getTime());
   });
 
   it("undoes the viewer's own press and refuses another's, the page's state with each answer", async () => {

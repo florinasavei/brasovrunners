@@ -46,9 +46,10 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
   "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
   // «Cronometrare»'s clock since the gun (§850, §NNN): the server's clock read through the phone's wall clock and the measured offset once a second on one
-  // backoffice page — a line of text and «Anulează»'s ten minutes, no request, no read; a press that failed is tried again on a timeout, and the clock is
-  // asked as the page wakes or is shown again, never on this interval.
-  "src/modules/results/ui/FinishLine.tsx": "the clock since the gun, once a second, no request",
+  // backoffice page — a line of text, «Anulează»'s ten minutes and a kept moment too old to give, no request, no read; a press that failed is tried again on
+  // a timeout. And, before the race's first finisher only, the clock's question — which carries the gun «Start» moves on the organizer's phone — every
+  // thirty seconds while the page is shown (`FINISH_GUN_ASK_MS`): a backoffice page at the finish line, nothing once a runner is «Sosit».
+  "src/modules/results/ui/FinishLine.tsx": "the clock since the gun once a second, no request; the gun asked every 30 s before the first finisher, while shown",
 };
 
 /**

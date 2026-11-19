@@ -21,8 +21,11 @@ import {
   holdAfterFailure,
   isInstant,
   keepTime,
+  keptAge,
   keptOf,
+  KEPT_TIME_MAX_AGE_MS,
   KEPT_TIMES_MAX,
+  lineGunAt,
   type LineTrailRow,
   mayUndo,
   nextRetryAt,
@@ -42,6 +45,7 @@ import {
   serverNowAt,
   settleEntry,
   stampedGunTime,
+  staleKept,
   storedClockSample,
   storedFinishLine,
   takeOldestKept,
@@ -57,9 +61,10 @@ import {
  * over round trips, the best sample kept; the stamp floored to the second, the claimed time held to the server's bounds, a claim
  * before the gun refused as not started and a press arriving after the day and its grace refused; what a press does to a stored row,
  * and a press found in the trail by its id read back as it was answered; «Start»'s window, its tap and the organizer's own press sent
- * twice; «Anulează»'s ten minutes on one's own press at the line, unchanged and not pressed again; the kept times oldest first, each
- * account's own; the queue in the order pressed, each account sending its own, a press the server could not record held for its
- * backoff while the next ones go and never given up; and the phone's storage read back tolerantly.
+ * twice, and the gun the line counts from — the newer of the last answer and the clock's question; «Anulează»'s ten minutes on one's
+ * own press at the line, unchanged and not pressed again; the kept times oldest first, each account's own, each with its age, none
+ * older than ten minutes given to a number; the queue in the order pressed, each account sending its own, a press the server could
+ * not record held for its backoff while the next ones go and never given up; and the phone's storage read back tolerantly.
  */
 const GUN = Date.UTC(2026, 10, 21, 7, 0, 0);
 const at = (minutes: number, seconds = 0, ms = 0) => GUN + minutes * 60_000 + seconds * 1000 + ms;
@@ -265,6 +270,33 @@ describe("§NNN «Start»", () => {
   });
 });
 
+describe("§NNN the gun the line counts from: the newer of the last answer and the clock's question", () => {
+  const planned = GUN;
+  const pressed = GUN + 4 * 60_000;
+
+  it("moves a page drawn before «Start» to the gun the clock's answer heard — «Start» pressed by another account on its phone", () => {
+    // The page drawn at 06:58 on the planned gun; the organizer presses «Start» at 07:04 on their phone; the volunteer's clock asks at 07:04:20.
+    const drawn = { serverNowMs: GUN - 2 * 60_000, gunAtMs: planned };
+    expect(lineGunAt(drawn, null)).toBe(planned);
+    const heard = { gunAtMs: pressed, serverMs: pressed + 20_000 };
+    expect(lineGunAt(drawn, heard)).toBe(pressed);
+    // «De la start» then counts from the gun as pressed, not as planned: twenty seconds, not four minutes and twenty.
+    expect(clockReading(pressed + 20_000, lineGunAt(drawn, heard))).toBe(20_000);
+    // A page drawn before an early gun said «Cursa nu a pornit încă»; the clock's answer starts it.
+    const early = { gunAtMs: GUN - 60_000, serverMs: GUN - 30_000 };
+    expect(clockReading(GUN - 30_000, lineGunAt(drawn, null))).toBeNull();
+    expect(clockReading(GUN - 30_000, lineGunAt(drawn, early))).toBe(30_000);
+  });
+
+  it("keeps a press's answer newer than the clock's — the gun as it then stood — and the clock's newer than that answer", () => {
+    const heard = { gunAtMs: pressed, serverMs: pressed + 20_000 };
+    const answeredAfter = { serverNowMs: pressed + 25_000, gunAtMs: pressed + 1_000 };
+    expect(lineGunAt(answeredAfter, heard)).toBe(pressed + 1_000);
+    const answeredBefore = { serverNowMs: pressed + 10_000, gunAtMs: planned };
+    expect(lineGunAt(answeredBefore, heard)).toBe(pressed);
+  });
+});
+
 describe("§NNN «Anulează»: one's own press at the line, written once, not pressed again, for ten minutes", () => {
   const written = new Date(at(45));
   const mine = { id: "row-1", status: "FINISHED", createdAt: written, updatedAt: written, updatedByStaffUserId: "me" };
@@ -331,6 +363,28 @@ describe("§NNN «⏱ Prinde timpul»: kept times, oldest first, each account's 
     expect(dropKept(taken.rest, 0)).toEqual([at(10, 3)]);
     const full = Array.from({ length: KEPT_TIMES_MAX }, (_, index) => at(1, index));
     expect(keepTime(full, at(30))).toEqual(full);
+  });
+
+  it("gives a number no kept moment older than ten minutes: dropped when the line is read or pressed, its time said for paper", () => {
+    expect(KEPT_TIME_MAX_AGE_MS).toBe(10 * 60_000);
+    const kept = [at(10), at(19, 59), at(20, 1)];
+    // At 0:30:00 the moment of 0:10:00 is twenty minutes old and the one of 0:19:59 ten minutes and a second: both go; 0:20:01 stays.
+    expect(staleKept(kept, at(30))).toEqual({ fresh: [at(20, 1)], stale: [at(10), at(19, 59)] });
+    // Exactly ten minutes old is still young.
+    expect(staleKept([at(20)], at(30))).toEqual({ fresh: [at(20)], stale: [] });
+    // A press then takes the oldest young one, never a stale one.
+    expect(takeOldestKept(staleKept(kept, at(30)).fresh)).toEqual({ atMs: at(20, 1), rest: [] });
+    // A moment ahead of now — the clock measured again under it — is young; nothing kept, nothing dropped.
+    expect(staleKept([at(31)], at(30))).toEqual({ fresh: [at(31)], stale: [] });
+    expect(staleKept([], at(30))).toEqual({ fresh: [], stale: [] });
+  });
+
+  it("says each kept moment's age on its chip: seconds under a minute, then minutes, never below nought", () => {
+    expect(keptAge(at(10), at(10, 42))).toEqual({ unit: "seconds", value: 42 });
+    expect(keptAge(at(10), at(10, 59, 999))).toEqual({ unit: "seconds", value: 59 });
+    expect(keptAge(at(10), at(11))).toEqual({ unit: "minutes", value: 1 });
+    expect(keptAge(at(10), at(19, 59))).toEqual({ unit: "minutes", value: 9 });
+    expect(keptAge(at(10, 5), at(10))).toEqual({ unit: "seconds", value: 0 });
   });
 });
 

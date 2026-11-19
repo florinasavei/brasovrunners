@@ -93,6 +93,8 @@ export type DomainErrorCode =
   | "RESULT_FINISH_CLOSED"
   // «Anulează» at the line (§NNN) on a row that is not the viewer's own unchanged press of the last ten minutes: «Clasament» corrects it.
   | "RESULT_UNDO_NOT_ALLOWED"
+  // A press sent again whose row is gone since — undone at the line, deleted on «Clasament» (§NNN): told so, never recorded again.
+  | "RESULT_PRESS_UNDONE"
   // «Start» outside its window (§NNN): from three hours before the planned gun to six hours after.
   | "RACE_GUN_WINDOW"
   // «Start» moved or taken off once a runner is «Sosit» (§NNN): the gun is fixed; a correction of the times is «Clasament»'s.

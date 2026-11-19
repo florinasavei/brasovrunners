@@ -11,11 +11,12 @@ import { countForm, type CountForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
-  CLOCK_RESYNC_MS,
   clockReading,
   dropKept,
   type EliteButtonView,
   entryStateOf,
+  FINISH_GUN_ASK_MS,
+  FINISH_PRESS_SLOW_MS,
   type FinishClockAnswer,
   type FinishEntry,
   type FinishEntryOutcome,
@@ -24,15 +25,19 @@ import {
   type FinishUndoAnswer,
   finishRetryDelay,
   finishStorageKey,
+  type HeardGun,
   holdAfterFailure,
   keepTime,
+  keptAge,
   keptOf,
+  lineGunAt,
   nextRetryAt,
   nextToSend,
   pressEntry,
   type RecentFinisherView,
   settleEntry,
   stampedGunTime,
+  staleKept,
   takeOldestKept,
   waitingCount,
   withKept,
@@ -51,11 +56,16 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  * - **The elites first**: one big button an elite, the bib's label large and the full name under it; pressing it records that
  *   elite's number. A line with no number is drawn disabled with what to do; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
- * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its ✕); the next number or elite pressed
- *   takes the oldest kept moment instead of now.
+ * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
+ *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
+ *   the line is read or pressed, and a line says its time, for paper (`staleKept`).
  * - **The times** are stamped at the press on the server's clock (`server-clock.ts`: the phone's wall clock and the offset measured
- *   by a round trip as the page wakes — again when it is shown after five minutes away — and by every answer), so a phone whose
- *   clock is wrong, or whose screen locked between two finishers, stamps right; the server floors them and holds them to its bounds.
+ *   by a round trip as the page wakes — again every time it is shown — and by every answer), so a phone whose clock is wrong, or
+ *   whose screen locked between two finishers, stamps right; the server floors them and holds them to its bounds.
+ * - **The gun** comes with the clock's every answer (§NNN): «Start» is pressed on the organizer's phone, so a page drawn before it —
+ *   every volunteer's at the line — counts from it at the next answer; while no finisher is stored the clock is asked every half
+ *   minute too (`FINISH_GUN_ASK_MS`), and the newer of that gun and the last press's answer is the one the line counts from
+ *   (`lineGunAt`).
  * - **The queue**: every press is a line under the box at once («se salvează…») and is sent through the Server Action in the order
  *   pressed, with its own id; an unsent one waits in this phone's storage for this event (every read and write in a `try`: without
  *   storage the page works, it only forgets on a reload), is retried by itself, and a reload sends what is left. A second tab of the
@@ -92,6 +102,13 @@ export type FinishLineWords = {
   keepHelp: string;
   keptTitle: string;
   keptDrop: string;
+  /** A kept moment's age on its chip: «acum {count} s» under a minute, «acum {count} min» after. */
+  keptAgeSeconds: string;
+  keptAgeMinutes: string;
+  /** Kept moments older than ten minutes, dropped: «{times}» to be written on paper, by `countForm`. */
+  keptStale: Record<CountForm, string>;
+  /** The volunteer wrote them down: the line goes. */
+  keptStaleDone: string;
   entriesTitle: string;
   waiting: string;
   saved: string;
@@ -145,8 +162,8 @@ type Props = {
   /** The Server Actions the island calls (`cronometrare/actions.ts`). */
   record: (input: unknown) => Promise<FinishPressAnswer>;
   undo: (input: unknown) => Promise<FinishUndoAnswer>;
-  /** The server's clock, asked as the page wakes. */
-  clock: () => Promise<FinishClockAnswer>;
+  /** The server's clock and the gun, asked as the page wakes, when it is shown again and, before the first finisher, every half minute. */
+  clock: (input: unknown) => Promise<FinishClockAnswer>;
   /** …and the ones the forms post with scripts off. */
   recordForm: (form: FormData) => Promise<void>;
   undoForm: (form: FormData) => Promise<void>;
@@ -202,6 +219,10 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   const [undoLines, setUndoLines] = useState<Record<string, string>>({});
   // The server's clock, re-read every second for the clock and for «Anulează»'s ten minutes; the server's own `now` until the first tick.
   const [nowMs, setNowMs] = useState(initial.serverNowMs);
+  // The gun as the clock's question last heard it (§NNN): «Start» pressed on another phone reaches this page by it.
+  const [heardGun, setHeardGun] = useState<HeardGun | null>(null);
+  // The kept moments dropped for being older than ten minutes: their times, said on the line for paper until the volunteer clears it.
+  const [staleTimes, setStaleTimes] = useState<number[]>([]);
 
   const pumping = useRef(false);
   const failures = useRef(0);
@@ -211,7 +232,6 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   const sessionEnded = useRef(false);
   // The site was deployed again under the page: its actions are gone until a reload, so nothing more is sent.
   const outdated = useRef(false);
-  const lastClock = useRef(0);
   const box = useRef<HTMLInputElement>(null);
 
   // Each write keeps the event's title with its line, for another event's page to name it.
@@ -228,28 +248,39 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     setReload(true);
   }, []);
 
-  /** The server's clock asked over one round trip: as the page wakes, and when it is shown again after `CLOCK_RESYNC_MS`. */
-  const askClock = useCallback(
-    (always: boolean) => {
-      const sentAtMs = wallNow();
-      if (!always && sentAtMs - lastClock.current < CLOCK_RESYNC_MS) return;
-      lastClock.current = sentAtMs;
-      clock().then(
-        (answer: FinishClockAnswer) => {
-          if (answer.kind === "clock") measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
-          else if (answer.kind === "session") {
-            sessionEnded.current = true;
-            setSession(true);
-          }
-        },
-        // No answer: the next answer measures the clock instead; a site deployed again asks for a reload.
-        (error: unknown) => {
-          if (unstable_isUnrecognizedActionError(error)) markOutdated();
-        },
-      );
-    },
-    [clock, markOutdated],
-  );
+  /**
+   * The server's clock asked over one round trip — as the page wakes, every time it is shown again and, before the first finisher,
+   * every half minute — and with it the gun (§NNN): the newer of the gun it says and the last press's answer is the line's.
+   */
+  const askClock = useCallback(() => {
+    const sentAtMs = wallNow();
+    clock({ eventId }).then(
+      (answer: FinishClockAnswer) => {
+        if (answer.kind === "clock") {
+          measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
+          const gunAtMs = answer.gunAtMs;
+          const serverMs = answer.clock.answeredAtMs;
+          if (gunAtMs !== null) setHeardGun((current) => (current && current.serverMs > serverMs ? current : { gunAtMs, serverMs }));
+        } else if (answer.kind === "session") {
+          sessionEnded.current = true;
+          setSession(true);
+        }
+      },
+      // No answer: the next answer measures the clock instead; a site deployed again asks for a reload.
+      (error: unknown) => {
+        if (unstable_isUnrecognizedActionError(error)) markOutdated();
+      },
+    );
+  }, [clock, eventId, markOutdated]);
+
+  /** The viewer's kept moments older than ten minutes dropped (`staleKept`), their times said on the line, for paper. */
+  const sweepKept = useCallback(() => {
+    const atMs = serverClockNow();
+    const { stale } = staleKept(keptOf(finishLineSnapshot(storageKey), staffId), atMs);
+    if (stale.length === 0) return;
+    commitKept((current) => staleKept(current, atMs).fresh);
+    setStaleTimes((current) => [...current, ...stale]);
+  }, [commitKept, staffId, storageKey]);
 
   /** A state the server answered with, kept when it is the newest one heard. */
   const adopt = useCallback((next: FinishLineState) => {
@@ -280,9 +311,12 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
         }
         const sentAtMs = wallNow();
         let answer: FinishPressAnswer;
+        // A request that hangs — neither answered nor failed — is still awaited; after ten seconds the line says the signal is weak.
+        const slow = setTimeout(() => setOffline(true), FINISH_PRESS_SLOW_MS);
         try {
           answer = await record({ eventId, staffId, bibNumber: next.bibNumber, claimedAtMs: next.pressedAtMs, pressId: next.id });
         } catch (error) {
+          clearTimeout(slow);
           // The site deployed again: this page's actions are gone until a reload, which sends what waits.
           if (unstable_isUnrecognizedActionError(error)) {
             markOutdated();
@@ -294,6 +328,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
           later(finishRetryDelay(failures.current));
           break;
         }
+        clearTimeout(slow);
         failures.current = 0;
         setOffline(false);
         if (answer.kind === "session") {
@@ -318,13 +353,17 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     }
   }, [adopt, commitEntries, eventId, markOutdated, record, staffId, storageKey]);
 
-  // Waking: the server's clock asked, the clock ticking, whatever this phone kept waiting sent at once — and both again when the page
-  // is shown after a while, comes back from the browser's memory or finds its signal again.
+  // Waking: the server's clock and the gun asked, the clock ticking, a kept moment too old dropped, whatever this phone kept waiting
+  // sent at once — and all of it again every time the page is shown, comes back from the browser's memory or finds its signal again.
   useEffect(() => {
     seedServerClock(initial.serverNowMs);
-    const tick = setInterval(() => setNowMs(serverClockNow()), 1000);
+    const tick = setInterval(() => {
+      setNowMs(serverClockNow());
+      sweepKept();
+    }, 1000);
     const wake = () => {
-      askClock(false);
+      askClock();
+      sweepKept();
       void pump();
     };
     const shown = () => {
@@ -333,7 +372,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     window.addEventListener("online", wake);
     window.addEventListener("pageshow", wake);
     document.addEventListener("visibilitychange", shown);
-    askClock(true);
+    askClock();
+    sweepKept();
     void pump();
     return () => {
       clearInterval(tick);
@@ -346,12 +386,29 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** One press: the moment — the oldest kept one, else now on the server's clock — a line at once, and the queue on its way. */
+  // Before the first finisher the gun may still be pressed, moved or taken off — on the organizer's phone: the clock, which carries it,
+  // is asked every half minute while the page is shown. From the first finisher the gun is fixed, and nothing is asked on a timer.
+  const noFinisherYet = state.finished === 0;
+  useEffect(() => {
+    if (!noFinisherYet) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") askClock();
+    }, FINISH_GUN_ASK_MS);
+    return () => clearInterval(timer);
+  }, [askClock, noFinisherYet]);
+
+  /**
+   * One press: the moment — the oldest kept one still young (ten minutes), else now on the server's clock — a line at once, and the
+   * queue on its way; a kept moment older than that is dropped and said on the line, for paper.
+   */
   const press = useCallback(
     (bibNumber: number, label: string | null) => {
-      const taken = takeOldestKept(keptOf(finishLineSnapshot(storageKey), staffId));
-      if (taken.atMs !== null) commitKept(() => taken.rest);
-      const pressedAtMs = taken.atMs ?? serverClockNow();
+      const nowServerMs = serverClockNow();
+      const { fresh, stale } = staleKept(keptOf(finishLineSnapshot(storageKey), staffId), nowServerMs);
+      if (stale.length > 0) setStaleTimes((current) => [...current, ...stale]);
+      const taken = takeOldestKept(fresh);
+      if (taken.atMs !== null || stale.length > 0) commitKept(() => taken.rest);
+      const pressedAtMs = taken.atMs ?? nowServerMs;
       commitEntries((current) => pressEntry(current, { id: entryId(), staffId, bibNumber, label, pressedAtMs }));
       void pump();
     },
@@ -416,7 +473,9 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   const time = (ms: number | null) => (ms === null ? "—" : formatResultTime(ms));
   const clockAt = (ms: number) => formatTimeWithSeconds(new Date(ms), { locale: uiLocale, timeZone: CLUB_TIME_ZONE });
   const who = (bibNumber: number, label: string | null) => (label ? `${label} (#${bibNumber})` : `#${bibNumber}`);
-  const reading = clockReading(nowMs, state.gunAtMs);
+  // The gun the line counts from: the newer of the last state the server answered with and the clock's question (§NNN).
+  const gunAtMs = lineGunAt(state, heardGun);
+  const reading = clockReading(nowMs, gunAtMs);
   const waiting = waitingCount(entries, staffId);
   // The numbers whose press of the viewer's still waits on this phone: an elite's button waits with it, so a double tap is one press.
   const waitingNumbers = new Set(entries.flatMap((entry) => (entry.outcome === null && entry.staffId === staffId ? [entry.bibNumber] : [])));
@@ -424,7 +483,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   /** What an entry's line says. */
   const entryLine = (entry: FinishEntry): string => {
     const head = who(entry.bibNumber, entry.label ?? (entry.outcome && "label" in entry.outcome ? entry.outcome.label : null));
-    const pressed = entry.pressedAtMs >= state.gunAtMs ? time(stampedGunTime(entry.pressedAtMs, state.gunAtMs)) : "—";
+    const pressed = entry.pressedAtMs >= gunAtMs ? time(stampedGunTime(entry.pressedAtMs, gunAtMs)) : "—";
     const outcome = entry.outcome;
     if (!outcome) return entry.staffId === staffId ? `${head} · ${pressed} · ${words.waiting}` : `${head}: ${fill(words.otherAccount, { time: pressed })}`;
     if (outcome.kind === "recorded") {
@@ -596,7 +655,9 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
               </Typography>
             )}
             {kept.map((atMs, index) => {
-              const label = atMs >= state.gunAtMs ? time(stampedGunTime(atMs, state.gunAtMs)) : clockAt(atMs);
+              const label = atMs >= gunAtMs ? time(stampedGunTime(atMs, gunAtMs)) : clockAt(atMs);
+              const age = keptAge(atMs, nowMs);
+              const aged = `${label} · ${fill(age.unit === "seconds" ? words.keptAgeSeconds : words.keptAgeMinutes, { count: String(age.value) })}`;
               return (
                 <GlyphButton
                   key={`${atMs}-${index}`}
@@ -605,11 +666,11 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
                   variant="outlined"
                   size="small"
                   sx={{ minHeight: 44, fontVariantNumeric: "tabular-nums" }}
-                  aria-label={fill(words.keptDrop, { time: label })}
+                  aria-label={fill(words.keptDrop, { time: aged })}
                   onClick={() => commitKept((current) => dropKept(current, index))}
                   data-testid="finish-kept"
                 >
-                  {label}
+                  {aged}
                 </GlyphButton>
               );
             })}
@@ -617,6 +678,24 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
             {words.keepHelp}
           </Typography>
+          {/* Kept moments older than ten minutes, dropped (§NNN): their times, to be written on paper — until the volunteer says so. */}
+          {staleTimes.length > 0 && (
+            <Alert
+              severity="warning"
+              sx={{ mt: 1 }}
+              data-testid="finish-kept-stale"
+              action={
+                <GlyphButton type="button" icon="confirm" variant="text" size="small" sx={{ minHeight: 44 }} onClick={() => setStaleTimes([])} data-testid="finish-kept-stale-done">
+                  {words.keptStaleDone}
+                </GlyphButton>
+              }
+            >
+              {fill(words.keptStale[countForm(staleTimes.length, uiLocale)], {
+                count: String(staleTimes.length),
+                times: staleTimes.map((atMs) => (atMs >= gunAtMs ? time(stampedGunTime(atMs, gunAtMs)) : clockAt(atMs))).join(", "),
+              })}
+            </Alert>
+          )}
         </Box>
       )}
 

@@ -211,7 +211,7 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(html).toContain('data-testid="finish-undo-closed"');
     expect(text(html)).toContain("alt voluntar l-a trecut și el după tine: nu se mai anulează aici — corectează la «Clasament»");
     language = "en";
-    expect(text(await timing({ eventId: raceId }, at(46), "en"))).toContain("another volunteer entered it after you too: it is no longer undone here — correct it under «Results»");
+    expect(text(await timing({ eventId: raceId }, at(46), "en"))).toContain("another volunteer entered it after you too: it can no longer be undone here — correct it under «Results»");
     language = "ro";
     // The Organizer typed 101 on «Clasament» a minute ago: his own row, as written, yet no «Anulează» here — it was never pressed at the line.
     await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "46:00", status: "", chip: "", note: "", agreed: "" }, { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "45:12", status: "", chip: "", note: "", agreed: "" }] }, at(46, 30));

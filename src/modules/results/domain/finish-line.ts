@@ -81,8 +81,20 @@ export const FINISH_STORAGE_PREFIX = "finish-line:";
 export const CLOCK_STORAGE_KEY = `${FINISH_STORAGE_PREFIX}clock`;
 /** How long a clock sample the phone kept is believed by the next page: half a day, a race day. */
 export const CLOCK_SAMPLE_KEPT_MS = 12 * 3_600_000;
-/** How seldom a page shown again asks the server's clock once more: a clock moved under the page is rare, an answer re-measures anyway. */
-export const CLOCK_RESYNC_MS = 5 * 60_000;
+/**
+ * How often the island asks the server's clock — and with it the gun — while no finisher is stored yet (§NNN): «Start» is pressed on
+ * the organizer's phone, so a volunteer's page drawn before it learns of it this way, within half a minute. From the first finisher the
+ * gun is fixed (`RACE_GUN_FIXED`) and nothing more is asked on a timer.
+ */
+export const FINISH_GUN_ASK_MS = 30_000;
+/** How long a press may wait for its answer before the line says the signal is weak — it is still awaited, and nothing else changes. */
+export const FINISH_PRESS_SLOW_MS = 10_000;
+/**
+ * How old a kept moment of «⏱ Prinde timpul» may be and still be given to the next number (§NNN): ten minutes. An older one is no bunch
+ * any more — a moment forgotten on the phone, a page left open since the morning —, so it is dropped when the line is read or pressed,
+ * and the line says its time, to be written on paper.
+ */
+export const KEPT_TIME_MAX_AGE_MS = 10 * 60_000;
 /** What two samples may disagree by beyond their round trips and still agree: the milliseconds rounded on both sides, a clock's drift. */
 const CLOCK_SLACK_MS = 50;
 
@@ -178,6 +190,18 @@ export function storedClockSample(sample: ClockSample): string {
 /** The time since the gun at `atMs`, as the line stamps it: floored to the second, at least one second. */
 export function stampedGunTime(atMs: number, gunAtMs: number): number {
   return Math.max(SECOND, Math.floor((atMs - gunAtMs) / SECOND) * SECOND);
+}
+
+/** The gun as the clock's own question last heard it (§NNN): the instant, and the server's time it was said at. */
+export type HeardGun = { gunAtMs: number; serverMs: number };
+
+/**
+ * The gun the line counts from (§NNN): the newer of what the server last said — the page's state, drawn or answered to a press (its
+ * `serverNowMs`), and the clock's question (`HeardGun`, its answer's time). «Start» pressed on another phone reaches a page drawn
+ * before it by the clock; a press answered after that clock brings the gun as it then stood.
+ */
+export function lineGunAt(state: { serverNowMs: number; gunAtMs: number }, heard: HeardGun | null): number {
+  return heard && heard.serverMs > state.serverNowMs ? heard.gunAtMs : state.gunAtMs;
 }
 
 /** The clock's reading at `nowMs`: whole seconds since the gun, or null before it. */
@@ -361,6 +385,23 @@ export function dropKept(kept: readonly number[], index: number): number[] {
   return kept.filter((_, at) => at !== index);
 }
 
+/**
+ * The kept times still young enough to give a number (§NNN), and those older than `KEPT_TIME_MAX_AGE_MS` at `nowMs` — dropped, their
+ * moments said on the line for paper. A moment ahead of `nowMs` (a clock measured again) is young.
+ */
+export function staleKept(kept: readonly number[], nowMs: number): { fresh: number[]; stale: number[] } {
+  const fresh: number[] = [];
+  const stale: number[] = [];
+  for (const atMs of kept) (nowMs - atMs > KEPT_TIME_MAX_AGE_MS ? stale : fresh).push(atMs);
+  return { fresh, stale };
+}
+
+/** A kept moment's age at `nowMs`, for its chip: whole seconds under a minute, else whole minutes; never below nought. */
+export function keptAge(atMs: number, nowMs: number): { unit: "seconds" | "minutes"; value: number } {
+  const elapsed = Math.max(0, nowMs - atMs);
+  return elapsed < 60 * SECOND ? { unit: "seconds", value: Math.floor(elapsed / SECOND) } : { unit: "minutes", value: Math.floor(elapsed / (60 * SECOND)) };
+}
+
 // ---- What the server answers ----------------------------------------------------------------------------
 
 /** One of «Ultimii sosiți»: a stored «Sosit», the latest written first. */
@@ -455,8 +496,12 @@ export type FinishUndoAnswer =
   | { kind: "answer"; outcome: { kind: "undone"; bibNumber: number } | { kind: "refused"; code: string }; state: FinishLineState | null; clock: ServerClockReading }
   | { kind: "session" };
 
-/** The server's clock as the page asks it when it wakes (§NNN). */
-export type FinishClockAnswer = { kind: "clock"; clock: ServerClockReading } | { kind: "session" } | { kind: "refused" };
+/**
+ * The server's clock as the page asks it when it wakes, is shown again or, before the first finisher, every half minute (§NNN) — with
+ * the gun the line counts from (`gunAtMs`, «Start» as pressed, else the plan; null when the event could not be read), so a page drawn
+ * before «Start» counts from it.
+ */
+export type FinishClockAnswer = { kind: "clock"; clock: ServerClockReading; gunAtMs: number | null } | { kind: "session" } | { kind: "refused" };
 
 // ---- The queue -------------------------------------------------------------------------------------------
 
