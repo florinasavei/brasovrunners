@@ -386,7 +386,7 @@ describe("§NNN BR-REQ-036-02 the person's own link (LINK): POST only, the token
     expect(await entries()).toEqual([]);
     const withdrawn = (await signUpTrail()).filter((row) => row.action === "event_raffle.entry_withdrawn");
     expect(withdrawn).toHaveLength(1);
-    expect(withdrawn[0]).toMatchObject({ actorStaffUserId: null, metadataJson: { kind: "RUNNER", by: "person" } });
+    expect(withdrawn[0]).toMatchObject({ actorStaffUserId: null, metadataJson: { method: "LINK", kind: "RUNNER", by: "person" } });
   });
 
   it("never signs another adult on the address up from this link — their acceptance is their own — but may take them out", async () => {
@@ -690,7 +690,7 @@ describe("§NNN «Șterge înscrierea»: the organizers take a sign-up off, at a
     expect(await deleteRaffleEntry(db, admin, { entryId: row.id, eventId }, NOW)).toEqual({ eventId });
     expect(await entries()).toEqual([]);
     const withdrawn = (await signUpTrail()).find((audit) => audit.action === "event_raffle.entry_withdrawn");
-    expect(withdrawn).toMatchObject({ actorStaffUserId: admin.id, metadataJson: { entryId: row.id, kind: "RUNNER", by: "staff" } });
+    expect(withdrawn).toMatchObject({ actorStaffUserId: admin.id, metadataJson: { entryId: row.id, method: "FORM", kind: "RUNNER", by: "staff" } });
     expect(ana.id).toBeTruthy();
   });
 });

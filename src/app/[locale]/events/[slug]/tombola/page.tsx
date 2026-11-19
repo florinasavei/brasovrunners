@@ -16,11 +16,10 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
-import { cachedRaffleEvent, cachedRaffleSignUpOpen } from "@/modules/public-cache/reads";
+import { cachedBotCheckSiteKey, cachedRaffleEvent, cachedRaffleSignUpOpen } from "@/modules/public-cache/reads";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
-import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
@@ -100,7 +99,8 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const volunteersMay = raffle.settings.groups.VOLUNTEER;
   const typed = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
   const refused = new Set((one(asked.fields) ?? "").split(",").filter((box): box is (typeof BOXES)[number] => (BOXES as readonly string[]).includes(box)));
-  const siteKey = turnstileSiteKey();
+  // The widget as the other public forms draw it (§254, §675): only while the Administrator's switch is on and its keys are set.
+  const siteKey = await cachedBotCheckSiteKey();
   // A corrected form is timed from the render it corrects (§146), as the volunteers' page times it: a second press seconds after a
   // refusal is a person trying again, never a post the timing check would take for a script's and quietly keep nothing of.
   const renderedAt = ((outcome !== null && outcome !== "done" && parseInterestSince(one(asked.since), now)) || now).toISOString();

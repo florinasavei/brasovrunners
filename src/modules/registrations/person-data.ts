@@ -170,11 +170,6 @@ export type PersonData = {
     expiresAt: Date;
   }>;
   /**
-   * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
-   * what was typed — name, address, telephone number, their message and the organizers' notes, every column
-   * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
-   */
-  /**
    * The person's raffle sign-ups (§NNN, art. 15 GDPR): the event, which of their rows signed up, the door, the rules' version, moment,
    * language and fingerprint, the name typed, the trace, the notice's version and the recorder's role — every column but the ids of the
    * documents and the staff account. Gone with the registration or the offer, and thirty days after the event.
@@ -196,6 +191,11 @@ export type PersonData = {
     privacyNoticeVersion: number;
     createdAt: Date;
   }>;
+  /**
+   * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
+   * what was typed — name, address, telephone number, their message and the organizers' notes, every column
+   * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
+   */
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;

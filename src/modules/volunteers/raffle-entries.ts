@@ -142,7 +142,13 @@ async function signUp<T extends Record<string, unknown>>(
 }
 
 /** Takes a person's sign-up away, audited; false when there was none. Who and why is the caller's (`by`). */
-async function withdraw<T extends Record<string, unknown>>(db: Database<T>, entry: { id: string; eventId: string; kind: RaffleKind }, by: "person" | "staff", actorId: string | null, now: Date): Promise<boolean> {
+async function withdraw<T extends Record<string, unknown>>(
+  db: Database<T>,
+  entry: { id: string; eventId: string; kind: RaffleKind; method: RaffleEntryMethod },
+  by: "person" | "staff",
+  actorId: string | null,
+  now: Date,
+): Promise<boolean> {
   return db.transaction(async (tx) => {
     const [gone] = await tx.delete(eventRaffleEntries).where(eq(eventRaffleEntries.id, entry.id)).returning({ id: eventRaffleEntries.id });
     if (!gone) return false;
@@ -151,7 +157,8 @@ async function withdraw<T extends Record<string, unknown>>(db: Database<T>, entr
       action: "event_raffle.entry_withdrawn",
       entityType: "event",
       entityId: entry.eventId,
-      metadata: { entryId: entry.id, kind: entry.kind, by },
+      // The door the sign-up had come by, beside the group and who took it away — never a name.
+      metadata: { entryId: entry.id, method: entry.method, kind: entry.kind, by },
       now,
     });
     return true;
@@ -206,7 +213,7 @@ export async function withdrawFromRaffleByLink<T extends Record<string, unknown>
   assertOpen(await readRaffleGateFacts(db, person.eventId, now), now, person.kind);
   const entry = await findRaffleEntry(db, person.ref);
   if (!entry) return { ok: true, changed: false };
-  return { ok: true, changed: await withdraw(db, { id: entry.id, eventId: entry.eventId, kind: person.kind }, "person", null, now) };
+  return { ok: true, changed: await withdraw(db, { id: entry.id, eventId: entry.eventId, kind: person.kind, method: entry.method }, "person", null, now) };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -319,7 +326,7 @@ export async function deleteRaffleEntry<T extends Record<string, unknown>>(db: D
   if (!entry) throw new DomainError("NOT_FOUND", "no such sign-up");
   const ref: RafflePersonRef = entry.registrationId ? { table: "registration", id: entry.registrationId } : entry.volunteerId ? { table: "volunteer", id: entry.volunteerId } : { table: "elite", id: entry.eliteEntryId as string };
   const person = await readRafflePerson(db, ref);
-  await withdraw(db, { id: entry.id, eventId: entry.eventId, kind: person?.kind ?? "RUNNER" }, "staff", actor.id, now);
+  await withdraw(db, { id: entry.id, eventId: entry.eventId, kind: person?.kind ?? "RUNNER", method: entry.method }, "staff", actor.id, now);
   return { eventId: entry.eventId };
 }
 
