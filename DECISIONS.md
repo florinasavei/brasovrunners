@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.75-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.76-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.75-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.76-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31170,3 +31170,13 @@ Baseline `BR-V4.74-2026-11-19`.
 **Not in this change.** The names in capitals on «Pe puncte» and on the badges: the owner asked for the table.
 
 Baseline `BR-V4.75-2026-11-19`.
+
+## 995. The desk shows an identity document only to the Organizer and the Administrators
+
+**The owner, 2026-11-19, two days before Saturday's race, as the race's volunteers were given desk accounts («Voluntar»):** «Nu e ok că afișăm info din buletin (codul de buletin) pentru voluntari». Every desk row said «Act de identitate: <seria și numărul>» — a minor's row both documents — to every desk role (§95, §330), so that whoever hands the kit could compare the card with the one in the declaration.
+
+**Decision.** The desk row draws the identity document — the participant's, and a minor's and the parent's — only for a role that reads the registrations (`canReadRegistrations`: the Organizer, the Administrator, the Superadministrator), who read it on the registration's page as well. The desk's other roles («Voluntar», «Tehnic», «Redactor») and a row drawn with no role get no line. The row is a Server Component and passes no row to a client island, so for them the document is not in what their browser receives. The desk's volunteers check the kit by the name on the card; the declaration and its PDF keep the document as before, and the Organizer at the desk still reads it.
+
+**Not in this change.** A masked document (the last digits) for the other roles: the owner asked for none at all.
+
+Baseline `BR-V4.76-2026-11-19`.

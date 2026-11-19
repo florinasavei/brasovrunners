@@ -327,7 +327,7 @@ export default async function DeskRow({
             to. A minor's declaration carries two (§330) — the minor's and the parent's, to whom the
             kit goes (§108) — each shown the way one always was, and each labelled whose it is.
 
-            Since §NNN (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
+            Since §995 (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
             pentru voluntari») only for a role that reads the registrations — the Organizer and the
             Administrators, who read it on the registration's page as well — never the desk's other
             roles («Voluntar», «Tehnic», «Redactor») or a row drawn with no role. The row is drawn on

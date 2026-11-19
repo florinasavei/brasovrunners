@@ -494,12 +494,12 @@ describe("§980 «Descarcă BIB-ul» in the registrations list's «⋮»", () =>
 });
 
 /**
- * §NNN — the identity document on the desk row (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
+ * §995 — the identity document on the desk row (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
  * pentru voluntari»): drawn for a role that reads the registrations — the Organizer and the Administrators — and for no other
  * desk role, nor for a row drawn with no role; a minor's two documents the same way. The row is a Server Component, so the
  * document is absent from what the other roles' browsers receive.
  */
-describe("§NNN the desk row's identity document, by role", () => {
+describe("§995 the desk row's identity document, by role", () => {
   const deskRowWith = async (id: string, documents: { idDocument: string | null; minorIdDocument?: string | null; guardianName?: string | null }, role?: StaffRole) => {
     const row = (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
     expect(row, id).toBeDefined();
