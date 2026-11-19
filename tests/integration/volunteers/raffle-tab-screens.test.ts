@@ -471,6 +471,39 @@ describe("§NNN BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(byTestId(await deskView(people.ana), "desk-raffle")).toEqual([]);
   });
 
+  it("says «scos de organizatori» to the organizers alone — every other desk role reads «nu participă» alone — and every other reason to all (§NNN)", async () => {
+    const people = await saturday();
+    await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.ana));
+    for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
+      state.actor = staff[role];
+      expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă De ce: scos de organizatori");
+    }
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
+      state.actor = staff[role];
+      expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă");
+      // Any other reason is said to every desk role: «nu s-a înscris» is what lets the desk offer the sign-up.
+      expect(words(await html(byTestId(await deskView(people.elena), "desk-raffle")[0])), role).toBe("Tombolă: nu participă De ce: neconfirmat");
+    }
+    // The desk's list, the same: the organizers' exclusion said only to them.
+    const deskList = async () => DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, q: "Ana Popescu" }) });
+    state.actor = staff.CONTRIBUTOR;
+    expect(words(await html(byTestId(await deskList(), "desk-raffle")[0]))).toBe("Tombolă: nu participă");
+    state.actor = staff.MODERATOR;
+    expect(words(await html(byTestId(await deskList(), "desk-raffle")[0]))).toBe("Tombolă: nu participă De ce: scos de organizatori");
+  });
+
+  it("draws no raffle line for a test registration — on the desk, its view and its page — and no note on the registrations list (§NNN)", async () => {
+    await saturday();
+    const test = await runner("Test Confirmat", 70, { kind: "TEST" });
+    state.actor = staff.MODERATOR;
+    expect(byTestId(await deskView(test), "desk-raffle")).toEqual([]);
+    const deskList = await DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, q: "Test Confirmat" }) });
+    expect(byTestId(deskList, "desk-raffle")).toEqual([]);
+    const { readRaffleLine, raffleReasonsFor } = await import("@/modules/volunteers/raffle-roster");
+    expect(await readRaffleLine(db, { table: "registration", id: test }, new Date())).toBeNull();
+    expect((await raffleReasonsFor(db, eventId, { registrationIds: [test] })).has(test)).toBe(false);
+  });
+
   it("says it under every row of the desk's list — where a search by name lands — and its «Înscrie» comes back to the list", async () => {
     const people = await saturday();
     state.actor = staff.CONTRIBUTOR;

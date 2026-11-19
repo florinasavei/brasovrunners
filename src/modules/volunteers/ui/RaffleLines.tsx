@@ -30,13 +30,13 @@ export function raffleStandingWords(t: Translate, reason: RaffleReason): string 
 
 /**
  * The house's state chip — green for in, plain for out — and, when out, why in a few words beside it («De ce: nu s-a înscris»): the
- * chip keeps its one line, the reason wraps as text does.
+ * chip keeps its one line, the reason wraps as text does. `why` false leaves the reason out: the chip alone.
  */
-function standingChip(t: Translate, reason: RaffleReason, testId: string): ReactElement {
+function standingChip(t: Translate, reason: RaffleReason, testId: string, why = true): ReactElement {
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid={testId} data-in={reason === "in" ? "1" : "0"}>
       <StatusChip glyph={reason === "in" ? "done" : "cancelled"} color={reason === "in" ? "success" : "default"} variant="outlined" label={raffleStandingWords(t, reason)} />
-      {reason !== "in" && (
+      {reason !== "in" && why && (
         <Typography variant="body2" color="text.secondary" component="span" sx={{ overflowWrap: "anywhere" }}>
           {t("raffle.standing.why", { reason: t(`raffle.reasons.${reason}`) })}
         </Typography>
@@ -67,15 +67,18 @@ export type RaffleDeskBack = { to: "code"; code: string } | { to: "desk"; eventI
 
 /**
  * A person at the desk (§NNN), under their row on the desk's list and on the scanned person's view: «Tombolă: participă / nu
- * participă» for every desk role, always, in both modes; and, in the sign-up mode with its gate open for a person who may still sign
- * up, «Înscrie la tombolă» — the person having accepted the rules on paper or aloud, which the desk member ticks.
+ * participă» for every desk role, always, in both modes, with why — but the organizers' own exclusion, «scos de organizatori»
+ * (`takenOut`), is said only to the organizers (`organizer`: `canTakeRaffleList`, the Organizer and the Administrators, whose decision
+ * it is); every other desk role reads «Tombolă: nu participă» alone there. Every other reason is said to all — «nu s-a înscris» is
+ * what lets the desk offer the sign-up. And, in the sign-up mode with its gate open for a person who may still sign up, «Înscrie la
+ * tombolă» — the person having accepted the rules on paper or aloud, which the desk member ticks.
  */
-export async function raffleDeskLine(props: { line: RaffleLine; locale: string; back: RaffleDeskBack; registrationId: string; name: string; action: ServerAction }): Promise<ReactElement> {
+export async function raffleDeskLine(props: { line: RaffleLine; locale: string; back: RaffleDeskBack; registrationId: string; name: string; action: ServerAction; organizer: boolean }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
   const { back } = props;
   return (
     <Stack spacing={1} data-testid="desk-raffle">
-      {standingChip(t, props.line.reason, "desk-raffle-line")}
+      {standingChip(t, props.line.reason, "desk-raffle-line", props.organizer || props.line.reason !== "takenOut")}
       {props.line.maySignUp &&
         signUpForm({
           action: props.action,

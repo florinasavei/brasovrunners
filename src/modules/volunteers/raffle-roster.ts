@@ -152,6 +152,8 @@ export type RafflePersonFacts = {
   number: number | null;
   locale: Locale;
   person: Omit<RafflePerson, "signedUp">;
+  /** A test registration (§30): never in a raffle — its `confirmed` is false — and given no raffle line or note to read. */
+  test?: true;
 };
 
 function localeOr(value: string | null | undefined): Locale {
@@ -177,6 +179,7 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
       number: row.bibNumber,
       locale: localeOr(row.locale),
       person: { kind, confirmed: row.status === "CONFIRMED" && row.kind === "REAL", hasNumber: row.bibNumber !== null, inRaffle: row.inRaffle },
+      ...(row.kind === "TEST" ? { test: true as const } : {}),
     };
   }
   if (ref.table === "volunteer") {
@@ -354,6 +357,8 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
   ]);
   const signed = new Set(entries.flatMap((entry) => [entry.registrationId, entry.volunteerId].filter((id): id is string => id !== null)));
   for (const one of people) {
+    // A test registration (§30) is in no raffle and is told no reason: «Nu · neconfirmat» would be false of a confirmed one.
+    if (one.kind === "TEST") continue;
     reasons.set(
       one.id,
       raffleParticipation({ kind: raffleKindOfRegistration(one), confirmed: one.status === "CONFIRMED" && one.kind === "REAL", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle, signedUp: signed.has(one.id) }, settings),
@@ -384,7 +389,8 @@ function raffleLineOf(person: Omit<RafflePerson, "signedUp">, facts: RaffleGateF
  */
 export async function readRaffleLine<T extends Record<string, unknown>>(db: Database<T>, ref: RafflePersonRef, now: Date): Promise<RaffleLine | null> {
   const person = await readRafflePerson(db, ref);
-  if (!person) return null;
+  // A test registration (§30) has no raffle line on its page or at the desk: it takes part in none.
+  if (!person || person.test) return null;
   const facts = await readRaffleGateFacts(db, person.eventId, now);
   if (!facts || !facts.settings.hasRaffle) return null;
   const entry = facts.settings.signUp ? await findRaffleEntry(db, ref) : null;
@@ -414,6 +420,8 @@ export async function readRaffleDeskLines<T extends Record<string, unknown>>(db:
     ]);
     const signed = new Set(entries.map((entry) => entry.registrationId));
     for (const one of people) {
+      // A test registration (§30) gets no raffle line at the desk: it takes part in no raffle, and «neconfirmat» would be false.
+      if (one.kind === "TEST") continue;
       const person = { kind: raffleKindOfRegistration(one), confirmed: one.status === "CONFIRMED" && one.kind === "REAL", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle };
       lines.set(one.id, raffleLineOf(person, facts, signed.has(one.id), now));
     }

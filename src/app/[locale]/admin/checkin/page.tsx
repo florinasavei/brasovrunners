@@ -33,6 +33,7 @@ import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-li
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { type RaffleLine, readRaffleDeskLines } from "@/modules/volunteers/raffle-roster";
 import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -103,7 +104,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
     await Promise.all(
       rows.map(async (row) => {
         const line = raffleLines.get(row.id);
-        const drawn = line ? await raffleDeskLine({ line, locale, back: { to: "desk", eventId, q }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction }) : null;
+        const drawn = line
+          ? await raffleDeskLine({ line, locale, back: { to: "desk", eventId, q }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) })
+          : null;
         return [row.id, drawn] as const;
       }),
     ),

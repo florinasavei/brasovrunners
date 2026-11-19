@@ -16,6 +16,7 @@ import DeskRow from "@/modules/registrations/ui/DeskRow";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
 import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
 import { raffleDeskSignUpAction } from "../tombola/actions";
@@ -72,7 +73,8 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
       {row ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
           <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role}>
-            {raffle && (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction }))}
+            {raffle &&
+              (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) }))}
           </DeskRow>
         </Stack>
       ) : (

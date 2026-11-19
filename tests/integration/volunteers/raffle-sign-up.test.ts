@@ -741,6 +741,23 @@ describe("§NNN BR-REQ-070-01 the sign-up's life: «Toate datele unei persoane»
   });
 });
 
+describe("§NNN /admin/tasks: how many raffles ahead ask a sign-up", () => {
+  it("counts a raffle «Cu înscriere separată» from a day behind on — never a cancelled one, one «Din oficiu» or a sign-up set on no raffle", async () => {
+    const { countRaffleSignUpEvents } = await import("@/modules/volunteers/raffle-roster");
+    // The fixture's race, tomorrow: one.
+    expect(await countRaffleSignUpEvents(db, NOW)).toBe(1);
+    // Started twenty-three hours ago — race day, the desk still signing people up: counted; twenty-five hours ago: not.
+    await race({ startsAt: new Date(NOW.getTime() - 23 * 60 * 60_000) });
+    await race({ startsAt: new Date(NOW.getTime() - 25 * 60 * 60_000) });
+    expect(await countRaffleSignUpEvents(db, NOW)).toBe(2);
+    // Cancelled, «Din oficiu», and the sign-up mode left ticked on an event that holds no raffle: none counted.
+    await race({ eventStatus: "CANCELLED" });
+    await race({ raffleSignUp: false });
+    await race({ hasRaffle: false });
+    expect(await countRaffleSignUpEvents(db, NOW)).toBe(2);
+  });
+});
+
 describe("§NNN the sign-up is nobody's message", () => {
   it("queues no email at any door, at a withdrawal or at a deletion", async () => {
     const ana = await runner("Ana Popescu", 7);

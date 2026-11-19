@@ -284,6 +284,38 @@ describe("owner tasks", () => {
     }
   });
 
+  it("§NNN: the raffle's rules' row is open while a raffle ahead asks a sign-up and no «Regulamentul tombolei» is in force, done once one is, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, raffleRulesInForce: false, raffleSignUpEvents: 1 }, "raffleRules")).toBe("open");
+    expect(stateOf(LAUNCHED, "raffleRules")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, raffleSignUpEvents: 2 }, "raffleRules")).toBe("done");
+    // No raffle asking a sign-up and no rules ever in force: nothing to say.
+    expect(ownerTasks({ ...LAUNCHED, raffleRulesInForce: false, raffleSignUpEvents: 0 }).some((task) => task.id === "raffleRules")).toBe(false);
+    // Its own gate: without a privacy notice the rules' row still says what is missing; and never blocking — «Din oficiu» needs no text.
+    expect(stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false, raffleRulesInForce: false, raffleSignUpEvents: 1 }, "raffleRules")).toBe("open");
+    expect(ownerTasks({ ...LAUNCHED, raffleRulesInForce: false, raffleSignUpEvents: 1 }).find((task) => task.id === "raffleRules")?.state).not.toBe("blocking");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.raffleRules;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§NNN: the notice's row for the raffle's sign-up is open while a raffle ahead asks one and the notice names no {{raffle}}, done once it does, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, raffleDescribed: false, raffleSignUpEvents: 1 }, "raffleNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "raffleNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, raffleSignUpEvents: 3 }, "raffleNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, raffleDescribed: false, raffleSignUpEvents: 0 }).some((task) => task.id === "raffleNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, raffleDescribed: false, raffleSignUpEvents: 1 }).find((task) => task.id === "raffleNotice")?.state).not.toBe("blocking");
+    // The two rows are each their own: the rules in force and the notice silent leave only the notice's open.
+    const tasks = ownerTasks({ ...LAUNCHED, raffleDescribed: false, raffleSignUpEvents: 1 });
+    expect([tasks.find((task) => task.id === "raffleRules")?.state, tasks.find((task) => task.id === "raffleNotice")?.state]).toEqual(["done", "open"]);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.raffleNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
   it("§761: the agreement's row for several roles is open while one in force names no {{volunteerRoleChoices}} and an event takes volunteers", () => {
     expect(stateOf({ ...LAUNCHED, volunteerRoleChoicesAgreement: false }, "volunteerRoleChoicesAgreement")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerRoleChoicesAgreement")).toBe("done");
