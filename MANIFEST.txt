@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V4.68-2026-11-19
+Baseline: BR-V4.69-2026-11-19
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -80,6 +80,7 @@ Important current decisions:
 - Optional public runner profiles with Strava/social links, noindex and absent from sitemap
 - Capacity correctness comes from transaction-time expiry, not from the scheduler
 - qa -> QA, main -> production; no develop branch
+- A branch is named for what it carries, never a generated name (DECISIONS.md §988)
 - Local checks and CI are one command: .githooks/pre-commit and the CI workflow both run
   yarn check; hooks are dependency-free via core.hooksPath, not husky
 - Hosting: Vercel Hobby, region fra1, one project per environment; app stays portable by rule
