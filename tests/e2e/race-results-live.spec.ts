@@ -84,6 +84,14 @@ async function seedRace(tag: string): Promise<{ eventId: string; slug: string }>
   return { eventId, slug };
 }
 
+/**
+ * The seeded race moved out of the recent past once its test is done: six per full run, started minutes before it, would otherwise fill
+ * the listing's past fold (twelve rows) on a reused database and push `race-results-public.spec.ts`'s race out of it.
+ */
+async function retire(eventId: string): Promise<void> {
+  await sql(`UPDATE events SET starts_at = now() - interval '60 days' WHERE id = $1`, [eventId]);
+}
+
 /** Whether the privacy notice and the terms in force, in both languages, name `{{results}}` — what the Administrator's tick is gated on. */
 async function textsNameResults(): Promise<boolean> {
   for (const key of ["PRIVACY_NOTICE", "TERMS"]) {
@@ -159,7 +167,7 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       }
       await expect(admin.getByTestId("toast-live")).toContainText("de la start", { timeout: 30_000 });
       await expect(admin.getByTestId("results-published-chip")).toHaveText("Public de la start");
-      await expect(admin.getByTestId("results-publish-from-start")).toContainText(/Pe site apare de la start, .+, la \d{2}:\d{2}, pe măsură ce sosesc alergătorii\./);
+      await expect(admin.getByTestId("results-publish-from-start")).toContainText(/Clasamentul apare pe site de la start, .+, la \d{2}:\d{2}, pe măsură ce sosesc alergătorii\./);
       // The unticked runner says why she is «Participant #102»; the ticked one says nothing more.
       const bia = admin.locator('[data-testid="result-line"][data-bib="102"]');
       await expect(bia).toContainText("Pe site: Participant #102");
@@ -238,6 +246,7 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       expect(await sameDocument(page)).toBe(true);
     } finally {
       await backoffice.close();
+      await retire(eventId);
     }
   });
 
@@ -277,6 +286,7 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       expect(await sameDocument(page)).toBe(true);
     } finally {
       await backoffice.close();
+      await retire(eventId);
     }
   });
 
@@ -327,6 +337,7 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       expect(await sameDocument(page)).toBe(true);
     } finally {
       await backoffice.close();
+      await retire(eventId);
     }
   });
 });

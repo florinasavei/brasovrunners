@@ -289,10 +289,23 @@ describe("§808 the page, in Romanian", () => {
 
   it("says, while the race is ahead, that the tick may be set now and the results show from its start — its day and hour — and nothing of it once the gun has gone (§NNN)", async () => {
     const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
+    await approveResultsTexts(db);
     const words = text(await render(future.id));
     expect(words).toContain("Poți bifa de pe acum: pe site, clasamentul apare de la start, sâm., 1 mai 2027, la 10:00, pe măsură ce sosesc alergătorii.");
     expect(words).not.toContain("Clasamentul se poate publica după ce a început cursa");
     expect(await render()).not.toContain('data-testid="results-publish-not-started"');
+  });
+
+  it("tells an Administrator neither «bifa» sentence before the race while no notice or terms in force describe the results: the tick would be refused (§NNN)", async () => {
+    const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
+    for (const texts of ["none", "notice only"] as const) {
+      if (texts === "notice only") await approvePrivacyNotice(db, { results: true });
+      const html = await render(future.id);
+      expect(html, texts).not.toContain('data-testid="results-publish-not-started"');
+      expect(text(html), texts).not.toContain("Poți bifa de pe acum");
+      expect(text(html), texts).not.toContain("bifa clasamentul public");
+      expect(text(html), texts).toContain("Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.");
+    }
   });
 
   it("drops the gate's sentences once a notice and terms from the templates are in force, and shows the tick ticked after it is switched on", async () => {

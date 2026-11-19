@@ -109,6 +109,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
   const termsDescribe = takes ? await termsDescribeResults(db, now) : false;
   const started = event.startsAt.getTime() <= now.getTime();
+  // Whether the tick could be set now (§NNN): an Administrator, and the notice and the terms in force describing the results — else the
+  // tick is refused, and the cards below say why; no sentence says it may be ticked before the race while it cannot.
+  const canTick = mayPublish && noticeDescribes && termsDescribe;
   // The tick as the page says it (§NNN): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
   const publishState = resultsPublishState(event, now);
   // The start's day and hour, as the site will show them — none while the date or the hour is to be announced (§533): the public read
@@ -362,8 +365,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       )}
       {!started && (
         <Alert severity="info" data-testid="results-not-started">
-          {/* The tick is the Administrator's (`canPublishResults`): the Organizer is told only what they may do before the start. */}
-          {t(mayPublish ? "results.notStarted" : "results.notStartedEnterOnly")}
+          {/* The tick is the Administrator's (`canPublishResults`), and only while the texts describe the results: anybody else is told only what they may do before the start. */}
+          {t(canTick ? "results.notStarted" : "results.notStartedEnterOnly")}
         </Alert>
       )}
       {errorCode && (
@@ -571,9 +574,10 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               <Typography variant="body2">{startWords !== null ? t("results.publish.fromStart", { start: startWords }) : t("results.publish.fromStartUnannounced")}</Typography>
             </Stack>
           ) : (
-            // «Poți bifa de pe acum» is said to whoever may tick it: the Organizer's card says «Doar un administrator…» below.
+            // «Poți bifa de pe acum» is said to whoever may tick it, while the texts allow it: the Organizer's card says «Doar un
+            // administrator…» below, and the gates' own sentences above say what an Administrator must approve first.
             !started &&
-            mayPublish && (
+            canTick && (
               <Alert severity="info" data-testid="results-publish-not-started">
                 {startWords !== null ? t("results.publish.beforeStart", { start: startWords }) : t("results.publish.beforeStartUnannounced")}
               </Alert>

@@ -265,7 +265,7 @@ describe("§NNN «Public de la start» on the publish card", () => {
     expect(chipText(html, "results-published-chip")).toBe("Public de la start");
     const card = html.slice(html.indexOf('data-testid="results-publish"'));
     expect(card).toContain('data-testid="results-from-start-chip"');
-    expect(text(card)).toContain("Pe site apare de la start, sâm., 21 nov. 2026, la 09:00, pe măsură ce sosesc alergătorii.");
+    expect(text(card)).toContain("Clasamentul apare pe site de la start, sâm., 21 nov. 2026, la 09:00, pe măsură ce sosesc alergătorii.");
     expect(card).not.toContain('data-testid="results-publish-not-started"');
     // The page's own sentence before the race fits: the tick may be set, nothing shows before the start.
     expect(text(html)).toContain("Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.");
@@ -284,6 +284,7 @@ describe("§NNN «Public de la start» on the publish card", () => {
 
   it("says, unticked before the race, that it may be ticked now and shows from the start", async () => {
     await field();
+    await approveResultsTexts(db);
     const html = await render(BEFORE);
     expect(chipText(html, "results-published-chip")).toBe("Nepublic");
     expect(html).toContain('data-testid="results-publish-not-started"');
@@ -312,16 +313,16 @@ describe("§NNN before the race, for whoever may not tick, and while the start's
   it("names no hour while «Ora se anunță» is on: the results appear once the start's hour is announced", async () => {
     await field();
     await db.update(events).set({ timeToBeAnnounced: true }).where(eq(events.id, raceId));
+    await approveResultsTexts(db);
     const unticked = text(await render(BEFORE));
     expect(unticked).toContain("Poți bifa de pe acum: pe site, clasamentul apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.");
     expect(unticked).not.toContain("la 09:00");
-    await approveResultsTexts(db);
     await setResultsPublished(db, admin, raceId, true, BEFORE);
     const html = await render(BEFORE);
     const card = text(html.slice(html.indexOf('data-testid="results-publish"')));
-    expect(card).toContain("Pe site apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.");
+    expect(card).toContain("Clasamentul apare pe site de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.");
     expect(card).not.toContain("la 09:00");
-    expect(text(await render(BEFORE, "en"))).toContain("It appears on the site from the start, once you announce the start's hour, as the runners arrive.");
+    expect(text(await render(BEFORE, "en"))).toContain("The results appear on the site from the start, once you announce the start's hour, as the runners arrive.");
   });
 });
 
@@ -342,7 +343,7 @@ describe("§NNN the same in English", () => {
     expect(words).toContain("Named on the site: 2 of 8");
     expect(words).toContain("“Place” is the place in the results: overall and, under it, by sex and by category.");
     expect(chipText(html, "results-published-chip")).toBe("Public from the start");
-    expect(words).toContain("It appears on the site from the start, Sat, 21 Nov 2026, at 09:00, as the runners arrive.");
+    expect(words).toContain("The results appear on the site from the start, Sat, 21 Nov 2026, at 09:00, as the runners arrive.");
   });
 
   it("says once, at the top, in English, that nobody appears by name", async () => {
