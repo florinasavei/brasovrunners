@@ -86,7 +86,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-type Boxes = { place?: unknown; name?: unknown; km?: unknown; coordinates?: unknown };
+type Boxes = { place?: unknown; name?: unknown; km?: unknown; coordinates?: unknown; volunteerNoteRo?: unknown; volunteerNoteEn?: unknown };
 const add = (boxes: Boxes, actor: StaffUser = staff.MODERATOR!, eventId = race.raceId) =>
   changePlanPoint(db, actor, { kind: "add", eventId, place: "route", name: "Izvor", km: "3,4", coordinates: "", ...boxes }, clock());
 const edit = (id: unknown, boxes: Boxes, actor: StaffUser = staff.MODERATOR!, eventId = race.raceId) =>
@@ -646,5 +646,138 @@ describe("§961 the words a refusal is said with", () => {
   it("holds the database to the same two kinds: a start–finish point that is not the plan's own cannot be written", async () => {
     await expect(db.update(eventCheckpoints).set({ startFinish: true }).where(and(eq(eventCheckpoints.id, race.points.water)))).rejects.toThrow();
     expect(await rowOf(race.points.water)).toMatchObject({ planOnly: false, startFinish: false });
+  });
+});
+
+/*
+  §1009, BR-REQ-050-02, BR-REQ-060-01 — «Notă pentru voluntari» (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
+  voluntari"»): what everybody standing at a point has to know, on any point, in Romanian and in English — both or neither, at most
+  500 characters each, its line breaks kept —, written by «Salvează punctul» and audited as the point's other changes, never its words.
+*/
+describe("§1009 «Notă pentru voluntari»: written with the point, both or neither, audited without its words", () => {
+  const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
+  const noteOf = async (id: string) => {
+    const row = await rowOf(id);
+    return { ro: row.volunteerNoteRo, en: row.volunteerNoteEn };
+  };
+
+  it("writes the note of an editor's point and of the plan's own — line breaks kept as typed, a browser's \\r\\n read as \\n, the ends trimmed — and the plan's one list reads it", async () => {
+    // An editor's point: only where it is and the note are read of it — the rest of its row is the editor's, as it was.
+    const before = await rowOf(race.points.water);
+    expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: "  Direcționați spre stânga la intersecție.\r\nPurtați vesta reflectorizantă.\n ", volunteerNoteEn: NOTE.en })).toEqual({
+      changed: true,
+      outcome: "edited",
+      id: race.points.water,
+    });
+    expect(await rowOf(race.points.water)).toEqual({ ...before, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
+    // A point of the plan's own, with its other boxes in the same press.
+    const spring = await added({ name: "Izvor", km: "3,4" });
+    expect(await edit(spring, { name: "Izvor", km: "3,4", coordinates: PIATA, volunteerNoteRo: "Apă și pahare.", volunteerNoteEn: "Water and cups." })).toMatchObject({ changed: true, outcome: "edited" });
+    expect(await rowOf(spring)).toMatchObject({ latitude: "45.642710", volunteerNoteRo: "Apă și pahare.", volunteerNoteEn: "Water and cups." });
+    // The plan's one list says both, for the page and the email; the points without one say none.
+    const listedNotes = (await listPlanPoints(db, race.raceId)).map((point) => [point.nameRo, point.volunteerNoteRo, point.volunteerNoteEn]);
+    expect(listedNotes).toEqual([
+      ["Intersecția Stejeriș", null, null],
+      ["Izvor", "Apă și pahare.", "Water and cups."],
+      ["Apă la cabană", NOTE.ro, NOTE.en],
+      ["Podul de lemn", null, null],
+    ]);
+  });
+
+  it("audits that the note changed — whether there was one before and is one after — and never its words", async () => {
+    await edit(race.points.water, { coordinates: "", volunteerNoteRo: "Ana aduce steagurile.", volunteerNoteEn: "Ana brings the flags." });
+    await edit(race.points.water, { coordinates: "", volunteerNoteRo: "Dan aduce steagurile.", volunteerNoteEn: "Dan brings the flags." });
+    await edit(race.points.water, { coordinates: "", volunteerNoteRo: "", volunteerNoteEn: "" });
+    const rows = await trail();
+    expect(rows.map((row) => row.action)).toEqual(["volunteer_plan.point_changed", "volunteer_plan.point_changed", "volunteer_plan.point_changed"]);
+    const where = { place: "route", name: "Apă la cabană", km: 5.5, latitude: null, longitude: null };
+    expect(rows.map((row) => row.metadataJson)).toEqual([
+      { pointId: race.points.water, planOnly: false, from: where, to: where, volunteerNote: { from: false, to: true } },
+      { pointId: race.points.water, planOnly: false, from: where, to: where, volunteerNote: { from: true, to: true } },
+      { pointId: race.points.water, planOnly: false, from: where, to: where, volunteerNote: { from: true, to: false } },
+    ]);
+    for (const row of rows) expect(row).toMatchObject({ actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: race.raceId });
+    // Not a word of the note — it may name a person —, in either language.
+    const written = JSON.stringify(rows.map((row) => row.metadataJson));
+    for (const never of ["Ana", "Dan", "steag", "flags"]) expect(written, never).not.toContain(never);
+    // A change of the point's other boxes alone says nothing of the note.
+    const spring = await added({ name: "Izvor", km: "3,4" });
+    await edit(spring, { name: "Izvor", km: "4", volunteerNoteRo: "", volunteerNoteEn: "" });
+    expect((await trail()).at(-1)!.metadataJson).not.toHaveProperty("volunteerNote");
+  });
+
+  it("refuses a note written in one language only, naming the empty box — and nothing is written or audited", async () => {
+    await edit(race.points.water, { coordinates: "", volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
+    const audited = (await trail()).length;
+    const spring = await added({ name: "Izvor", km: "3,4" });
+    const springBefore = await rowOf(spring);
+    for (const id of [race.points.water, spring]) {
+      expect(await refusal(edit(id, { coordinates: "", volunteerNoteRo: "Doar în română.", volunteerNoteEn: "" })), id).toEqual({ code: "VALIDATION_ERROR", reason: "PLAN_POINT_NOTE_ONE_LANGUAGE", fields: ["volunteerNoteEn"] });
+      expect(await refusal(edit(id, { coordinates: "", volunteerNoteRo: "  \n ", volunteerNoteEn: "Only in English." })), id).toEqual({ code: "VALIDATION_ERROR", reason: "PLAN_POINT_NOTE_ONE_LANGUAGE", fields: ["volunteerNoteRo"] });
+    }
+    // …even beside a change that would have gone through: the press is refused whole.
+    expect(await refusal(edit(spring, { name: "Izvorul rece", km: "3,4", volunteerNoteRo: "Ceva", volunteerNoteEn: "" }))).toMatchObject({ reason: "PLAN_POINT_NOTE_ONE_LANGUAGE" });
+    expect(await noteOf(race.points.water)).toEqual(NOTE);
+    expect(await rowOf(spring)).toEqual(springBefore);
+    expect(await trail()).toHaveLength(audited + 1);
+    // The point's other boxes are read first: the first thing wrong is what the refusal names.
+    expect(await refusal(edit(spring, { name: "", volunteerNoteRo: "Ceva", volunteerNoteEn: "" }))).toMatchObject({ reason: "PLAN_POINT_NAME_MISSING" });
+    expect(await refusal(edit(race.points.water, { coordinates: "nicăieri", volunteerNoteRo: "Ceva", volunteerNoteEn: "" }))).toMatchObject({ reason: "COORDINATES_INVALID" });
+  });
+
+  it("takes 500 characters in each language — an emoji counted as one, as the database counts — and refuses the 501st, naming its box", async () => {
+    const full = `${"a".repeat(498)}\n🏃`;
+    expect([...full]).toHaveLength(500);
+    expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: full, volunteerNoteEn: "e".repeat(500) })).toMatchObject({ changed: true });
+    expect(await noteOf(race.points.water)).toEqual({ ro: full, en: "e".repeat(500) });
+    expect(await refusal(edit(race.points.water, { coordinates: "", volunteerNoteRo: `${full}a`, volunteerNoteEn: "e" }))).toEqual({ code: "VALIDATION_ERROR", reason: "PLAN_POINT_NOTE_TOO_LONG", fields: ["volunteerNoteRo"] });
+    expect(await refusal(edit(race.points.water, { coordinates: "", volunteerNoteRo: "a", volunteerNoteEn: "e".repeat(501) }))).toEqual({ code: "VALIDATION_ERROR", reason: "PLAN_POINT_NOTE_TOO_LONG", fields: ["volunteerNoteEn"] });
+    // Trimmed before it is counted: the ends' spaces are not the note's.
+    expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: `  ${"b".repeat(500)}  `, volunteerNoteEn: "e" })).toMatchObject({ changed: true });
+    expect(await noteOf(race.points.water)).toEqual({ ro: "b".repeat(500), en: "e" });
+    expect(planPointRefusalValues("PLAN_POINT_NOTE_TOO_LONG")).toEqual({ max: "500" });
+  });
+
+  it("takes the note off with both boxes empty, changes nothing for the same words, and keeps it when a press names neither box", async () => {
+    await edit(race.points.water, { coordinates: PIATA, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
+    const audited = (await trail()).length;
+    // The same words, the line break posted as a browser posts it: nothing written, nothing audited.
+    expect(await edit(race.points.water, { coordinates: PIATA, volunteerNoteRo: NOTE.ro.replace("\n", "\r\n"), volunteerNoteEn: ` ${NOTE.en} ` })).toEqual({ changed: false, id: race.points.water });
+    // A press that names neither box — a form drawn before them — keeps the note, and changes the coordinates alone.
+    expect(await edit(race.points.water, { coordinates: "" })).toMatchObject({ changed: true });
+    expect(await rowOf(race.points.water)).toMatchObject({ latitude: null, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
+    expect((await trail()).at(-1)!.metadataJson).not.toHaveProperty("volunteerNote");
+    expect(await trail()).toHaveLength(audited + 1);
+    // Both empty: no note, in either language.
+    expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: " ", volunteerNoteEn: "" })).toMatchObject({ changed: true });
+    expect(await noteOf(race.points.water)).toEqual({ ro: null, en: null });
+    expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: "", volunteerNoteEn: "" })).toEqual({ changed: false, id: race.points.water });
+  });
+
+  it("is written by whoever works the volunteers alone: the Tehnic role, the Redactor, a desk Volunteer and a member are refused, nothing written", async () => {
+    for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
+      expect(await refusal(edit(race.points.water, { coordinates: "", volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en }, staff[role]!)), role).toMatchObject({ code: "FORBIDDEN" });
+    }
+    expect(await noteOf(race.points.water)).toEqual({ ro: null, en: null });
+    expect(await trail()).toEqual([]);
+    for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
+      expect(await edit(race.points.water, { coordinates: "", volunteerNoteRo: `De la ${role}`, volunteerNoteEn: `From ${role}` }, staff[role]!), role).toMatchObject({ changed: true });
+    }
+    expect(await noteOf(race.points.water)).toEqual({ ro: "De la SUPERADMIN", en: "From SUPERADMIN" });
+  });
+
+  it("is held by the database to both or neither and 500 characters each, whoever writes the row", async () => {
+    await expect(db.update(eventCheckpoints).set({ volunteerNoteRo: "Doar română" }).where(eq(eventCheckpoints.id, race.points.water))).rejects.toThrow();
+    await expect(db.update(eventCheckpoints).set({ volunteerNoteRo: "", volunteerNoteEn: "" }).where(eq(eventCheckpoints.id, race.points.water))).rejects.toThrow();
+    await expect(db.update(eventCheckpoints).set({ volunteerNoteRo: "a".repeat(501), volunteerNoteEn: "e" }).where(eq(eventCheckpoints.id, race.points.water))).rejects.toThrow();
+    await db.update(eventCheckpoints).set({ volunteerNoteRo: "a".repeat(500), volunteerNoteEn: "e" }).where(eq(eventCheckpoints.id, race.points.water));
+    expect(await noteOf(race.points.water)).toEqual({ ro: "a".repeat(500), en: "e" });
+  });
+
+  it("emails nobody and expires no public cache tag", async () => {
+    await place(race.people.radu, race.points.water);
+    await edit(race.points.water, { coordinates: "", volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
+    expect(await db.select().from(emailOutbox)).toEqual([]);
+    expect(revalidateTag).not.toHaveBeenCalled();
   });
 });

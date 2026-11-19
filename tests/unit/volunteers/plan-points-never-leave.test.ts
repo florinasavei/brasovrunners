@@ -17,7 +17,9 @@ import { importsModule } from "../../helpers/module-imports";
  * 2. **the plan's side of a point** — whether it is the plan's own, whether it is at the start–finish, its coordinates — is
  *    named only by those files, the schema, the two public-side files that name it to leave it out, and the email's template;
  * 3. **the table itself** is read only by the files listed, each held to how it reads: the public side through the one
- *    filter, the others a point by its id.
+ *    filter, the others a point by its id;
+ * 4. **«Notă pentru voluntari»** (§1009) — what the people standing at a point have to know — is named only by the files listed,
+ *    and by nothing on the public side: not the one filter, its `Checkpoint`, the event's file or the race number's stamp.
  *
  * A new reader is a reviewed edit of these lists.
  */
@@ -55,6 +57,29 @@ const IMPORTERS = [
 const NAMES_THE_KIND = /planOnly|plan_only|startFinish|start_finish/;
 /** A point's coordinates read from the table: the column of the Drizzle table, or of the stamp's own SQL alias. */
 const NAMES_A_POINTS_PLACE = /eventCheckpoints\s*\.\s*(?:latitude|longitude)|\bc\.(?:latitude|longitude)\b/;
+/** «Notă pentru voluntari» (§1009): a point's note for the people standing at it, by the column or by the field. */
+const NAMES_THE_VOLUNTEER_NOTE = /volunteerNote(?:Ro|En)|volunteer_note_(?:ro|en)/;
+
+/**
+ * Who may name «Notă pentru voluntari» (§1009) — and why. The plan's side of a point too: the organizers' words to the people at a
+ * point, on the plan and in the one email, never on the event's page, the chart, a race number, the event's file or a copy.
+ */
+const NOTE_NAMERS = [
+  // The columns themselves.
+  SCHEMA,
+  // The reader and the verb that writes it, both or neither.
+  READER,
+  // «Salvează punctul»: the two boxes handed to the verb.
+  PLAN_ACTIONS,
+  // The plan's page: the note under the point's name, in the fold and in the table, and the two boxes of «Modifică punctul».
+  PLAN_PAGE,
+  // What the message says of the point as it leaves…
+  POINT_MAIL,
+  // …and its paragraph under the band.
+  TEMPLATES,
+  // The preview's made-up point on «Emailuri», with its note.
+  "src/modules/notifications/email-copy-fields.ts",
+];
 
 /** Who may name the plan's side of a point — and why. */
 const NAMERS = [
@@ -118,6 +143,14 @@ describe("§961 the plan's own points and every coordinate stay with the organiz
     expect(SOURCES.filter(({ text }) => NAMES_A_POINTS_PLACE.test(text)).map(({ file }) => relative(file))).toEqual([READER]);
   });
 
+  it("lets only the reviewed files name «Notă pentru voluntari» (§1009) — and the public side none of them", () => {
+    const naming = SOURCES.filter(({ text }) => NAMES_THE_VOLUNTEER_NOTE.test(text)).map(({ file }) => relative(file));
+    expect(naming.sort()).toEqual([...NOTE_NAMERS].sort());
+    // The one filter every public reader goes through hands no note on: its mapper names each field, and not this one.
+    expect(read(PUBLIC_READER)).not.toMatch(NAMES_THE_VOLUNTEER_NOTE);
+    expect(read(STAMP)).not.toMatch(NAMES_THE_VOLUNTEER_NOTE);
+  });
+
   it("lets only the reviewed files read the table at all", () => {
     const reading = SOURCES.filter(({ text }) => readsTheTable(text)).map(({ file }) => relative(file));
     expect(reading.sort()).toEqual([...TABLE_READERS].sort());
@@ -139,20 +172,20 @@ describe("§961 the plan's own points and every coordinate stay with the organiz
     // What it hands on has no field for the kind or the coordinates: `toCheckpoint` names each field, and none of these.
     const mapper = /const toCheckpoint = [\s\S]*?\n\}\);/.exec(source)?.[0] ?? "";
     expect(mapper).toContain("onProfile: row.onProfile");
-    expect(mapper).not.toMatch(/planOnly|startFinish|latitude|longitude/);
-    // Its inserts name no such column either: a row it writes is the editor's, with no coordinates.
-    expect(source).not.toMatch(/planOnly:|startFinish:|latitude:|longitude:/);
+    expect(mapper).not.toMatch(/planOnly|startFinish|latitude|longitude|volunteerNote/);
+    // Its inserts name no such column either: a row it writes is the editor's, with no coordinates and no note for the volunteers.
+    expect(source).not.toMatch(/planOnly:|startFinish:|latitude:|longitude:|volunteerNote(?:Ro|En):/);
   });
 
-  it("gives `Checkpoint` — the type every public reader takes — no field for the kind or the coordinates", () => {
+  it("gives `Checkpoint` — the type every public reader takes — no field for the kind, the coordinates or the volunteers' note", () => {
     const domain = read("src/modules/event-checkpoints/domain/checkpoint.ts");
-    expect(domain).not.toMatch(/planOnly|plan_only|startFinish|start_finish|latitude|longitude/);
+    expect(domain).not.toMatch(/planOnly|plan_only|startFinish|start_finish|latitude|longitude|volunteerNote|volunteer_note/);
     // …and the event's file has none to carry: its schema of a point names seven things, these not among them, and is
     // strict — a file that named one would be refused whole, never read into the editor's list.
     const fileFormat = read("src/modules/content/events/transfer/file-format.ts");
     const pointSchema = /const checkpointSchema = z\s*\.object\(\{[\s\S]*?\}\)\s*\.strict\(\);/.exec(fileFormat)?.[0] ?? "";
     expect([...pointSchema.matchAll(/^ {4}(\w+): z\./gm)].map((match) => match[1])).toEqual(["km", "name", "kinds", "cutoffMinutes", "cutoff", "note", "onProfile"]);
-    expect(pointSchema).not.toMatch(/planOnly|startFinish|latitude|longitude|coordinates/);
+    expect(pointSchema).not.toMatch(/planOnly|startFinish|latitude|longitude|coordinates|volunteerNote/);
   });
 
   it("leaves the plan's own rows out of the race number's stamp in SQL, and reads no coordinate there", () => {
@@ -181,7 +214,9 @@ describe("§961 the plan's own points and every coordinate stay with the organiz
       );
     });
     expect(publicSide.length).toBeGreaterThan(100);
-    const strangers = publicSide.filter(({ file, text }) => relative(file) !== STAMP && (importsTheReader(file, text) || NAMES_THE_KIND.test(text) || NAMES_A_POINTS_PLACE.test(text))).map(({ file }) => relative(file));
+    const strangers = publicSide
+      .filter(({ file, text }) => relative(file) !== STAMP && (importsTheReader(file, text) || NAMES_THE_KIND.test(text) || NAMES_A_POINTS_PLACE.test(text) || NAMES_THE_VOLUNTEER_NOTE.test(text)))
+      .map(({ file }) => relative(file));
     expect(strangers).toEqual([]);
   });
 

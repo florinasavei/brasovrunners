@@ -12,6 +12,9 @@ import { events } from "./events";
  */
 export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
 
+/** The most characters «Notă pentru voluntari» holds in each language (§1009); the check below holds the same bound. */
+export const PLAN_POINT_NOTE_MAX = 500;
+
 /**
  * The checkpoints of one event's route (§757; the owner, 2026-10-13: «other things for the route: I
  * need to put checkpoints and limit times»): a point at a distance along the route, where something
@@ -50,7 +53,8 @@ export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FO
  * `event-checkpoints/checkpoints.ts`, which every one of those readers goes through, reads only the
  * rows that are not plan-only, and the volunteers' side has a reader of its own
  * (`volunteers/plan-points.ts`). A guard holds the list of files that may name the four columns
- * below (`tests/unit/volunteers/plan-points-never-leave.test.ts`).
+ * below, and the two of «Notă pentru voluntari» after them (§1009), which are the plan's too
+ * (`tests/unit/volunteers/plan-points-never-leave.test.ts`).
  */
 export const eventCheckpoints = pgTable(
   "event_checkpoints",
@@ -112,6 +116,17 @@ export const eventCheckpoints = pgTable(
      */
     latitude: numeric("latitude", { precision: 8, scale: 6 }),
     longitude: numeric("longitude", { precision: 9, scale: 6 }),
+    /**
+     * «Notă pentru voluntari» (§1009; the owner, 2026-11-19, of «Planul voluntarilor»: «si am nevoie de un nou field "noua pentru
+     * voluntari"»): what everybody standing at this point has to know — «Direcționați spre stânga la intersecție; vestă
+     * reflectorizantă» —, for any point, the editor's too, in each language: both or neither (a check below), at most
+     * `PLAN_POINT_NOTE_MAX` characters each, plain text whose line breaks are kept. Written on the plan's page
+     * (`volunteers/plan-points.ts#changePlanPoint`), read by the plan's page — on the screen and on paper — and by the one
+     * email that tells a volunteer their point. Never public: not the event's page, its file, a copy or a race number — and
+     * not the point's own `note_ro` / `note_en` above, which the event's page shows.
+     */
+    volunteerNoteRo: text("volunteer_note_ro"),
+    volunteerNoteEn: text("volunteer_note_en"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -133,6 +148,11 @@ export const eventCheckpoints = pgTable(
     check(
       "event_checkpoints_coordinates_range",
       sql`(${t.latitude} IS NULL OR ${t.latitude} BETWEEN -90 AND 90) AND (${t.longitude} IS NULL OR ${t.longitude} BETWEEN -180 AND 180)`,
+    ),
+    // «Notă pentru voluntari» (§1009) is in both languages or in neither, each 1 to `PLAN_POINT_NOTE_MAX` characters.
+    check(
+      "event_checkpoints_volunteer_note_both_languages",
+      sql`(${t.volunteerNoteRo} IS NULL) = (${t.volunteerNoteEn} IS NULL) AND (${t.volunteerNoteRo} IS NULL OR (char_length(${t.volunteerNoteRo}) BETWEEN 1 AND ${sql.raw(String(PLAN_POINT_NOTE_MAX))} AND char_length(${t.volunteerNoteEn}) BETWEEN 1 AND ${sql.raw(String(PLAN_POINT_NOTE_MAX))}))`,
     ),
   ],
 );
