@@ -326,8 +326,14 @@ export default async function DeskRow({
             The document the kit is handed out against (§95): what the volunteer compares the card
             to. A minor's declaration carries two (§330) — the minor's and the parent's, to whom the
             kit goes (§108) — each shown the way one always was, and each labelled whose it is.
+
+            Since §995 (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
+            pentru voluntari») only for a role that reads the registrations — the Organizer and the
+            Administrators, who read it on the registration's page as well — never the desk's other
+            roles («Voluntar», «Tehnic», «Redactor») or a row drawn with no role. The row is drawn on
+            the server, so for them the document never reaches the browser.
           */}
-          {row.guardianName ? (
+          {role === undefined || !canReadRegistrations(role) ? null : row.guardianName ? (
             <>
               {documents.participant && (
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
