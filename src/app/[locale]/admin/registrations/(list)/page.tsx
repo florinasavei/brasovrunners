@@ -774,12 +774,32 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           it. The journey's cell carried the moment only in its hover title, which a phone never shows.
         */
         const endedAt = row.status === "CANCELLED" ? row.cancelledAt : row.status === "EXPIRED" ? row.expiredAt : null;
+        /*
+          …and why (§NNN; the owner, 2026-11-19, on the list filtered to «Anulată»: «aș vrea să văd aici și când a anulat cineva
+          și de ce»): the person's own answer (§558), in the registration page's words — «Alt motiv» with their words after it —,
+          or that the organizers cancelled it. Nothing for a cancellation from before the reasons were asked.
+        */
+        const why =
+          row.status !== "CANCELLED"
+            ? null
+            : row.cancelReasonKind
+              ? row.cancelReasonKind === "OTHER" && row.cancelReason
+                ? t("registrations.cancelReasonOther", { kind: t(`registrations.cancelReasonKinds.${row.cancelReasonKind}`), text: row.cancelReason })
+                : t(`registrations.cancelReasonKinds.${row.cancelReasonKind}`)
+              : row.cancellationSource === "ADMIN"
+                ? t("registrations.cancelledByStaff")
+                : null;
         return (
           <>
             <RegistrationStatusChip status={row.status} />
             {endedAt && (
               <Box component="span" data-testid="row-ended-at" sx={{ display: "block", mt: 0.5, color: "text.secondary", fontVariantNumeric: "tabular-nums" }}>
                 {formatDay(endedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
+              </Box>
+            )}
+            {why && (
+              <Box component="span" data-testid="row-cancel-reason" sx={{ display: "block", mt: 0.25, color: "text.secondary", maxWidth: { md: "16rem" }, overflowWrap: "anywhere" }}>
+                {why}
               </Box>
             )}
           </>

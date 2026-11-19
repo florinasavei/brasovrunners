@@ -1455,6 +1455,7 @@
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
       "cancelReasonLabel": "Cancellation reason",
+      "cancelledByStaff": "Cancelled by the organisers",
       "cancelReasonOther": "{kind} — “{text}”",
       "cancelReasonKinds": {
         "INJURY_OR_ILLNESS": "Injury or illness",
