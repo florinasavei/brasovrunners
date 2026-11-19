@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.74-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.75-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.74-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.75-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31156,3 +31156,17 @@ Baseline `BR-V4.73-2026-11-19`.
 **Not in this change.** A «Cancelled at» column in the export: the export says why (`Cancellation reason`); when is one more column if the club asks for it.
 
 Baseline `BR-V4.74-2026-11-19`.
+
+## 994. The volunteers' addresses on «Voluntari» and on the plan's table, and the plan's names in capitals
+
+**The owner, 2026-11-19, two days before Saturday's race, with a picture of «Punctele, pe scurt» (§974):** «Aici vreau numele cu caps și vreau și mailul», **and then, with a picture of the «Voluntari» list (§839):** «și aici vreau să văd mailurile». A volunteer's address was on the person's own page alone; the plan's table gave each person's name and telephone, and the decision and the notes under them (§981), all in one weight, so one person ran into the next.
+
+**Decision.**
+
+- *«Punctele, pe scurt».* Each person's name in capitals (`text-transform`, so the words stay as typed for a screen reader and a copy), on the screen and on the paper, and after the telephone the address, a `mailto:` link with the telephone's shape — a thumb's 44 pixels on the screen, the address as text on the paper — breaking inside the cell rather than widening the table. A row the club typed without an address has none. The plan's one read (`readVolunteerPlan`) carries the address with the telephone; nothing else reads it, and «Trimite fiecăruia punctul lui» (§956) sends nobody else's address.
+- *«Voluntari».* A column «Contact», right after «Nume», as the registrations list's «Contact» (§943): the address, a `mailto:` link, and under it the telephone, a `tel:` link a phone rings, read grouped. A row the club typed with neither (§865) has an empty cell and no line on a phone's card; one with only one of them has that one. «Coloane» hides it. Its «?» says who sees them.
+- *Who sees them.* The same three roles as both screens already: the Organizer, the Administrator and the Superadministrator (`canManageVolunteers`), who read the same address on the person's page. No other role, and no public page.
+
+**Not in this change.** The names in capitals on «Pe puncte» and on the badges: the owner asked for the table.
+
+Baseline `BR-V4.75-2026-11-19`.

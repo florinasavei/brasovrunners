@@ -6529,6 +6529,7 @@
         "kitNo": "No kit",
         "columnKit": "Kit",
         "ageHint": "The age on the event's day, the one the parent's agreement for minors goes by. «—»: not given.",
+        "contactHint": "The email address and, under it, the phone number, as the person or the organiser typed them. Press the address to write, the number to call. Only organisers and administrators see them.",
         "raffleOut": "Not in the raffle",
         "columnRaffle": "Raffle",
         "raffleTick": "In the raffle",
