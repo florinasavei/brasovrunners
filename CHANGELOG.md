@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.73-2026-11-19
+
+- **An invitation can carry a blank bib** — «La confirmare primește un BIB gol» on «Trimite invitații noi»: when the invited person's registration is confirmed, they wear the lowest blank spare bib free at that moment, marked printed, instead of the next number — or the next number when none is left — and the invitation's row and the registration's page say which. An invitation already takes a place kept for the club while one is free. §992.
 ## BR-V4.72-2026-11-19
 
 - **The volunteer agreement is signed by both parties on paper** — every agreement's PDF, alone or in the event's file of all agreements, keeps the volunteer's side on the left as it was and has «Asociația» on the right: the club's legal name and dotted lines for its representative's name and position, signature and date; the sheet's «Pentru organizator» line is that column now. The legal text is unchanged, so nothing waits for approval, and the race declaration prints as before. §991.
