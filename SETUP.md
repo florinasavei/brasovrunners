@@ -1720,6 +1720,16 @@ languages go live together; that is the rule, not a setting.
      keep none of the announced places. The tick shows only while the race's **«Folosește lista de
      invitați speciali»** (item 5) is ticked; switched off since the page was opened, the send is refused with
      the same sentence the registration's own «Lista de invitați speciali» gives;
+   - «La confirmare primește un BIB gol» (unticked by default) for a person who should wear one of the
+     desk's blank spare bibs: the tick shows only once spares are printed («Alocare și tipărire» →
+     «Numere de rezervă pentru înscrierile de la fața locului»), and the line under it says which are free
+     now. When that person's registration is confirmed — by their own signature, on paper at the desk, or
+     by a registration of their address that took the invitation over — they get the lowest blank bib free
+     at that moment, marked printed, and the confirmation's email says its number; if none is free then,
+     they get the next ordinary number and their registration's page says so. Hand them that blank bib
+     with their name written on it; the spares card lists it («154 → name») like any spare given, and the
+     invitation's row shows «BIB gol: 154». A number the desk hands with the paper wins over the tick. It
+     works with «Pe lista de invitați speciali» too: the blank bib instead of the special guests' series;
    - «Trimite invitațiile» asks first: how many invitations, how many places are free for them, until
      when the invitation lasts and in which language a new address gets it, and — on a full race, or
      while anybody is on the waiting list — how many supplementary places it adds and what the capacity

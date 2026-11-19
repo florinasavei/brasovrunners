@@ -32,6 +32,8 @@ export const INVITATION_REFUSALS = [
   "INVITATION_BAD_DAYS",
   "INVITATION_UNREAD_LINE",
   "INVITATION_UNREAD_ROW",
+  // «La confirmare primește un BIB gol» (§NNN) posted for an event with no desk spares reserved: the form draws no tick then.
+  "INVITATION_NO_SPARES",
 ] as const;
 export type InvitationRefusalCode = (typeof INVITATION_REFUSALS)[number];
 

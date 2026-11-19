@@ -496,6 +496,23 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // A number as the event writes it (§735): «007» here when the bib says «007».
   const written = (number: number) => formatRaceNumber(number, registration.raceNumberFormat);
   const voidSuffix = voidBib !== null ? ` · ${tr("registrations.bibVoid", { number: written(voidBib) })}` : "";
+  /*
+    «La confirmare primește un BIB gol» (§NNN): under the invitation's line, what its tick did — the spare the confirmation gave,
+    or that none was free and the ordinary number came — from the trail's own row; before the confirmation, what it will do. A
+    test registration wears no number (§30), and a number handed at the desk with the paper writes no such row: no line.
+  */
+  const blankBibLine = ((): string | null => {
+    if (!invitedBy?.blankBib || registration.kind !== "REAL") return null;
+    const outcome = auditTrail.find((entry) => entry.action === "registration.invitation_blank_bib_given" || entry.action === "registration.invitation_blank_bib_missed");
+    const number = (outcome?.metadataJson as { bibNumber?: unknown } | null)?.bibNumber;
+    if (outcome && Number.isInteger(number)) {
+      const values = { number: written(number as number) };
+      return outcome.action === "registration.invitation_blank_bib_given"
+        ? tr("registrations.invitationBlankBib.given", values)
+        : tr("registrations.invitationBlankBib.missed", values);
+    }
+    return registration.bibNumber === null && isActiveStatus(registration.status) ? tr("registrations.invitationBlankBib.pending") : null;
+  })();
   // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.
   const canConfirmNow =
     registration.status === "PENDING_EMAIL_CONFIRMATION" ||
@@ -655,6 +672,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {invitedBy && (
         <Typography variant="body2" color="text.secondary" data-testid="registration-invited">
           {tr("registrations.invitedBy", { who: invitedBy.invitedByName ?? tr("invitations.byNobody"), when: dtInline(invitedBy.sentAt) ?? "" })}
+        </Typography>
+      )}
+      {/* The invitation's blank bib (§NNN): which spare the confirmation gave, or why none — read by every role that reads this page. */}
+      {blankBibLine && (
+        <Typography variant="body2" color="text.secondary" data-testid="registration-invitation-blank-bib">
+          {blankBibLine}
         </Typography>
       )}
 

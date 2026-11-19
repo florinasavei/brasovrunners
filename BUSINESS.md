@@ -347,7 +347,9 @@ For a capped event:
   does a registration of the invited address made another way, once it gets its place. On a full
   race, or while anyone waits for the site's places, each invitation that needs a place adds one supplementary place, which
   the Administrator confirms before the send; one sent «pe lista de invitați speciali» keeps none (`DECISIONS.md` §647); a
-  place kept for the club nobody holds needs none (`DECISIONS.md` §914);
+  place kept for the club nobody holds needs none (`DECISIONS.md` §914). While the race has blank spare bibs printed for
+  the desk, the Administrator may also tick that the invited person gets one: once their registration is confirmed they
+  wear the lowest blank bib free at that moment, and an ordinary number when none is left (`DECISIONS.md` §NNN);
 - **«Locuri păstrate pentru club»** (*places kept for the club*): of the capacity, a number of places the site never gives.
   The site takes registrations until only these are left — then it reads full, or offers the waiting list — and announces
   the capacity less them («N înscriși din 165 de locuri»); nothing public names the reserve. The waiting list is never
@@ -403,6 +405,8 @@ registrations get no number and are never printed. A confirmed runner's number c
 by hand while it is not printed — the old one stays retired — and it is never cleared. A printed
 one changes only when the runner is handed one of the desk's blank spare bibs: they wear its
 number from then on, and the printed number is retired too, so no two people ever wear one number.
+A person the club invited with a blank bib wears, from their confirmation, the lowest blank spare
+free at that moment instead of the next number in order — or the next number when none is left.
 
 **Race day has a desk** (2026-09-18). Every confirmed participant receives, in the confirmation
 email, a code and its QR; at the pickup table a volunteer — any staff role, on a phone — scans

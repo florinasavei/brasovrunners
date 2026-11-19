@@ -157,14 +157,33 @@ export async function findLiveInvitationsOfParticipant<T extends Record<string, 
 export async function findInvitationOfRegistration<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
-): Promise<{ sentAt: Date; invitedByName: string | null } | undefined> {
+): Promise<{ sentAt: Date; invitedByName: string | null; blankBib: boolean } | undefined> {
   const [row] = await db
-    .select({ sentAt: eventInvitations.sentAt, invitedByName: staffUsers.displayName })
+    .select({ sentAt: eventInvitations.sentAt, invitedByName: staffUsers.displayName, blankBib: eventInvitations.blankBib })
     .from(eventInvitations)
     .leftJoin(staffUsers, eq(staffUsers.id, eventInvitations.invitedByStaffUserId))
     .where(eq(eventInvitations.acceptedRegistrationId, registrationId))
     .limit(1);
-  return row ? { sentAt: row.sentAt, invitedByName: row.invitedByName ?? null } : undefined;
+  return row ? { sentAt: row.sentAt, invitedByName: row.invitedByName ?? null, blankBib: row.blankBib } : undefined;
+}
+
+/**
+ * The invitation a registration came from when it was sent with «La confirmare primește un BIB gol» (§NNN), or nothing: the
+ * accepted invitation naming the registration — by its link or taken over by another route (`markInvitationAdopted`) — whose
+ * tick asks the confirmation for the lowest free desk spare instead of the allocator's number (`service.ts#bibAtConfirmation`).
+ * Read under the confirmation's event lock; the sender is who the trail names, as «Elită» from the send is (§917).
+ */
+export async function findBlankBibInvitationOfRegistration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<{ id: string; invitedByStaffUserId: string | null } | undefined> {
+  const [row] = await db
+    .select({ id: eventInvitations.id, invitedByStaffUserId: eventInvitations.invitedByStaffUserId })
+    .from(eventInvitations)
+    .where(and(eq(eventInvitations.acceptedRegistrationId, registrationId), eq(eventInvitations.blankBib, true)))
+    .orderBy(asc(eventInvitations.createdAt), asc(eventInvitations.id))
+    .limit(1);
+  return row;
 }
 
 /**

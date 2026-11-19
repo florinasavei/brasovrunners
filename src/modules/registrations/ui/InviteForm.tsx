@@ -46,6 +46,13 @@ export type InviteFormWords = {
   eliteLabel: string;
   eliteHelp: string;
   /**
+   * «La confirmare primește un BIB gol» for the whole send (§NNN), and its line: the free desk spares now, counted, with
+   * `{count}` and `{numbers}` («155–158, 160»); `blankBibHelpOut` when every spare is given.
+   */
+  blankBibLabel: string;
+  blankBibHelp: Counted;
+  blankBibHelpOut: string;
+  /**
    * «E de la parteneri» for the whole send and its box «Numele partenerului sau sponsorului» (the decision «De la parteneri»),
    * the box's one line, and the sentence when the tick has no name.
    */
@@ -70,6 +77,8 @@ export type InviteFormWords = {
   dialogOutside: string;
   /** «Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.»: said only with «Elită» ticked. */
   dialogElite: string;
+  /** «La confirmare, fiecare primește cel mai mic BIB gol liber atunci.»: said only with the blank bib ticked (§NNN). */
+  dialogBlankBib: string;
   /** «Înscrierile vor fi marcate «Partener: {name}» — intern …»: said only with «E de la parteneri» ticked. */
   dialogPartner: string;
   /** «Invitația expiră în {count} zile, cel mult la start.», counted: the deadline the press sends. */
@@ -113,7 +122,8 @@ function fill(template: string, values: Record<string, string | number>): string
 /**
  * «Trimite invitații» (§647): the members' zone accounts as ticks with a search, the typed lines
  * «Nume <adresă>», the days, «Pe lista ascunsă» (§643's `outside_capacity`) and «Limba invitației» for
- * an address the club has never seen, and — before anything is sent — the dialog that
+ * an address the club has never seen, «La confirmare primește un BIB gol» while the event has desk spares (§NNN),
+ * and — before anything is sent — the dialog that
  * says how many people, how many places are free, and whether the send adds supplementary places and
  * what the capacity becomes (§642: a raise is never pressed through a button that does not name it).
  * The capacity the dialog named is posted (`addPlace`), and the server adds exactly that or refuses.
@@ -133,6 +143,7 @@ export default function InviteForm({
   daysMax,
   hiddenListEnabled,
   placesMax,
+  blankBibSpares = null,
   partnerSuggestions = [],
   partnerNameMax,
   words,
@@ -149,6 +160,11 @@ export default function InviteForm({
   hiddenListEnabled: boolean;
   /** The club's people per address (§576): the most a row's «Locuri» may ask; the server asks it again under the lock. */
   placesMax: number;
+  /**
+   * The event's desk spares (§444) for «La confirmare primește un BIB gol» (§NNN): how many are free now and which, as the
+   * desk writes them — or null when the club reserved none, and then the tick is not drawn (the server refuses it anyway).
+   */
+  blankBibSpares?: { count: number; numbers: string } | null;
   /** The event's earlier partners' names (`listPartnerSuggestions`), the box's native suggestions. */
   partnerSuggestions?: readonly string[];
   /** The longest name the box keeps (`PARTNER_NAME_MAX`); the server refuses a longer one anyway. */
@@ -172,6 +188,10 @@ export default function InviteForm({
   // «Elită» (§917): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
   const [elite, setElite] = useState(false);
   const eliteHelpId = useId();
+  // «La confirmare primește un BIB gol» (§NNN): unticked by default, controlled like «Elită»; posted only while it is drawn.
+  const [blankBib, setBlankBib] = useState(false);
+  const blankBibHelpId = useId();
+  const blankBibTicked = blankBibSpares !== null && blankBib;
   /*
     «E de la parteneri» (the decision «De la parteneri»): one tick and one name for the whole send, as «Elită» — controlled, so a
     refused send keeps them for the corrected press. The box is what is stored; the tick without a name is said at the box.
@@ -256,6 +276,7 @@ export default function InviteForm({
       hiddenListEnabled && outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
       (hiddenListEnabled && outside) || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
       elite ? words.dialogElite : null,
+      blankBibTicked ? words.dialogBlankBib : null,
       partner ? fill(words.dialogPartner, { name: partnerName.trim() }) : null,
       counted(words.dialogDays, dayCount),
       fill(words.dialogLocale, { language: inviteLocale === "en" ? words.localeEn : words.localeRo }),
@@ -294,6 +315,7 @@ export default function InviteForm({
       <input type="hidden" name="addPlace" value={addPlace} />
       {hiddenListEnabled && outside && <input type="hidden" name="outside" value="1" />}
       {elite && <input type="hidden" name="elite" value="1" />}
+      {blankBibTicked && <input type="hidden" name="blankBib" value="1" />}
       {partner && <input type="hidden" name="partner" value="on" />}
       <Stack spacing={2}>
         {(localError ?? serverError) && (
@@ -463,6 +485,29 @@ export default function InviteForm({
             {words.eliteHelp}
           </Typography>
         </Box>
+        {/*
+          «La confirmare primește un BIB gol» (§NNN; the owner: «când invit pe cineva, trebuie să pot să-i dau unul dintre locurile
+          de rezervă» — «Ambele»), beside «Elită» and drawn the same way, only while the event has desk spares reserved: the line
+          under it says which are free now; the confirmation takes the lowest free at its own moment, under the event's lock.
+        */}
+        {blankBibSpares !== null && (
+          <Box data-testid="invite-blank-bib">
+            <FormControlLabel
+              sx={{ minHeight: TAP_TARGET.minHeight }}
+              control={
+                <Checkbox
+                  checked={blankBib}
+                  onChange={(event) => setBlankBib(event.target.checked)}
+                  slotProps={{ input: { "aria-describedby": blankBibHelpId, "data-testid": "invite-blank-bib-tick" } as Record<string, string> }}
+                />
+              }
+              label={words.blankBibLabel}
+            />
+            <Typography id={blankBibHelpId} variant="body2" color="text.secondary">
+              {blankBibSpares.count > 0 ? counted(words.blankBibHelp, blankBibSpares.count, { numbers: blankBibSpares.numbers }) : words.blankBibHelpOut}
+            </Typography>
+          </Box>
+        )}
         {/* «E de la parteneri» (the decision «De la parteneri»), beside «Elită»: one tick and one name for the whole send. */}
         <Box data-testid="invite-partner">
           <FormControlLabel

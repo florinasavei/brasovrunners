@@ -79,6 +79,15 @@ export const eventInvitations = pgTable(
      * form the person sees says it. Trimmed, 1 to `PARTNER_NAME_MAX` characters.
      */
     partnerName: text("partner_name"),
+    /**
+     * «La confirmare primește un BIB gol» at the send (§NNN; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot
+     * să-i dau unul dintre locurile de rezervă» — a place kept for the club or a blank bib? «Ambele»): the registration this
+     * invitation becomes, once CONFIRMED by whichever path, wears the lowest of the desk's spares (§444) free at that moment
+     * instead of the allocator's next number, marked printed — a spare is on paper — in the confirmation's own transaction,
+     * under the event row's lock (`service.ts#bibAtConfirmation`). None free then: the ordinary number, and the trail says
+     * so. Only on an event with spares reserved, asked under the lock at the send (`INVITATION_NO_SPARES`). The club's alone.
+     */
+    blankBib: boolean("blank_bib").notNull().default(false),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     acceptedRegistrationId: uuid("accepted_registration_id").references(() => registrations.id, { onDelete: "cascade" }),
     withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
