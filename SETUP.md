@@ -2532,7 +2532,10 @@ enter them; **only the Administrator and the Superadministrator make them public
    chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
    and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
-   `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
+   `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. The two time boxes are
+   typed or picked (§NNN): digits alone become a time when the box is left (`12345` → `1:23:45`, `2345,6` → `23:45.6`; a dot, a comma or a
+   space stands for a colon), and the clock beside each box opens the hours, minutes and seconds on the 24-hour clock — «OK» writes
+   `h:mm:ss`, tenths are typed. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is
    «Sosit»; a note alone is «Neprezentat»; abandon, neprezentat and descalificat are written without a time. A number a **cancelled or
    expired** registration holds is refused («numărul aparține unei înscrieri neconfirmate»): a result is never filed under a cancelled

@@ -9819,7 +9819,7 @@
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
                 "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
                 "Several arriving at once? Press «Catch the time» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
-                "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
+                "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours, minutes and seconds, on the 24-hour clock, and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
                 "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
@@ -12388,8 +12388,8 @@
       "backToEvent": "Back to the event",
       "link": "Results",
       "registrationsLink": "The event's registrations",
-      "intro": "Type the times, import them from a CSV and save everything at once. The places work themselves out.",
-      "introMore": "One line per runner, by race number. Places are overall, by sex and by category; equal times share a place. A line with only a note means did not start.",
+      "intro": "Type the times or pick them from the clock beside the box, import them from a CSV and save everything at once. The places work themselves out.",
+      "introMore": "One line per runner, by race number. A time can be typed as digits alone: 12345 is 1:23:45. Equal times share a place; a line with only a note means did not start.",
       "notRace": "Only a race has results. Group runs and the other events have none.",
       "notStarted": "The race has not started yet. You can type results and tick the results public already; nothing shows on the site before the start.",
       "notStartedEnterOnly": "The race has not started yet. You can type results already; nothing shows on the site before the start.",
@@ -12442,6 +12442,13 @@
         "place": "Place"
       },
       "timePlaceholder": "h:mm:ss",
+      "pickTime": "Pick the time: {runner}",
+      "pickChip": "Pick the chip time: {runner}",
+      "picker": {
+        "help": "Hours, minutes and seconds, on the 24-hour clock. Tenths (mm:ss.t) and times over 24 hours are typed in the box; “OK” writes whole seconds.",
+        "ok": "OK",
+        "cancel": "Cancel"
+      },
       "birthDatePlaceholder": "DD.MM.YYYY",
       "present": "Present",
       "publicLine": {

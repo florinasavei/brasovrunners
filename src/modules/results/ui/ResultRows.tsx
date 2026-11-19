@@ -2,14 +2,18 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { CLOCK_BUTTON_CLASS, useClockPicker } from "@/shared/forms/pickers/ClockPickerHost";
+import { writeBox } from "@/shared/forms/pickers/clock-values";
 import { useRecall } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { openFoldsAround } from "@/shared/ui/fold";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import { EXTRA_ROWS, RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
+import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "../domain/result-time";
 
 /**
  * The lines of «Clasament»'s one form (§808): a line per runner, each with its boxes — «Timp», «Status», «Timp cip», «Notă» — named by
@@ -19,6 +23,13 @@ import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
  * and more components on a phone. A plain `<input>` and `<select>`, styled once (`BOX_SX`), is what the line needs and what keeps the
  * page's input latency where the event editor's is (§371) — still 44 pixels tall, still named by an `aria-label` that says whose
  * line it is, and still coming back as it was typed after a refusal (`useRecall`, §315), marked when the refusal named it.
+ *
+ * **«Timp» and «Timp cip» are picked or typed** (§NNN): beside each, a 44-pixel clock button opens the page's ONE picker
+ * (`ClockPickerHost`, mounted once by the page and loaded on the first press) — hours, minutes and seconds on the 24-hour clock —
+ * which writes `h:mm:ss` into the box; and the box reads digits alone and the usual separators as a time when it is left
+ * («12345» → «1:23:45», `normalizeTypedResultTime`). The button and its wrapper are plain elements styled once by the list
+ * (`TIME_STYLES`), so a line grows by a button and its glyph, nothing more; without scripts the host hides the button and the box
+ * is the box it was.
  *
  * A client island because the recall and the «Adaugă un alergător» button are; plain data crosses the boundary — strings, numbers
  * and booleans — and never an element (`AGENTS.md` §14.1).
@@ -44,6 +55,9 @@ export type ResultWords = {
   sexOptions: readonly { value: string; label: string }[];
   /** «Șterge rezultatul: {runner}» — the delete button's accessible name, `{runner}` filled here. */
   deleteFor: string;
+  /** «Alege timpul: {runner}» and «Alege timpul cip: {runner}» — the clock buttons beside «Timp» and «Timp cip» (§NNN), `{runner}` filled here. */
+  pickTime: string;
+  pickChip: string;
   delete: string;
   /** «Prezent» on a checked-in runner's line. */
   present: string;
@@ -127,6 +141,44 @@ const BOX_SX = {
   "&[aria-invalid=true]": { borderColor: "error.main", borderWidth: 2 },
 } as const;
 
+/** A time box beside its clock button: it takes what the button leaves of the cell, and may shrink to nothing first (§844's `minWidth: 0`). */
+const TIME_BOX_SX = { ...BOX_SX, width: "auto", flex: "1 1 0%", minWidth: 0 } as const;
+
+/** The class of the cell that holds a time box and its clock button side by side. */
+const TIME_CELL_CLASS = "result-time-cell";
+
+/**
+ * The time cells' styles, written once on each list rather than once per box (§NNN): a race has a few hundred lines, and the cell
+ * and the button are plain elements. The button is the volunteers' calendar button's (`BirthDatePicker`): 44 pixels, a round hover
+ * disc inside them, the theme's own outline when the keyboard reaches it.
+ */
+const TIME_STYLES = {
+  [`& .${TIME_CELL_CLASS}`]: { display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 },
+  [`& .${CLOCK_BUTTON_CLASS}`]: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: "0 0 auto",
+    width: 44,
+    height: 44,
+    m: 0,
+    p: 0,
+    border: 0,
+    borderRadius: "50%",
+    bgcolor: "transparent",
+    color: "action.active",
+    cursor: "pointer",
+    position: "relative",
+    "&::before": { content: '""', position: "absolute", inset: 2, borderRadius: "50%" },
+    "&:hover::before": { bgcolor: "action.hover" },
+    "& > svg": { position: "relative" },
+    "&:focus-visible": { outline: 2, outlineStyle: "solid", outlineColor: "primary.main", outlineOffset: -2 },
+  },
+} as const;
+
+/** The clock on the button, asked of the backoffice's registry by its name (§318). */
+const PickTimeIcon = ACTION_ICONS.pickTime;
+
 /** A caption above a box on a phone; from the medium width the column header says it once for every line. */
 const CAPTION_SX = { display: { xs: "block", md: "none" }, color: "text.secondary", mb: 0.25 } as const;
 
@@ -152,7 +204,7 @@ const LINE_SX = {
 /** Header over the lines, from the medium width up: the words of every column once. */
 export function ResultsHeader({ words }: { words: ResultWords }) {
   return (
-    <Box aria-hidden="true" sx={{ ...LINE_SX, display: { xs: "none", md: "grid" }, borderTop: 0, py: 0.5, color: "text.secondary" }}>
+    <Box aria-hidden="true" sx={{ ...LINE_SX, display: { xs: "none", md: "grid" }, borderTop: 0, py: 0.5, color: "text.secondary" }} data-testid="results-header">
       <Typography variant="caption">{`${words.bib} · ${words.name}`}</Typography>
       <Typography variant="caption">{words.place}</Typography>
       <Typography variant="caption">{words.time}</Typography>
@@ -160,6 +212,76 @@ export function ResultsHeader({ words }: { words: ResultWords }) {
       <Typography variant="caption">{words.chip}</Typography>
       <Typography variant="caption">{words.note}</Typography>
     </Box>
+  );
+}
+
+/** The attributes every box of a line carries, whatever its kind. */
+type BoxAttributes = {
+  id: string;
+  name: string;
+  "aria-label": string;
+  "aria-invalid": true | undefined;
+  "data-testid": string | undefined;
+};
+
+/**
+ * A time box — «Timp», «Timp cip» — and, beside it, the clock button (§NNN).
+ *
+ * - **Typed:** what the server reads is left as it is; on leaving the box, or on Enter before the form's own submit, digits alone
+ *   and the usual separators become the time they stand for (`normalizeTypedResultTime`: «12345» → «1:23:45», «2345,6» →
+ *   «23:45.6»), written as typing would (`writeBox`); what cannot be read stays as typed, for the server's own refusal. A decimal
+ *   keypad on a phone (`inputMode="decimal"`): digits and a separator, as a stopwatch's reading is typed.
+ * - **Picked:** the button hands the page's one picker this box, itself, the box's name for the picker's title, and the box's two
+ *   readings: where the clock opens (`clockOfResultTime`) and what «OK» writes (`resultTimeOfClock`, `h:mm:ss`). Drawn only under
+ *   the host (`useClockPicker`); its class hides it without scripts.
+ */
+function TimeInput({ box, initial, maxLength, placeholder, pickLabel }: { box: BoxAttributes; initial: string; maxLength?: number; placeholder?: string; pickLabel: string }) {
+  const picker = useClockPicker();
+  const input = useRef<HTMLInputElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  function normalize() {
+    if (input.current) writeBox(input.current, normalizeTypedResultTime(input.current.value));
+  }
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") normalize();
+  }
+  function pick() {
+    if (!picker || !input.current || !button.current) return;
+    picker({ box: input.current, button: button.current, title: box["aria-label"], read: clockOfResultTime, write: resultTimeOfClock });
+  }
+  return (
+    <div className={TIME_CELL_CLASS}>
+      <Box
+        component="input"
+        ref={input}
+        {...box}
+        sx={TIME_BOX_SX}
+        type="text"
+        defaultValue={initial}
+        maxLength={maxLength}
+        placeholder={placeholder}
+        inputMode="decimal"
+        autoComplete="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        onBlur={normalize}
+        onKeyDown={onKeyDown}
+      />
+      {picker && (
+        <button
+          ref={button}
+          type="button"
+          className={CLOCK_BUTTON_CLASS}
+          aria-label={pickLabel}
+          aria-haspopup="dialog"
+          title={pickLabel}
+          onClick={pick}
+          data-testid={box["data-testid"] ? `${box["data-testid"]}-pick` : undefined}
+        >
+          <PickTimeIcon fontSize="small" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -176,6 +298,7 @@ function LineBox({
   inputMode,
   testId,
   span,
+  pickLabel,
 }: {
   name: string;
   caption: string;
@@ -188,18 +311,20 @@ function LineBox({
   inputMode?: "text" | "numeric" | "decimal";
   testId?: string;
   span?: boolean;
+  /** A time box (§NNN): the clock button's accessible name beside it, and the box read as a time when it is left. */
+  pickLabel?: string;
 }) {
   const recall = useRecall();
   const value = recall.value(name) ?? initial;
   const named = recall.named(name);
-  const common = {
+  const attributes: BoxAttributes = {
     id: recall.idOf(name),
     name,
     "aria-label": label,
     "aria-invalid": named ? true : undefined,
     "data-testid": testId,
-    sx: BOX_SX,
   };
+  const common = { ...attributes, sx: BOX_SX };
   return (
     // On a phone the note takes the whole line; from the medium width it is the sixth column the header names, beside the others.
     // `minWidth: 0` (§844): a grid cell otherwise keeps its box's natural width and the line runs past the card.
@@ -215,6 +340,8 @@ function LineBox({
             </option>
           ))}
         </Box>
+      ) : pickLabel !== undefined ? (
+        <TimeInput key={recall.generation} box={attributes} initial={value} maxLength={maxLength} placeholder={placeholder} pickLabel={pickLabel} />
       ) : (
         <Box
           component="input"
@@ -279,9 +406,27 @@ function CommonBoxes({ rowKey, values, words, runner }: { rowKey: string; values
   const box = (name: ResultRowBox) => resultBox(rowKey, name);
   return (
     <>
-      <LineBox name={box("time")} caption={words.time} label={`${words.time}: ${runner}`} initial={values.time} placeholder={words.timePlaceholder} inputMode="text" maxLength={14} testId="result-time" />
+      <LineBox
+        name={box("time")}
+        caption={words.time}
+        label={`${words.time}: ${runner}`}
+        initial={values.time}
+        placeholder={words.timePlaceholder}
+        maxLength={14}
+        testId="result-time"
+        pickLabel={words.pickTime.replace("{runner}", runner)}
+      />
       <LineBox name={box("status")} caption={words.status} label={`${words.status}: ${runner}`} initial={values.status} kind="select" options={words.statusOptions} testId="result-status" />
-      <LineBox name={box("chip")} caption={words.chip} label={`${words.chip}: ${runner}`} initial={values.chip} placeholder={words.timePlaceholder} maxLength={14} testId="result-chip" />
+      <LineBox
+        name={box("chip")}
+        caption={words.chip}
+        label={`${words.chip}: ${runner}`}
+        initial={values.chip}
+        placeholder={words.timePlaceholder}
+        maxLength={14}
+        testId="result-chip"
+        pickLabel={words.pickChip.replace("{runner}", runner)}
+      />
       <LineBox name={box("note")} caption={words.note} label={`${words.note}: ${runner}`} initial={values.note} maxLength={RESULT_NOTE_MAX} testId="result-note" span />
     </>
   );
@@ -310,7 +455,7 @@ function DeleteButton({ bibNumber, runner, words }: { bibNumber: number; runner:
 /** The runners who registered: a line each, checked-in first, each with its four boxes and, once it has a result, «Șterge». */
 export function RegisteredResultLines({ lines, words }: { lines: readonly RegisteredLine[]; words: ResultWords }) {
   return (
-    <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="result-lines">
+    <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, ...TIME_STYLES }} data-testid="result-lines">
       {lines.map((line) => {
         const runner = `#${line.bibNumber} ${line.name}`;
         return (
@@ -387,7 +532,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
   }, [added]);
   return (
     <Box ref={container} data-testid="typed-lines">
-      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, [`& .${CAPTION_CLASS}`]: { display: "block" } }}>
+      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, ...TIME_STYLES, [`& .${CAPTION_CLASS}`]: { display: "block" } }}>
         {Array.from({ length: count }, (_, index) => {
           const line = lines[index];
           const key = typedRowKey(index);

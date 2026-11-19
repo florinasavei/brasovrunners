@@ -9819,7 +9819,7 @@
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
                 "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
                 "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
-                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
+                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele, minutele și secundele, pe 24 de ore, și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
                 "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
@@ -12388,8 +12388,8 @@
       "backToEvent": "Înapoi la eveniment",
       "link": "Clasament",
       "registrationsLink": "Înscrierile evenimentului",
-      "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
-      "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
+      "intro": "Scrie timpii sau alege-i de la ceasul de lângă căsuță, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
+      "introMore": "Un rând pe alergător, după numărul de concurs. Timpul se poate scrie și doar din cifre: 12345 e 1:23:45. Timpii egali împart locul; un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
       "notStarted": "Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.",
       "notStartedEnterOnly": "Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.",
@@ -12442,6 +12442,13 @@
         "place": "Loc"
       },
       "timePlaceholder": "h:mm:ss",
+      "pickTime": "Alege timpul: {runner}",
+      "pickChip": "Alege timpul cip: {runner}",
+      "picker": {
+        "help": "Ore, minute și secunde, pe 24 de ore. Zecimile (mm:ss.t) și timpii de peste 24 de ore se scriu în căsuță; „OK” pune secunde întregi.",
+        "ok": "OK",
+        "cancel": "Anulează"
+      },
       "birthDatePlaceholder": "ZZ.LL.AAAA",
       "present": "Prezent",
       "publicLine": {

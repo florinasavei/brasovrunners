@@ -42,6 +42,7 @@ import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
+import ClockPickerHost from "@/shared/forms/pickers/ClockPickerHost";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
@@ -165,6 +166,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       { value: "MALE", label: t("registrations.statistics.sexMale") },
     ],
     deleteFor: t("results.deleteFor", { runner: "{runner}" }),
+    pickTime: t("results.pickTime", { runner: "{runner}" }),
+    pickChip: t("results.pickChip", { runner: "{runner}" }),
     delete: t("results.delete"),
     present: t("results.present"),
     nameless: t("results.nameless"),
@@ -375,75 +378,79 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Alert>
       )}
 
-      {/* The one form of the page: the import box, the registered runners' lines, the typed ones and the one «Salvează tot clasamentul». */}
-      <ActionForm action={saveEventResultsAction} scope="results" messages={boxes} data-testid="results-form">
-        <input type="hidden" name="uiLocale" value={locale} />
-        <input type="hidden" name="eventId" value={id} />
-        {/* What the stored rows were when the page was drawn: a form older than another session's save is refused, not written over it. */}
-        <RecallHidden name="fingerprint" value={view.fingerprint} />
-        {/* The default of the form: Enter in a box saves, and never imports — the import button below comes first in the page. */}
-        <Box component="button" type="submit" name="intent" value="save" tabIndex={-1} aria-hidden="true" sx={{ ...VISUALLY_HIDDEN, opacity: 0 }} />
-        <Stack spacing={2}>
-          <Panel glyph="importCsv" collapsible level={3} title={t("results.import.title")} aside={t("results.import.aside")} id="box-results-import" data-testid="results-import">
-            <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
-                {t("results.import.intro")}
-                <QuietHelp text={t("results.import.more")} />
-              </Typography>
-              <RecallField
-                name="importText"
-                label={t("results.import.textLabel")}
-                multiline
-                minRows={4}
-                fullWidth
-                size="small"
-                defaultValue=""
-                slotProps={{ htmlInput: { spellCheck: false, autoComplete: "off", "data-testid": "results-import-text" } }}
-              />
-              <Typography variant="body2">{t("results.import.fileLabel")}</Typography>
-              <ImportFilePicker words={{ choose: t("results.import.fileChoose"), chooseAgain: t("results.import.fileChooseAgain"), none: t("results.import.fileNone") }} />
-              <Box>
-                <GlyphSubmitButton icon="upload" variant="outlined" name="intent" value="import" label={t("results.import.button")} pendingLabel={t("results.import.pending")} />
-              </Box>
-            </Stack>
-          </Panel>
+      {/* The page's ONE clock picker (§NNN), for every «Timp» and «Timp cip» of both panels: loaded on the first press, and outside the
+          form, so nothing it draws is the form's. */}
+      <ClockPickerHost words={{ help: t("results.picker.help"), ok: t("results.picker.ok"), cancel: t("results.picker.cancel") }}>
+        {/* The one form of the page: the import box, the registered runners' lines, the typed ones and the one «Salvează tot clasamentul». */}
+        <ActionForm action={saveEventResultsAction} scope="results" messages={boxes} data-testid="results-form">
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={id} />
+          {/* What the stored rows were when the page was drawn: a form older than another session's save is refused, not written over it. */}
+          <RecallHidden name="fingerprint" value={view.fingerprint} />
+          {/* The default of the form: Enter in a box saves, and never imports — the import button below comes first in the page. */}
+          <Box component="button" type="submit" name="intent" value="save" tabIndex={-1} aria-hidden="true" sx={{ ...VISUALLY_HIDDEN, opacity: 0 }} />
+          <Stack spacing={2}>
+            <Panel glyph="importCsv" collapsible level={3} title={t("results.import.title")} aside={t("results.import.aside")} id="box-results-import" data-testid="results-import">
+              <Stack spacing={1.5}>
+                <Typography variant="body2" color="text.secondary">
+                  {t("results.import.intro")}
+                  <QuietHelp text={t("results.import.more")} />
+                </Typography>
+                <RecallField
+                  name="importText"
+                  label={t("results.import.textLabel")}
+                  multiline
+                  minRows={4}
+                  fullWidth
+                  size="small"
+                  defaultValue=""
+                  slotProps={{ htmlInput: { spellCheck: false, autoComplete: "off", "data-testid": "results-import-text" } }}
+                />
+                <Typography variant="body2">{t("results.import.fileLabel")}</Typography>
+                <ImportFilePicker words={{ choose: t("results.import.fileChoose"), chooseAgain: t("results.import.fileChooseAgain"), none: t("results.import.fileNone") }} />
+                <Box>
+                  <GlyphSubmitButton icon="upload" variant="outlined" name="intent" value="import" label={t("results.import.button")} pendingLabel={t("results.import.pending")} />
+                </Box>
+              </Stack>
+            </Panel>
 
-          {/* «Loc» in plain words (§985; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
-              has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
-          {(registered.length > 0 || typed.length > 0) && (
-            <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
-              {t("results.placeHint")}
-              <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
-            </Typography>
-          )}
-
-          <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
-            {registered.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" data-testid="results-registered-empty">
-                {t("results.registered.empty")}
+            {/* «Loc» in plain words (§985; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
+                has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
+            {(registered.length > 0 || typed.length > 0) && (
+              <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
+                {t("results.placeHint")}
+                <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
               </Typography>
-            ) : (
-              <>
-                <ResultsHeader words={words} />
-                <RegisteredResultLines lines={registered} words={words} />
-              </>
             )}
-          </Panel>
 
-          <Panel glyph="invite" collapsible level={3} title={t("results.typed.title")} aside={t("results.typed.aside", { count: String(typed.length) })} id="box-results-typed" openWhen={{ inUse: typed.length > 0 }} data-testid="results-typed">
-            <Stack spacing={1}>
-              <Typography variant="body2" color="text.secondary">
-                {t("results.typed.intro")}
-              </Typography>
-              <TypedResultLines lines={typed} words={words} />
-            </Stack>
-          </Panel>
+            <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
+              {registered.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" data-testid="results-registered-empty">
+                  {t("results.registered.empty")}
+                </Typography>
+              ) : (
+                <>
+                  <ResultsHeader words={words} />
+                  <RegisteredResultLines lines={registered} words={words} />
+                </>
+              )}
+            </Panel>
 
-          <Box>
-            <GlyphSubmitButton icon="save" name="intent" value="save" label={t("results.save")} pendingLabel={t("results.saving")} slowHint={t("results.slow")} />
-          </Box>
-        </Stack>
-      </ActionForm>
+            <Panel glyph="invite" collapsible level={3} title={t("results.typed.title")} aside={t("results.typed.aside", { count: String(typed.length) })} id="box-results-typed" openWhen={{ inUse: typed.length > 0 }} data-testid="results-typed">
+              <Stack spacing={1}>
+                <Typography variant="body2" color="text.secondary">
+                  {t("results.typed.intro")}
+                </Typography>
+                <TypedResultLines lines={typed} words={words} />
+              </Stack>
+            </Panel>
+
+            <Box>
+              <GlyphSubmitButton icon="save" name="intent" value="save" label={t("results.save")} pendingLabel={t("results.saving")} slowHint={t("results.slow")} />
+            </Box>
+          </Stack>
+        </ActionForm>
+      </ClockPickerHost>
 
       {/* A line's «Șterge»: one hidden form for the whole page; the button names it with `form=` and posts its number. Asks first (§384). */}
       <ActionForm
