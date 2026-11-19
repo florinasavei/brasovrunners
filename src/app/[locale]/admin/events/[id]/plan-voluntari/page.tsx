@@ -522,7 +522,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
             {t("volunteers.plan.table.nobody")}
           </Box>
         ) : (
-          <Box component="ol" sx={TABLE_PEOPLE_SX} data-testid="plan-table-people">
+          <Box component="ol" role="list" sx={TABLE_PEOPLE_SX} data-testid="plan-table-people">
             {people.map((person, at) => (
               <li key={person.id} data-testid="plan-table-person">
                 <span data-testid="plan-table-person-number">{personNumber(at + 1)}</span>{" "}
@@ -766,7 +766,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                   </Typography>
                 ) : (
                   // Numbered in the point's order, as the table numbers them (§NNN): «1.», «2.», … before each name.
-                  <Stack spacing={1} component="ol" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="plan-point-people">
+                  <Stack spacing={1} component="ol" role="list" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="plan-point-people">
                     {people.map((person, at) => (
                       <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
                         {personWords(person, at + 1)}
