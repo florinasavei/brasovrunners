@@ -6529,6 +6529,7 @@
         "kitNo": "Nu are kit",
         "columnKit": "Kit",
         "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotește acordul părintelui pentru minori. «—»: nu a spus-o.",
+        "contactHint": "Adresa de e-mail și, sub ea, telefonul, cum le-a scris persoana sau organizatorul. Apasă pe adresă ca să scrii, pe număr ca să suni. Le văd doar organizatorii și administratorii.",
         "raffleOut": "Nu participă la tombolă",
         "columnRaffle": "Tombolă",
         "raffleTick": "Participă",
