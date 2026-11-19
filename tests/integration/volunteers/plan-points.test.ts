@@ -650,11 +650,11 @@ describe("§961 the words a refusal is said with", () => {
 });
 
 /*
-  §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Notă pentru voluntari» (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
+  §1009, BR-REQ-050-02, BR-REQ-060-01 — «Notă pentru voluntari» (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
   voluntari"»): what everybody standing at a point has to know, on any point, in Romanian and in English — both or neither, at most
   500 characters each, its line breaks kept —, written by «Salvează punctul» and audited as the point's other changes, never its words.
 */
-describe("§NNN «Notă pentru voluntari»: written with the point, both or neither, audited without its words", () => {
+describe("§1009 «Notă pentru voluntari»: written with the point, both or neither, audited without its words", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
   const noteOf = async (id: string) => {
     const row = await rowOf(id);

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * The migration of «Notă pentru voluntari» (§NNN; the owner, 2026-11-19, of «Planul voluntarilor»: «si am nevoie de un nou field
+ * The migration of «Notă pentru voluntari» (§1009; the owner, 2026-11-19, of «Planul voluntarilor»: «si am nevoie de un nou field
  * "noua pentru voluntari"»), proven on real PostgreSQL (PGlite), on a database migrated by the release before: two columns on a
  * route's points — `volunteer_note_ro` and `volunteer_note_en`, absent on every row from before and on a row written without them
  * — and the check that holds them to both languages or neither, each 1 to 500 characters. The file only expands.

@@ -219,7 +219,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       const openMap = escaped(words.points.openMap);
 
       // One row a point, in the order the owner reads the day: the route by kilometre — the plan's own «Izvor», typed last,
-      // second at 3.4 km and numbered so — then the start–finish as the page lists it, with no number. Since §NNN each point's
+      // second at 3.4 km and numbered so — then the start–finish as the page lists it, with no number. Since §1009 each point's
       // people are a numbered list, so the cell's words begin with «1.» and a second person reads «2.» (the owner, 2026-11-19:
       // «vreau sa numerotez aici voluntarii»).
       expect(rows.map((cells) => cells.map(wordsOf)), locale).toEqual(
@@ -326,7 +326,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     ] as const) {
       state.locale = locale;
       const section = sectionOf(await planPage(race.otherId));
-      // The one person numbered too (§NNN): «1.» before her name.
+      // The one person numbered too (§1009): «1.» before her name.
       expect(rowsOf(wideOf(section)).map((cells) => cells.map(wordsOf))).toEqual([
         ["1", locale === "ro" ? "Punctul altui eveniment" : "Another event's point", "3", "—", "1. Mara Dinu +40 700 000 066 mara.dinu@example.test", "1"].map((cell) => escaped(cell)),
       ]);
@@ -379,7 +379,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     expect(tallClass(page, classesIn(tagsOf(section, "plan-table-map")[0]))).toBe(true);
   });
 
-  it("numbers each point's people from 1, each name in bold and in capitals, a thin line between two — in the table and the phone's blocks, on paper too (§NNN)", async () => {
+  it("numbers each point's people from 1, each name in bold and in capitals, a thin line between two — in the table and the phone's blocks, on paper too (§1009)", async () => {
     await fullPlan();
     // The rules from the page as streamed; its structure from the same markup with Emotion's `<style>` tags taken out.
     const page = await planPage(race.raceId, true);
@@ -419,7 +419,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     expect(listClasses.some((part) => new RegExp(`\\.${part}>li\\{`).test(rulesOf(page)))).toBe(false);
   });
 
-  it("draws a point's «Notă pentru voluntari» under its name in the «Punct» cell — the page's language, its line breaks kept, wrapping inside the cell, printed — and nothing for a point with none (§NNN)", async () => {
+  it("draws a point's «Notă pentru voluntari» under its name in the «Punct» cell — the page's language, its line breaks kept, wrapping inside the cell, printed — and nothing for a point with none (§1009)", async () => {
     const { spring } = await fullPlan();
     const note = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
     // An editor's point and one of the plan's own, as «Salvează punctul» writes them.

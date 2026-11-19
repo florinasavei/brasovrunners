@@ -18,7 +18,7 @@ import { importsModule } from "../../helpers/module-imports";
  *    named only by those files, the schema, the two public-side files that name it to leave it out, and the email's template;
  * 3. **the table itself** is read only by the files listed, each held to how it reads: the public side through the one
  *    filter, the others a point by its id;
- * 4. **«Notă pentru voluntari»** (§NNN) — what the people standing at a point have to know — is named only by the files listed,
+ * 4. **«Notă pentru voluntari»** (§1009) — what the people standing at a point have to know — is named only by the files listed,
  *    and by nothing on the public side: not the one filter, its `Checkpoint`, the event's file or the race number's stamp.
  *
  * A new reader is a reviewed edit of these lists.
@@ -57,11 +57,11 @@ const IMPORTERS = [
 const NAMES_THE_KIND = /planOnly|plan_only|startFinish|start_finish/;
 /** A point's coordinates read from the table: the column of the Drizzle table, or of the stamp's own SQL alias. */
 const NAMES_A_POINTS_PLACE = /eventCheckpoints\s*\.\s*(?:latitude|longitude)|\bc\.(?:latitude|longitude)\b/;
-/** «Notă pentru voluntari» (§NNN): a point's note for the people standing at it, by the column or by the field. */
+/** «Notă pentru voluntari» (§1009): a point's note for the people standing at it, by the column or by the field. */
 const NAMES_THE_VOLUNTEER_NOTE = /volunteerNote(?:Ro|En)|volunteer_note_(?:ro|en)/;
 
 /**
- * Who may name «Notă pentru voluntari» (§NNN) — and why. The plan's side of a point too: the organizers' words to the people at a
+ * Who may name «Notă pentru voluntari» (§1009) — and why. The plan's side of a point too: the organizers' words to the people at a
  * point, on the plan and in the one email, never on the event's page, the chart, a race number, the event's file or a copy.
  */
 const NOTE_NAMERS = [
@@ -143,7 +143,7 @@ describe("§961 the plan's own points and every coordinate stay with the organiz
     expect(SOURCES.filter(({ text }) => NAMES_A_POINTS_PLACE.test(text)).map(({ file }) => relative(file))).toEqual([READER]);
   });
 
-  it("lets only the reviewed files name «Notă pentru voluntari» (§NNN) — and the public side none of them", () => {
+  it("lets only the reviewed files name «Notă pentru voluntari» (§1009) — and the public side none of them", () => {
     const naming = SOURCES.filter(({ text }) => NAMES_THE_VOLUNTEER_NOTE.test(text)).map(({ file }) => relative(file));
     expect(naming.sort()).toEqual([...NOTE_NAMERS].sort());
     // The one filter every public reader goes through hands no note on: its mapper names each field, and not this one.

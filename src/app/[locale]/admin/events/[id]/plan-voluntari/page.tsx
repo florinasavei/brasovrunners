@@ -100,7 +100,7 @@ const TABLE_PHONE_SX = { ...PHONE_LINK_SX, whiteSpace: "nowrap" } as const;
 const TABLE_EMAIL_SX = { ...PHONE_LINK_SX, overflowWrap: "anywhere" } as const;
 
 /**
- * The volunteers of one point in «Punctele, pe scurt» (§NNN; the owner, 2026-11-19: «vreau sa numerotez aici voluntarii si sa
+ * The volunteers of one point in «Punctele, pe scurt» (§1009; the owner, 2026-11-19: «vreau sa numerotez aici voluntarii si sa
  * fac cu bold numele lor» — «si vreau un separator acolo la voluntari sa se vada ca e o lista, gen un <hr/>»): a numbered list
  * whose numbers are its words («1.», «2.», …), each person under a thin line — the house's divider colour, one pixel — but the
  * first, on the screen and on paper alike.
@@ -112,11 +112,11 @@ const TABLE_PEOPLE_SX = {
   "& > li + li": { borderTop: "1px solid", borderColor: "divider", mt: 0.75, pt: 0.75 },
 } as const;
 
-/** A person's name in that list (§994, §NNN): in bold and in capitals — the words stay as typed — breaking inside the cell. */
+/** A person's name in that list (§994, §1009): in bold and in capitals — the words stay as typed — breaking inside the cell. */
 const TABLE_PERSON_NAME_SX = { fontWeight: 700, overflowWrap: "anywhere", textTransform: "uppercase" } as const;
 
 /**
- * «Notă pentru voluntari» where the plan draws it (§NNN): a quiet block under the point's name — in its fold on «Pe puncte», in
+ * «Notă pentru voluntari» where the plan draws it (§1009): a quiet block under the point's name — in its fold on «Pe puncte», in
  * the «Punct» cell of «Punctele, pe scurt» —, its label in bold, the note's own line breaks kept and a long word broken, so it
  * wraps inside the cell and never widens the table, a phone's 320 pixels included; on paper as on the screen. Its own weight and
  * size: the phone's block draws the cell inside a bold headline.
@@ -319,7 +319,7 @@ const PENCIL_FOLD_SX = {
  * the race-day decision in a quiet line of its own, which prints, and the person's internal notes, newest first with their day,
  * which never print. Both come with the plan's one read (`readVolunteerPlan`); the notes only for a role their own gate allows.
  *
- * «Notă pentru voluntari» and the people as a list (§NNN; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
+ * «Notă pentru voluntari» and the people as a list (§1009; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
  * voluntari"», «vreau sa numerotez aici voluntarii si sa fac cu bold numele lor», «vreau un separator acolo la voluntari sa se
  * vada ca e o lista»): every point may carry what everybody standing there has to know, in both languages, written in its
  * «Modifică punctul» and drawn under its name — in its fold on «Pe puncte», in the «Punct» cell of «Punctele, pe scurt» — on
@@ -385,7 +385,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const peopleWords = (count: number) => (count === 0 ? t("volunteers.plan.peopleNone") : t(`volunteers.plan.people.${countForm(count, locale)}`, { count }));
   const nameOf = (point: PlanPoint) => (locale === "ro" ? point.nameRo : point.nameEn);
   /**
-   * A point's «Notă pentru voluntari» as the plan draws it (§NNN), under the point's name — in its fold on «Pe puncte» and in the
+   * A point's «Notă pentru voluntari» as the plan draws it (§1009), under the point's name — in its fold on «Pe puncte» and in the
    * «Punct» cell of «Punctele, pe scurt»: «Notă pentru voluntari:» in bold, then the note in the page's language, its line breaks
    * kept; on the screen and on paper. Nothing for a point that has none.
    */
@@ -401,7 +401,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       </Typography>
     );
   };
-  /** A person's number in their point's list (§NNN): «1.», «2.», … in the point's order — the plan's, by name. */
+  /** A person's number in their point's list (§1009): «1.», «2.», … in the point's order — the plan's, by name. */
   const personNumber = (number: number) => t("volunteers.plan.personNumber", { number });
   const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
 
@@ -465,7 +465,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       label: t("volunteers.plan.table.columns.point"),
       // The phone's block is headed by the point's name.
       primary: true,
-      // Under the name, the point's «Notă pentru voluntari» (§NNN), which prints with the table.
+      // Under the name, the point's «Notă pentru voluntari» (§1009), which prints with the table.
       render: ({ point }) => (
         <>
           <Box component="a" href={planAddress(planPath, { view: "points", open: point.id, hash: `point-${point.id}` })} sx={POINT_LINK_SX} data-testid="plan-table-point">
@@ -513,7 +513,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       // The point's people in the point's order, a line each: the name and the telephone to ring — and under it the organizers'
       // decision and notes about the person (§981). Since §994 (the owner, 2026-11-19: «Aici vreau numele cu caps și vreau și
       // mailul»), the name in capitals, so each person stands out from the words under them — the text stays as typed, for a
-      // screen reader and a copy —, and the address after the telephone. Since §NNN («vreau sa numerotez aici voluntarii si sa
+      // screen reader and a copy —, and the address after the telephone. Since §1009 («vreau sa numerotez aici voluntarii si sa
       // fac cu bold numele lor» — «un separator … sa se vada ca e o lista»), a numbered list: «1.», «2.», … before each name,
       // the name in bold, and a thin line between two people (`TABLE_PEOPLE_SX`) — the phone's block the same, and the paper.
       render: ({ people }) =>
@@ -661,7 +661,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   /**
    * One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct» —, and
    * under it the organizers' own words about them (`ownWordsOf`). At a point, `place` is the person's place in the point's list
-   * (§NNN), said before the name as the table says it: «1.», «2.», …; under «Fără punct» nobody is numbered.
+   * (§1009), said before the name as the table says it: «1.», «2.», …; under «Fără punct» nobody is numbered.
    */
   const personWords = (person: VolunteerPlanPerson, place?: number) => {
     const roles = rolesOf(person);
@@ -734,7 +734,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
             </Typography>
           </Box>
           <Stack spacing={1.5}>
-            {/* Under the bar, the point's «Notă pentru voluntari» (§NNN): what everybody standing here has to know — printed. */}
+            {/* Under the bar, the point's «Notă pentru voluntari» (§1009): what everybody standing here has to know — printed. */}
             {volunteerNoteBlock(point, "fold", "plan-point-volunteer-note")}
             {/* A point of the route that only the plan has: said so, quietly; then what an editor's point offers, and its note. */}
             {((point.planOnly && !point.startFinish) || facts.length > 0) && (
@@ -765,7 +765,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                     {t("volunteers.plan.nobodyHere")}
                   </Typography>
                 ) : (
-                  // Numbered in the point's order, as the table numbers them (§NNN): «1.», «2.», … before each name.
+                  // Numbered in the point's order, as the table numbers them (§1009): «1.», «2.», … before each name.
                   <Stack spacing={1} component="ol" role="list" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="plan-point-people">
                     {people.map((person, at) => (
                       <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
@@ -848,7 +848,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                       size="small"
                       slotProps={{ htmlInput: { "data-testid": "plan-point-edit-coordinates" } }}
                     />
-                    {/* «Notă pentru voluntari» (§NNN), of any point — an editor's too: what everybody standing here has to know, in
+                    {/* «Notă pentru voluntari» (§1009), of any point — an editor's too: what everybody standing here has to know, in
                         Romanian and in English, both or neither (the service refuses one alone), the browser stopping each box at
                         its most. Plain text: a line break typed is a line break on the plan and in the email. */}
                     <TextField

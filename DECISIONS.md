@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.80-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.81-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.81-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31431,3 +31431,20 @@ Baseline `BR-V4.80-2026-11-20`.
 **Decision.** The button says «Finish» — the same word in English —, its stopwatch kept, and so do the lines that name it: «Vin mulți deodată? Apasă «Finish» pentru fiecare…», the guide's two «Cronometrare» steps, and the runbook, `SETUP.md`, `AGENTS.md` and the code's comments. What it does is as it was: each press keeps one moment, oldest first, and the next number or elite pressed takes the oldest. «Sosit» beside the number box keeps its name: «Finish» is the press without a number, «Sosit» the one with it.
 
 Baseline `BR-V4.80-2026-11-20`.
+
+## 1009. «Notă pentru voluntari» on each point of the plan, and a point's people as a numbered list
+
+**The owner, 2026-11-19**, of «Planul voluntarilor»: «si am nevoie de un nou field "noua pentru voluntari"» — then «vreau sa numerotez aici voluntarii si sa fac cu bold numele lor: in lista de "planul voluntarilor"» and «vreau un separator acolo la voluntari sa se vada ca e o lista, gen un <hr/>».
+
+**Decision.**
+
+1. **One note a point.** Every point of the plan — the editor's «Puncte pe traseu» and the plan's own alike — may carry «Notă pentru voluntari» / “Note for the volunteers”: what everybody standing there has to know («Direcționați spre stânga la intersecție; vestă reflectorizantă»). Romanian and English, both or neither (§352), at most 500 characters each (`PLAN_POINT_NOTE_MAX`), plain text whose line breaks are kept. It is stored with the point (`event_checkpoints.volunteer_note_ro`, `volunteer_note_en`, an expand-only migration whose CHECK holds both or neither and the length) and written in the point's own «Modifică punctul» on «Pe puncte», after the coordinates, by whoever works the volunteers — `canManageVolunteers`, asked at the action's door and again in `changePlanPoint`. Of an editor's point only the coordinates and the note are read there: its name and kilometre stay the editor's. One language alone (`PLAN_POINT_NOTE_ONE_LANGUAGE`) or more than 500 characters in either (`PLAN_POINT_NOTE_TOO_LONG`, counted as the database counts) is refused with nothing written and said at the page's alert; both boxes empty take the note off; a form that posts neither box keeps it. The trail is the point's own `volunteer_plan.point_changed`, which says whether there was a note before and is one after (`volunteerNote: { from, to }`) and never its words — a note may well name a person.
+2. **Where it is read.** Under the point's name: first under the bar of its fold on «Pe puncte», and in the «Punct» cell of «Punctele, pe scurt» — «Notă pentru voluntari:» in bold, then the note in the page's language, its line breaks kept, wrapping inside the cell and never widening the table (at most 42 characters wide there) — on the screen, in the phone's blocks and printed with the plan in both views. In «Punctul tău de voluntar» it is its own paragraph right under the band that names the point, «Notă pentru voluntari: …», each half in its own language, read as the point stands at the send; nothing at all for a point that has none. The email's preview on «Emailuri» shows a made-up one.
+3. **The people as a list.** In «Punctele, pe scurt» a point's volunteers are an ordered list numbered «1.», «2.», … in the point's order — starting again at each point —, each name in bold and still in capitals (§994), with a one-pixel line in the house's divider colour between two people of the same point: on the screen, in the phone's blocks and on paper. «Pe puncte» numbers each point's people the same way, before their names; «Fără punct» is no point's list and numbers nobody.
+4. **Nothing else moves:** the race-day decision and the notes under each person, the telephones and addresses, the counts, the table's columns.
+
+**Not public, by construction.** The note is the plan's side of a point, as its coordinates are (§961): the public reader (`event-checkpoints/checkpoints.ts`) never names it, so the event's page, the route's chart, the race number, the event's file and a copy of the event are what they were; the editor's save and an import update a kept row by its id and leave the note on it. `tests/unit/volunteers/plan-points-never-leave.test.ts` holds the list of the files that may name it.
+
+**Refused.** The note in «Adaugă un punct»: the owner's ask is a note on the plan's points, and the point's own form is where its words are changed — a point is added in one press and given its note in the next. Keeping what was typed when a save is refused: «Modifică punctul» stays the plain form it was, its refusals said at the page's alert (§953), the browser holding each box to 500 characters. Emailing anybody when a note changes: who already knows their point stays told, and «Trimite din nou tuturor» is how a new note is sent, as for the coordinates (§961).
+
+Baseline `BR-V4.81-2026-11-20`.

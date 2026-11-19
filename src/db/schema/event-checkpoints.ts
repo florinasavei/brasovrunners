@@ -12,7 +12,7 @@ import { events } from "./events";
  */
 export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION", "REGROUP"]);
 
-/** The most characters «Notă pentru voluntari» holds in each language (§NNN); the check below holds the same bound. */
+/** The most characters «Notă pentru voluntari» holds in each language (§1009); the check below holds the same bound. */
 export const PLAN_POINT_NOTE_MAX = 500;
 
 /**
@@ -53,7 +53,7 @@ export const PLAN_POINT_NOTE_MAX = 500;
  * `event-checkpoints/checkpoints.ts`, which every one of those readers goes through, reads only the
  * rows that are not plan-only, and the volunteers' side has a reader of its own
  * (`volunteers/plan-points.ts`). A guard holds the list of files that may name the four columns
- * below, and the two of «Notă pentru voluntari» after them (§NNN), which are the plan's too
+ * below, and the two of «Notă pentru voluntari» after them (§1009), which are the plan's too
  * (`tests/unit/volunteers/plan-points-never-leave.test.ts`).
  */
 export const eventCheckpoints = pgTable(
@@ -117,7 +117,7 @@ export const eventCheckpoints = pgTable(
     latitude: numeric("latitude", { precision: 8, scale: 6 }),
     longitude: numeric("longitude", { precision: 9, scale: 6 }),
     /**
-     * «Notă pentru voluntari» (§NNN; the owner, 2026-11-19, of «Planul voluntarilor»: «si am nevoie de un nou field "noua pentru
+     * «Notă pentru voluntari» (§1009; the owner, 2026-11-19, of «Planul voluntarilor»: «si am nevoie de un nou field "noua pentru
      * voluntari"»): what everybody standing at this point has to know — «Direcționați spre stânga la intersecție; vestă
      * reflectorizantă» —, for any point, the editor's too, in each language: both or neither (a check below), at most
      * `PLAN_POINT_NOTE_MAX` characters each, plain text whose line breaks are kept. Written on the plan's page
@@ -149,7 +149,7 @@ export const eventCheckpoints = pgTable(
       "event_checkpoints_coordinates_range",
       sql`(${t.latitude} IS NULL OR ${t.latitude} BETWEEN -90 AND 90) AND (${t.longitude} IS NULL OR ${t.longitude} BETWEEN -180 AND 180)`,
     ),
-    // «Notă pentru voluntari» (§NNN) is in both languages or in neither, each 1 to `PLAN_POINT_NOTE_MAX` characters.
+    // «Notă pentru voluntari» (§1009) is in both languages or in neither, each 1 to `PLAN_POINT_NOTE_MAX` characters.
     check(
       "event_checkpoints_volunteer_note_both_languages",
       sql`(${t.volunteerNoteRo} IS NULL) = (${t.volunteerNoteEn} IS NULL) AND (${t.volunteerNoteRo} IS NULL OR (char_length(${t.volunteerNoteRo}) BETWEEN 1 AND ${sql.raw(String(PLAN_POINT_NOTE_MAX))} AND char_length(${t.volunteerNoteEn}) BETWEEN 1 AND ${sql.raw(String(PLAN_POINT_NOTE_MAX))}))`,

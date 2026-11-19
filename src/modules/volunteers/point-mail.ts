@@ -291,7 +291,7 @@ export type VolunteerPointFacts = {
   noteRo: string | null;
   noteEn: string | null;
   /**
-   * «Notă pentru voluntari» (§NNN): what everybody standing at the point has to know, in each language — both or neither, line
+   * «Notă pentru voluntari» (§1009): what everybody standing at the point has to know, in each language — both or neither, line
    * breaks as `\n` — said as its own paragraph under the point's name, each half in its own language. Null for none.
    */
   volunteerNoteRo: string | null;
@@ -323,7 +323,7 @@ export type VolunteerPointFacts = {
  *
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
  * (`render.ts`); this reads only what is the point's — its number in the route's order, or none at the start–finish, its
- * name, its kilometre, where it is and its «Notă pentru voluntari» (§NNN), from the plan's one list
+ * name, its kilometre, where it is and its «Notă pentru voluntari» (§1009), from the plan's one list
  * (`plan-points.ts#listPlanPoints`, §961), which is what
  * the plan's page reads, so the message and the page say one point one way; the pictures and the links are the plan's as
  * they are now (`plan.ts#readVolunteerPlanMaps`, §978).

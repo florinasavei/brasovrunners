@@ -70,7 +70,7 @@ beforeEach(async () => {
 });
 
 type PointBoxes = { place: string; name: string; km: string; coordinates: string };
-/** «Notă pentru voluntari» (§NNN), as «Salvează punctul» posts it. */
+/** «Notă pentru voluntari» (§1009), as «Salvează punctul» posts it. */
 type NoteBoxes = { volunteerNoteRo?: string; volunteerNoteEn?: string };
 function point(request: ({ kind: "add" } & PointBoxes) | ({ kind: "edit"; id: string } & PointBoxes & NoteBoxes) | { kind: "remove"; id: string }) {
   return changePlanPoint(db, staff.MODERATOR!, { ...request, eventId: race.raceId }, NOW);
@@ -272,11 +272,11 @@ describe("§961 a point that has coordinates says where it is", () => {
 });
 
 /*
-  §NNN, BR-REQ-080-02, BR-REQ-050-02 — «Notă pentru voluntari» in «Punctul tău de voluntar» (the owner, 2026-11-19: «si am nevoie de
+  §1009, BR-REQ-080-02, BR-REQ-050-02 — «Notă pentru voluntari» in «Punctul tău de voluntar» (the owner, 2026-11-19: «si am nevoie de
   un nou field "noua pentru voluntari"»): the point's note for the people standing at it, its own paragraph right under the band
   that names the point, each half in its own language — and nothing at all for a point that has none.
 */
-describe("§NNN the message says the point's «Notă pentru voluntari»", () => {
+describe("§1009 the message says the point's «Notă pentru voluntari»", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
   /** «Notă pentru voluntari» of each half, as the HTML carries it. */
   const notesOf = (html: string) => [...html.matchAll(/<p data-email-part="volunteer-point-note"[^>]*>([^]*?)<\/p>/g)].map((match) => match[1]);

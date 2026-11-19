@@ -306,7 +306,7 @@ export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
  * refuse. No role, as no volunteer's preview has one (the message says nothing about roles then). One picture and one link of
  * the plan (§978), so the preview draws the part they make: the platform's own banner standing for the map — a preview draws
  * none of the club's stored pictures — and a made-up map's address on the site itself, with its label (one for both
- * languages, as a plan's link has). And its «Notă pentru voluntari» (§NNN), two lines, so the preview shows the paragraph
+ * languages, as a plan's link has). And its «Notă pentru voluntari» (§1009), two lines, so the preview shows the paragraph
  * under the band and that a line break is kept.
  */
 export const EMAIL_SAMPLE_PLAN_POINT = {

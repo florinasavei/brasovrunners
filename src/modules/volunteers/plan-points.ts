@@ -45,7 +45,7 @@ import { isUuid } from "@/shared/ids";
   Nothing here emails anybody, moves a person's state or number, or expires a public cache tag: no public page reads these
   rows. Telling the volunteers stays one press of its own, «Trimite fiecăruia punctul lui» (§956).
 
-  **«Notă pentru voluntari» (§NNN; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"»).** Every
+  **«Notă pentru voluntari» (§1009; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"»).** Every
   point — the editor's and the plan's own alike — may carry what everybody standing there has to know («Direcționați spre
   stânga la intersecție; vestă reflectorizantă»), in Romanian and in English, both or neither, at most `PLAN_POINT_NOTE_MAX`
   characters each, its line breaks kept (`volunteer_note_ro`, `volunteer_note_en`). It is the plan's side of
@@ -83,7 +83,7 @@ export type PlanPoint = {
   latitude: number | null;
   longitude: number | null;
   /**
-   * «Notă pentru voluntari» (§NNN): what everybody standing here has to know, in each language — both or neither, line breaks
+   * «Notă pentru voluntari» (§1009): what everybody standing here has to know, in each language — both or neither, line breaks
    * as `\n`. Any point may have one, the editor's too; null for none.
    */
   volunteerNoteRo: string | null;
@@ -162,7 +162,7 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
 // The verbs: «Adaugă punctul», «Salvează punctul», «Șterge punctul»
 // ---------------------------------------------------------------------------------------------
 
-/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§NNN) in «Modifică punctul» alone. */
+/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§1009) in «Modifică punctul» alone. */
 export const PLAN_POINT_BOXES = {
   place: "place",
   name: "name",
@@ -179,7 +179,7 @@ export const PLAN_POINT_REASONS = [
   "PLAN_POINT_KM_INVALID",
   "PLAN_POINT_TOO_MANY",
   "PLAN_POINT_IN_EDITOR",
-  // «Notă pentru voluntari» (§NNN): written in one language only, or longer than `PLAN_POINT_NOTE_MAX` in one of them.
+  // «Notă pentru voluntari» (§1009): written in one language only, or longer than `PLAN_POINT_NOTE_MAX` in one of them.
   "PLAN_POINT_NOTE_ONE_LANGUAGE",
   "PLAN_POINT_NOTE_TOO_LONG",
 ] as const;
@@ -233,7 +233,7 @@ export type PlanPointRequest =
   | { kind: "add"; eventId: string; place: unknown; name: unknown; km: unknown; coordinates: unknown }
   /**
    * «Salvează punctul»: all of a plan's own point, the kind included — or the coordinates alone of an editor's point —, and of
-   * either its «Notă pentru voluntari» (§NNN). A request that names neither of the note's boxes (`undefined`, a form drawn
+   * either its «Notă pentru voluntari» (§1009). A request that names neither of the note's boxes (`undefined`, a form drawn
    * before them) keeps the note as it is.
    */
   | { kind: "edit"; eventId: string; id: unknown; place: unknown; name: unknown; km: unknown; coordinates: unknown; volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }
@@ -282,14 +282,14 @@ function columnsOf(words: PointWords) {
 
 const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place && a.name === b.name && a.km === b.km && a.latitude === b.latitude && a.longitude === b.longitude;
 
-/** «Notă pentru voluntari» as it is stored (§NNN): both languages, or null in both. */
+/** «Notă pentru voluntari» as it is stored (§1009): both languages, or null in both. */
 type VolunteerNote = { ro: string | null; en: string | null };
 
 /** A note's words as they are stored: line breaks as `\n` — a browser posts a textarea's as `\r\n` —, the ends trimmed. */
 const noteWords = (value: unknown): string => (typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "");
 
 /**
- * What «Notă pentru voluntari» (§NNN) was posted as, held to the rules: each language at most `PLAN_POINT_NOTE_MAX` characters —
+ * What «Notă pentru voluntari» (§1009) was posted as, held to the rules: each language at most `PLAN_POINT_NOTE_MAX` characters —
  * counted as the table's check counts them (`char_length`: an emoji is one) — and both written or neither (§352: the house's rule
  * for every text the club types, `shared/forms/both-languages.ts`); both empty is no note. The first thing wrong, in the order of
  * the form's boxes, is refused naming its box: a language too long, then the language left empty.
@@ -309,7 +309,7 @@ const namesTheNote = (request: { volunteerNoteRo?: unknown; volunteerNoteEn?: un
 const sameNote = (a: VolunteerNote, b: VolunteerNote): boolean => a.ro === b.ro && a.en === b.en;
 
 /**
- * What the trail says of a note that changed (§NNN): only whether there was one before and is one after — never its words, which
+ * What the trail says of a note that changed (§1009): only whether there was one before and is one after — never its words, which
  * may well name a person («Ana aduce steagurile»). Nothing for a note that did not change.
  */
 const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, unknown> =>
@@ -330,7 +330,7 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  *   to the route it needs one. Of an editor's point, ONLY the coordinates: a posted name, kilometre or place for it is never
  *   read and never written — those are changed in the event's editor, where they are public. A point of another event, or
  *   one that is not there, is NOT_FOUND (`PlanPointGone`, said on the page as a point no longer on the plan).
- * - **«Notă pentru voluntari» (§NNN), on `edit` of either kind:** both languages or neither, each at most
+ * - **«Notă pentru voluntari» (§1009), on `edit` of either kind:** both languages or neither, each at most
  *   `PLAN_POINT_NOTE_MAX` characters, line breaks kept (`volunteerNoteOf`), read after the point's other boxes; both empty
  *   takes the note off. A request that names neither box keeps the note as it is.
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
@@ -428,7 +428,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
       return { changed: true, outcome: "removed", id: current.id, freed };
     }
 
-    // «Notă pentru voluntari» (§NNN), of either kind of point: as it is, and as the press would leave it — read after the
+    // «Notă pentru voluntari» (§1009), of either kind of point: as it is, and as the press would leave it — read after the
     // point's other boxes, so the first thing wrong is refused first; a request that names neither box keeps it.
     const noteBefore: VolunteerNote = { ro: current.volunteerNoteRo, en: current.volunteerNoteEn };
     const noteAfter = (): VolunteerNote => (request.kind === "edit" && namesTheNote(request) ? volunteerNoteOf(request) : noteBefore);

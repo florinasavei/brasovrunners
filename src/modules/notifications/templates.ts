@@ -1200,7 +1200,7 @@ export type TemplateData = {
    * when the organizers typed it: the numbers and a link to a map stand under the band; absent or null, the message is
    * what it was. Both are absent on the preview's made-up point, which is a point on the route with no coordinates.
    *
-   * `volunteerNoteRo` / `volunteerNoteEn` (§NNN) are the point's «Notă pentru voluntari» — what everybody standing there has
+   * `volunteerNoteRo` / `volunteerNoteEn` (§1009) are the point's «Notă pentru voluntari» — what everybody standing there has
    * to know, written on the plan's page in both languages (line breaks as `\n`): its own paragraph right under the band,
    * each half in its own language (`volunteerPointNotePart`); absent or null, nothing is said.
    */
@@ -1698,7 +1698,7 @@ function volunteerPointWhere(locale: EmailLocale, coordinates: { latitude: numbe
 }
 
 /**
- * «Notă pentru voluntari» (§NNN), its own paragraph right under the band that names the point: the label in bold and the note
+ * «Notă pentru voluntari» (§1009), its own paragraph right under the band that names the point: the label in bold and the note
  * on the same line — «Notă pentru voluntari: Direcționați spre stânga la intersecție» —, its own line breaks kept, escaped as
  * plain text with no emphasis read inside it (as an organizer's note is drawn, §331). The plain-text half the same, a line of
  * the note a line.
@@ -1713,7 +1713,7 @@ function volunteerPointNotePart(label: string, note: string): EmailBodyPart {
 
 /**
  * What the platform says of the point before the words of «Punctul tău» (§956), under the band that names it — each only
- * when there is something to say: the point's «Notă pentru voluntari» in this half's language (§NNN,
+ * when there is something to say: the point's «Notă pentru voluntari» in this half's language (§1009,
  * `volunteerPointNotePart`); where the point is, when it has coordinates (§961, `volunteerPointWhere`); the point's
  * own note as the club typed it (its label bold, no emphasis read inside it, as an organizer's note is drawn, §331); then
  * the roles the organizers gave the person and what they ask, in the role message's own sentence — nothing about roles
@@ -3184,7 +3184,7 @@ const T = {
     /**
      * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's pictures
      * and links (§978) — and, since §961, the band of a person at the start–finish and where a point with coordinates is; since
-     * §NNN, the label of the point's «Notă pentru voluntari».
+     * §1009, the label of the point's «Notă pentru voluntari».
      */
     volunteerPointWords: {
       line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,

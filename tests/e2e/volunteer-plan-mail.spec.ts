@@ -55,7 +55,7 @@ import { openFold } from "./support/fold";
  * what was typed —, opens it in a new tab, sees it printed after the plan with its whole address, and deletes it after a
  * question. The rules are `plan-unplaced-screens.test.ts`, `plan-picture.test.ts` and `plan-links.test.ts`.
  *
- * And, since §NNN (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"», «vreau sa numerotez aici
+ * And, since §1009 (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"», «vreau sa numerotez aici
  * voluntarii si sa fac cu bold numele lor», «vreau un separator acolo la voluntari sa se vada ca e o lista»): the Organizer
  * writes a point's «Notă pentru voluntari» in its «Modifică punctul» — a note in one language alone refused —, reads it under
  * the point's name on «Pe puncte» and in «Punctele, pe scurt», on the screen and on paper, the point's people numbered, their
@@ -813,7 +813,7 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
       await expect(wide.locator("thead th")).toHaveText(["Nr.", "Punct", "Km", "Coordonate", "Voluntari", "Câți"]);
       const rows = wide.locator("tbody tr");
       await expect(rows).toHaveCount(4);
-      // Since §NNN a point's people are a numbered list: the cell's words begin with «1.».
+      // Since §1009 a point's people are a numbered list: the cell's words begin with «1.».
       await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `1. ${ana.name} +40 712 345 678 ${ana.email}`, "1"]);
       await expect(rows.nth(1).locator("td")).toHaveText(["2", "Izvorul rece", "3,4", "45.64271, 25.58871 Deschide pe hartă", "niciunul", "0"]);
       await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `1. ${dan.name} +40 712 345 678 ${dan.email}`, "1"]);
@@ -980,7 +980,7 @@ test.describe("§978 «Poze și hărți» on «Planul voluntarilor»", () => {
   });
 });
 
-test.describe("§NNN «Notă pentru voluntari» and the numbered people on «Planul voluntarilor»", () => {
+test.describe("§1009 «Notă pentru voluntari» and the numbered people on «Planul voluntarilor»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   /** An element's box inside the screen's width: what «nothing wider than the phone» means for one element. */

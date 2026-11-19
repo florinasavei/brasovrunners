@@ -907,11 +907,11 @@ describe("§961 the «Voluntari» list's «Punct», and one number everywhere", 
 });
 
 /*
-  §NNN, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Notă pentru voluntari» on «Pe puncte» (the owner, 2026-11-19: «si am nevoie de
+  §1009, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Notă pentru voluntari» on «Pe puncte» (the owner, 2026-11-19: «si am nevoie de
   un nou field "noua pentru voluntari"»): written in the point's own «Modifică punctul», drawn first under the point's bar and
   printed; and the point's people numbered as the table numbers them («vreau sa numerotez aici voluntarii»).
 */
-describe("§NNN «Notă pentru voluntari» and the numbered people on «Pe puncte»", () => {
+describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe puncte»", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
   /** A textarea of a part, by its test id: its opening tag and what it holds. */
   const textareaOf = (part: string, testid: string) => {

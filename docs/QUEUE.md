@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.81` | «Notă pentru voluntari» on each point of the plan, its volunteers numbered in bold with a line between two (§1009) |
 | `BR-V4.80` | the team's undertaking at sign-in — a ninth legal text the club approves on its own, accepted on /admin/acord once per version by every colleague below the Administrator (§1006) · «Cronometrare» counts only who can finish (§1007) · «Prinde timpul» is now «Finish» (§1008) |
 | `BR-V4.79` | «Clasament» lists the elites first (§1005) |
 | `BR-V4.78` | the race-day desk folds by state, a press back on its row with its section open (§1002) · the registrations list says why someone cancelled (§1003) · the desk's eye says who appears by name (§1004) |

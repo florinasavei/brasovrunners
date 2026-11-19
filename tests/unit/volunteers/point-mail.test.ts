@@ -160,7 +160,7 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
         km: 5.5,
         noteRo: "Pahare în cutia albastră.",
         noteEn: "Cups in the blue box.",
-        // «Notă pentru voluntari» (§NNN): the platform's line too, whoever wrote the words.
+        // «Notă pentru voluntari» (§1009): the platform's line too, whoever wrote the words.
         volunteerNoteRo: "Umpleți paharele devreme.",
         volunteerNoteEn: "Fill the cups early.",
         pictures: [{ displayUrl: "https://media.example.test/plan/1280w.webp", fullUrl: "https://media.example.test/plan/web.webp", width: 2400, height: 1600 }],
@@ -177,7 +177,7 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     // The club's words…
     expect(roHalf).toContain("Ne vedem sâmbătă la Crosul de toamnă. Adu frontala.");
     expect(roHalf).not.toContain("Organizatorii te-au pus la un punct");
-    // …between the platform's own lines, in the order a reader needs them: the point, its note for the volunteers (§NNN), its
+    // …between the platform's own lines, in the order a reader needs them: the point, its note for the volunteers (§1009), its
     // public note, the role, then the words, then the picture.
     const order = [
       "▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană",
@@ -228,7 +228,7 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     expect(preview.text).toContain("▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană");
     expect(preview.text).toContain("▶ Your point at The autumn cross: 3. 5.5 km — Water at the hut");
     expect(preview.text).toContain("De știut la acest punct");
-    // Its «Notă pentru voluntari» (§NNN), in each half's language, under the band — two lines, so the kept line break shows.
+    // Its «Notă pentru voluntari» (§1009), in each half's language, under the band — two lines, so the kept line break shows.
     const [roHalf, enHalf] = preview.text.split("\n— — —\n");
     expect(roHalf).toContain("Notă pentru voluntari: Umpleți paharele înainte de primul alergător.\nPurtați vesta reflectorizantă.");
     expect(enHalf).toContain("Note for the volunteers: Fill the cups before the first runner.\nWear the reflective vest.");
