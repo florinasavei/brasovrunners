@@ -4173,10 +4173,14 @@
       "invite": "Add",
       "inviteHelp": "Adds the address to the team list and emails the invitation. The sign-in account is created by itself only with the Zitadel key set; until then, in the Zitadel console.",
       "inviteHelpSends": "Adds the address to the team list, creates their sign-in account and emails them the invitation and the password link.",
-      "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
-      "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
-      "inviteManual": "Added, and the invitation is on its way, but no sign-in account was created: the Zitadel key is missing. Create it in the Zitadel console with exactly this address.",
-      "inviteFailed": "Added and the invitation is on its way, but the sign-in provider refused to create the account ({reason}). They can create it at the sign-in page with exactly this address.",
+      "inviteSent": "Added. They get two emails: first from Zitadel, for the password, then from us, with the steps.",
+      "inviteExists": "Added. They already had a Zitadel account, without a password: they still get two emails, first from Zitadel, with a new code, then from us, with the steps.",
+      "inviteReady": "Added. They already have a Zitadel account with a password: only our email goes, with the steps, and they sign in with the password they have.",
+      "inviteManual": "Added. They get one email, from us, with the steps to make the account themselves: the Zitadel key is missing, so it was not made here.",
+      "inviteFailed": "Added, but Zitadel did not make the account ({reason}): only our email goes, with the steps to make the account themselves at the sign-in page.",
+      "resendSent": "Sent again. They get two emails: first from Zitadel, with a new code (the old one stops working), then from us, with the steps.",
+      "resendReady": "Sent again, from us only: they already have a Zitadel account with a password, and sign in with it.",
+      "resendManual": "Sent again: they get one email, from us, with the steps to make the account themselves — the Zitadel key is missing.",
       "resendInvite": "Resend the invitation",
       "resendInvitePending": "Sending…",
       "pending": "Has not signed in yet",
@@ -4206,7 +4210,7 @@
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
         "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
-      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the list — if it is wrong, withdraw access and add the person again with the right one.",
+      "resendFailed": "Our email went, but Zitadel did not send the code ({reason}): they get only ours, with the steps to make the account themselves at the sign-in page.",
       "passwordReset": "Send a password reset",
       "passwordResetPending": "Sending…",
       "passwordResetSent": "Done. They have been emailed the link for setting a new password.",
@@ -4250,10 +4254,11 @@
       "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
       "membersRetried": "Already members: {retried} — only their account was tried again.",
       "membersOutcome": {
-        "created": "account created, invitation sent",
-        "invited": "the account existed, invitation sent again",
-        "failed": "failed: {reason}",
-        "unconfigured": "no invitation key: the account is made in the Zitadel console"
+        "created": "account created: two emails, first from Zitadel, for the password, then from us",
+        "invited": "the account existed, without a password: two emails, first from Zitadel, with a new code, then from us",
+        "ready": "already has an account with a password: only our email",
+        "failed": "Zitadel did not make the account ({reason}): only our email, they make it themselves",
+        "unconfigured": "no Zitadel key: only our email, they make the account themselves"
       },
       "permissions": {
         "shopManage": "Manages the shop",
@@ -9088,6 +9093,12 @@
         "whenShort": "after a family's last declaration",
         "when": "When one address registered several people at once and all of them are confirmed: one email, with each person's QR code, desk code and race number.",
         "platformWords": "Always the default text. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
+      },
+      "selfSignIn": {
+        "name": "{type} — the person makes the account",
+        "whenShort": "when Zitadel does not make the account",
+        "when": "When “Add” or “Resend the invitation” cannot ask Zitadel for the account — the key is missing, or Zitadel did not make it: the person makes it at the sign-in page.",
+        "platformWords": "Always the default text. The club's own words for this email are for the account Zitadel makes and do not apply here."
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",

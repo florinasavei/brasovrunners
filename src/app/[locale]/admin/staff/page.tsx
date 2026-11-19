@@ -51,6 +51,7 @@ import MemberTierSelect from "@/modules/content/member-tiers/ui/MemberTierSelect
 import TierBadge from "@/modules/content/member-tiers/ui/TierBadge";
 import OnlyForType from "@/modules/content/events/ui/OnlyForType";
 import { MEMBER_ROWS_MAX } from "@/modules/staff-identity/domain/member-rows";
+import { inviteLineOf } from "@/modules/staff-identity/domain/invite-lines";
 import type { MemberAccountLine } from "@/modules/staff-identity/member-accounts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -113,6 +114,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const nobodyAdded = count === "0";
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
+  /** The invitation's one line (§NNN): who sends what to the person, by Zitadel's answer. */
+  const inviteLine = inviteLineOf(saved, invite);
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
   const invitesSend = env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
 
@@ -409,27 +412,19 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-        {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
-        {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
-        {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
+        {/* After «Adaugă» or «Retrimite invitația», one line (§NNN): what the person receives — two emails, Zitadel's
+            first, or ours alone — by what Zitadel answered; a refusal says Zitadel's reason (§170). */}
+        {inviteLine && (
+          <Alert severity={inviteLine.severity} data-testid="staff-invite-line">
+            {t(`staff.${inviteLine.key}`, { reason: reason ?? "" })}
+          </Alert>
+        )}
         {/* Added «fără invitație» (slice 4): nobody was written to and Zitadel was not asked. */}
         {(saved === "invited" || saved === "membersInvited") && invitationsKept && (
           <Alert severity="info" data-testid="staff-invite-not-sent">
             {t("staff.inviteNotSent")}
           </Alert>
         )}
-        {/* Two different failures, and they were wearing one sentence (§170): adding says the
-            row is on the list and the account was refused; resending says the row is on the
-            list and there is no account to send to. "A refuzat să creeze contul" under a
-            person who has been on the list for a week explains nothing. */}
-        {saved === "invited" && invite === "failed" && (
-          <Alert severity="warning">{t("staff.inviteFailed", { reason: reason ?? "" })}</Alert>
-        )}
-        {saved === "reinvited" && invite === "failed" && (
-          <Alert severity="warning">{t("staff.resendFailed", { reason: reason ?? "" })}</Alert>
-        )}
-        {saved === "reinvited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
-        {saved === "reinvited" && invite === "unconfigured" && <Alert severity="info">{t("staff.inviteManual")}</Alert>}
         {/* The two account verbs (§171). `missing` is its own answer: there is nothing to act
             on, which is not a failure and not a success. */}
         {saved === "passwordReset" && account === "done" && <Alert severity="success">{t("staff.passwordResetSent")}</Alert>}

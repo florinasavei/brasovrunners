@@ -38,6 +38,7 @@ import { topicsPhrase } from "@/modules/newsletter/topic-words";
 import type { EmailEventFacts } from "./domain/event-facts";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
+import { zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 
 /**
  * The club's words and the page's sample kept apart (`DECISIONS.md` §359; the owner, 2026-09-24:
@@ -144,6 +145,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     inviterName: sample.inviterName,
     staffEmail: sample.staffEmail,
     signInUrl: `${base}/${locale}/EXAMPLE`,
+    // Zitadel's email by its subject in the account's language — the previewed one — in both halves, as the send names it (§NNN).
+    zitadelSubject: zitadelInviteSubject(locale),
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
     // organizer's note, and a reason — read only by those two messages' templates. Each in both
     // languages, as the organizer now writes them (§354, bilingual everywhere): the previewed

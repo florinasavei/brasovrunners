@@ -119,6 +119,7 @@ import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
 import { audienceOf } from "./domain/email-audience";
+import { signInStepsOf, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -957,11 +958,18 @@ async function renderRow(
   // A member's invitation (§524) the same, its button the sign-in page in the members' words, which
   // lands in the members' zone.
   if (row.messageType === "STAFF_INVITATION" || row.messageType === "MEMBER_INVITATION") {
-    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown; signInSteps?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
     data.staffRole = typeof payload.role === "string" ? payload.role : undefined;
     data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
     data.staffEmail = row.recipientEmail;
+    /*
+      Whose the account is, as the press left it (§NNN): Zitadel's steps or the person's own. And Zitadel's email by its
+      subject in the row's language — the one the press gave Zitadel for the account — so both halves name the email the
+      person really has.
+    */
+    data.signInSteps = signInStepsOf(payload.signInSteps);
+    data.zitadelSubject = zitadelInviteSubject(locale);
     data.signInUrl =
       row.messageType === "MEMBER_INVITATION"
         ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/sign-in", query: { to: "members" } } })}`

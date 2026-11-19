@@ -138,7 +138,8 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       expect(queued[0].locale).toBe("en");
       expect(queued[0].participantId).toBeNull();
       expect(queued[0].requestedByStaffUserId).toBe(admin.id);
-      expect(queued[0].payloadJson).toEqual({ displayName: "Ana", role: "Organizator", inviterName: admin.displayName });
+      // §NNN: and whose the account is, as the email's steps say it — here the person's own, since no press asks Zitadel.
+      expect(queued[0].payloadJson).toEqual({ displayName: "Ana", role: "Organizator", inviterName: admin.displayName, signInSteps: "self" });
 
       // The message itself: the inviter, the role, the address, the sign-in page as the action; no token.
       const rendered = await renderOutboxMessage(queued[0], db, new Date());

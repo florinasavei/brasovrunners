@@ -138,8 +138,9 @@ export const DERIVED_TOAST_KEYS: readonly string[] = [
  * The provider's answers that mean the verb happened (§171, §288). A staff verb that reaches
  * Zitadel redirects with `saved` whatever Zitadel said — the page's banner tells `failed`,
  * `missing` and `unconfigured` apart — so a green "the link was sent" is owed only to these.
+ * `ready` (§NNN): the account already signs in, so nothing was missing and nothing had to be sent.
  */
-const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]);
+const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "ready", "done"]);
 const PROVIDER_FIELDS = ["invite", "account"] as const;
 
 /** Whether a provider's answer means the verb happened (above): the actions choose their toast by it. */

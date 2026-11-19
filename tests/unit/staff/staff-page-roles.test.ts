@@ -317,3 +317,44 @@ describe("the banner after «Adaugă mai mulți membri» says an invitation was 
     expect(await banner({ saved: "membersInvited", count: "2" })).toEqual({ kept: false, words: "Membri adăugați: 2. Invitațiile sunt pe drum." });
   });
 });
+
+/**
+ * §NNN — after «Adaugă» or «Retrimite invitația», one line on the page says what the person receives, by Zitadel's answer:
+ * two emails, Zitadel's first; the club's alone; or the one email with the person's own steps — a refusal with its reason.
+ */
+describe("§NNN the inviter's one line after a press, as the page draws it", () => {
+  async function line(query: Record<string, string>) {
+    actor = member("reader", "ADMIN");
+    team = [actor];
+    const tree = elements(await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(query) }));
+    const alerts = tree.filter((element) => element.props["data-testid"] === "staff-invite-line");
+    return alerts.map((alert) => ({ severity: alert.props.severity, words: alert.props.children }));
+  }
+
+  it("after «Adaugă», for each answer Zitadel gives", async () => {
+    expect(await line({ saved: "invited", invite: "invited" })).toEqual([
+      { severity: "success", words: "Adăugat. Primește două emailuri: întâi de la Zitadel, pentru parolă, apoi de la noi, cu pașii." },
+    ]);
+    expect((await line({ saved: "invited", invite: "exists" }))[0].words).toContain("cu un cod nou");
+    expect((await line({ saved: "invited", invite: "ready" }))[0].words).toContain("primește doar emailul nostru");
+    expect((await line({ saved: "invited", invite: "unconfigured" }))[0].words).toContain("un singur email, de la noi");
+    expect(await line({ saved: "invited", invite: "failed", reason: "403 permission denied" })).toEqual([
+      {
+        severity: "warning",
+        words: "Adăugat, dar Zitadel nu a făcut contul (403 permission denied): primește doar emailul nostru, cu pașii ca să-și facă singur contul din pagina de autentificare.",
+      },
+    ]);
+  });
+
+  it("after «Retrimite invitația», and none after «… fără invitație» or another press", async () => {
+    expect((await line({ saved: "reinvited", invite: "invited" }))[0]).toEqual({
+      severity: "success",
+      words: "Trimisă din nou. Primește două emailuri: întâi de la Zitadel, cu un cod nou (cel vechi nu mai merge), apoi de la noi, cu pașii.",
+    });
+    expect((await line({ saved: "reinvited", invite: "ready" }))[0].words).toContain("doar de la noi");
+    expect((await line({ saved: "reinvited", invite: "unconfigured" }))[0].severity).toBe("info");
+    expect((await line({ saved: "reinvited", invite: "failed", reason: "x" }))[0].severity).toBe("warning");
+    expect(await line({ saved: "invited", mailSkipped: "1" })).toEqual([]);
+    expect(await line({ saved: "passwordReset", account: "done" })).toEqual([]);
+  });
+});

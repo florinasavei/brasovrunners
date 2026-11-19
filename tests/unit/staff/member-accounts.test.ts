@@ -33,15 +33,17 @@ describe("§524 the members' sign-in accounts, batched and reported", () => {
     ]);
   });
 
-  it("reports a refusal, a throw and a missing key per member, and counts them", async () => {
+  it("reports a refusal, a throw, a missing key and an account that already signs in per member, and counts them", async () => {
     const answers: Record<string, InviteOutcome | Error> = {
       a: { kind: "invited" },
       b: { kind: "failed", reason: "403 membership not found" },
       c: new TypeError("fetch failed"),
       d: { kind: "unconfigured" },
+      // §NNN: the account already has its password — Zitadel sent nothing, only the club's email goes.
+      e: { kind: "ready" },
     };
     const lines = await createMemberAccounts(
-      ["a", "b", "c", "d"].map((id) => ({ id })),
+      ["a", "b", "c", "d", "e"].map((id) => ({ id })),
       async (member) => {
         const answer = answers[member.id];
         if (answer instanceof Error) throw answer;
@@ -53,8 +55,9 @@ describe("§524 the members' sign-in accounts, batched and reported", () => {
       { staffUserId: "b", outcome: "failed", reason: "403 membership not found" },
       { staffUserId: "c", outcome: "failed", reason: "TypeError: fetch failed" },
       { staffUserId: "d", outcome: "unconfigured" },
+      { staffUserId: "e", outcome: "ready" },
     ]);
-    expect(countAccountLines(lines)).toEqual({ created: 1, invited: 0, failed: 2, unconfigured: 1 });
+    expect(countAccountLines(lines)).toEqual({ created: 1, invited: 0, ready: 1, failed: 2, unconfigured: 1 });
   });
 
   it("does nothing for nobody", async () => {

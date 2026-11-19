@@ -7,15 +7,16 @@ import type { InviteOutcome } from "./zitadel-users";
  * bounded by `ZITADEL_CALL_TIMEOUT_MS`. So the calls run a few at a time — never fifty at once
  * against the provider, never one by one for minutes — and every member ends with a line of the
  * report, whatever happened to the others: `created` (a new account, its invitation sent),
- * `invited` (the account was there, the invitation sent again), `failed` with the provider's or the
- * network's words, or `unconfigured` (no key: nothing was asked). Pure over the invite function it
- * is given, so the batching and the report are tested without a network.
+ * `invited` (the account was there, the invitation sent again), `ready` (the account was there and
+ * already signs in: Zitadel sent nothing, §NNN), `failed` with the provider's or the network's words,
+ * or `unconfigured` (no key: nothing was asked). Pure over the invite function it is given, so the
+ * batching and the report are tested without a network.
  */
 
 /** How many members' accounts are asked for at once. */
 export const MEMBER_ACCOUNTS_CONCURRENCY = 3;
 
-export type MemberAccountOutcome = "created" | "invited" | "failed" | "unconfigured";
+export type MemberAccountOutcome = "created" | "invited" | "ready" | "failed" | "unconfigured";
 
 /** One member's line: the row's id (never the address — the audit row carries this), the outcome, the reason. */
 export type MemberAccountLine = { staffUserId: string; outcome: MemberAccountOutcome; reason?: string };
@@ -27,6 +28,8 @@ export function accountLineOf(staffUserId: string, invite: InviteOutcome): Membe
       return { staffUserId, outcome: "created" };
     case "exists":
       return { staffUserId, outcome: "invited" };
+    case "ready":
+      return { staffUserId, outcome: "ready" };
     case "unconfigured":
       return { staffUserId, outcome: "unconfigured" };
     case "failed":
@@ -63,7 +66,7 @@ export async function createMemberAccounts<M extends { id: string }>(
 
 /** The report's counts, for the banner and the audit row. */
 export function countAccountLines(lines: readonly MemberAccountLine[]): Record<MemberAccountOutcome, number> {
-  const counts: Record<MemberAccountOutcome, number> = { created: 0, invited: 0, failed: 0, unconfigured: 0 };
+  const counts: Record<MemberAccountOutcome, number> = { created: 0, invited: 0, ready: 0, failed: 0, unconfigured: 0 };
   for (const line of lines) counts[line.outcome] += 1;
   return counts;
 }
