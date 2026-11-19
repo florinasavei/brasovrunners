@@ -310,6 +310,41 @@ describe("§650 «Până când» on the registrations list", () => {
     }
   });
 
+  it("§NNN «Stare»: under a cancellation's moment, why — the person's answer, «Alt motiv» with their words, or the organizers", async () => {
+    // The owner, 2026-11-19, on the list filtered to «Anulată»: «aș vrea să văd aici și când a anulat cineva și de ce».
+    const race = await createRace("Crosul");
+    const cancelledAt = new Date("2026-11-18T19:42:00.000Z");
+    const cancelled = { status: "CANCELLED" as const, cancelledAt };
+    await register(race.id, "Bogdan Bolnav", { ...cancelled, cancellationSource: "PARTICIPANT", cancelReasonKind: "INJURY_OR_ILLNESS" });
+    await register(race.id, "Carmen Plecată", { ...cancelled, cancellationSource: "PARTICIPANT", cancelReasonKind: "OTHER_PLANS" });
+    await register(race.id, "Dan Altceva", { ...cancelled, cancellationSource: "PARTICIPANT", cancelReasonKind: "OTHER", cancelReason: "Mă mut din oraș" });
+    await register(race.id, "Elena Scoasă", { ...cancelled, cancellationSource: "ADMIN" });
+    await register(race.id, "Felix Vechi", { ...cancelled, cancellationSource: "PARTICIPANT" });
+    await register(race.id, "Gelu Expirat", { status: "EXPIRED", expiredAt: cancelledAt, expiryReason: "DECLARATION_HOLD_LAPSED" });
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      state.actor = await staff("MODERATOR");
+      const tree = await AdminRegistrationsPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ eventId: race.id }) } as never);
+      const table = elements(tree).find((element) => element.type === AdminTable);
+      const column = (table!.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((candidate) => candidate.key === "status")!;
+      const why = new Map<string, string | undefined>();
+      for (const row of table!.props.rows as { registeredName: string }[]) {
+        const html = renderToStaticMarkup(createElement(Fragment, null, column.render(row)));
+        why.set(row.registeredName, /data-testid="row-cancel-reason"[^>]*>([^<]*)</.exec(html)?.[1]?.replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
+      }
+      const words = (locale === "ro" ? ro : en).Admin.registrations;
+      expect(why.get("Bogdan Bolnav"), locale).toBe(words.cancelReasonKinds.INJURY_OR_ILLNESS);
+      expect(why.get("Carmen Plecată"), locale).toBe(words.cancelReasonKinds.OTHER_PLANS);
+      expect(why.get("Dan Altceva"), locale).toBe(locale === "ro" ? "Alt motiv — „Mă mut din oraș”" : "Another reason — “Mă mut din oraș”");
+      expect(why.get("Elena Scoasă"), locale).toBe(words.cancelledByStaff);
+      // A cancellation from before the reasons were asked, and a lapsed row: no line.
+      expect(why.get("Felix Vechi"), locale).toBeUndefined();
+      expect(why.get("Gelu Expirat"), locale).toBeUndefined();
+      await db.delete(staffUsers);
+    }
+    expect(ro.Admin.registrations.cancelledByStaff).toBe("Anulată de organizatori");
+  });
+
   /** Past its stored deadline, with its `WAITLIST_SPOT_OFFER` still queued (§520): the night's hourly tick. */
   async function queuedOffer(raceId: string, past: Date) {
     const id = await register(raceId, "Dan Oferit", { status: "WAITLIST_OFFERED", offerCreatedAt: new Date(past.getTime() - HOUR), holdExpiresAt: past });

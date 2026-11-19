@@ -195,6 +195,8 @@ export type RegistrationListRow = {
   offerEmailQueued?: boolean;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
+  /** Who cancelled (`PARTICIPANT` or `ADMIN`), null on a row never cancelled: the list's «Stare» says a staff cancellation (§NNN). */
+  cancellationSource: string | null;
   /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
   cancelReasonKind: RegistrationCancelReasonKind | null;
   cancelReason: string | null;
@@ -619,6 +621,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       offerEmailQueued: offerEmailQueuedAt(now),
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       cancelledAt: registrations.cancelledAt,
+      cancellationSource: registrations.cancellationSource,
       cancelReasonKind: registrations.cancelReasonKind,
       cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,

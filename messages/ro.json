@@ -1455,6 +1455,7 @@
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
       "cancelReasonLabel": "Motivul anulării",
+      "cancelledByStaff": "Anulată de organizatori",
       "cancelReasonOther": "{kind} — „{text}”",
       "cancelReasonKinds": {
         "INJURY_OR_ILLNESS": "Accidentare sau boală",
