@@ -60,6 +60,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   setResultsPublishedAction: async () => null,
   setResultAgeBandsAction: async () => null,
   setResultAwardsAction: async () => null,
+  resetEventResultsAction: async () => null,
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},
@@ -402,5 +403,31 @@ describe("§986 «Clasament»: who wrote each line, «Istoricul sosirilor», and
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 101 }, at(51, 3));
     const lines = [...(await results(at(52))).matchAll(/data-testid="results-history-line" data-where="(\w+)"[^>]*>([^<]*)</g)].map((match) => text(match[2]).trim());
     expect(lines[0]).toBe("Sâm., 21 nov. 2026, 09:51:03 · Vlad Voluntar a trecut #101 Ana Popescu la 0:51:03 — rămâne Descalificat, cum e la «Clasament» · Cronometrare");
+  });
+});
+
+/**
+ * §NNN — a press this phone kept from before «Resetează clasamentul», refused after it: the island has the reason's words in both
+ * languages, so the press's line says why it no longer counts instead of «nu s-a salvat — notează pe hârtie».
+ */
+describe("§NNN «Cronometrare»: the words of a press older than the reset", () => {
+  type Element = { props: Record<string, unknown> };
+  const elementsOf = (node: unknown): Element[] => {
+    if (Array.isArray(node)) return node.flatMap(elementsOf);
+    if (!node || typeof node !== "object" || !("props" in node)) return [];
+    const element = node as Element;
+    return [element, ...elementsOf(element.props.children)];
+  };
+
+  it("hands the island the refusal's sentence, in Romanian and in English", async () => {
+    for (const [locale, sentence] of [
+      ["ro", "apăsat înainte de resetarea clasamentului — nu mai contează"],
+      ["en", "pressed before the results were reset — it no longer counts"],
+    ] as const) {
+      language = locale;
+      const tree = await atTheClock(at(-50), () => TimingPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ eventId: raceId }) }));
+      const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "refused" in (element.props.words as object));
+      expect((island?.props.words as { refused: Record<string, string> } | undefined)?.refused.RESULT_PRESS_BEFORE_RESET, locale).toBe(sentence);
+    }
   });
 });

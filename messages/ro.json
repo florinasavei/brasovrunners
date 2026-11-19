@@ -2899,7 +2899,8 @@
       "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, neschimbată, în primele 10 minute. Corectează la «Clasament».",
       "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
-      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e."
+      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
+      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start."
     },
     "editor": {
       "draftPreview": {
@@ -9823,7 +9824,7 @@
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
                 "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
-                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul."
+                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul. Ați făcut o probă înainte de cursă? Administratorul o șterge cu «Resetează clasamentul»."
               ]
             },
             {
@@ -10227,6 +10228,15 @@
                 "Sub fiecare „Pe site: Participant #…” scrie de ce nu apare numele, iar sus, «Cu nume pe site…» spune câți din cei din clasament apar cu numele. La un alergător înscris, numele îl pune doar bifa lui; un administrator poate doar să-l ascundă.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
+              ]
+            },
+            {
+              "title": "Resetează clasamentul după probe, înainte de cursă",
+              "steps": [
+                "Ați încercat «Cronometrare» înainte de cursă — un «Start» de probă, câteva sosiri? Pe «Clasament», la capătul paginii, deschide «Resetează clasamentul»: șterge tot ce s-a scris, ca ziua cursei să înceapă de la zero.",
+                "Apasă «Resetează clasamentul». Întrebarea spune câte rezultate se șterg — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși — și startul dat, dacă a fost dat. Ce n-a plecat încă de pe telefoanele de la «Cronometrare» nu mai contează: pe telefon, rândul spune de ce.",
+                "Rămân înscrierile și numerele lor, prezența, lista de elită, premiile, categoriile de vârstă și bifa «Clasamentul e public pe pagina evenimentului». Pe «Cronometrare» ceasul arată iar «Cursa nu a pornit încă.»",
+                "Se poate doar până la startul planificat al cursei — un «Start» de probă nu-l închide — și doar un Administrator vede butonul. După start, butonul e gri. Nu se poate anula."
               ]
             },
             {
@@ -12617,7 +12627,13 @@
           "deleted": "a șters rezultatul {runner} ({status})",
           "gunSet": "a dat startul la {time}",
           "gunMoved": "a mutat startul la {time} (era {previous})",
-          "gunCleared": "a anulat startul (era {previous})"
+          "gunCleared": "a anulat startul (era {previous})",
+          "reset": {
+            "one": "a resetat clasamentul: {count} rezultat șters",
+            "few": "a resetat clasamentul: {count} rezultate șterse",
+            "other": "a resetat clasamentul: {count} de rezultate șterse"
+          },
+          "resetGun": "{reset}, startul anulat"
         },
         "box": {
           "bib": "număr",
@@ -12631,6 +12647,26 @@
           "registration": "înscriere",
           "nameAgreed": "acordul pentru nume"
         }
+      },
+      "reset": {
+        "title": "Resetează clasamentul",
+        "aside": "Doar înainte de start",
+        "intro": "Pentru probele dinainte de cursă: șterge toate rezultatele și startul dat la «Cronometrare», ca ziua cursei să înceapă de la zero.",
+        "introMore": "Rămân înscrierile și numerele lor, prezența, lista de elită, premiile, categoriile de vârstă și bifa de clasament public. Doar până la startul planificat; nu se poate anula.",
+        "button": "Resetează clasamentul",
+        "pending": "Se resetează…",
+        "afterStart": "Clasamentul se poate reseta doar înainte de start.",
+        "nothing": "Nimic de resetat: niciun rezultat și niciun start dat.",
+        "confirmTitle": "Resetezi clasamentul?",
+        "confirmCount": {
+          "one": "Se șterge {count} rezultat al cursei — sosirea, timpul, starea, nota sau rândul unui alergător neînscris.",
+          "few": "Se șterg toate cele {count} rezultate ale cursei — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși.",
+          "other": "Se șterg toate cele {count} de rezultate ale cursei — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși."
+        },
+        "confirmGun": "Se șterge și startul dat la {time}.",
+        "confirmGunOnly": "Nu e niciun rezultat; se șterge startul dat la {time}.",
+        "confirmPhones": "Ce e pe telefoanele de la «Cronometrare» și n-a plecat încă se pierde. Nu se poate anula.",
+        "changed": "Între timp au venit rezultate noi sau startul s-a schimbat: nu s-a șters nimic. Uită-te din nou și resetează dacă vrei."
       }
     },
     "reserve": {
@@ -13094,6 +13130,7 @@
         "FORBIDDEN": "rolul tău nu poate trece sosiri — notează pe hârtie: {time}",
         "NOT_FOUND": "evenimentul nu mai e pe site — notează pe hârtie: {time}",
         "RESULT_PRESS_UNDONE": "anulat între timp — vezi «Clasament»",
+        "RESULT_PRESS_BEFORE_RESET": "apăsat înainte de resetarea clasamentului — nu mai contează",
         "other": "nu s-a salvat — notează pe hârtie: {time}"
       },
       "recent": {
@@ -15300,6 +15337,8 @@
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
+      "resultsReset": "Clasamentul a fost resetat.",
+      "resultsResetNothing": "Nu era nimic de resetat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
       "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
       "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat.",

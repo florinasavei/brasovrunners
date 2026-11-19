@@ -180,6 +180,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // «Salvează tot clasamentul» with every result as it was, and the publish tick pressed as it already stood (§808).
   "resultsUnchanged",
   "resultsPublicUnchanged",
+  // «Resetează clasamentul» on a race with no result and no start given, from a page that drew it so (§NNN).
+  "resultsResetNothing",
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",
   "newsletterNotFound",

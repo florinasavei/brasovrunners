@@ -826,6 +826,12 @@ export type AuditAction =
   | "event.race_gun_set"
   | "event.race_gun_cleared"
   /**
+   * «Resetează clasamentul» on «Clasament» (§NNN), entity `event`: every result of a race deleted and the gun pressed on «Cronometrare»
+   * taken off, before the planned start, by an Administrator — `{ results, gunCleared }`, how many rows went and whether a gun was
+   * cleared; never a name, a number or a time. The moment is the row's own: a press a phone made before it is refused after it.
+   */
+  | "event.results_reset"
+  /**
    * «Clasamentul e public pe pagina evenimentului» (§808), entity `event`: the Administrator made a race's results public or took
    * them off, and «Descarcă clasamentul (CSV)» — the file has the names, so who downloaded it and how many rows are recorded.
    */

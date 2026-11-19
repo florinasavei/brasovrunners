@@ -829,6 +829,18 @@ export function canPublishResults(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Resetează clasamentul» (§NNN)** — a race's whole list wiped before the start: every result, its time, state and note, every
+ * runner typed by hand, and the gun pressed on «Cronometrare», so race day starts from zero after the trial runs. The results'
+ * one destructive verb over the whole list, so **the Administrator and the Superadministrator** alone — whoever makes the results
+ * public (`canPublishResults`), written as that function so the two lines move together. The Organizer enters, imports and deletes
+ * a row at a time and does not wipe the list; the Tehnic role, the Redactor, the desk Volunteer and a member are out. Asserted in
+ * the service and the action; the page draws the card for nobody else.
+ */
+export function canResetResults(subject: StaffSubject): boolean {
+  return canPublishResults(subject);
+}
+
+/**
  * **An event's volunteer badges (§764)** — «Ecusoane pentru voluntari»: designing the badge, giving each
  * role its band's colour and downloading the sheet. Whoever runs the event's volunteers
  * (`canManageVolunteers`): the Organizer, the Administrator and the Superadministrator — the owner's three

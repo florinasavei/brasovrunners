@@ -95,6 +95,11 @@ export type DomainErrorCode =
   | "RESULT_UNDO_NOT_ALLOWED"
   // A press sent again whose row is gone since — undone at the line, deleted on «Clasament» (§986): told so, never recorded again.
   | "RESULT_PRESS_UNDONE"
+  // A press made before «Resetează clasamentul» and sent after it — a queue on a phone without signal (§NNN): it belongs to the
+  // trial the reset wiped, so it is refused, its line on the phone saying why, and never brings a test finish back.
+  | "RESULT_PRESS_BEFORE_RESET"
+  // «Resetează clasamentul» once the race's planned gun has passed (§NNN): the results can only be wiped before the start.
+  | "RESULTS_RESET_AFTER_START"
   // «Start» outside its window (§986): from three hours before the planned gun to six hours after.
   | "RACE_GUN_WINDOW"
   // «Start» moved or taken off once a runner is «Sosit» (§986): the gun is fixed; a correction of the times is «Clasament»'s.
