@@ -225,6 +225,19 @@ export default async function DeskRow({
               {row.registeredName}
             </Typography>
             {/*
+              The eye (§NNN; the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor»):
+              open with «Cu nume» when the person appears by name on the site — the list and the results —, crossed with «Anonim» when
+              they did not tick it or the club hid them; for every desk role, from the desk's own query. Not on a row that is over.
+            */}
+            {!terminal && (
+              <StatusChip
+                glyph={row.namedOnSite ? "visible" : "hidden"}
+                variant="outlined"
+                label={t(row.namedOnSite ? "desk.siteNamed" : "desk.siteAnonymous")}
+                testId="desk-site-name"
+              />
+            )}
+            {/*
               «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
               e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).
             */}

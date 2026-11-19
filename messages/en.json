@@ -8027,6 +8027,8 @@
       "scanSwitch": "Another camera",
       "scanCamera": "Camera {n} of {total}",
       "eliteLabel": "On the bib: {label}",
+      "siteNamed": "By name",
+      "siteAnonymous": "Anonymous",
       "eliteFold": "Elite and bib",
       "sections": {
         "toPickUp": "To pick up ({n})",
