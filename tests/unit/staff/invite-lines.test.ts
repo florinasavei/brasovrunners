@@ -44,11 +44,16 @@ describe("§NNN the inviter's one line after a press", () => {
         expect((line as string).length, `${locale} staff.${key}`).toBeLessThanOrEqual(200);
       }
     }
-    expect(staff.ro.inviteSent).toBe("Adăugat. Primește două emailuri: întâi de la Zitadel, pentru parolă, apoi de la noi, cu pașii.");
-    expect(staff.en.inviteSent).toBe("Added. They get two emails: first from Zitadel, for the password, then from us, with the steps.");
+    // Two emails and who sends which — never an order, which neither Zitadel nor the outbox promises (the review, §NNN).
+    expect(staff.ro.inviteSent).toBe("Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii.");
+    expect(staff.en.inviteSent).toBe("Added. They get two emails: one from Zitadel, with the “Accept invite” button, for the password, and one from us, with the steps.");
     for (const key of ["inviteExists", "resendSent"]) {
-      expect(staff.ro[key], key).toContain("întâi de la Zitadel");
-      expect(staff.en[key], key).toContain("first from Zitadel");
+      expect(staff.ro[key], key).toContain("unul de la Zitadel");
+      expect(staff.en[key], key).toContain("one from Zitadel");
+    }
+    for (const key of ["inviteSent", "inviteExists", "resendSent"]) {
+      expect(staff.ro[key], key).not.toContain("întâi");
+      expect(staff.en[key], key).not.toContain("first from");
     }
     for (const key of ["inviteReady", "inviteFailed", "resendFailed"]) {
       expect(staff.ro[key], key).toContain("doar emailul nostru");

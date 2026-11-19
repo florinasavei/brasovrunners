@@ -119,7 +119,7 @@ import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
 import { audienceOf } from "./domain/email-audience";
-import { signInStepsOf, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
+import { signInStepsOf, zitadelInviteButton, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -970,6 +970,7 @@ async function renderRow(
     */
     data.signInSteps = signInStepsOf(payload.signInSteps);
     data.zitadelSubject = zitadelInviteSubject(locale);
+    data.zitadelButton = zitadelInviteButton(locale);
     data.signInUrl =
       row.messageType === "MEMBER_INVITATION"
         ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/sign-in", query: { to: "members" } } })}`

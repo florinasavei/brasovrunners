@@ -26,6 +26,15 @@ export function zitadelInviteSubject(locale: Locale): string {
 }
 
 /**
+ * The button of Zitadel's «Invite user» email in the account's language — `ButtonText` in the same `ro.yaml` and `en.yaml`:
+ * «Acceptare invitație», “Accept invite”. The owner, 2026-11-19, with a picture of it: the email Zitadel sends first comes
+ * from the club's name too, so the club's steps name it by its subject and by this button.
+ */
+export function zitadelInviteButton(locale: Locale): string {
+  return locale === "ro" ? "Acceptare invitație" : "Accept invite";
+}
+
+/**
  * Two labels of Zitadel's hosted sign-in page, the new login (`docs/RUNBOOKS.md` § Staff sign-in): the button that makes
  * an account, and the one that asks for another code. The new login has no Romanian, so a Romanian reads it in English;
  * each half of the email names the labels as the page shows them.
@@ -38,11 +47,14 @@ export const ZITADEL_LOGIN_LABELS = { register: "Register new user", resendCode:
  * person makes the account at the sign-in page. A row queued before §NNN carries neither and reads as `zitadel`, which
  * is what every environment with the key had asked of Zitadel.
  */
-export type SignInSteps = "zitadel" | "self";
+export type SignInSteps = "zitadel" | "self" | "ready";
 
-/** The payload's word read back: only `self` is the person's own steps. */
+/**
+ * The payload's word read back: `self` — the person's own steps; `ready` — the account already signs in with its password,
+ * so no email of Zitadel's is coming and the steps are the button alone; anything else Zitadel's.
+ */
 export function signInStepsOf(value: unknown): SignInSteps {
-  return value === "self" ? "self" : "zitadel";
+  return value === "self" || value === "ready" ? value : "zitadel";
 }
 
 /**
@@ -51,5 +63,6 @@ export function signInStepsOf(value: unknown): SignInSteps {
  * no key, leaves the person to make the account themselves.
  */
 export function signInStepsAfter(answer: InviteOutcome["kind"]): SignInSteps {
-  return answer === "invited" || answer === "exists" || answer === "ready" ? "zitadel" : "self";
+  if (answer === "ready") return "ready";
+  return answer === "invited" || answer === "exists" ? "zitadel" : "self";
 }

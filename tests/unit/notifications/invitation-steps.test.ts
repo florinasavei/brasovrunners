@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { emailCopyKey, emailCopySchema } from "@/modules/notifications/domain/email-copy";
 import { emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
-import { ZITADEL_LOGIN_LABELS, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
+import { signInStepsAfter, signInStepsOf, ZITADEL_LOGIN_LABELS, zitadelInviteButton, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
@@ -40,12 +40,12 @@ function halves(text: string): [string, string] {
 describe("§NNN the invitation's steps when the press asked Zitadel for the account", () => {
   for (const type of TYPES) {
     it(`${type}: says who sends what, Zitadel's email by its subject, and the steps in order, in both halves`, () => {
-      const email = render(type, "ro", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("ro") });
+      const email = render(type, "ro", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("ro"), zitadelButton: zitadelInviteButton("ro") });
       const [ro, en] = halves(email.text);
       const subject = `Invitație la ${CLUB_NAME}`;
-      // Romanian half.
-      expect(ro).toContain(`Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „${subject}” (caută-l și în Spam). Pașii, în ordine:`);
-      const one = ro.indexOf("1. Deschide emailul de la Zitadel, apasă butonul din el și alege-ți parola.");
+      // Romanian half: Zitadel's email by its subject and by its button, as the owner saw it (2026-11-19).
+      expect(ro).toContain(`Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „${subject}” și butonul „Acceptare invitație” (caută-l și în Spam). Pașii, în ordine:`);
+      const one = ro.indexOf("1. Deschide emailul de la Zitadel, apasă „Acceptare invitație” și alege-ți parola.");
       const two = ro.indexOf(`2. Apoi apasă „${BUTTON[type].ro}”, mai jos, și intră cu adresa ana@example.ro și parola aleasă.`);
       expect(one).toBeGreaterThan(-1);
       expect(two).toBeGreaterThan(one);
@@ -53,7 +53,8 @@ describe("§NNN the invitation's steps when the press asked Zitadel for the acco
       expect(ro).toContain(`Nu încerca să intri înainte de pasul 1: până îți alegi parola, fiecare încercare — și „${ZITADEL_LOGIN_LABELS.resendCode}” de pe pagina de autentificare — îți trimite alt email de la Zitadel, cu alt cod, și îl anulează pe cel de dinainte.`);
       expect(ro).toContain("Dacă ai primit mai multe, folosește-l doar pe cel mai nou.");
       // English half: the same steps, and Zitadel's email by the subject it really has — the account's language.
-      expect(en).toContain(`You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “${subject}”`);
+      expect(en).toContain(`You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “${subject}” and the button “Acceptare invitație”`);
+      expect(en).toContain("1. Open the email from Zitadel, press “Acceptare invitație” and choose your password.");
       expect(en.indexOf("1. Open the email from Zitadel")).toBeLessThan(en.indexOf(`2. Then press “${BUTTON[type].en}”, below, and sign in with ana@example.ro`));
       expect(en).toContain("Already have an account (signed in with us before)? Skip step 1.");
       expect(en).toContain(`“${ZITADEL_LOGIN_LABELS.resendCode}” on the sign-in page`);
@@ -61,6 +62,7 @@ describe("§NNN the invitation's steps when the press asked Zitadel for the acco
       for (const half of [ro, en]) expect(half).not.toContain(ZITADEL_LOGIN_LABELS.register);
       // The subject and the warning are bold where the reader looks first.
       expect(email.html).toContain(`<strong>${subject}</strong>`);
+      expect(email.html).toContain("<strong>Acceptare invitație</strong>");
       expect(email.html).toContain("<strong>Nu încerca să intri înainte de pasul 1</strong>");
     });
 
@@ -75,10 +77,10 @@ describe("§NNN the invitation's steps when the press asked Zitadel for the acco
     });
   }
 
-  it("names an English account's email “Invitation to …” in both halves", () => {
-    const [en, ro] = halves(render("STAFF_INVITATION", "en", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("en") }).text);
-    expect(en).toContain(`with the subject “Invitation to ${CLUB_NAME}”`);
-    expect(ro).toContain(`cu subiectul „Invitation to ${CLUB_NAME}”`);
+  it("names an English account's email “Invitation to …” and its button “Accept invite” in both halves", () => {
+    const [en, ro] = halves(render("STAFF_INVITATION", "en", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("en"), zitadelButton: zitadelInviteButton("en") }).text);
+    expect(en).toContain(`with the subject “Invitation to ${CLUB_NAME}” and the button “Accept invite”`);
+    expect(ro).toContain(`cu subiectul „Invitation to ${CLUB_NAME}” și butonul „Accept invite”`);
   });
 
   it("reads a row queued before §NNN, with no steps in its payload, as Zitadel's shape", () => {
@@ -171,5 +173,41 @@ describe("§NNN «Setări» → «Emailuri» previews both shapes", () => {
       for (const key of ["name", "whenShort", "when", "platformWords"]) expect(words[key]?.length, key).toBeGreaterThan(0);
       expect(words.name).toContain("{type}");
     }
+  });
+});
+
+describe("§NNN the invitation's steps for an account that already signs in with its password (`ready`)", () => {
+  for (const type of TYPES) {
+    it(`${type}: the button alone, with the address and the person's own password — no email of Zitadel's announced`, () => {
+      const email = render(type, "ro", { signInSteps: "ready" });
+      const [ro, en] = halves(email.text);
+      expect(ro).toContain(`Ai deja cont de autentificare (Zitadel), cu parolă: apasă „${BUTTON[type].ro}”, mai jos, și intră cu adresa ana@example.ro și parola ta.`);
+      expect(en).toContain(`You already have a sign-in account (Zitadel) with a password: press “${BUTTON[type].en}”, below, and sign in with ana@example.ro and your password.`);
+      for (const half of [ro, en]) {
+        expect(half).not.toContain("Primești două emailuri");
+        expect(half).not.toContain("You get two emails");
+        expect(half).not.toContain(ZITADEL_LOGIN_LABELS.register);
+      }
+      // The privacy paragraph stays.
+      expect(email.text).toContain("Pentru cont folosim Zitadel, cu numele și adresa ta");
+    });
+  }
+
+  it("is the platform's words: the club's own text was written for Zitadel's email, which is not coming", () => {
+    const overrides = emailCopySchema.parse({ [emailCopyKey("STAFF_INVITATION", "ro")]: { subject: "Bun venit în echipă", paragraphs: ["Textul clubului pentru invitație."] } });
+    expect(render("STAFF_INVITATION", "ro", { signInSteps: "zitadel" }, overrides).text).toContain("Textul clubului pentru invitație.");
+    expect(render("STAFF_INVITATION", "ro", { signInSteps: "ready" }, overrides).text).not.toContain("Textul clubului pentru invitație.");
+  });
+
+  it("is what Zitadel's `ready` answer writes, and what the payload reads back", () => {
+    expect(signInStepsAfter("ready")).toBe("ready");
+    expect(signInStepsAfter("invited")).toBe("zitadel");
+    expect(signInStepsAfter("exists")).toBe("zitadel");
+    expect(signInStepsAfter("unconfigured")).toBe("self");
+    expect(signInStepsAfter("failed")).toBe("self");
+    expect(signInStepsOf("ready")).toBe("ready");
+    expect(signInStepsOf("self")).toBe("self");
+    expect(signInStepsOf(undefined)).toBe("zitadel");
+    expect(signInStepsOf("anything")).toBe("zitadel");
   });
 });

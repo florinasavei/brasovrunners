@@ -43,7 +43,7 @@ import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import { LEGAL_TEMPLATES_DIGEST_CLOCK } from "@/modules/legal-documents/domain/templates-notice";
 import { contactParts } from "@/modules/volunteers/domain/volunteer";
 import { formatCoordinates, mapUrlOf } from "@/modules/event-checkpoints/domain/coordinates";
-import { type SignInSteps, ZITADEL_LOGIN_LABELS, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
+import { type SignInSteps, ZITADEL_LOGIN_LABELS, zitadelInviteButton, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -1093,11 +1093,14 @@ export type TemplateData = {
   signInUrl?: string;
   /**
    * Whose the sign-in account is, in the invitation's numbered steps (§NNN): `zitadel` — the press asked Zitadel, whose
-   * email to choose a password comes first; `self` — the person makes it at the sign-in page. Absent reads as `zitadel`.
+   * email to choose a password comes first; `self` — the person makes it at the sign-in page; `ready` — the account already
+   * signs in with its password, so Zitadel sends nothing and the button is the one step. Absent reads as `zitadel`.
    */
   signInSteps?: SignInSteps;
   /** Zitadel's email by its subject, in the account's language, named the same in both halves (§NNN); absent, the half's own. */
   zitadelSubject?: string;
+  /** Zitadel's email's button, «Acceptare invitație» / “Accept invite”, in the account's language like the subject (§NNN). */
+  zitadelButton?: string;
   /**
    * «Șabloanele textelor legale s-au schimbat» (§639): the keys of the texts whose template is newer
    * than the text in force, as the maintenance job found them. Each half names them in its own
@@ -1998,9 +2001,14 @@ function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[
 function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, team: boolean): string[] {
   const { register, resendCode } = ZITADEL_LOGIN_LABELS;
   const subject = d.zitadelSubject ?? zitadelInviteSubject(locale);
+  const accept = d.zitadelButton ?? zitadelInviteButton(locale);
   if (locale === "ro") {
     const email = d.staffEmail ?? "aceasta";
     const access = team ? " Accesul începe la prima autentificare." : "";
+    // An account that already signs in with its password (`ready`): Zitadel sends nothing, the button is the one step.
+    if (d.signInSteps === "ready") {
+      return [`Ai deja cont de autentificare (Zitadel), cu parolă: apasă „${button}”, mai jos, și intră cu adresa ${email} și parola ta.${access}`];
+    }
     if (d.signInSteps === "self") {
       return [
         "Contul de autentificare ți-l faci singur, în doi pași:",
@@ -2009,8 +2017,8 @@ function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, 
       ];
     }
     return [
-      `Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „**${subject}**” (caută-l și în Spam). Pașii, în ordine:`,
-      "1. Deschide emailul de la Zitadel, apasă butonul din el și alege-ți parola.",
+      `Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „**${subject}**” și butonul „**${accept}**” (caută-l și în Spam). Pașii, în ordine:`,
+      `1. Deschide emailul de la Zitadel, apasă „${accept}” și alege-ți parola.`,
       `2. Apoi apasă „${button}”, mai jos, și intră cu adresa ${email} și parola aleasă.${access}`,
       "Ai deja cont (ai mai intrat la noi)? Sari peste pasul 1.",
       `**Nu încerca să intri înainte de pasul 1**: până îți alegi parola, fiecare încercare — și „${resendCode}” de pe pagina de autentificare — îți trimite alt email de la Zitadel, cu alt cod, și îl anulează pe cel de dinainte. Dacă ai primit mai multe, folosește-l doar pe cel mai nou.`,
@@ -2018,6 +2026,9 @@ function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, 
   }
   const email = d.staffEmail ?? "this address";
   const access = team ? " Access begins at your first sign-in." : "";
+  if (d.signInSteps === "ready") {
+    return [`You already have a sign-in account (Zitadel) with a password: press “${button}”, below, and sign in with ${email} and your password.${access}`];
+  }
   if (d.signInSteps === "self") {
     return [
       "You make your sign-in account yourself, in two steps:",
@@ -2026,8 +2037,8 @@ function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, 
     ];
   }
   return [
-    `You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “**${subject}**” (look in your spam folder too). The steps, in order:`,
-    "1. Open the email from Zitadel, press the button in it and choose your password.",
+    `You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “**${subject}**” and the button “**${accept}**” (look in your spam folder too). The steps, in order:`,
+    `1. Open the email from Zitadel, press “${accept}” and choose your password.`,
     `2. Then press “${button}”, below, and sign in with ${email} and the password you chose.${access}`,
     "Already have an account (signed in with us before)? Skip step 1.",
     `**Do not try to sign in before step 1**: until you choose your password, every attempt — and “${resendCode}” on the sign-in page — sends you another email from Zitadel, with a new code, and cancels the one before. If you got several, use only the newest.`,
@@ -4551,11 +4562,12 @@ export function buildTemplateContent(
   // «Vin!» (§811): the shapes that are about the answer's state — already counted, or taken back — are the platform's sentence alone.
   const rsvpState = messageType === "RSVP_CONFIRM" && data.rsvpStage !== undefined && data.rsvpStage !== "confirm";
   /*
-    An invitation whose account the person makes themselves (§NNN) — no Zitadel key, or Zitadel refused it — is the
-    platform's steps alone: the club's words for the invitation are written for the press that asks Zitadel, whose email
-    comes first, and would send the person to an email that is not coming.
+    An invitation whose account the person makes themselves (§NNN) — no Zitadel key, or Zitadel refused it — or whose
+    account already signs in with its password (`ready`) is the platform's steps alone: the club's words for the invitation
+    are written for the press that asks Zitadel, whose email comes first, and would send the person to an email that is not
+    coming.
   */
-  const selfSignIn = (messageType === "STAFF_INVITATION" || messageType === "MEMBER_INVITATION") && data.signInSteps === "self";
+  const selfSignIn = (messageType === "STAFF_INVITATION" || messageType === "MEMBER_INVITATION") && (data.signInSteps === "self" || data.signInSteps === "ready");
   const written =
     messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || familyConfirmedShape || lapsedOffer || newsletterState || rsvpState || selfSignIn
       ? null

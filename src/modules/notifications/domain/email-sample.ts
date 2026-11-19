@@ -333,7 +333,7 @@ export function emailSampleValueOf(name: EmailCopyPlaceholder, locale: EmailLoca
  *
  * `placeholder` for every value that is a field of the closed set (§247). The sample colleague's
  * address is the one value with no field — `{staffEmail}` is not in the set — so its place is taken
- * by the words the platform's own sentence falls back to ("Intri cu adresa aceasta"), which are
+ * by the words the platform's own sentence falls back to ("intră cu adresa aceasta și parola aleasă"), which are
  * true: the invitation is sent to that very address.
  */
 export type EmailSampleLiteral = {

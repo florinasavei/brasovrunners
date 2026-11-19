@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -509,13 +509,16 @@ export async function releaseInvitationHold<T extends Record<string, unknown>>(
     .update(emailOutbox)
     .set({
       nextAttemptAt: null,
-      ...(steps === "self" ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ signInSteps: "self" })}::jsonb` } : {}),
+      ...(steps !== "zitadel" ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ signInSteps: steps })}::jsonb` } : {}),
     })
     .where(
       and(
         eq(emailOutbox.status, "PENDING"),
         eq(emailOutbox.attemptCount, 0),
         isNotNull(emailOutbox.nextAttemptAt),
+        // A row a provider's pause handed back (`releaseForPause`) also reads attempt 0 with a next attempt: it carries its error
+        // and waits for its own moment — only the hold this press queued is let go.
+        isNull(emailOutbox.lastError),
         inArray(emailOutbox.messageType, ["STAFF_INVITATION", "MEMBER_INVITATION"]),
         sql`left(${emailOutbox.idempotencyKey}, ${prefix.length}) = ${prefix}`,
         sql`(${emailOutbox.payloadJson} ->> 'signInSteps') = 'zitadel'`,

@@ -240,13 +240,13 @@ describe("§NNN through the presses: the club's invitation leaves only after Zit
     expect(row.payloadJson).toMatchObject({ signInSteps: "self" });
   });
 
-  it("«Adaugă» for an account that already signs in: `ready`, the invitation goes with Zitadel's steps — «Sari peste pasul 1»", async () => {
+  it("«Adaugă» for an account that already signs in: `ready`, the invitation goes at once with the button alone — no Zitadel email is coming", async () => {
     state.answer = { kind: "ready" };
     const to = await redirectOf(inviteStaffAction(null, form({ uiLocale: "ro", ...person(), preferredLocale: "ro" })));
     expect(to).toContain("invite=ready");
     const [row] = await outboxOf();
     expect(row.nextAttemptAt).toBeNull();
-    expect(row.payloadJson).toMatchObject({ signInSteps: "zitadel" });
+    expect(row.payloadJson).toMatchObject({ signInSteps: "ready" });
   });
 
   it("«Adaugă» with no key: nothing is held, and the steps are the person's own", async () => {
