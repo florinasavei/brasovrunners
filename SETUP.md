@@ -2801,8 +2801,10 @@ never puts one in force (`yarn db:seed:legal` included), and no migration brings
    how long the acceptance is kept — the platform deletes it with the account).
 2. **Approve it on its own, at least a day before the race — never on its morning.** Type the club's facts where a `<…>`
    stands (the approval refuses a text that still holds one), «Salvează ciorna», then «Aprobă și publică», in **both**
-   languages, on QA first, then on production. It is **not** among the texts of «Aprobă acum textele care lipsesc…»: from the
-   moment it is in force, every Voluntar, Redactor, Organizator and Tehnic is stopped at their next page until they accept it.
+   languages, on QA first, then on production. It is **not** among the texts of «Aprobă acum textele care lipsesc…», and
+   «Aprobă ciornele» holds its draft back — «se aprobă separat» — even when «Regenerează din șabloane» made it with the
+   others: from the moment it is in force, every Voluntar, Redactor, Organizator and Tehnic is stopped at their next page
+   until they accept it.
    Until a version is in force `/admin/tasks` carries the row «Angajamentul echipei».
 3. **What a colleague sees.** At their next page — the first sign-in, or a page of a session already open — `/admin/acord`:
    the text in force with its version line, «Numele tău complet», «Am citit și accept angajamentul» and «Accept și intru»,

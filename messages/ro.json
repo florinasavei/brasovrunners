@@ -4602,7 +4602,8 @@
         "held": {
           "superseded": "există o ciornă mai nouă a aceluiași text; șterge-o pe aceasta sau aprob-o de pe pagina ei.",
           "behind": "o versiune aprobată cu număr mai mare este deja oferită, deci aceasta n-ar intra niciodată în vigoare.",
-          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le."
+          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le.",
+          "alone": "angajamentul echipei se aprobă separat, de pe pagina ciornei, cu «Aprobă și publică»: din acel moment, fiecare coleg care nu e administrator e oprit la următoarea pagină până îl acceptă."
         },
         "deleteIntro": "Bifează în tabel versiunile de șters, apoi apasă butonul: vezi lista înainte de ștergere.",
         "deleteTicked": "Șterge versiunile bifate",
@@ -5739,7 +5740,7 @@
           "done": "Angajamentul echipei e în vigoare: fiecare coleg, în afară de administratori, îl acceptă la prima intrare.",
           "how": [
             "/admin/legal → „Versiune nouă” → sub „Pornește de la șablon”, „Angajament de confidențialitate și protecția datelor pentru echipă”.",
-            "Butonul „Aprobă acum textele care lipsesc…” nu îl aprobă: se aprobă separat, citit pentru el.",
+            "Nici „Aprobă acum textele care lipsesc…”, nici „Aprobă ciornele” nu îl aprobă, chiar dacă „Regenerează din șabloane” i-a făcut ciorna: se aprobă separat, citit pentru el.",
             "Un jurist ar trebui să-l citească întâi: autoritatea clubului (art. 29 și 32 alin. (4) GDPR), confidențialitatea după rol, răspunderea și cât se păstrează acceptarea.",
             "Completează datele clubului rămase între paranteze unghiulare, în ambele limbi, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare coleg care nu e administrator e oprit la prima pagină până îl acceptă.",
@@ -10467,7 +10468,7 @@
                 "Completează datele clubului rămase de forma <…>, în română și în engleză, și apasă «Salvează ciorna». Un jurist ar trebui să citească textul întâi.",
                 "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
                 "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă.",
-                "Nu e printre textele din «Aprobă acum textele care lipsesc…»: se aprobă separat, citit pentru el.",
+                "Nu e printre textele din «Aprobă acum textele care lipsesc…» și nici din «Aprobă ciornele», chiar dacă «Regenerează din șabloane» i-a făcut ciorna: se aprobă separat, citit pentru el.",
                 "«Echipa» arată pe rândul fiecărui coleg dacă a acceptat — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
               ]
             },

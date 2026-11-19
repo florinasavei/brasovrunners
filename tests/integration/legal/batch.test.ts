@@ -178,16 +178,48 @@ describe("every legal text at once (§532)", () => {
     it("approves the ready drafts in one press, each in force from the press", async () => {
       await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);
       const plan = await planDraftApproval(db);
-      expect(plan.every((item) => item.outcome === "ready")).toBe(true);
+      // Every text of the catalogue is ready but the team's undertaking, held back on its own (§NNN, the next test).
+      expect(plan.filter((item) => item.outcome === "ready").map((item) => item.row.key).sort()).toEqual([...PLATFORM_APPROVAL_KEYS].sort());
+      const ready = plan.filter((item) => item.outcome === "ready");
 
-      const approved = await approveDrafts(db, admin, plan.map((item) => item.row.id), LATER);
-      expect(approved).toBe(LEGAL_DOCUMENT_KEYS.length);
-      for (const key of LEGAL_DOCUMENT_KEYS) {
+      const approved = await approveDrafts(db, admin, ready.map((item) => item.row.id), LATER);
+      expect(approved).toBe(PLATFORM_APPROVAL_KEYS.length);
+      for (const key of PLATFORM_APPROVAL_KEYS) {
         const inForce = await findCurrentApprovedDocument(db, key, "en", LATER);
         expect(inForce?.version, key).toBe(1);
       }
-      const rows = await db.select().from(legalDocuments);
+      const rows = (await db.select().from(legalDocuments)).filter((row) => row.key !== "STAFF_DATA_AGREEMENT");
       expect(rows.every((row) => row.isApproved && row.approvedByStaffUserId === admin.id && row.effectiveAt.getTime() === LATER.getTime())).toBe(true);
+    });
+
+    it("§NNN never puts the team's undertaking in force: «Regenerează din șabloane» drafts it, «Aprobă ciornele» holds it back", async () => {
+      // The two presses as an Administrator two days before the race would make them, on a deployment that knows the club's
+      // four facts — so no placeholder is left to stop the undertaking's draft.
+      const regenerated = await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);
+      expect(regenerated.created).toContain("STAFF_DATA_AGREEMENT");
+      const plan = await planDraftApproval(db);
+      const team = plan.find((item) => item.row.key === "STAFF_DATA_AGREEMENT");
+      expect(team?.outcome).toBe("alone");
+
+      // Every draft the page offers to approve together: the undertaking is not among them, and none of the team is stopped.
+      const offered = plan.filter((item) => item.outcome === "ready").map((item) => item.row.id);
+      expect(offered).not.toContain(team?.row.id);
+      await approveDrafts(db, admin, offered, LATER);
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER)).toBeUndefined();
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "en", LATER)).toBeUndefined();
+      const [draft] = await db.select().from(legalDocuments).where(eq(legalDocuments.key, "STAFF_DATA_AGREEMENT"));
+      expect(draft.isApproved).toBe(false);
+
+      // A page that names its draft anyway — a stale tab, a crafted post — refuses the whole press: nothing is approved.
+      const terms = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("t2") }, LATER);
+      expect(await codeOf(approveDrafts(db, admin, [terms, draft.id], LATER))).toBe("CONFLICT");
+      expect(await codeOf(approveDrafts(db, admin, [draft.id], LATER))).toBe("CONFLICT");
+      expect((await findCurrentApprovedDocument(db, "TERMS", "ro", LATER))?.version).toBe(1);
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER)).toBeUndefined();
+
+      // Its own page's «Aprobă și publică» is the one way it comes into force.
+      await approveVersion(db, admin, draft.id, LATER);
+      expect((await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER))?.id).toBe(draft.id);
     });
 
     it("holds back an older draft, a draft behind an approved version and a draft with a placeholder", async () => {

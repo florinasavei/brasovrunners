@@ -1,6 +1,7 @@
 import { hasLocale } from "next-intl";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { auth } from "@/auth";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
@@ -8,11 +9,11 @@ import { routing } from "@/i18n/routing";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import { isBackofficeRole, type StaffSubject } from "./domain/roles";
+import { isBackofficeRole, mustAcceptTeamAgreement, type StaffSubject } from "./domain/roles";
 import { gateRequestOf, isTeamAgreementPath, localeOfPath, TEAM_AGREEMENT_REFUSAL, teamAgreementReturnTo } from "./domain/team-agreement";
 import { findStaffUserById, type StaffAccount } from "./repository";
 import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
-import { type TeamAgreementVersion, teamAgreementOwedBy } from "./team-agreement";
+import { outstandingTeamAgreement, type TeamAgreementVersion } from "./team-agreement";
 
 /**
  * Who is signing this request, and the three helpers AGENTS.md §13.1 names.
@@ -101,7 +102,26 @@ export async function requireStaff(): Promise<StaffAccount> {
  * the staff preview of a draft, which reads its staff member itself to answer a stranger 404.
  */
 export async function assertTeamAgreementAccepted(staffUser: StaffSubject & { id: string }): Promise<void> {
-  if (await teamAgreementOwedBy(getDb(), staffUser, new Date())) await refuseUntilTeamAgreementAccepted();
+  if (await owedThisRequest(staffUser)) await refuseUntilTeamAgreementAccepted();
+}
+
+/**
+ * The version of the undertaking an account has not accepted, asked of the database once per request (§NNN) however many doors
+ * ask it — the layout's bare shell, the page's `requireStaff`, a page that asks the door again —, as `deadlinesForThisRequest` is
+ * read once per backoffice render. React scopes `cache` to the render of one request; outside a render — a Server Action's body, a
+ * route handler, a test — it calls through every time, so a press that has just written the acceptance is never answered from a
+ * moment before it. Keyed by the account's id.
+ */
+const outstandingThisRequest = cache(
+  (staffUserId: string): Promise<TeamAgreementVersion | null> => outstandingTeamAgreement(getDb(), staffUserId, new Date()),
+);
+
+/**
+ * The version this colleague owes: none, with no query, for a role that is not asked (`mustAcceptTeamAgreement`); else the
+ * request's one read.
+ */
+async function owedThisRequest(staffUser: StaffSubject & { id: string }): Promise<TeamAgreementVersion | null> {
+  return mustAcceptTeamAgreement(staffUser) ? outstandingThisRequest(staffUser.id) : null;
 }
 
 /**
@@ -147,7 +167,7 @@ async function refuseUntilTeamAgreementAccepted(): Promise<never> {
  * page is fetched afresh on every navigation.
  */
 export async function teamAgreementOwedFor(staffUser: StaffSubject & { id: string }): Promise<TeamAgreementVersion | null> {
-  return teamAgreementOwedBy(getDb(), staffUser, new Date());
+  return owedThisRequest(staffUser);
 }
 
 /**

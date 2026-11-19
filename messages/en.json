@@ -4602,7 +4602,8 @@
         "held": {
           "superseded": "a newer draft of the same text exists; delete this one or approve it from its own page.",
           "behind": "an approved version with a higher number is already offered, so this one would never take effect.",
-          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them."
+          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them.",
+          "alone": "the team's undertaking is approved on its own, on the draft's page, with «Approve and publish»: from then on every colleague but the Administrators is stopped at their next page until they accept it."
         },
         "deleteIntro": "Tick the versions to delete in the table, then press the button: you see the list before anything is deleted.",
         "deleteTicked": "Delete the ticked versions",
@@ -5739,7 +5740,7 @@
           "done": "The team's undertaking is in force: every colleague but the administrators accepts it at their first sign-in.",
           "how": [
             "/admin/legal → “New version” → under “Start from the template”, “Team confidentiality and data protection undertaking”.",
-            "The button “Approve the missing texts now…” does not approve it: it is approved on its own, read for itself.",
+            "Neither “Approve the missing texts now…” nor “Approve the drafts” approves it, even when “Regenerate from the templates” made its draft: it is approved on its own, read for itself.",
             "A lawyer should read it first: the club's authority (Articles 29 and 32(4) GDPR), confidentiality after the role, liability and how long the acceptance is kept.",
             "Fill in the club's facts left in angle brackets, in both languages, “Save draft”, then “Approve and publish”.",
             "Approve it at least a day before the race: from then on, every colleague who is not an administrator is stopped at their first page until they accept it.",
@@ -10467,7 +10468,7 @@
                 "Fill in the club's facts left shaped <…>, in Romanian and in English, and press «Save draft». A lawyer should read the text first.",
                 "Under «Approve this version» tick «I confirm the club has approved this text and it may become public», press «Approve and publish» and confirm.",
                 "Approve it at least a day before the race, not on its morning: from then on, every volunteer, copywriter, organiser and technical colleague is stopped at the next page until they accept.",
-                "It is not among the texts of «Approve the missing texts now…»: it is approved on its own, read for itself.",
+                "It is among the texts of neither «Approve the missing texts now…» nor «Approve the drafts», even when «Regenerate from the templates» made its draft: it is approved on its own, read for itself.",
                 "«Staff» shows on each colleague's row whether they accepted — the version, the date and the name typed —, «Not accepted» or «Not required»."
               ]
             },

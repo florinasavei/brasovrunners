@@ -12,8 +12,8 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { TEAM_AGREEMENT_NAME_MAX, teamAgreementReturnTo } from "@/modules/staff-identity/domain/team-agreement";
-import { requireStaffBeforeTeamAgreement } from "@/modules/staff-identity/session";
-import { findTeamAgreementText, teamAgreementOwedBy } from "@/modules/staff-identity/team-agreement";
+import { requireStaffBeforeTeamAgreement, teamAgreementOwedFor } from "@/modules/staff-identity/session";
+import { findTeamAgreementText } from "@/modules/staff-identity/team-agreement";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -50,10 +50,9 @@ export default async function TeamAgreementPage({ params, searchParams }: Props)
   const query = await searchParams;
   const returnTo = teamAgreementReturnTo(typeof query.returnTo === "string" ? query.returnTo : null);
   const back = returnTo ?? getPathname({ locale, href: "/admin" });
-  const db = getDb();
-  const now = new Date();
-  if (!(await teamAgreementOwedBy(db, actor, now))) redirect(back);
-  const document = await findTeamAgreementText(db, locale, now);
+  // The layout above asked the same question in this render: one read of the database for both (`teamAgreementOwedFor`).
+  if (!(await teamAgreementOwedFor(actor))) redirect(back);
+  const document = await findTeamAgreementText(getDb(), locale, new Date());
   if (!document) redirect(back);
 
   const t = await getTranslations("Admin");

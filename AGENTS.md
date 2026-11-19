@@ -2159,10 +2159,12 @@ below the Administrator accepts, once per version, before the backoffice answers
 both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
 tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
 access withdrawn), the club's four facts as visible `<PLACEHOLDER>`s and no merge field. Approved in `/admin/legal` **on
-its own** — never by the one press (`PLATFORM_APPROVAL_KEYS` leaves it out) — and **never seeded** on any environment
-(`NEVER_SEEDED_KEYS`): a version in force gates the whole team. An acceptance (`staff_team_agreement_acceptances`, one
-per account and version) keeps the version, its hash, the language, the name typed, `signedTextHash`, the moment, the IP
-address and the browser; `RESTRICT` on the version, counted on the legal list; `CASCADE` with the account.
+its own** — never by the one press (`PLATFORM_APPROVAL_KEYS` leaves it out) nor by «Aprobă ciornele», which holds its
+draft back even when «Regenerează din șabloane» made it with the others (`draftApprovalOutcome`'s `alone`) — and **never
+seeded** on any environment (`NEVER_SEEDED_KEYS`): a version in force gates the whole team. An acceptance
+(`staff_team_agreement_acceptances`, one per account and version) keeps the version, its hash, the language, the name
+typed, `signedTextHash`, the moment, the IP address and the browser; `RESTRICT` on the version, counted on the legal
+list; `CASCADE` with the account.
 
 Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
 

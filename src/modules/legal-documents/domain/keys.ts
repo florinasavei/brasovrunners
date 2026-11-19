@@ -44,7 +44,9 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
  * **But the team's undertaking (§NNN).** Approving `STAFF_DATA_AGREEMENT` stops every colleague below
  * the Administrator at their next request until they accept it — on race day, the whole desk. So it is
  * approved on its own, read and pressed for itself («Versiune nouă» or its card's «Regenerează din
- * șablon», then «Aprobă și publică»), never as a side effect of a press about the participants' texts.
+ * șablon», then «Aprobă și publică»), never as a side effect of a press about the participants' texts:
+ * this press leaves it out, and «Aprobă ciornele» holds its draft back (`draftApprovalOutcome`'s
+ * `alone`, `domain/batch.ts`) even when «Regenerează din șabloane» made it with the others.
  */
 export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS.filter(
   (key): key is Exclude<(typeof LEGAL_DOCUMENT_KEYS)[number], "STAFF_DATA_AGREEMENT"> => key !== "STAFF_DATA_AGREEMENT",

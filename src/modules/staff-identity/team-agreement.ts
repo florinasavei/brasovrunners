@@ -12,7 +12,7 @@ import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { type CurrentLegalDocument, findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { mustAcceptTeamAgreement, type StaffSubject } from "./domain/roles";
+import { mustAcceptTeamAgreement } from "./domain/roles";
 import { teamAgreementName } from "./domain/team-agreement";
 
 /**
@@ -55,7 +55,8 @@ function inForce(now: Date) {
 
 /**
  * The version in force this account has not accepted, or null — the gate's one question, one query. Asked only of a role that
- * must accept (`mustAcceptTeamAgreement`): the session never reads it for an Administrator.
+ * must accept (`mustAcceptTeamAgreement`): the session never reads it for an Administrator, and asks it once per request however
+ * many doors ask (`session.ts`, React's `cache`).
  */
 export async function outstandingTeamAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -78,19 +79,6 @@ export async function outstandingTeamAgreement<T extends Record<string, unknown>
     .orderBy(desc(legalDocuments.version))
     .limit(1);
   return row && row.acceptanceId === null ? { id: row.id, version: row.version } : null;
-}
-
-/**
- * Whether this colleague must accept a version before the backoffice answers them, and which: null for a role that is not
- * asked (`mustAcceptTeamAgreement` — no query at all), for nothing in force, and for a version already accepted.
- */
-export async function teamAgreementOwedBy<T extends Record<string, unknown>>(
-  db: Database<T>,
-  account: StaffSubject & { id: string },
-  now: Date,
-): Promise<TeamAgreementVersion | null> {
-  if (!mustAcceptTeamAgreement(account)) return null;
-  return outstandingTeamAgreement(db, account.id, now);
 }
 
 /** The text a colleague reads on `/admin/acord`: the version in force in the page's language, or undefined. */
