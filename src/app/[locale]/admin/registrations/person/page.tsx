@@ -17,6 +17,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
+import { formatBytes } from "@/modules/media/ui/stored-facts";
 import { eraseEventInvitationsAction, eraseReserveEntriesAction, eraseRsvpsAction, eraseVolunteerInvitationsAction, lookUpPersonAction } from "./actions";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -553,6 +554,15 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                           : ""}
                         {offer.guardianIp || offer.guardianUserAgent
                           ? ` · ${t("person.traceGuardian", { ip: show(offer.guardianIp), browser: show(offer.guardianUserAgent) })}`
+                          : ""}
+                        {/* «Contract semnat» (§NNN): the signed copy the organizers attached — its name, format, length and moment; the file is on the volunteer's page. */}
+                        {offer.signedContract
+                          ? ` · ${t("person.signedContract", {
+                              name: offer.signedContract.fileName,
+                              format: offer.signedContract.format,
+                              size: formatBytes(offer.signedContract.size, locale),
+                              when: show(offer.signedContract.uploadedAt),
+                            })}`
                           : ""}
                       </Typography>
                       {/*

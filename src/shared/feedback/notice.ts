@@ -109,6 +109,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
   // «Trimite fiecăruia punctul lui» with people at a point who have no address (§956): how many messages, and how many such people.
   planPointsSentSomeWithout: { count: "queued", values: { noAddress: "noAddress" } },
+  // «Încarcă contractele semnate» with scripts off (§NNN): how many files were attached, and how many were not — counts, never a name.
+  volunteerContractsAttachedSome: { count: "count", values: { left: "left" } },
 };
 
 /**
@@ -191,6 +193,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // «Dă număr elitelor fără număr» finding every line numbered already, and a line's «Număr» saved as it stood (§990).
   "eliteNumberedNone",
   "eliteNumberUnchanged",
+  // «Șterge» on a signed agreement another colleague had deleted first (§NNN).
+  "volunteerContractNone",
 ]);
 
 /**

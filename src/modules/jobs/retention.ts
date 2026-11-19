@@ -693,6 +693,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for
     2026) never takes a whole list at the next run, offers made yesterday among them. The roles stay with the
     event: they hold no name. Since §821 an event's page may name the volunteers who ticked (the public list), so the cache is told after the commit.
+    A volunteer's signed agreement (§NNN, `event_volunteer_documents`) and an upload of it left half-sent go with the row, in this
+    same statement, by their `ON DELETE CASCADE`: the file never outlives the person's data.
   */
   await step("volunteers", async (tx) => {
     const cutoff = daysBefore(now, RETENTION.volunteerDaysAfterEvent);
