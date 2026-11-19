@@ -480,7 +480,7 @@ export type ResultRunner = {
 
 export type EventResultsView = {
   event: EventFacts;
-  /** Registered runners with a race number — checked-in first, then by number — each with its result when it has one. */
+  /** Registered runners with a race number — the elites first, then the checked-in, then by number — each with its result when it has one. */
   registered: ResultRunner[];
   /** Rows no registration holds the number of: typed by hand, or left nameless by an erased registration's. */
   typed: ResultRunner[];
@@ -586,7 +586,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       result: row ? resultOf(row, rankedOf(row), staffNames) : null,
     });
   }
-  registered.sort((a, b) => Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
+  // The elites first — the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
+  registered.sort((a, b) => Number(b.elite) - Number(a.elite) || Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
 
   const typed: ResultRunner[] = [...index.freeByBib.values()]
     .filter((row) => !taken.has(row.id) && !heldBibs.has(row.bibNumber))
