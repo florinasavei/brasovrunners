@@ -64,6 +64,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      sentAtTurn: false,
       onMailgunRoad: true,
     },
     {
@@ -79,6 +80,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      sentAtTurn: false,
       onMailgunRoad: true,
     },
     {
@@ -93,6 +95,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      sentAtTurn: false,
       onMailgunRoad: true,
     },
   ],

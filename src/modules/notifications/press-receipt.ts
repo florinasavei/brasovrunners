@@ -7,7 +7,7 @@ import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { bulkBudget, isBulkMessage } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { receiptValues, type ReceiptRow, summarizeReceipt } from "./domain/press-receipt";
-import { SENT_NOW_FLAG } from "./domain/send-at-once";
+import { SENT_AT_TURN_FLAG, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { gmailRoadCondition } from "./outbox";
 import { readOutboxDelivery } from "./outbox-delivery";
 import { readOutboxRoads } from "./outbox-roads";
@@ -49,9 +49,10 @@ export async function pressMailValues<T extends Record<string, unknown>>(
       createdAt: emailOutbox.createdAt,
       lastError: emailOutbox.lastError,
       isManualResend: emailOutbox.isManualResend,
-      // The payload's flags only — a family's hold (§519), a press's «now» (§540), a club copy (§320) — never its words.
+      // The payload's flags only — a family's hold (§519), a press's «now» (§540) or its turn (§1021), a club copy (§320) — never its words.
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
+      sentAtTurn: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
       onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
       clubCopy: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${CLUB_COPY_FLAG}::text) = 'true', false)`,
       test: sql<boolean>`coalesce(${registrations.kind} = 'TEST', false)`,
@@ -65,6 +66,7 @@ export async function pressMailValues<T extends Record<string, unknown>>(
     ...row,
     familyHeld: Boolean(row.familyHeld),
     sentNow: Boolean(row.sentNow),
+    sentAtTurn: Boolean(row.sentAtTurn),
     onMailgunRoad: Boolean(row.onMailgunRoad),
     clubCopy: Boolean(row.clubCopy),
     test: Boolean(row.test),
