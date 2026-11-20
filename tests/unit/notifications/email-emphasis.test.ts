@@ -157,6 +157,8 @@ const HIGHLIGHTED: ReadonlyArray<{ type: EmailMessageType; ro: readonly string[]
   { type: "NEW_EVENT_ALERT", ro: ["Duminică, 4 oct. 2026, la 09:00"], en: ["Sunday, 4 Oct 2026, at 09:00"] },
   // «Punctul tău» (§956): the point the person stands at — its number in the route's order, its kilometre and its name.
   { type: "VOLUNTEER_POINT", ro: ["Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană"], en: ["Your point at The autumn cross: 3. 5.5 km — Water at the hut"] },
+  // The desk's eye (§NNN): what was recorded at the table; its way back is the line and the button after the band.
+  { type: "LIST_CONSENT_RECORDED", ro: ["La masa de ridicare a numerelor", "cu numele pe lista participanților și în clasament"], en: ["At the race-number pick-up desk", "by name on the participant list and in the results"] },
 ];
 
 /** The club's copies, the staff's and the club's own words: no band (out of scope, §580). */

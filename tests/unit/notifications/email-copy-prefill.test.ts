@@ -75,6 +75,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // «Schimbă adresa»: whose registration, at which event and when; the dead links, the status and the contact page are the platform's lines.
   REGISTRATION_ADDRESS_REMOVED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   REGISTRATION_ADDRESS_ADDED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
+  // The desk's eye (§NNN): the event; the way back is the platform's line above its button.
+  LIST_CONSENT_RECORDED: ["eventTitle"],
   EVENT_REMINDER: ["eventTitle", "bibNumber", "checkinCode", "eventChecklist"],
   EVENT_THANKS: ["eventTitle"],
   DECLARATION_SIGNED: ["eventTitle", "signedAtFormatted"],

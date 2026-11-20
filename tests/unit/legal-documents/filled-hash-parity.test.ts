@@ -25,10 +25,12 @@ const FACTS: ClubFacts = {
 const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
   // Edited on purpose (§984): the paragraph «Tombola ({{raffle}})» in section 5 and its line in section 7 — the elites named
   // «sportivii de top», as every text a participant reads names them (§917).
+  // And on purpose again (§NNN): one sentence in section 4's public-list paragraph — the wish to appear by name may also be told to
+  // the organizers at the race-number desk, who record it (who and when kept), the person emailed at once the link to withdraw it.
   PRIVACY_NOTICE: {
-    ro: "2ef3d1a891bf11bd31e0b7ddb50a9b1f223ec1cdfc6c9a7cdf004fe93682ce0e",
-    en: "a3e9c5d8cd4299692c86dd37bdeac8fd057b8e7908e8365ebab9c777e2bd5c37",
-    both: "bf6a2eebcfbf9703b431df4c8705b5c5169dd03384de6aed55611667f19c0cf2",
+    ro: "b5c61a66689d72c6ab217b3c49fc36857f43113ed8ebc77bf4af45304f4b0f06",
+    en: "9283b9a3be8c6e1d416a5c9b5fe6c180171892cf091a9f8448dbb01790a40813",
+    both: "9fdef0318510a7786f2464f01c285e27d9faed1ef32b867c8504cf22aa12b15f",
   },
   TERMS: {
     ro: "d4f30d2e01521edb464620af19d13fc0af7f3179c40ee2c7cb57b2290162e05c",

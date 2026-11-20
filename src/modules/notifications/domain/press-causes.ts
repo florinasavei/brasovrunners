@@ -35,6 +35,8 @@ export const PRESS_CAUSES = {
   "registrations.confirmPaper": ["REGISTRATION_CONFIRMED", "WAITLIST_JOINED"],
   "registrations.givePlace": ["REGISTRATION_CONFIRMED"],
   "registrations.setBib": ["BIB_ASSIGNED"],
+  // The desk's eye (§NNN): the person's spoken wish to appear by name, recorded — they are told, with the way back. Hiding emails nobody.
+  "registrations.deskListWish": ["LIST_CONSENT_RECORDED"],
   "registrations.specialGuests": ["COMPLETE_DECLARATION"],
   "registrations.cancel": ["REGISTRATION_CANCELLED"],
   "registrations.bulkCancel": ["REGISTRATION_CANCELLED"],

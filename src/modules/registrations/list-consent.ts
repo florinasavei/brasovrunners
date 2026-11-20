@@ -51,16 +51,32 @@ import { findRegistrationById } from "./repository";
  * "Set", not "flip": the form carries the choice it is making, so a double submission — or a
  * choice made from two tabs — lands on the state the button said, and a second identical
  * request changes nothing and writes no audit row.
+ *
+ * **A fourth door, the desk (§NNN): the person's wish spoken at the table.** A desk role presses
+ * the row's eye when the runner standing there says they want their name shown — or hidden
+ * (`desk-list-wish.ts`). The same column and the same columns beside it (`listChoiceColumns`),
+ * the same action in the trail with the door `DESK` — and, unlike the three above, the staff
+ * member who recorded it as the actor, because somebody else wrote it down; the person is
+ * emailed at once with this module's `LIST_CONSENT` link to take it back.
  */
 
-/** Which door the change came through; audit metadata, never a name. */
-export type ListConsentSurface = "LIST_LINK" | "MY_REGISTRATIONS" | "MANAGE_LINK";
+/** Which door the change came through; audit metadata, never a name. `DESK`: a desk role recorded the person's spoken wish (§NNN). */
+export type ListConsentSurface = "LIST_LINK" | "MY_REGISTRATIONS" | "MANAGE_LINK" | "DESK";
 
 /** The same fortnight every other participant link gets when it has no deadline to borrow. */
 export const LIST_CONSENT_TOKEN_HOURS = 14 * 24;
 
-function consentWord(listed: boolean): "LISTED" | "NOT_LISTED" {
+/** The shape of the change in the trail: LISTED or NOT_LISTED, never the name. */
+export function consentWord(listed: boolean): "LISTED" | "NOT_LISTED" {
   return listed ? "LISTED" : "NOT_LISTED";
+}
+
+/**
+ * The one write's columns, whichever door it came through: `list_opt_out` set, and — leaving the list — the socials beside the
+ * name gone with it (§500), for good; `updated_at` bumped.
+ */
+export function listChoiceColumns(listed: boolean, now: Date) {
+  return { listOptOut: !listed, ...(listed ? {} : { listSocials: false }), updatedAt: now };
 }
 
 /**
@@ -85,7 +101,7 @@ export async function setListConsent<T extends Record<string, unknown>>(
     .update(registrations)
     // Leaving the list takes the socials beside the name with it (§500), for good: coming back
     // through this door puts the name back, never a Strava or Instagram nobody asked about again.
-    .set({ listOptOut: !listed, ...(listed ? {} : { listSocials: false }), updatedAt: now })
+    .set(listChoiceColumns(listed, now))
     .where(eq(registrations.id, registrationId));
   // Off the public list (or back on it) for the next visitor, not after the cache's day (§333).
   revalidatePublicContent("places");

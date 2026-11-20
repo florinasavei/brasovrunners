@@ -8,7 +8,7 @@ import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
-import { canManageRegistrations, canReadRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations, canRecordListWishAtDesk, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { mayEndWaitlisted } from "@/modules/registrations/domain/row-verbs";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
@@ -36,6 +36,7 @@ import {
   checkInAction,
   confirmRegistrationNowAction,
   promoteRegistrationAction,
+  recordListWishAtDeskAction,
   setBibNumberAction,
   setRegistrationEliteAction,
   setRegistrationEliteBibLabelAction,
@@ -58,6 +59,9 @@ import {
  *       handed out. The person may well be standing there with the email; the desk is where
  *       that must not become a surprise. Every role sees it: a state and a number, never an
  *       address (`AGENTS.md` §15.11).
+ *   Any state but those two and PENDING_EMAIL_CONFIRMATION → the eye «Anonim» / «Cu nume» is a
+ *       press too (§NNN): the person's own spoken wish to appear by name, or no longer, asked
+ *       first and recorded as theirs — showing emails them at once with the way back.
  *
  * `back` says where the buttons return to — this row inside the desk's search, or the page
  * one scanned code opened — and the hidden fields carry what that page needs to rebuild.
@@ -150,6 +154,28 @@ export default async function DeskRow({
   */
   const terminal = isTerminalStatus(row.status);
   const voidedAt = row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt;
+
+  /*
+    The eye's press (§NNN): the person's own wish, recorded the other way — showing when they are anonymous by their own choice,
+    hiding when they asked for their name. Every desk role, on an open desk, on a row whose address was confirmed (the email
+    that tells the person needs one somebody vouched for); the action and the service ask the same again (BR-REQ-060-01).
+  */
+  const mayRecordWish =
+    !readOnly && !terminal && role !== undefined && canRecordListWishAtDesk(role) && row.status !== "PENDING_EMAIL_CONFIRMATION";
+  const showing = row.listOptOut;
+  const eyeWords = t(row.namedOnSite ? "desk.siteNamed" : "desk.siteAnonymous");
+  // Who says it: the person — or, for a minor, the parent or guardian the kit goes to (§108), who answers for them.
+  const wishWho = { name: row.registeredName, guardian: row.guardianName ?? "" };
+  const wishQuestion = {
+    title: showing
+      ? t(row.guardianName ? "desk.siteWish.showTitleMinor" : "desk.siteWish.showTitle", wishWho)
+      : t(row.guardianName ? "desk.siteWish.hideTitleMinor" : "desk.siteWish.hideTitle", wishWho),
+    body: t(showing ? (row.hiddenByClub ? "desk.siteWish.showBodyHidden" : "desk.siteWish.showBody") : row.hiddenByClub ? "desk.siteWish.hideBodyHidden" : "desk.siteWish.hideBody"),
+    // Showing tells the person at once, with the way back (`LIST_CONSENT_RECORDED`); hiding emails nobody — said either way (§384).
+    ...(showing ? words.mail({ to: row.registeredName, type: "LIST_CONSENT_RECORDED", test: row.kind === "TEST" }) : words.noMail(row.registeredName)),
+    confirmLabel: t(showing ? (row.hiddenByClub ? "desk.siteWish.showConfirmHidden" : "desk.siteWish.showConfirm") : "desk.siteWish.hideConfirm"),
+    cancelLabel: t("desk.siteWish.cancel"),
+  };
   // Whose document is whose (§330): the minor's and the parent's on a minor's declaration.
   const documents = identityDocumentsOf(row);
   const printedVoid = terminal && row.bibPrintedAt !== null && row.bibNumber !== null;
@@ -228,15 +254,36 @@ export default async function DeskRow({
               The eye (§1004; the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor»):
               open with «Cu nume» when the person appears by name on the site — the list and the results —, crossed with «Anonim» when
               they did not tick it or the club hid them; for every desk role, from the desk's own query. Not on a row that is over.
+
+              A press since §NNN (the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot schimba în „Cu nume”
+              la click, dar cu acordul lor»): the same words and eye as a button, for every desk role, recording the person's own wish
+              the other way — «Anonim» → «Cu nume» when they say they want their name shown, «Cu nume» → «Anonim» when they ask to be
+              taken off. It asks first, naming the person (and, for a minor, the parent who says it) and what follows; «Anulează» has
+              the focus. Not on a closed desk, and not while the address was never confirmed — the email that tells the person would go
+              where nobody vouched for it: «Confirmă aici» first. Anywhere else the chip as it was.
             */}
-            {!terminal && (
-              <StatusChip
-                glyph={row.namedOnSite ? "visible" : "hidden"}
-                variant="outlined"
-                label={t(row.namedOnSite ? "desk.siteNamed" : "desk.siteAnonymous")}
-                testId="desk-site-name"
-              />
-            )}
+            {!terminal &&
+              (mayRecordWish ? (
+                <ActionForm action={recordListWishAtDeskAction} confirm={wishQuestion} data-testid="desk-site-name-form">
+                  {hidden}
+                  {/* The wish this press records — never a flip: a second press of a stale row lands on the same state. */}
+                  <input type="hidden" name="listed" value={showing ? "1" : "0"} />
+                  <GlyphButton
+                    icon={row.namedOnSite ? "siteNamed" : "siteAnonymous"}
+                    type="submit"
+                    variant="outlined"
+                    color="inherit"
+                    size="small"
+                    sx={{ minHeight: 44 }}
+                    aria-label={t(showing ? "desk.siteWish.showAria" : "desk.siteWish.hideAria", { state: eyeWords })}
+                    data-testid="desk-site-name"
+                  >
+                    {eyeWords}
+                  </GlyphButton>
+                </ActionForm>
+              ) : (
+                <StatusChip glyph={row.namedOnSite ? "visible" : "hidden"} variant="outlined" label={eyeWords} testId="desk-site-name" />
+              ))}
             {/*
               «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
               e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).
@@ -289,6 +336,15 @@ export default async function DeskRow({
               />
             )}
           </Stack>
+          {/*
+            The club's hide stands (§910, §NNN): an Administrator unticked «Apare pe site» on this name, so the eye says «Anonim»
+            whatever the person wants — the line says so, and what their own wish is, which is all the press changes.
+          */}
+          {!terminal && row.hiddenByClub && (
+            <Typography variant="body2" color="text.secondary" data-testid="desk-site-name-club">
+              {t(row.listOptOut ? "desk.siteWish.clubHiddenAnonymous" : "desk.siteWish.clubHiddenNamed")}
+            </Typography>
+          )}
           {showEvent && (
             <Typography variant="body2" color="text.secondary">
               {row.eventTitle ?? row.eventId} ·{" "}

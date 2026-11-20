@@ -53,6 +53,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 }));
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   checkInAction: vi.fn(),
+  recordListWishAtDeskAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   createRegistrationAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),

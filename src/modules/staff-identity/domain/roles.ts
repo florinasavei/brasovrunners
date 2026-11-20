@@ -918,6 +918,22 @@ export function canWorkTheDesk(subject: StaffSubject): boolean {
 }
 
 /**
+ * **Recording a runner's spoken wish to appear by name, at the desk (§NNN, amending §143, §910, §1004)** — the desk row's eye
+ * pressed: «Anonim» → «Cu nume» when the person standing at the table says they want their name on the public list and in the
+ * results, and «Cu nume» → «Anonim» when they ask to be taken off. The owner, 2026-11-20: «dacă cineva are semnul ăsta de
+ * „Anonim” trebuie să îl pot schimba în „Cu nume” la click, dar cu acordul lor». **Every staff role that works the desk**
+ * (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer, Tehnic and the Administrators), written as that function so
+ * the two lines move together — the volunteer is the one who hears it; never a member, who is no staff (§524).
+ *
+ * It is the person's own wish, recorded as theirs: asked first, one audit row naming who recorded it, and the person emailed at
+ * once with the one-tap way back — no staff member decides it, and nothing else of a registration changes. A name the club hid
+ * (§910) stays hidden. Asserted in the action and again in the service (BR-REQ-060-01); the row draws the press as a courtesy.
+ */
+export function canRecordListWishAtDesk(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
+}
+
+/**
  * Filling an event's queue with synthetic registrations reaches `registrations` and
  * `participants`, so it sits on the same side of the line as reading them. The environment is
  * the other half of the gate: never in production, refused twice.

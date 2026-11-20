@@ -71,6 +71,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   setBibPrintedAction: vi.fn(),
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
+  recordListWishAtDeskAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   createRegistrationAction: vi.fn(),
   editRegistrationAnswersAction: vi.fn(),
@@ -551,13 +552,17 @@ describe("§995 the desk row's identity document, by role", () => {
  */
 describe("§1004 the desk row's eye: by name or anonymous", () => {
   const rowOf = async (id: string) => (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
+  // Since §NNN the eye is a press for every desk role (`GlyphButton`, the outlined eye by name) — the same words and the same
+  // state, read here as the chip's glyph so the reading below stays the chip's.
+  const pressGlyph: Record<string, string> = { siteNamed: "visible", siteAnonymous: "hidden" };
   const eyeOf = async (id: string, role: StaffRole = "CONTRIBUTOR") => {
     const row = await rowOf(id);
     expect(row, id).toBeDefined();
-    const chip = elements(await DeskRow({ row: row!, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false }, role })).find(
-      (element) => element.props.testId === "desk-site-name",
-    );
-    return chip ? { glyph: chip.props.glyph, label: chip.props.label } : null;
+    const all = elements(await DeskRow({ row: row!, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false }, role }));
+    const chip = all.find((element) => element.props.testId === "desk-site-name");
+    if (chip) return { glyph: chip.props.glyph, label: chip.props.label };
+    const press = all.find((element) => element.props["data-testid"] === "desk-site-name");
+    return press ? { glyph: pressGlyph[String(press.props.icon)], label: press.props.children } : null;
   };
 
   it("reads the person's tick and the club's hide, as the public list does", async () => {
@@ -600,6 +605,6 @@ describe("§1004 the desk row's eye: by name or anonymous", () => {
     const row = (await listDeskRegistrations(db, { eventId, query: "16", locale: "ro" })).find((candidate) => candidate.id === cancelled);
     expect(row).toBeDefined();
     const all = elements(await DeskRow({ row: row!, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false }, role: "ADMIN" }));
-    expect(all.some((element) => element.props.testId === "desk-site-name")).toBe(false);
+    expect(all.some((element) => element.props.testId === "desk-site-name" || element.props["data-testid"] === "desk-site-name")).toBe(false);
   });
 });

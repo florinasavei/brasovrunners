@@ -187,6 +187,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   // volunteer's and the point's ids in the payload; everything said is read at the send, and the message is withdrawn
   // when the person no longer stands at that point, was cancelled or has another address. No token, no link that acts.
   "VOLUNTEER_POINT",
+  // «La masa de ridicare a numerelor ai cerut să apari cu numele…» (§NNN): a desk role recorded the runner's spoken wish to
+  // appear by name on the public list and in the results — to the registration's own address, in its language, at once, with
+  // the one-tap way back (a `LIST_CONSENT` link minted at the send, as the confirmation's second token is). Withdrawn at the
+  // send when the name is off the list again by then or the registration is over. The registration's id is the row's own.
+  "LIST_CONSENT_RECORDED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];
