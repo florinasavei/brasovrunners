@@ -13634,7 +13634,7 @@
       },
       "keep": {
         "button": "Finish",
-        "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
+        "help": "Vin mai mulți deodată: cu căsuța goală, apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
         "kept": "Timpi prinși",
         "drop": "Șterge timpul prins {time}",
         "ageSeconds": "acum {count} s",

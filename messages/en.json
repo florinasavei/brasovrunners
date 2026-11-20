@@ -13634,7 +13634,7 @@
       },
       "keep": {
         "button": "Finish",
-        "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
+        "help": "Several at once: with the box empty, press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
         "kept": "Times caught",
         "drop": "Remove the caught time {time}",
         "ageSeconds": "{count} s ago",
