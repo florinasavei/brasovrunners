@@ -340,7 +340,7 @@ describe("the banner after «Adaugă mai mulți membri» says an invitation was 
 /**
  * §1000 — after «Adaugă» or «Retrimite invitația», one line on the page says what the person receives, by Zitadel's answer:
  * two emails, Zitadel's (named by its button) now and the club's a minute and a half later — the order and the gap the press
- * keeps since §NNN, sending ours itself at that gap; the club's alone; or the one email with the person's own steps — a
+ * keeps since §1021, sending ours itself at that gap; the club's alone; or the one email with the person's own steps — a
  * refusal with its reason.
  */
 describe("§1000 the inviter's one line after a press, as the page draws it", () => {

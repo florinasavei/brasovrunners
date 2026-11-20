@@ -1584,7 +1584,7 @@ function asksZitadel(): boolean {
 /**
  * The club's invitation let go once Zitadel answered (§1000), before the press's response, with the steps that answer makes
  * true: due a minute and a half after the answer when Zitadel's email is on its way — the press then sends it itself at that
- * turn (`sendInvitationsAtTheirTurn`, §NNN) — and at once otherwise, for the drain after the response. A failure here is
+ * turn (`sendInvitationsAtTheirTurn`, §1021) — and at once otherwise, for the drain after the response. A failure here is
  * logged, never the press's: the row is added, Zitadel was asked, and the hold's bound lets the email go anyway.
  */
 async function releaseAfterZitadel(staffUserId: string, answer: InviteOutcome): Promise<ReleasedInvitation> {
@@ -1642,7 +1642,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
             ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
             : ({ kind: "unconfigured" } as const);
         // Zitadel answered: the club's invitation may leave, with the steps the answer makes true (§1000) — a minute and a half
-        // after Zitadel's own email, sent then by this press after its response (§NNN).
+        // after Zitadel's own email, sent then by this press after its response (§1021).
         if (zitadelInvite) sendInvitationsAtTheirTurn([await releaseAfterZitadel(member.id, invite)]);
         outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
         // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
@@ -1708,7 +1708,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
               return invite;
             })
           : [];
-      // The ones Zitadel emailed, a minute and a half after the last of its answers: one wait for the whole press (§NNN).
+      // The ones Zitadel emailed, a minute and a half after the last of its answers: one wait for the whole press (§1021).
       sendInvitationsAtTheirTurn(released);
       const counts = countAccountLines(lines);
       const report = await recordAuditEvent(getDb(), {
@@ -1787,7 +1787,7 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
           ? await reinviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
           : ({ kind: "unconfigured" } as const);
       // Before the response (§1000): a minute and a half after Zitadel's own email, sent then by this press, «Trimite acum» or
-      // «Pune la coadă» (§NNN); due at once when no email of Zitadel's is coming, for «Trimite acum»'s drain or the queue's (§540).
+      // «Pune la coadă» (§1021); due at once when no email of Zitadel's is coming, for «Trimite acum»'s drain or the queue's (§540).
       if (zitadelInvite) sendInvitationsAtTheirTurn([await releaseAfterZitadel(member.id, invite)]);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),

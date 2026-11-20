@@ -8,7 +8,7 @@ import { INVITE_LINE_KEYS, inviteLineOf } from "@/modules/staff-identity/domain/
 /**
  * §1000 — «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»): what the person receives — two emails, Zitadel's first, or
- * the club's alone — for each answer Zitadel gives, in both languages. Since §NNN (2026-11-20: the two still arrived
+ * the club's alone — for each answer Zitadel gives, in both languages. Since §1021 (2026-11-20: the two still arrived
  * together) the two say when: Zitadel's now, ours a minute and a half later — the press sends it at that gap itself.
  */
 const staff = { ro: ro.Admin.staff as Record<string, unknown>, en: en.Admin.staff as Record<string, unknown> };
@@ -45,7 +45,7 @@ describe("§1000 the inviter's one line after a press", () => {
         expect((line as string).length, `${locale} staff.${key}`).toBeLessThanOrEqual(200);
       }
     }
-    // Two emails, who sends which and — since §NNN, which makes it true — when: Zitadel's now, ours a minute and a half later.
+    // Two emails, who sends which and — since §1021, which makes it true — when: Zitadel's now, ours a minute and a half later.
     expect(staff.ro.inviteSent).toBe(
       "Adăugat. Primește două emailuri: unul de la Zitadel acum, cu butonul „Acceptare invitație”, pentru parolă, și, după un minut și jumătate, unul de la noi, cu pașii.",
     );
@@ -97,7 +97,7 @@ describe("§1000 the inviter's one line after a press", () => {
     for (const locale of ["ro", "en"] as const) {
       expect(Object.keys(outcomes(locale)).sort()).toEqual(["created", "failed", "invited", "ready", "unconfigured"]);
     }
-    // §NNN: Zitadel's now, ours a minute and a half later, for every member Zitadel emailed.
+    // §1021: Zitadel's now, ours a minute and a half later, for every member Zitadel emailed.
     for (const key of ["created", "invited"]) {
       expect(outcomes("ro")[key], key).toContain("unul de la Zitadel acum");
       expect(outcomes("ro")[key], key).toContain("după un minut și jumătate, unul de la noi");

@@ -75,7 +75,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * A Server Action runs in the function of the page it is posted from, so this is also «Adaugă»'s, «Adaugă mai mulți
- * membri»'s and «Retrimite invitația»'s ceiling (§NNN): Zitadel's answer, then the club's invitation a minute and a half
+ * membri»'s and «Retrimite invitația»'s ceiling (§1021): Zitadel's answer, then the club's invitation a minute and a half
  * later, sent by the press after its response (`INVITATION_GAP_MS`). `STAFF_PRESS_MAX_DURATION_S` in
  * `staff-identity/service.ts` is this number — the invitation's hold is built on it — and a test keeps the two equal.
  */

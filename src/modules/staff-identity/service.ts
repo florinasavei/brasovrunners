@@ -59,7 +59,7 @@ import {
  * the person at the sign-in page. Since §1000 the email says which, as numbered steps
  * (`signInSteps` in its payload), and when the action will ask Zitadel the row is held until
  * Zitadel answered (`INVITATION_HOLD_MS`, `releaseInvitationHold`): the club's email never leaves
- * before Zitadel was asked — and since §NNN, when Zitadel's own email is on its way, not before a
+ * before Zitadel was asked — and since §1021, when Zitadel's own email is on its way, not before a
  * minute and a half after it (`INVITATION_GAP_MS`), sent then by the press itself.
  *
  * Every function takes the acting staff user explicitly rather than reading a session. The
@@ -256,7 +256,7 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  *
  * `zitadelInvite` (§1000): the action will ask Zitadel for the account once this commits. The invitation then says
  * Zitadel's steps and waits (`INVITATION_HOLD_MS`) until the action lets it go (`releaseInvitationHold`) — a minute and a
- * half after Zitadel's answer when Zitadel's email is on its way (§NNN); without it the steps are the person's own and the
+ * half after Zitadel's answer when Zitadel's email is on its way (§1021); without it the steps are the person's own and the
  * row is due at once, as every invitation was.
  */
 export async function inviteStaffUser<T extends Record<string, unknown>>(
@@ -349,7 +349,7 @@ async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Da
  *
  * `zitadelInvite` (§1000): as `inviteStaffUser`'s — each invitation says Zitadel's steps and waits until the action, member
  * by member, lets it go once Zitadel answered for that member; the press then sends those it let go with the gap at the last
- * of their turns (§NNN).
+ * of their turns (§1021).
  */
 export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -414,7 +414,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   delivery: DeliveryChoice = "queue",
   /**
    * `zitadelInvite` (§1000): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers; with
-   * Zitadel's email on its way the press sends this one at the gap after it, «Trimite acum» or not (§NNN).
+   * Zitadel's email on its way the press sends this one at the gap after it, «Trimite acum» or not (§1021).
    */
   options: { zitadelInvite?: boolean } = {},
 ): Promise<StaffUser> {
@@ -441,7 +441,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
     return queued.key;
   });
   // The invitation, after this response, whatever «Când pleacă emailurile» says (§540) — when the action let it go at once. One
-  // the action gave the gap after Zitadel's answer is not due then, and the press's own drain at its turn sends it (§NNN).
+  // the action gave the gap after Zitadel's answer is not due then, and the press's own drain at its turn sends it (§1021).
   if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, key));
   return member;
 }
@@ -452,7 +452,7 @@ function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_
 }
 
 /**
- * The gap between Zitadel's email and the club's (§NNN, amending §1000, whose ask was «cumva trebuie un delay intre mailurile
+ * The gap between Zitadel's email and the club's (§1021, amending §1000, whose ask was «cumva trebuie un delay intre mailurile
  * de logare» — and the two still arrived together): when Zitadel answered a press with its own email on the way, the club's
  * invitation is due this long after that answer (`releaseInvitationHold`), and the press's own drain sends it then
  * (`sendInvitationsAtTheirTurn`) — so the person opens Zitadel's first, chooses the password, and finds the steps after it.
@@ -467,7 +467,7 @@ export const INVITATION_GAP_MS = 90_000;
 export const STAFF_PRESS_MAX_DURATION_S = 300;
 
 /**
- * How long the club's invitation waits for Zitadel (§1000, amended by §NNN). A press that will ask Zitadel for the account
+ * How long the club's invitation waits for Zitadel (§1000, amended by §1021). A press that will ask Zitadel for the account
  * queues it with `next_attempt_at` this far ahead — the column the claim already waits on, and the one a first attempt is held
  * by too (`EnqueueEmailParams.notBefore`) — and the action moves it once Zitadel answered (`releaseInvitationHold`), before the
  * press's response: to the gap after that answer, or to now when no email of Zitadel's is coming. No drain or pinger takes it
@@ -515,12 +515,12 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
 }
 
 /**
- * What one release let go (§NNN): the rows, and the turn they wait for — null when they are due at once.
+ * What one release let go (§1021): the rows, and the turn they wait for — null when they are due at once.
  */
 export type ReleasedInvitation = { ids: string[]; dueAt: Date | null };
 
 /**
- * The club's invitation let go once Zitadel answered (§1000, amended by §NNN). Only what the hold still holds: this person's
+ * The club's invitation let go once Zitadel answered (§1000, amended by §1021). Only what the hold still holds: this person's
  * invitations, waiting and never tried, queued with Zitadel's steps. `steps` is what Zitadel's answer makes true
  * (`signInStepsAfter`):
  *
@@ -569,7 +569,7 @@ export async function releaseInvitationHold<T extends Record<string, unknown>>(
 }
 
 /**
- * The invitations a press let go with the gap, sent by that press itself at their turn (§NNN): one bounded wait inside the
+ * The invitations a press let go with the gap, sent by that press itself at their turn (§1021): one bounded wait inside the
  * `after()` of its response, for the last of their turns — a members' press waits once, for the member Zitadel answered last —
  * then exactly those rows, whatever «Când pleacă emailurile» says (`drain.ts#drainOutboxRowsAtTurnAfterResponse`). Rows due at
  * once (`self`, `ready`) are not among them: they leave as every invitation did, with the drain the enqueue scheduled or

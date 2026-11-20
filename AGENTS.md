@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.89-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.90-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.90-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -4099,7 +4099,7 @@ last). Every claim honours `next_attempt_at`, so no other drain, «Trimite acum�
 sends it earlier; a function stopped mid-wait leaves it PENDING and due, for the outbox job's
 next pass. The hold — the bound for a press that never reached the release — is the staff
 page's `maxDuration` plus the gap, so it never lets a row go before its gap would have. A
-refusal, `ready` or no key waits for nothing (`DECISIONS.md` §NNN).
+refusal, `ready` or no key waits for nothing (`DECISIONS.md` §1021).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on

@@ -6,7 +6,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * §1000 — the club's invitation waits until Zitadel has been asked (the owner, 2026-11-19: «cumva trebuie un delay intre
- * mailurile de logare, sau sa fie instructiunile mai clare») — and, since §NNN (2026-11-20: the two still arrived together),
+ * mailurile de logare, sau sa fie instructiunile mai clare») — and, since §1021 (2026-11-20: the two still arrived together),
  * a minute and a half after Zitadel's own email.
  *
  * A press that will ask Zitadel for the account queues the invitation with `next_attempt_at` held ahead
@@ -29,7 +29,7 @@ const state = vi.hoisted(() => ({
   answer: { kind: "invited" } as { kind: "invited" | "exists" | "ready" | "unconfigured" } | { kind: "failed"; reason: string },
   /** At each call to Zitadel: whose account, how many invitations that person has, and how many were still held. */
   asked: [] as { email: string; rows: number; held: number }[],
-  /** Each turn a press handed its drain after the response (§NNN): the rows and the moment it waits for. */
+  /** Each turn a press handed its drain after the response (§1021): the rows and the moment it waits for. */
   turns: [] as { ids: string[]; dueAt: Date }[],
 }));
 
@@ -69,7 +69,7 @@ vi.mock("@/modules/staff-identity/zitadel-users", async (importOriginal) => {
   }
   return { ...real, isZitadelInviteConfigured: () => state.keySet, inviteZitadelUser: zitadel, reinviteZitadelUser: zitadel };
 });
-// The press's drain at its rows' turn (§NNN), recorded rather than run: `invitation-gap.test.ts` runs it.
+// The press's drain at its rows' turn (§1021), recorded rather than run: `invitation-gap.test.ts` runs it.
 vi.mock("@/modules/notifications/drain", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/modules/notifications/drain")>();
   return {
@@ -142,14 +142,14 @@ describe("§1000 the invitation's hold, at the service", () => {
     expect(await claimAt(new Date(row.createdAt.getTime() + INVITATION_HOLD_MS - 1))).toEqual([]);
   });
 
-  it("§NNN holds for the press's whole life plus the gap: the bound never lets it go before the gap after Zitadel's answer would", () => {
+  it("§1021 holds for the press's whole life plus the gap: the bound never lets it go before the gap after Zitadel's answer would", () => {
     expect(INVITATION_GAP_MS).toBe(90_000);
     // A release happens inside the press's function, at most its ceiling after the enqueue; its turn is the gap after it.
     expect(INVITATION_HOLD_MS).toBe(STAFF_PRESS_MAX_DURATION_S * 1_000 + INVITATION_GAP_MS);
     expect(INVITATION_HOLD_MS).toBeGreaterThanOrEqual(INVITATION_GAP_MS);
   });
 
-  it("§NNN is let go once Zitadel answered with its email on the way: due the gap after the answer, marked for its press; a second release finds nothing", async () => {
+  it("§1021 is let go once Zitadel answered with its email on the way: due the gap after the answer, marked for its press; a second release finds nothing", async () => {
     const member = await inviteStaffUser(db, admin, person(), { zitadelInvite: true });
     const answeredAt = new Date(Date.now() + 2_000);
     const released = await releaseInvitationHold(db, member.id, "zitadel", answeredAt);
@@ -179,7 +179,7 @@ describe("§1000 the invitation's hold, at the service", () => {
     expect(row.payloadJson).toEqual({ displayName: "Ana Pop", role: "Voluntar", inviterName: "Admin Club", signInSteps: "self" });
   });
 
-  it("§NNN lets an account that already signs in (`ready`) go at once: no email of Zitadel's is coming, nothing to wait for", async () => {
+  it("§1021 lets an account that already signs in (`ready`) go at once: no email of Zitadel's is coming, nothing to wait for", async () => {
     const member = await inviteStaffUser(db, admin, person(), { zitadelInvite: true });
     expect((await releaseInvitationHold(db, member.id, "ready")).dueAt).toBeNull();
     const [row] = await outboxOf();
@@ -258,7 +258,7 @@ describe("§1000 the invitation as it renders from the row", () => {
 });
 
 describe("§1000 through the presses: the club's invitation leaves only after Zitadel was asked", () => {
-  it("«Adaugă»: Zitadel is asked while the invitation is held, then it is due the gap after the answer, handed to the press's drain (§NNN)", async () => {
+  it("«Adaugă»: Zitadel is asked while the invitation is held, then it is due the gap after the answer, handed to the press's drain (§1021)", async () => {
     const before = Date.now();
     const to = await redirectOf(inviteStaffAction(null, form({ uiLocale: "ro", ...person(), preferredLocale: "ro" })));
     const after = Date.now();

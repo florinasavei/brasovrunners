@@ -239,7 +239,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
       pressId: emailOutbox.pressId,
       by: staffUsers.displayName,
       manualResend: emailOutbox.isManualResend,
-      // The payload's flags only — a club copy (§320), a family's hold (§519), a press's «now» (§540) or its turn (§NNN) — never its words.
+      // The payload's flags only — a club copy (§320), a family's hold (§519), a press's «now» (§540) or its turn (§1021) — never its words.
       clubCopy: sql<boolean>`${clubCopySql}`,
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,

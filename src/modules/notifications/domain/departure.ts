@@ -22,7 +22,7 @@ import { LEAVES_NOW_WITHIN_MS, leavesNow, pressTurnOf } from "./send-at-once";
  *   «now» is judged before it: «Trimite acum» was asked with room to send (`assertRoomToSendNow`);
  * - **reset** — on Mailgun's road while Mailgun is stopped and nothing carries it (§622, the panel's header), or
  *   while the plan's day is spent: it leaves when the stop ends or the allowance resets;
- * - **at its turn** — its press sends it itself at the row's own turn (§NNN, the `sentAtTurn` flag: the club's
+ * - **at its turn** — its press sends it itself at the row's own turn (§1021, the `sentAtTurn` flag: the club's
  *   invitation, a minute and a half after Zitadel answered): that turn while it is ahead, «now» once it came, while
  *   that press's drain is still plausibly under way (`pressTurnOf`) — judged after the stop, which that drain's claim
  *   honours like the job's;
@@ -46,7 +46,7 @@ export type DepartureRow = {
   familyHeld: boolean;
   /** A press asked for it now (§540): the payload's `sentNow` flag. */
   sentNow: boolean;
-  /** Its press sends it itself at its own turn (§NNN): the payload's `sentAtTurn` flag. Absent reads as no. */
+  /** Its press sends it itself at its own turn (§1021): the payload's `sentAtTurn` flag. Absent reads as no. */
   sentAtTurn?: boolean;
   /** Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`). */
   onMailgunRoad: boolean;
@@ -118,7 +118,7 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
   if (row.onMailgunRoad && ctx.mailgunReopensAt && ctx.mailgunReopensAt.getTime() > now.getTime() && ctx.mailgunReopensAt.getTime() > dueAt.getTime()) {
     return { kind: "reset", at: outboxRowLeavesAt({ dueAt: ctx.mailgunReopensAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
   }
-  // Its press sends it at its own turn (§NNN): that turn while it is ahead, «now» once it came — past the stop above, which
+  // Its press sends it at its own turn (§1021): that turn while it is ahead, «now» once it came — past the stop above, which
   // the press's drain honours like the job's; whatever the timing, which that drain does not ask.
   const turn = pressTurnOf(row, now);
   if (turn) return turn.getTime() > now.getTime() ? { kind: "at", at: turn, late: false, heldUntil: null } : { kind: "now" };

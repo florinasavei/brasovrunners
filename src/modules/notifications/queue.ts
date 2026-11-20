@@ -47,7 +47,7 @@ export type QueuedMessage = {
   familyHeld: boolean;
   /** A press asked for it now, past the scheduled pass (§540): the payload's `sentNow` flag. */
   sentNow: boolean;
-  /** Its press sends it itself at its own turn (§NNN): the payload's `sentAtTurn` flag. */
+  /** Its press sends it itself at its own turn (§1021): the payload's `sentAtTurn` flag. */
   sentAtTurn: boolean;
   /**
    * Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`): only such a row waits for

@@ -128,7 +128,7 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
 }
 
 /**
- * A press's own rows sent at their turn, after its response (§NNN, amending §1000: the two sign-in emails still arrived
+ * A press's own rows sent at their turn, after its response (§1021, amending §1000: the two sign-in emails still arrived
  * together, and the owner had asked for a delay between them): the club's invitation, which the press let go a minute and a
  * half after Zitadel answered with its own email on the way (`staff-identity/service.ts#releaseInvitationHold`). The same one-shot
  * `after()` as «Trimite acum»'s above, limited to these ids and sent whatever «Când pleacă emailurile» says — but it waits

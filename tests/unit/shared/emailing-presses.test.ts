@@ -182,7 +182,7 @@ describe("every emailing press runs inside its email press scope", () => {
     expect(read("src/app/api/internal/jobs/email-outbox/route.ts")).toContain('inEmailPress("job.emailOutbox"');
     const drain = read("src/modules/notifications/drain.ts");
     expect(drain).toContain('inEmailPress("job.emailOutbox"');
-    // The timing's drain, «Trimite acum»'s (§540), a press's rows at their turn (§NNN) and the relay's (§778).
+    // The timing's drain, «Trimite acum»'s (§540), a press's rows at their turn (§1021) and the relay's (§778).
     expect([...drain.matchAll(/after\(\(\) => asTheOutboxJob\(/g)]).toHaveLength(4);
   });
 

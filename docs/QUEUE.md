@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.90` | the team's invitation leaves a minute and a half after Zitadel's, sent by the press itself (§1021) |
 | `BR-V4.89` | «Reconfirmare» beside «Status» in the registrations' Excel and CSV (§1019) · the desk takes a runner off the raffle or puts them back, asked first, with who decided in «Jurnal» (§1020) |
 | `BR-V4.88` | «Ziua cursei» → «Declarații»: every signed declaration of the race, for the organizers (§1018) |
 | `BR-V4.87` | desk: «Anonim» → «Cu nume» on the runner's word, recorded and emailed with a one-tap undo (§1017) |

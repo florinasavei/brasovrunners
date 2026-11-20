@@ -2016,7 +2016,7 @@ function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[
  *
  * `zitadel` — the press asked Zitadel for the account: who sends which email, Zitadel's named by its subject (in the
  * account's language, `zitadelSubject`) and said to come first, about a minute and a half before this one — the press lets
- * the club's go that long after Zitadel answered (§NNN, `staff-identity/service.ts#INVITATION_GAP_MS`); Zitadel's first,
+ * the club's go that long after Zitadel answered (§1021, `staff-identity/service.ts#INVITATION_GAP_MS`); Zitadel's first,
  * then the button; a line for an account that already signs in; and the trap. Zitadel's sign-in page sends a new code each time somebody without a password yet types their address —
  * an attempt before step 1, or its «Resend code» — and a new code cancels the one before, so the link in Zitadel's first
  * email stops working. `self` — no key, or Zitadel refused: the button, then the account made at the sign-in page with

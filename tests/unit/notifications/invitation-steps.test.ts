@@ -43,7 +43,7 @@ describe("§1000 the invitation's steps when the press asked Zitadel for the acc
       const email = render(type, "ro", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("ro"), zitadelButton: zitadelInviteButton("ro") });
       const [ro, en] = halves(email.text);
       const subject = `Invitație la ${CLUB_NAME}`;
-      // Romanian half: Zitadel's email by its subject and by its button, as the owner saw it (2026-11-19), and — since §NNN —
+      // Romanian half: Zitadel's email by its subject and by its button, as the owner saw it (2026-11-19), and — since §1021 —
       // said to come first, about a minute and a half before this one, which the press makes true.
       expect(ro).toContain(
         `Primești două emailuri: întâi unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „${subject}” și butonul „Acceptare invitație”, cam cu un minut și jumătate înaintea acestuia (caută-l și în Spam); apoi acesta, de la noi. Pașii, în ordine:`,
@@ -115,7 +115,7 @@ describe("§1000 the invitation's steps when the person makes the account", () =
       expect(en).toContain("You make your sign-in account yourself, in two steps:");
       expect(en).toContain(`1. Press “${BUTTON[type].en}”, below.`);
       expect(en).toContain(`2. On the sign-in page choose “${ZITADEL_LOGIN_LABELS.register}” and create your account with exactly ana@example.ro (the account is tied to the address).`);
-      // No email from Zitadel is coming: none is announced, no step waits for it, and no gap is said (§NNN).
+      // No email from Zitadel is coming: none is announced, no step waits for it, and no gap is said (§1021).
       for (const half of [ro, en]) {
         expect(half).not.toContain("Invitație la");
         expect(half).not.toContain("Invitation to");

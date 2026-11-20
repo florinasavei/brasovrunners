@@ -9,7 +9,7 @@ import { TURN_WAIT_MAX_MS } from "@/modules/notifications/send-rows-now";
 import { INVITATION_GAP_MS, INVITATION_HOLD_MS, lastTurnOf, STAFF_PRESS_MAX_DURATION_S } from "@/modules/staff-identity/service";
 
 /**
- * §NNN (amending §1000, whose ask was «cumva trebuie un delay intre mailurile de logare»; 2026-11-20: the two still arrived together) —
+ * §1021 (amending §1000, whose ask was «cumva trebuie un delay intre mailurile de logare»; 2026-11-20: the two still arrived together) —
  * the club's invitation leaves a minute and a half after Zitadel's, sent by the press itself after its response.
  *
  * The pure parts: which rows a press waits for and how long (`lastTurnOf` — a members' press waits once, for the last of
@@ -17,7 +17,7 @@ import { INVITATION_GAP_MS, INVITATION_HOLD_MS, lastTurnOf, STAFF_PRESS_MAX_DURA
  * while it is ahead, whatever «Când pleacă emailurile» says), and the bounds — the wait's, the hold's and the staff page's
  * function ceiling, which a Server Action posted from it runs under.
  */
-describe("§NNN lastTurnOf — what a press's drain waits for", () => {
+describe("§1021 lastTurnOf — what a press's drain waits for", () => {
   const at = (seconds: number) => new Date(Date.UTC(2026, 10, 20, 9, 0, seconds));
 
   it("waits for nothing when no release was given a turn: none, a refusal's or `ready`'s (due at once), a release that found no row", () => {
@@ -38,7 +38,7 @@ describe("§NNN lastTurnOf — what a press's drain waits for", () => {
   });
 });
 
-describe("§NNN the bounds", () => {
+describe("§1021 the bounds", () => {
   it("is a minute and a half, waited for inside the press's function, and the hold outlasts any turn a release could set", () => {
     expect(INVITATION_GAP_MS).toBe(90_000);
     expect(TURN_WAIT_MAX_MS).toBeGreaterThanOrEqual(INVITATION_GAP_MS);
@@ -54,7 +54,7 @@ describe("§NNN the bounds", () => {
   });
 });
 
-describe("§NNN the departure of an invitation its press sends at its turn", () => {
+describe("§1021 the departure of an invitation its press sends at its turn", () => {
   // 11:04 in Brașov; the outbox job's next real run at 11:15.
   const NOW = new Date("2026-11-20T09:04:00.000Z");
   const NEXT_TICK = new Date("2026-11-20T09:15:00.000Z");

@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §1000, whose ask was «cumva trebuie un delay intre mailurile de logare»; 2026-11-20: the two still arrived together) —
+ * §1021 (amending §1000, whose ask was «cumva trebuie un delay intre mailurile de logare»; 2026-11-20: the two still arrived together) —
  * when Zitadel answered a press with its own email on the way, the club's invitation leaves a fixed gap after that answer
  * (`INVITATION_GAP_MS`, ninety seconds), and the press sends it itself: its drain after the response waits once, until the
  * rows it let go are due, then sends exactly those, whatever «Când pleacă emailurile» says. No other drain, «Trimite acum»
@@ -196,7 +196,7 @@ async function jobPassAt(now: Date) {
   return processOutboxBatch(db, { sender, route, render: createOutboxRenderer({ replyTo: undefined }), now });
 }
 
-describe("§NNN «Adaugă»: the club's invitation leaves a minute and a half after Zitadel's, sent by the press itself", () => {
+describe("§1021 «Adaugă»: the club's invitation leaves a minute and a half after Zitadel's, sent by the press itself", () => {
   it("is due the gap after Zitadel's answer; the press's own drain waits once, for exactly that, then sends it", async () => {
     const before = Date.now();
     await redirectOf(inviteStaffAction(null, form({ uiLocale: "ro", ...person(), preferredLocale: "ro" })));
@@ -244,7 +244,7 @@ describe("§NNN «Adaugă»: the club's invitation leaves a minute and a half af
   });
 });
 
-describe("§NNN nothing claims the invitation before its turn, and a stopped wait leaves it to the job", () => {
+describe("§1021 nothing claims the invitation before its turn, and a stopped wait leaves it to the job", () => {
   it("the job's pass and «Trimite acum»'s worker take nothing a moment before the turn, and the job takes it at the turn", async () => {
     await redirectOf(inviteStaffAction(null, form({ uiLocale: "ro", ...person(), preferredLocale: "ro" })));
     const [row] = await outboxOf();
@@ -287,7 +287,7 @@ describe("§NNN nothing claims the invitation before its turn, and a stopped wai
   });
 });
 
-describe("§NNN the other presses, and nothing to wait for", () => {
+describe("§1021 the other presses, and nothing to wait for", () => {
   it("«Retrimite invitația» with «Trimite acum»: «now»'s drain takes nothing before the turn; the press's drain sends it then", async () => {
     await inviteStaffUser(db, admin, person());
     // The first invitation (no press asked Zitadel then) is the job's; only the resend is this press's.

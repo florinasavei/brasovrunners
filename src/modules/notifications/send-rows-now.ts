@@ -57,7 +57,7 @@ export async function sendOutboxRowsNow(
 }
 
 /**
- * The longest a press's drain waits for its rows' turn (§NNN): the club's invitation, let go a minute and a half after
+ * The longest a press's drain waits for its rows' turn (§1021): the club's invitation, let go a minute and a half after
  * Zitadel answered (`INVITATION_GAP_MS`), with half a minute to spare for the press's own work after the release. A turn
  * further away is not waited for: the rows stay PENDING and due at that turn, for the outbox job.
  */
@@ -69,7 +69,7 @@ export type TurnClock = { now: () => Date; sleep: (ms: number) => Promise<void> 
 const REAL_CLOCK: TurnClock = { now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)) };
 
 /**
- * A press's own rows sent at their turn (§NNN, amending §1000): one wait — up to `TURN_WAIT_MAX_MS` — until `dueAt`, the last
+ * A press's own rows sent at their turn (§1021, amending §1000): one wait — up to `TURN_WAIT_MAX_MS` — until `dueAt`, the last
  * of the rows' turns (a members' press waits once, for its last member), then exactly these rows, `SEND_NOW_ROW_LIMIT` at a
  * time, by the worker «Trimite acum» runs (`sendOutboxRowsNow`, §540) — whatever «Când pleacă emailurile» says. The claim's
  * instant is never before `dueAt`, so a timer that fires a moment early still finds the rows due; a row not yet due is never

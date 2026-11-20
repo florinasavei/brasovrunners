@@ -393,7 +393,7 @@ export async function readEmailJournal<T extends Record<string, unknown>>(db: Da
       lastError: emailOutbox.lastError,
       attemptCount: emailOutbox.attemptCount,
       nextAttemptAt: emailOutbox.nextAttemptAt,
-      // The payload's flags only — the family's hold (§519), a press's «now» (§540) or its turn (§NNN), a club copy (§320) — never its words.
+      // The payload's flags only — the family's hold (§519), a press's «now» (§540) or its turn (§1021), a club copy (§320) — never its words.
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
       sentAtTurn: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
