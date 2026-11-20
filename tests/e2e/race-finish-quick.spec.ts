@@ -89,6 +89,29 @@ async function noHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
+/** A whole-second time since the gun as the page writes it: `h:mm:ss`. */
+function resultTime(ms: number): string {
+  const whole = Math.floor(ms / 1000);
+  return `${Math.floor(whole / 3600)}:${String(Math.floor((whole % 3600) / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}`;
+}
+
+/**
+ * Whether the box holds the focus as each tap on the question ends (§1010): read at the window, after the page's own handler and the
+ * render it commits, before any frame — iOS Safari raises the keyboard only for a focus a tap's own handler gives, never for one given
+ * a frame later. Each read returns what was seen since the last one, a tap at a time.
+ */
+async function focusAtTapEnd(page: Page): Promise<() => Promise<boolean[]>> {
+  await page.evaluate(() => {
+    const seen: boolean[] = [];
+    (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd = seen;
+    window.addEventListener("click", (event) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-testid="confirm-dialog"]')) return;
+      seen.push(document.activeElement === document.querySelector('[data-testid="finish-bib"]'));
+    });
+  });
+  return () => page.evaluate(() => (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd.splice(0));
+}
+
 /**
  * «Ziua cursei»'s row (§984, §986): the current entry wholly inside the row as the scroller left it, the row scrolling inside itself, and
  * every entry reachable by a sideways swipe — scrolled to, each lies wholly inside the row — while the page never scrolls sideways.
@@ -296,6 +319,171 @@ test.describe("§986 «Cronometrare»", () => {
     expect(Number(starts[0].count)).toBe(0);
     // Drawn again under the gun as it stands, the button is «Mută startul acum».
     await expect(page.getByTestId("race-gun-start")).toContainText("Mută startul acum");
+    await noHorizontalScroll(page);
+  });
+
+  /**
+   * §1010 — the owner, 2026-11-20: «after an elite arrives and is marked as a finisher, if somebody types that again than we need a
+   * confirmation message, this is just for elites sincer their timing is more sensitive». The desk Volunteer presses Andrei's button as
+   * he crosses; his number typed after it asks first — the question fits 320 pixels, its two answers 44 pixels and more —; a second
+   * Enter and Esc cancel, nothing recorded and the «Finish» moment caught before it kept; Ioana's number, a woman's, asks in the same
+   * words — of the number, never «îl» —, and a tap on «Anulează» cancels too; typed again and answered «Trece numărul din nou» a few
+   * seconds later, the press takes that moment and the first time stays; answered so with no moment caught, it carries the moment
+   * «Sosit» was pressed, never the answer's. After every answer the box holds the focus as the tap ends — given inside the tap, so a
+   * phone's keyboard comes back —, a second tap on the fading question too. An elite who has not crossed yet, and a runner typed twice,
+   * are never asked.
+   */
+  test("a finished elite's number typed again is asked first: «Anulează» records nothing and keeps the caught moment, «Trece numărul din nou» records the tap's moment beside the first time, the box focused inside each answer's tap; nobody else is asked", async ({
+    page,
+  }) => {
+    const tag = `${test.info().project.name}-again-${Date.now().toString(36)}`;
+    const eventId = await seedRace(tag);
+    // A second elite, who has not crossed yet.
+    await query(`INSERT INTO event_elite_entries (event_id, name, bib_number) VALUES ($1, $2, 8)`, [eventId, `Ioana ${tag}`]);
+    const pressedAgain = () =>
+      query<{ gun: number; at: Date }>(
+        `SELECT (metadata_json->>'gunTimeMs')::int AS gun, created_at AS at FROM audit_logs
+          WHERE entity_id = $1 AND action = 'event_result.finish_duplicate' AND (metadata_json->>'bibNumber')::int = 7 ORDER BY created_at`,
+        [eventId],
+      );
+    await signIn(page, "Dev Contributor");
+    await page.goto(`/ro/admin/checkin/cronometrare?eventId=${eventId}`);
+    await hydrated(page);
+    const box = page.getByTestId("finish-bib");
+    const dialog = page.getByRole("dialog");
+    const kept = page.getByTestId("finish-kept");
+    const presses7 = page.locator('[data-testid="finish-entry"][data-bib="7"]');
+    const boxAtTapEnd = await focusAtTapEnd(page);
+
+    // Ioana, an elite who has not crossed yet, typed: recorded at once, nothing asked.
+    await box.fill("8");
+    await box.press("Enter");
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="8"]').first()).toHaveAttribute("data-state", "saved", { timeout: 15_000 });
+    await expect(dialog).toHaveCount(0);
+
+    // Andrei crosses: his button, «Sosit» at once, the button then disabled.
+    const andrei = page.locator('[data-testid="finish-elite"][data-bib="7"]').getByTestId("finish-elite-button");
+    await andrei.click();
+    await expect(page.locator('[data-testid="finish-recent-row"][data-bib="7"]')).toContainText(`Andrei (#7) Andrei ${tag}`, { timeout: 15_000 });
+    await expect(andrei).toBeDisabled();
+    const [first] = await query<{ gun: number }>(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 7`, [eventId]);
+
+    // A bunch coming: one «Finish» caught.
+    await page.getByTestId("finish-keep-button").click();
+    await expect(kept).toHaveCount(1);
+    const caught = ((await kept.textContent()) ?? "").split(" · ")[0];
+    expect(caught).toMatch(/^0:\d\d:\d\d$/);
+
+    // Andrei's number typed: asked first, «Anulează» focused, nothing recorded yet, the box already empty.
+    await box.fill("7");
+    await box.press("Enter");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("A sosit deja");
+    await expect(dialog).toContainText(`Andrei (Andrei ${tag}) a sosit deja la ${resultTime(first.gun)} — introdus de Dev Contributor. Treci numărul din nou?`);
+    await expect(dialog).toContainText("Al doilea timp nu-l schimbă pe primul: apare doar în «Istoricul sosirilor», la «Clasament».");
+    const cancel = dialog.getByTestId("confirm-dialog-cancel");
+    const confirm = dialog.getByTestId("confirm-dialog-confirm");
+    await expect(cancel).toHaveText("Anulează");
+    await expect(confirm).toHaveText("Trece numărul din nou");
+    await expect(cancel).toBeFocused();
+    await expect(box).toHaveValue("");
+    // The question fits the screen — 320 pixels on the phone —, nothing wider inside it, and both answers are a thumb's 44 pixels.
+    const paper = await dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, screen: document.documentElement.clientWidth, overflow: element.scrollWidth - element.clientWidth };
+    });
+    expect(paper.left).toBeGreaterThanOrEqual(0);
+    expect(paper.right).toBeLessThanOrEqual(paper.screen);
+    expect(paper.overflow).toBeLessThanOrEqual(1);
+    for (const answer of [cancel, confirm]) {
+      const rect = await answer.boundingBox();
+      expect(rect?.height ?? 0).toBeGreaterThanOrEqual(44);
+      expect(rect?.x ?? -1).toBeGreaterThanOrEqual(paper.left);
+      expect((rect?.x ?? 0) + (rect?.width ?? 0)).toBeLessThanOrEqual(paper.right + 1);
+    }
+    await noHorizontalScroll(page);
+
+    // A second Enter reaches the focused «Anulează»: nothing recorded, the caught moment kept for the next number, the box focused —
+    // already as the button's press ends.
+    await page.keyboard.press("Enter");
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
+    await expect(box).toHaveValue("");
+    await expect(kept).toHaveCount(1);
+    await expect(presses7).toHaveCount(1);
+    // Esc the same.
+    await box.fill("7");
+    await box.press("Enter");
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    await expect(kept).toHaveCount(1);
+    await expect(presses7).toHaveCount(1);
+    expect(await pressedAgain()).toEqual([]);
+
+    // Ioana's number typed again — a woman's: the question asks of the number, in the same words — and «Anulează» tapped: nothing
+    // recorded, the caught moment kept, and the box focused inside the tap itself, so a phone's keyboard comes back with it.
+    const [ioana] = await query<{ gun: number }>(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 8`, [eventId]);
+    await box.fill("8");
+    await box.press("Enter");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(`Ioana (Ioana ${tag}) a sosit deja la ${resultTime(ioana.gun)} — introdus de Dev Contributor. Treci numărul din nou?`);
+    await expect(confirm).toHaveText("Trece numărul din nou");
+    await cancel.click();
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="8"]')).toHaveCount(1);
+    await expect(kept).toHaveCount(1);
+
+    // Typed again, «Sosit» pressed, and answered «Trece numărul din nou» seconds later: the press takes the moment caught — read at
+    // «Sosit» — and the first time stays, this one going to «Istoricul sosirilor»; the box focused as the tap ends.
+    await box.fill("7");
+    await page.getByTestId("finish-record").click();
+    await expect(dialog).toBeVisible();
+    await page.waitForTimeout(2_500);
+    await confirm.click();
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
+    const again = page.locator('[data-testid="finish-entry"][data-bib="7"][data-state="duplicate"]');
+    await expect(again).toContainText(`Andrei (#7) era deja trecut de Dev Contributor la ${resultTime(first.gun)} — rămâne așa; apăsarea ta (${caught})`, { timeout: 15_000 });
+    await expect(kept).toHaveCount(0);
+    expect(await query(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 7`, [eventId])).toEqual([{ gun: first.gun }]);
+
+    // No moment caught: answered three seconds after «Sosit» — by a double tap, which answers once —, the press carries the moment
+    // «Sosit» was pressed — the server heard it three seconds after the moment it stands for —, never the answer's. The second tap,
+    // on the question as it fades, gives the button the focus in most browsers: its own handler gives it back to the box at once.
+    await box.fill("7");
+    await box.press("Enter");
+    await expect(dialog).toBeVisible();
+    await page.waitForTimeout(3_000);
+    await confirm.dblclick();
+    await expect(dialog).toBeHidden();
+    expect(await boxAtTapEnd()).toEqual([true, true]);
+    await expect(box).toBeFocused();
+    await expect(again).toHaveCount(2, { timeout: 15_000 });
+    // One press for the double tap: the first «Sosit», two answered «Trece numărul din nou» — a line each, written at the press.
+    await expect(presses7).toHaveCount(3);
+    await expect(kept).toHaveCount(0);
+    const trail = await pressedAgain();
+    expect(trail).toHaveLength(2);
+    const [{ gun }] = await query<{ gun: Date }>(`SELECT starts_at AS gun FROM events WHERE id = $1`, [eventId]);
+    expect(trail[1].at.getTime() - (gun.getTime() + trail[1].gun)).toBeGreaterThanOrEqual(2_500);
+    expect(await query(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 7`, [eventId])).toEqual([{ gun: first.gun }]);
+
+    // A runner typed twice is never asked: the second press is the duplicate's line at once.
+    await box.fill("102");
+    await box.press("Enter");
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="102"]').first()).toHaveAttribute("data-state", "saved", { timeout: 15_000 });
+    await page.waitForTimeout(1_100);
+    await box.fill("102");
+    await box.press("Enter");
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="102"][data-state="duplicate"]')).toHaveCount(1, { timeout: 15_000 });
+    await expect(dialog).toHaveCount(0);
+    await expect(box).toBeFocused();
     await noHorizontalScroll(page);
   });
 });

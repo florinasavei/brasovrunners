@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.82-2026-11-20
+
+- **«Cronometrare» asks before an elite is entered twice** — on a phone whose page knows an elite is already «Sosit», the elite's number typed in the box opens a question first: «Anulează» (focused, so Enter or Esc) records nothing and keeps a caught «Finish» moment for the next number, «Trece numărul din nou» records the moment «Sosit» was pressed and the first time stays, and the box has the focus — the phone its keypad — back at once; any other number goes at once as before. §1010.
 ## BR-V4.81-2026-11-20
 
 - **«Notă pentru voluntari» on each point of «Planul voluntarilor»** — written in the point's «Modifică punctul» in Romanian and English, shown under the point's name on «Pe puncte» and in «Punctele, pe scurt», printed with the plan and said in the «Punctul tău de voluntar» email of everybody at that point; and a point's volunteers are numbered, their names in bold, with a thin line between two. §1009.
