@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0225_staff_team_agreement_every_sign_in` (§NNN, amending §1006: the team's undertaking is owed at every sign-in, and
+ * Migration `0226_staff_team_agreement_every_sign_in` (§NNN, amending §1006: the team's undertaking is owed at every sign-in, and
  * every acceptance is kept), proven on real PostgreSQL (PGlite) over a database migrated by the release before (BR-REQ-060-01 for
  * the gate it records, BR-REQ-053-01 for the version it relies on):
  *
@@ -21,13 +21,13 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
  *   with their account; nothing written by the migration.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0225_staff_team_agreement_every_sign_in";
+const TAG = "0226_staff_team_agreement_every_sign_in";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
-const STAFF = "aaaaaaaa-0000-4000-8000-000000000225";
-const OTHER = "abababab-0000-4000-8000-000000000225";
-const DOCUMENT = "bbbbbbbb-0000-4000-8000-000000000225";
+const STAFF = "aaaaaaaa-0000-4000-8000-000000000226";
+const OTHER = "abababab-0000-4000-8000-000000000226";
+const DOCUMENT = "bbbbbbbb-0000-4000-8000-000000000226";
 const HASH = "a".repeat(64);
 
 let client: PGlite;
@@ -84,7 +84,7 @@ function acceptance(extra: Record<string, string | null> = {}): string {
 }
 const count = async (table: string) => (await client.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)).rows[0].n;
 
-describe("migration 0225_staff_team_agreement_every_sign_in", () => {
+describe("migration 0226_staff_team_agreement_every_sign_in", () => {
   it("keeps §1006's acceptances as they were and writes nothing of its own", async () => {
     expect(await count("staff_team_agreement_sign_in_acceptances")).toBe(0);
     const kept = (await client.query(`SELECT staff_user_id, typed_name, accepted_at FROM staff_team_agreement_acceptances`)).rows;

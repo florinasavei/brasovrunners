@@ -2177,7 +2177,7 @@ until a version is in force in every language **and** the privacy notice in forc
 
 **«Angajament de confidențialitate și protecția datelor pentru echipă»** (`STAFF_DATA_AGREEMENT`, 2026-11-19, `DECISIONS.md`
 §1006; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
-below the Administrator accepts — at every sign-in since §NNN (migration `0225`), and again for a new version — before the
+below the Administrator accepts — at every sign-in since §NNN (migration `0226`), and again for a new version — before the
 backoffice answers them (§13.1): the platform's template in
 both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
 tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
