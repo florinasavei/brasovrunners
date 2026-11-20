@@ -1121,7 +1121,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) —, «Ziua cursei» → «Tombolă» read, a runner signed up there by the desk's door (`canReadRaffle` = `canWorkTheDesk`, §1014) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984), and «Confirmă pentru tombolă» on a volunteer not confirmed (§NNN); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -3162,7 +3162,8 @@ Since 2026-11-18 (`DECISIONS.md` §984) who is on both files is one answer, the 
 event ticks in «Cine poate participa» — «Alergătorii» (a confirmed real registration with a race number, not marked
 «Elită»; an ambassador runs as a runner), «Elitele» (a registration marked «Elită», and a line of the race's elite list,
 §895, which takes part by name: its number when it has one, else an empty number cell, the numberless lines after the
-numbered ones, by name) and «Voluntarii» (a confirmed volunteer with a number) — everybody not taken out and, on an event
+numbered ones, by name) and «Voluntarii» (a confirmed volunteer with a number — since 2026-11-20, `DECISIONS.md` §NNN, also one
+the organizers confirmed for the raffle alone, «Confirmă pentru tombolă», §15.11) — everybody not taken out and, on an event
 «Cu înscriere separată», only those who signed up (§15.11). The third column says «Alergător», «Elită» or «Voluntar» — a
 registration marked «Elită» is «Elită» too — and a line's «Prezent» is the organizers' tick on «Ziua cursei» → «Tombolă»;
 the trail row carries the three groups' counts and whether the event asked a sign-up (`signUp`). «Din oficiu» with every
@@ -3618,6 +3619,34 @@ no press. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
+
+**«Confirmă pentru tombolă»** (2026-11-20, `DECISIONS.md` §NNN, amending §984 and §1023; the owner, the day before the race, of a
+volunteer of seventeen whose parents' volunteering agreement was still missing: «vreau să pot să o confirm și pe [ea] pentru tombolă,
+chiar și fără acordul părinților»). The Organizer and the Administrators (`canTakeRaffleList`, asserted by
+`checkin/tombola/actions.ts#raffleConfirmVolunteerAction` and again by `volunteers/raffle-confirmation.ts#confirmVolunteerForRaffle`;
+the desk's Voluntar, the Redactor and Tehnic are drawn no button and refused FORBIDDEN) confirm a volunteer who is «Înscris» — not
+confirmed, not cancelled — **for the raffle alone**, on the person's row of the «Tombolă» tab and on their own page, while the event's
+raffle takes its volunteers and the person is not taken out (and, «Cu înscriere separată», while the gate takes volunteers:
+`domain/raffle.ts#raffleConfirmationOffered`). Asked first by the house's dialog, which names the person and says nobody is emailed.
+**A minor** — under eighteen on the event's day, the age «Acordul părintelui lipsește» is decided by (`isVolunteerMinor`) — is
+confirmed only with the way the parent or guardian agreed chosen on the row («telefonic», «la fața locului», «în scris») and the
+dialog's box «Părintele sau tutorele a fost de acord să participe la tombolă» ticked; the service refuses without either
+(`RAFFLE_GUARDIAN_MISSING`, naming what is missing, `raffleGuardianRecord`), the approved «Regulamentul tombolei» saying «Un
+participant minor se înscrie cu acordul părintelui sau al tutorelui său.»; an adult is asked nothing. One transaction under the
+event row's lock (the V numbers' serialization point, §1023): the person's V number drawn when they have none — `drawVolunteerNumber`,
+the draw «Confirmă» makes; a later «Confirmă» keeps it, a number is never reissued —, the row marked
+(`event_volunteers.raffle_confirmed_at`, `raffle_confirmed_by_staff_user_id` `SET NULL`, and for a minor `raffle_guardian_agreed`
+with `raffle_guardian_way`, both or neither by the table's CHECKs; migration `0227_volunteer_raffle_confirmation`, expand only),
+and «Cu înscriere separată» the person signed up by the organizers' own door (STAFF, the row's «A acceptat regulamentul» required,
+`raffle-entries.ts#signUpConfirmedVolunteerInTransaction`); one audit row of its own, `volunteer.raffle_confirmed` — the staff
+member the actor, whether a minor, the way, the number, never a name — read by «Ziua cursei» → «Jurnal» («a confirmat pentru
+tombolă», with «acordul părintelui: telefonic» for a minor; filtered and counted per account). **It is not the volunteer's state**:
+the person stays «Înscris», their volunteering agreement and the parent's link exactly as they were, and «Confirmă» as a volunteer
+still waits for the parent's volunteering agreement (§768). The one answer reads it (`raffleConfirmed`, `volunteerConfirmedForRaffle`:
+never a cancelled volunteer; a minor's only with the parent's agreement recorded): the tab and its counts — whose row says «Da ·
+confirmat doar pentru tombolă», with the parent's way —, the «Voluntari» list's «Tombolă» column, the volunteer's page, both files,
+the files for random.org, the public form's «Sunt voluntar» and «Toate datele unei persoane». «Scoate» still takes the person out.
+Nobody is told.
 
 *Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
 raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a

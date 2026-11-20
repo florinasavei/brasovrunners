@@ -2927,7 +2927,8 @@
       "LIST_WISH_ADDRESS_UNCONFIRMED": "Adresa de email nu e confirmată: confirmă întâi înscrierea aici („Confirmă pe hârtie”), apoi apasă din nou pe ochi.",
       "LIST_WISH_DESK_CLOSED": "Evenimentul s-a încheiat sau a fost anulat: masa e închisă și nu mai înregistrează nimic.",
       "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
-      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
+      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul».",
+      "RAFFLE_GUARDIAN_MISSING": "Pentru un minor bifează că părintele sau tutorele a fost de acord și alege cum: telefonic, la fața locului sau în scris. Nu s-a scris nimic."
     },
     "editor": {
       "draftPreview": {
@@ -9843,7 +9844,7 @@
                 "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
                 "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
                 "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
-                "Fișierele pentru extragere, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i.",
+                "Fișierele pentru extragere, ștergerea unei înscrieri, înscrierea unui voluntar sau a unei elite de pe lista de elită și «Confirmă pentru tombolă» rămân ale Organizatorului și ale Administratorilor: cheamă-i.",
                 "Un alergător îl scoți de la tombolă, sau îl pui înapoi, de pe rândul lui din «Prezența»: «Scoate de la tombolă» întreabă întâi."
               ]
             },
@@ -10123,7 +10124,11 @@
               "steps": [
                 "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
                 "Voluntarii participă cu numărul lor de voluntar, V001, V002…, pe care îl primesc singuri în clipa în care îi confirmi: nu setezi nimic.",
-                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce.",
+                "Un voluntar neconfirmat — de exemplu un minor al cărui părinte n-a dat încă acordul pentru voluntariat — îl poți confirma doar pentru tombolă: pe rândul lui din «Tombolă», sau pe pagina lui, apasă «Confirmă pentru tombolă». O pot face Organizatorul și Administratorii.",
+                "Pentru un minor alege întâi la «Cum și-a dat acordul părintele»: telefonic, la fața locului sau în scris. În întrebare bifează «Părintele sau tutorele a fost de acord să participe la tombolă», apoi «Da, confirmă pentru tombolă».",
+                "Primește numărul de voluntar, dacă nu are, și intră la tragere; rândul spune „confirmat doar pentru tombolă”. Ca voluntar rămâne neconfirmat, iar acordul părintelui pentru voluntariat lipsește în continuare. Cu înscriere separată bifează și «A acceptat regulamentul»: îl și înscrie.",
+                "În «Jurnal» rămâne cine a decis, când și, pentru un minor, cum și-a dat acordul părintele."
               ]
             },
             {
@@ -10460,7 +10465,7 @@
                 "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
                 "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
                 "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el.",
-                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Unul neconfirmat îl poți confirma doar pentru tombolă, cu «Confirmă pentru tombolă».",
                 "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
                 "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți, dacă participă și, când nu participă, de ce."
               ]
@@ -13425,7 +13430,7 @@
       },
       "journal": {
         "title": "Jurnalul zilei cursei",
-        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii, cine a bifat voluntarii și cine a scos pe cineva de la tombolă sau l-a pus înapoi, cel mai nou primul.",
+        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii, cine a bifat voluntarii, cine a scos de la tombolă sau a pus înapoi și cine a confirmat pentru tombolă, cel mai nou primul.",
         "ownAccount": "Ca jurnalul să numească omul, fiecare lucrează la masă cu contul lui.",
         "account": "Cont",
         "accounts": {
@@ -13441,6 +13446,7 @@
           "undone": "Prezențe anulate",
           "raffleOut": "Scoși de la tombolă",
           "raffleIn": "Puși înapoi la tombolă",
+          "raffleConfirmed": "Confirmați pentru tombolă",
           "volunteerPresent": "Voluntari bifați prezenți",
           "volunteerAbsent": "Voluntari debifați"
         },
@@ -13472,6 +13478,11 @@
             "few": "{count} puși înapoi la tombolă",
             "other": "{count} de puși înapoi la tombolă"
           },
+          "raffleConfirmed": {
+            "one": "{count} confirmat pentru tombolă",
+            "few": "{count} confirmați pentru tombolă",
+            "other": "{count} de confirmați pentru tombolă"
+          },
           "volunteerTicks": {
             "one": "{count} bifă la voluntari",
             "few": "{count} bife la voluntari",
@@ -13485,6 +13496,7 @@
           "undone": "a anulat prezența",
           "raffleOut": "a scos de la tombolă",
           "raffleIn": "a pus înapoi la tombolă",
+          "raffleConfirmed": "a confirmat pentru tombolă",
           "volunteerPresent": "a bifat prezent",
           "volunteerAbsent": "a debifat prezent"
         },
@@ -13497,6 +13509,7 @@
           "volunteer": "{name} (voluntar)"
         },
         "timeOnDay": "{time} ({day})",
+        "guardian": "· acordul părintelui: {way}",
         "more": {
           "one": "și încă {count} rând, mai vechi",
           "few": "și încă {count} rânduri, mai vechi",
@@ -13532,7 +13545,7 @@
     },
     "raffle": {
       "title": "Tombolă",
-      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Un voluntar neconfirmat îl confirmi doar pentru tombolă, de pe rândul lui. Extragerea o faceți voi, din fișier.",
       "randomOrgMissing": {
         "one": "{count} participant fără număr nu e în fișierul pentru random.org: dă-i întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
         "few": "{count} participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
@@ -13644,7 +13657,27 @@
       "deleteBody": "Persoana nu mai participă la tombolă până nu se înscrie din nou. Nu i se trimite niciun e-mail.",
       "cancel": "Renunță",
       "print": "Tipărește",
-      "empty": "Nimeni de arătat aici."
+      "empty": "Nimeni de arătat aici.",
+      "confirm": {
+        "button": "Confirmă pentru tombolă",
+        "buttonFor": "Confirmă pentru tombolă: {name}",
+        "title": "Confirmi pe {name} pentru tombolă?",
+        "body": "Primește un număr de voluntar, dacă nu are, și intră la tragere. Ca voluntar rămâne neconfirmat. Rămâne scris cine a decis.",
+        "bodyMinor": "{name} are sub 18 ani: participă doar cu acordul părintelui sau al tutorelui, dat {way}. Ca voluntar rămâne neconfirmat, fără acordul pentru voluntariat. Rămâne scris cine a decis.",
+        "guardianAgreed": "Părintele sau tutorele a fost de acord să participe la tombolă",
+        "way": "Cum și-a dat acordul părintele",
+        "wayChoose": "Alege cum",
+        "ways": {
+          "PHONE": "telefonic",
+          "IN_PERSON": "la fața locului",
+          "WRITING": "în scris"
+        },
+        "confirm": "Da, confirmă pentru tombolă",
+        "cancel": "Anulează",
+        "state": "confirmat doar pentru tombolă",
+        "guardianLine": "acordul părintelui: {way}",
+        "pageLine": "Confirmat doar pentru tombolă, nu ca voluntar"
+      }
     },
     "timing": {
       "title": "Cronometrare",
@@ -16037,7 +16070,10 @@
       "rafflePutBack": "Pus înapoi la tombolă.",
       "rafflePresentOn": "Bifat: prezent.",
       "rafflePresentOff": "Debifat: absent.",
-      "raffleUnchanged": "Era deja așa; nimic de schimbat."
+      "raffleUnchanged": "Era deja așa; nimic de schimbat.",
+      "raffleConfirmed": "Confirmat pentru tombolă: numărul intră la tragere.",
+      "raffleConfirmedSignedUp": "Confirmat și înscris la tombolă: numărul intră la tragere.",
+      "raffleConfirmedAlready": "Participa deja la tombolă; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

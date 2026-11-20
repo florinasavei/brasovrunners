@@ -325,7 +325,8 @@ describe("§996 «Jurnal» — the lines and the summary", () => {
       "Conturi șterse",
       "Participanții, prin „Am ajuns”",
     ]);
-    expect(optionsOf(markup, "kind").map((option) => option.value)).toEqual(["", "scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"]);
+    // §NNN: «Confirmați pentru tombolă» beside the raffle's two kinds of §1020.
+    expect(optionsOf(markup, "kind").map((option) => option.value)).toEqual(["", "scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "raffleConfirmed", "volunteerPresent", "volunteerAbsent"]);
   });
 
   it("says it in English", async () => {

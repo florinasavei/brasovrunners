@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
@@ -9,7 +10,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import type { RaffleReason } from "../domain/raffle";
+import { RAFFLE_GUARDIAN_FIELDS, RAFFLE_GUARDIAN_WAYS, type RaffleGuardianWay, type RaffleReason } from "../domain/raffle";
 import type { RaffleLine } from "../raffle-roster";
 
 /*
@@ -176,14 +177,136 @@ export async function raffleDeskLine(props: {
 }
 
 /**
- * A volunteer's page (§984): the line, and — for the organizers who open the page, in the sign-up mode with its gate open —
- * «Înscrie la tombolă» (STAFF), coming back to the page.
+ * What the «Tombolă» tab and the volunteer's page say of a volunteer confirmed for the raffle alone (§NNN), beside «Da»: that it is a
+ * raffle confirmation, never a volunteer's — «confirmat doar pentru tombolă» — and, for a minor, how the parent agreed.
  */
-export async function raffleVolunteerLine(props: { line: RaffleLine; locale: string; eventId: string; volunteerId: string; name: string; action: ServerAction }): Promise<ReactElement> {
+export function raffleConfirmationWords(t: Translate, guardianWay: RaffleGuardianWay | null): string {
+  const state = t("raffle.confirm.state");
+  return guardianWay === null ? state : `${state} · ${t("raffle.confirm.guardianLine", { way: t(`raffle.confirm.ways.${guardianWay}`) })}`;
+}
+
+/**
+ * «Confirmă pentru tombolă» (§NNN, amending §984 and §1023) — the organizers' press on a volunteer who is not confirmed, on the row of
+ * the «Tombolă» tab and on the volunteer's own page: one form, asked first by the house's one dialog — «Confirmi pe Maria Pop pentru
+ * tombolă?», what it does (a V number when the person has none, the draw, still unconfirmed as a volunteer, who decided kept), the email
+ * nobody gets, «Anulează» focused, «Da, confirmă pentru tombolă». For **a minor** the form holds the way the parent or guardian agreed —
+ * «telefonic», «la fața locului», «în scris», a native select the browser asks before the dialog opens, its chosen words in the dialog's
+ * sentence — and the dialog the box «Părintele sau tutorele a fost de acord să participe la tombolă», which its confirm waits for and
+ * writes into the form (`ConfirmSpec.tick`). **«Cu înscriere separată»** the press signs the person up too: the form holds «A acceptat
+ * regulamentul», as the organizers' «Înscrie» does. Every rule is the server's again (`raffle-confirmation.ts`, BR-REQ-060-01):
+ * without JavaScript there is no dialog, and a minor's empty answers are refused by name.
+ */
+export async function raffleConfirmForm(props: {
+  confirmAction: ActionFormAction;
+  /** The hidden fields the press carries back and names the person by: the page's language, the event, the person, the way back. */
+  hidden: ReactElement;
+  name: string;
+  minor: boolean;
+  /** «Cu înscriere separată»: the press signs the person up, the acceptance's tick beside it. */
+  signUpMode: boolean;
+  testId: string;
+}): Promise<ReactElement> {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
+  const { minor } = props;
+  return (
+    <ActionForm
+      action={props.confirmAction}
+      confirm={{
+        title: t("raffle.confirm.title", { name: props.name }),
+        // A minor's sentence names the way chosen on the form at the press (`fillFromChosen`): «… dat telefonic».
+        body: minor ? t("raffle.confirm.bodyMinor", { name: props.name, way: `{${RAFFLE_GUARDIAN_FIELDS.way}}` }) : t("raffle.confirm.body"),
+        // The person is not told (§949): said as every press that writes to nobody says it.
+        ...words.noMail(props.name),
+        ...(minor ? { tick: { field: RAFFLE_GUARDIAN_FIELDS.agreed, label: t("raffle.confirm.guardianAgreed") }, fillFromChosen: [RAFFLE_GUARDIAN_FIELDS.way] } : {}),
+        confirmLabel: t("raffle.confirm.confirm"),
+        cancelLabel: t("raffle.confirm.cancel"),
+      }}
+      data-testid={props.testId}
+    >
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+        {props.hidden}
+        {/* The dialog's box, posted empty as drawn; its confirm writes `on` here (§888's mechanism). */}
+        {minor && <input type="hidden" name={RAFFLE_GUARDIAN_FIELDS.agreed} defaultValue="" />}
+        {minor && (
+          <TextField
+            select
+            required
+            name={RAFFLE_GUARDIAN_FIELDS.way}
+            label={t("raffle.confirm.way")}
+            defaultValue=""
+            size="small"
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "raffle-confirm-way" } }}
+            // The select itself a thumb's 44 pixels (BR-REQ-041-01): a native select opens on the element, not on its frame.
+            sx={{ minWidth: 200, "& .MuiInputBase-input": { minHeight: 44, boxSizing: "border-box" } }}
+          >
+            <option value="">{t("raffle.confirm.wayChoose")}</option>
+            {RAFFLE_GUARDIAN_WAYS.map((way) => (
+              <option key={way} value={way}>
+                {t(`raffle.confirm.ways.${way}`)}
+              </option>
+            ))}
+          </TextField>
+        )}
+        {props.signUpMode && (
+          <CheckboxField name="accepted" required dense help={t("raffle.acceptedHelp")} requiredMessage={t("errors.RAFFLE_RULES_NOT_ACCEPTED")}>
+            {t("raffle.accepted")}
+          </CheckboxField>
+        )}
+        <GlyphButton icon="confirm" type="submit" variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("raffle.confirm.buttonFor", { name: props.name })} data-testid="raffle-confirm">
+          {t("raffle.confirm.button")}
+        </GlyphButton>
+      </Box>
+    </ActionForm>
+  );
+}
+
+/**
+ * A volunteer's page (§984): the line, and — for the organizers who open the page, in the sign-up mode with its gate open —
+ * «Înscrie la tombolă» (STAFF), coming back to the page. Since §NNN a volunteer confirmed for the raffle alone reads so beside the
+ * chip («Confirmat doar pentru tombolă, nu ca voluntar», a minor's parent's way after it), and one who may be is offered
+ * «Confirmă pentru tombolă» (`confirmAction`), coming back to the page.
+ */
+export async function raffleVolunteerLine(props: {
+  line: RaffleLine;
+  locale: string;
+  eventId: string;
+  volunteerId: string;
+  name: string;
+  action: ServerAction;
+  /** «Confirmă pentru tombolă» (§NNN): the organizers' press, drawn while the line says it may be offered. */
+  confirmAction?: ActionFormAction;
+}): Promise<ReactElement> {
+  const t = await getTranslations("Admin");
+  const volunteer = props.line.volunteer;
   return (
     <Stack spacing={1} id="volunteer-raffle" sx={{ scrollMarginTop: 16 }} data-testid="volunteer-raffle">
       {standingChip(t, props.line.reason, "volunteer-raffle-line")}
+      {volunteer?.confirmedForRaffle && (
+        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="volunteer-raffle-confirmed">
+          {volunteer.guardianWay === null
+            ? t("raffle.confirm.pageLine")
+            : `${t("raffle.confirm.pageLine")} · ${t("raffle.confirm.guardianLine", { way: t(`raffle.confirm.ways.${volunteer.guardianWay}`) })}`}
+        </Typography>
+      )}
+      {volunteer?.mayConfirmForRaffle &&
+        props.confirmAction &&
+        (await raffleConfirmForm({
+          confirmAction: props.confirmAction,
+          hidden: (
+            <>
+              <input type="hidden" name="uiLocale" value={props.locale} />
+              <input type="hidden" name="eventId" value={props.eventId} />
+              <input type="hidden" name="table" value="volunteer" />
+              <input type="hidden" name="personId" value={props.volunteerId} />
+              <input type="hidden" name="back" value="volunteer" />
+            </>
+          ),
+          name: props.name,
+          minor: volunteer.minor,
+          signUpMode: props.line.signUpMode,
+          testId: "volunteer-raffle-confirm-form",
+        }))}
       {props.line.maySignUp &&
         signUpForm({
           action: props.action,

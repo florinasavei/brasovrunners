@@ -19,16 +19,22 @@ import {
   type RaffleGateClosed,
   type RaffleGateEvent,
   type RaffleGateFacts,
+  type RaffleGuardianWay,
   type RaffleKind,
   type RafflePerson,
   type RaffleReason,
   type RaffleSettings,
+  raffleConfirmationOffered,
+  raffleConfirmed,
   raffleKindOfRegistration,
   raffleNumberText,
   raffleParticipation,
   raffleSettingsOf,
   raffleSignUpClosedFor,
+  type VolunteerRaffleFacts,
+  volunteerConfirmedForRaffle,
 } from "./domain/raffle";
+import { isVolunteerMinor } from "./domain/volunteer";
 import { raffleGroupsPhrase } from "./raffle-words";
 
 /*
@@ -169,10 +175,59 @@ export type RafflePersonFacts = {
   person: Omit<RafflePerson, "signedUp">;
   /** A test registration (§30): never in a raffle — its `confirmed` is false — and given no raffle line or note to read. */
   test?: true;
+  /**
+   * A volunteer's own facts for «Confirmă pentru tombolă» (§NNN): the state, whether a minor, the confirmation for the raffle and the
+   * organizers' exclusion — what `raffleConfirmationOffered` reads — and, once confirmed for the raffle, a minor's parent's way.
+   */
+  volunteer?: VolunteerRaffleFacts & { inRaffle: boolean; guardianWay: RaffleGuardianWay | null };
 };
 
-function localeOr(value: string | null | undefined): Locale {
+export function localeOr(value: string | null | undefined): Locale {
   return (routing.locales as readonly string[]).includes(value ?? "") ? (value as Locale) : routing.defaultLocale;
+}
+
+/**
+ * The volunteers' columns every read of the raffle takes (§1023, §NNN): the state, the V number, the organizers' exclusion, the age
+ * the minor's rule is decided by, and the confirmation for the raffle alone with a minor's parent's agreement.
+ */
+const VOLUNTEER_RAFFLE_COLUMNS = {
+  id: eventVolunteers.id,
+  state: eventVolunteers.state,
+  volunteerNumber: eventVolunteers.volunteerNumber,
+  inRaffle: eventVolunteers.inRaffle,
+  age: eventVolunteers.age,
+  raffleConfirmedAt: eventVolunteers.raffleConfirmedAt,
+  raffleGuardianAgreed: eventVolunteers.raffleGuardianAgreed,
+  raffleGuardianWay: eventVolunteers.raffleGuardianWay,
+};
+
+type VolunteerRaffleRow = {
+  state: "REGISTERED" | "CONFIRMED" | "CANCELLED";
+  volunteerNumber: number | null;
+  inRaffle: boolean;
+  age: number | null;
+  raffleConfirmedAt: Date | null;
+  raffleGuardianAgreed: boolean | null;
+};
+
+/** A volunteer's row as «Confirmă pentru tombolă» reads it (§NNN): a minor by the age «Acordul părintelui lipsește» is decided by. */
+function volunteerRaffleFactsOf(row: VolunteerRaffleRow): VolunteerRaffleFacts {
+  return { state: row.state, minor: isVolunteerMinor(row.age), raffleConfirmedAt: row.raffleConfirmedAt, raffleGuardianAgreed: row.raffleGuardianAgreed };
+}
+
+/**
+ * A volunteer as the one answer reads them: confirmed by the organizers' «Confirmă» (§984), or confirmed for the raffle alone (§NNN,
+ * `volunteerConfirmedForRaffle` — never a cancelled one, a minor only with the parent's agreement recorded), with their V number
+ * (§1023) and the organizers' exclusion.
+ */
+export function volunteerRafflePerson(row: VolunteerRaffleRow): Omit<RafflePerson, "signedUp"> {
+  return {
+    kind: "VOLUNTEER",
+    confirmed: row.state === "CONFIRMED",
+    confirmedForRaffle: volunteerConfirmedForRaffle(volunteerRaffleFactsOf(row)),
+    hasNumber: row.volunteerNumber !== null,
+    inRaffle: row.inRaffle,
+  };
 }
 
 /** One person, read — a registration, a volunteer or a line of the elite list — or null when there is none. */
@@ -199,12 +254,13 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
   }
   if (ref.table === "volunteer") {
     const [row] = await db
-      .select({ eventId: eventVolunteers.eventId, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, locale: eventVolunteers.locale })
+      .select({ ...VOLUNTEER_RAFFLE_COLUMNS, eventId: eventVolunteers.eventId, name: eventVolunteers.name, locale: eventVolunteers.locale })
       .from(eventVolunteers)
       .where(eq(eventVolunteers.id, ref.id))
       .limit(1);
     if (!row) return null;
-    // A volunteer takes part with their V number (§1023): drawn by itself at the confirmation, so every confirmed volunteer has one.
+    // A volunteer takes part with their V number (§1023): drawn by itself at the confirmation — the organizers' «Confirmă», or their
+    // «Confirmă pentru tombolă» (§NNN) — so every volunteer confirmed either way has one.
     return {
       ref,
       eventId: row.eventId,
@@ -212,7 +268,8 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
       name: row.name,
       number: row.volunteerNumber,
       locale: localeOr(row.locale),
-      person: { kind: "VOLUNTEER", confirmed: row.state === "CONFIRMED", hasNumber: row.volunteerNumber !== null, inRaffle: row.inRaffle },
+      person: volunteerRafflePerson(row),
+      volunteer: { ...volunteerRaffleFactsOf(row), inRaffle: row.inRaffle, guardianWay: row.raffleGuardianWay },
     };
   }
   const [row] = await db
@@ -238,9 +295,13 @@ export function entryColumnOf(ref: RafflePersonRef) {
   return ref.table === "registration" ? eventRaffleEntries.registrationId : ref.table === "volunteer" ? eventRaffleEntries.volunteerId : eventRaffleEntries.eliteEntryId;
 }
 
-/** Whether the person may sign up at all (the gate aside): confirmed, real, a number — what a sign-up of any door requires. */
+/**
+ * Whether the person may sign up at all (the gate aside): confirmed, real, a number — what a sign-up of any door requires. A volunteer
+ * the organizers confirmed for the raffle alone (§NNN) is confirmed here (`domain/raffle.ts#raffleConfirmed`), with the V number the
+ * press drew.
+ */
 export function raffleEligible(person: Omit<RafflePerson, "signedUp">): boolean {
-  return person.confirmed && person.hasNumber;
+  return raffleConfirmed(person) && person.hasNumber;
 }
 
 /** The person's sign-up, or null. */
@@ -276,6 +337,16 @@ export type RaffleRosterRow = {
    * desk: a sign-up would leave the person «nu participă» while the press said they were in.
    */
   deskMaySignUp: boolean;
+  /**
+   * A volunteer the organizers confirmed for the raffle alone (§NNN) who is not confirmed as a volunteer: when, and a minor's parent's
+   * way — what the row says beside «Da», so nobody reads it as a volunteer's confirmation. Null for everybody else, a volunteer
+   * confirmed by «Confirmă» included.
+   */
+  raffleConfirmation: { at: Date; guardianWay: RaffleGuardianWay | null } | null;
+  /** Whether «Confirmă pentru tombolă» may be offered on the row (§NNN, `raffleConfirmationOffered`): to the organizers, whom the page asks. */
+  mayConfirmForRaffle: boolean;
+  /** A volunteer under eighteen on the event's day: the press asks the parent's or guardian's agreement and how (§NNN). */
+  minor: boolean;
 };
 
 export type RaffleRoster = {
@@ -305,7 +376,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       .from(registrations)
       .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]))),
     db
-      .select({ id: eventVolunteers.id, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, here: eventVolunteers.present })
+      .select({ ...VOLUNTEER_RAFFLE_COLUMNS, name: eventVolunteers.name, here: eventVolunteers.present })
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.eventId, eventId), ne(eventVolunteers.state, "CANCELLED"))),
     db
@@ -317,7 +388,11 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
   const entryOf = new Map<string, (typeof entries)[number]>();
   for (const entry of entries) entryOf.set(entry.registrationId ?? entry.volunteerId ?? entry.eliteEntryId ?? "", entry);
 
-  const row = (ref: RafflePersonRef, number: number | null, name: string, person: Omit<RafflePerson, "signedUp">, present: boolean): RaffleRosterRow => {
+  // «Cu înscriere separată», «Confirmă pentru tombolă» signs the volunteer up too (§NNN): offered only while the gate takes volunteers.
+  const volunteersGate = raffleSignUpClosedFor(facts, now, "VOLUNTEER");
+  /** A volunteer's own facts for «Confirmă pentru tombolă» (§NNN); absent for a registration and a line of the elite list. */
+  type VolunteerExtras = { facts: VolunteerRaffleFacts; inRaffle: boolean; guardianWay: RaffleGuardianWay | null };
+  const row = (ref: RafflePersonRef, number: number | null, name: string, person: Omit<RafflePerson, "signedUp">, present: boolean, volunteer?: VolunteerExtras): RaffleRosterRow => {
     const entry = entryOf.get(ref.id) ?? null;
     const maySignUp = settings.signUp && entry === null && raffleEligible(person) && raffleSignUpClosedFor(facts, now, person.kind) === null;
     return {
@@ -332,6 +407,12 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       signUp: settings.signUp && entry ? { entryId: entry.id, method: entry.method, at: entry.createdAt } : null,
       maySignUp,
       deskMaySignUp: ref.table === "registration" && maySignUp && person.inRaffle,
+      raffleConfirmation:
+        volunteer && !person.confirmed && person.confirmedForRaffle === true && volunteer.facts.raffleConfirmedAt !== null
+          ? { at: volunteer.facts.raffleConfirmedAt, guardianWay: volunteer.guardianWay }
+          : null,
+      mayConfirmForRaffle: volunteer ? raffleConfirmationOffered({ volunteer: { ...volunteer.facts, inRaffle: volunteer.inRaffle }, settings, gateClosed: volunteersGate }) : false,
+      minor: volunteer?.facts.minor ?? false,
     };
   };
 
@@ -340,7 +421,10 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       const kind = raffleKindOfRegistration(one);
       return row({ table: "registration", id: one.id }, one.bibNumber, one.name, { kind, confirmed: one.status === "CONFIRMED", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle }, one.checkedInAt !== null);
     }),
-    ...helpers.map((one) => row({ table: "volunteer", id: one.id }, one.volunteerNumber, one.name, { kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.volunteerNumber !== null, inRaffle: one.inRaffle }, one.here)),
+    // A volunteer confirmed by «Confirmă», or confirmed for the raffle alone (§NNN), takes part with the V number either drew.
+    ...helpers.map((one) =>
+      row({ table: "volunteer", id: one.id }, one.volunteerNumber, one.name, volunteerRafflePerson(one), one.here, { facts: volunteerRaffleFactsOf(one), inRaffle: one.inRaffle, guardianWay: one.raffleGuardianWay }),
+    ),
     ...lines.map((one) => row({ table: "elite", id: one.id }, one.bibNumber, one.name, { kind: "ELITE", confirmed: true, hasNumber: true, inRaffle: one.inRaffle }, one.here)),
   ].sort(compareRaffleRows);
 
@@ -380,7 +464,7 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
       : Promise.resolve([]),
     volunteerIds.length > 0
       ? db
-          .select({ id: eventVolunteers.id, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, inRaffle: eventVolunteers.inRaffle })
+          .select(VOLUNTEER_RAFFLE_COLUMNS)
           .from(eventVolunteers)
           .where(and(eq(eventVolunteers.eventId, eventId), inArray(eventVolunteers.id, [...volunteerIds])))
       : Promise.resolve([]),
@@ -396,13 +480,24 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
     );
   }
   for (const one of helpers) {
-    reasons.set(one.id, raffleParticipation({ kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.volunteerNumber !== null, inRaffle: one.inRaffle, signedUp: signed.has(one.id) }, settings));
+    // Confirmed by «Confirmă», or for the raffle alone (§NNN): the same answer the tab and the files give.
+    reasons.set(one.id, raffleParticipation({ ...volunteerRafflePerson(one), signedUp: signed.has(one.id) }, settings));
   }
   return reasons;
 }
 
-/** One person's raffle line: the answer, whether the event asks a sign-up and whether they hold one, and whether «Înscrie» may be offered. */
-export type RaffleLine = { reason: RaffleReason; signUpMode: boolean; signedUp: boolean; maySignUp: boolean };
+/**
+ * One person's raffle line: the answer, whether the event asks a sign-up and whether they hold one, and whether «Înscrie» may be
+ * offered — and, for a volunteer (§NNN), whether they are confirmed for the raffle alone (with a minor's parent's way), whether
+ * «Confirmă pentru tombolă» may be offered, and whether they are a minor, whose press asks the parent's agreement.
+ */
+export type RaffleLine = {
+  reason: RaffleReason;
+  signUpMode: boolean;
+  signedUp: boolean;
+  maySignUp: boolean;
+  volunteer?: { confirmedForRaffle: boolean; guardianWay: RaffleGuardianWay | null; mayConfirmForRaffle: boolean; minor: boolean };
+};
 
 /**
  * The line from what was read — the one place it is decided, for one person and for a page of them. «Înscrie la tombolă» is offered
@@ -429,7 +524,19 @@ export async function readRaffleLine<T extends Record<string, unknown>>(db: Data
   const facts = await readRaffleGateFacts(db, person.eventId, now);
   if (!facts || !facts.settings.hasRaffle) return null;
   const entry = facts.settings.signUp ? await findRaffleEntry(db, ref) : null;
-  return raffleLineOf(person.person, facts, entry !== null, now);
+  const line = raffleLineOf(person.person, facts, entry !== null, now);
+  if (!person.volunteer) return line;
+  // A volunteer's page (§NNN): confirmed for the raffle alone, or «Confirmă pentru tombolă» to offer — by the tab's own rule.
+  const confirmedForRaffle = !person.person.confirmed && person.person.confirmedForRaffle === true;
+  return {
+    ...line,
+    volunteer: {
+      confirmedForRaffle,
+      guardianWay: confirmedForRaffle ? person.volunteer.guardianWay : null,
+      mayConfirmForRaffle: raffleConfirmationOffered({ volunteer: person.volunteer, settings: facts.settings, gateClosed: raffleSignUpClosedFor(facts, now, "VOLUNTEER") }),
+      minor: person.volunteer.minor,
+    },
+  };
 }
 
 /**

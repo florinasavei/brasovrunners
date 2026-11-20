@@ -7,12 +7,14 @@ import { getPathname } from "@/i18n/navigation";
 import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
 import { canReadRaffle } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { confirmVolunteerForRaffle } from "@/modules/volunteers/raffle-confirmation";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { deleteRaffleEntry, setEliteLineRaffleTick, signUpForRaffleAtDesk, signUpForRaffleByStaff } from "@/modules/volunteers/raffle-entries";
 import type { RafflePersonRef } from "@/modules/volunteers/raffle-roster";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
+import type { FormOutcome } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 import { returnedRowOf } from "@/modules/registrations/domain/desk-sections";
 import { listReturnAnchor } from "@/modules/registrations/domain/list-row";
@@ -71,6 +73,43 @@ export async function raffleSignUpAction(form: FormData): Promise<void> {
     if (!person) throw new DomainError("NOT_FOUND", "no such person");
     const outcome = await signUpForRaffleByStaff(getDb(), actor, { person, accepted: form.get("accepted") === "on", eventId: eventIdOf(form) }, new Date());
     await flashOutcome({ saved: outcome === "created" ? "raffleSignedUp" : "raffleAlready" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    refusal = error.code;
+  }
+  revalidatePath(getPathname({ locale: localeOf(form), href: "/admin/checkin/tombola" }));
+  redirect(backAddress(form, person, refusal ? { error: refusal } : {}));
+}
+
+/**
+ * «Confirmă pentru tombolă» (§NNN, amending §984 and §1023): the organizers' press on a volunteer who is not confirmed — on the row of
+ * the «Tombolă» tab and on the volunteer's own page (`back=volunteer`) —, asked first by the house's dialog, which names the person
+ * and, for a minor, holds the box «Părintele sau tutorele a fost de acord să participe la tombolă» (`raffleGuardianAgreed=on`) and the
+ * way the parent agreed (`raffleGuardianWay`). «Cu înscriere separată» the row's own tick «A acceptat regulamentul» (`accepted=on`)
+ * says the person accepted the rules: the press signs them up too. The capability at the door (`canTakeRaffleList`: the Organizer and
+ * the Administrators) and again in the service, which asks every rule (BR-REQ-060-01): without JavaScript there is no dialog, the
+ * minor's two answers post empty and the service refuses naming them. It emails nobody and expires no public cache. Back at the row
+ * or the page with its toast, or at the alert with the refusal's code.
+ */
+export async function raffleConfirmVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const person = personOf(form);
+  let refusal: string | null = null;
+  try {
+    const actor = await requireStaffCapability(canTakeRaffleList);
+    if (!person || person.table !== "volunteer") throw new DomainError("NOT_FOUND", "no such volunteer");
+    const result = await confirmVolunteerForRaffle(
+      getDb(),
+      actor,
+      {
+        eventId: eventIdOf(form),
+        volunteerId: person.id,
+        guardianAgreed: form.get("raffleGuardianAgreed") === "on",
+        guardianWay: field(form, "raffleGuardianWay"),
+        accepted: form.get("accepted") === "on",
+      },
+      new Date(),
+    );
+    await flashOutcome({ saved: result.changed ? (result.signedUp ? "raffleConfirmedSignedUp" : "raffleConfirmed") : "raffleConfirmedAlready" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     refusal = error.code;

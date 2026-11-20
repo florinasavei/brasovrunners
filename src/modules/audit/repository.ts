@@ -792,6 +792,14 @@ export type AuditAction =
    * — never a name or an address.
    */
   | "volunteer.became_runner"
+  /**
+   * «Confirmă pentru tombolă» (§NNN, `volunteers/raffle-confirmation.ts`), entity `event`: the Organizer or an Administrator — the
+   * actor — confirmed a volunteer who is not confirmed **for the event's raffle alone**. The metadata is the volunteer's id, whether
+   * a minor, how the parent or guardian agreed (`guardianWay`: PHONE, IN_PERSON, WRITING; null for an adult), the V number and
+   * whether the press drew it (`numberDrawn`), and the sign-up it wrote on an event «Cu înscriere separată» (`raffleEntryId`) —
+   * never a name. «Ziua cursei» → «Jurnal» reads it: who decided, when, how the parent agreed.
+   */
+  | "volunteer.raffle_confirmed"
   | "volunteer.signed_up"
   | "volunteer.exported"
   /** «Dă-i rolul …» (§761, §837): the organizers gave a volunteer one more role — the volunteer's id, the role's, the roles now held and those before. */

@@ -9,6 +9,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { confirmVolunteerForRaffle } from "@/modules/volunteers/raffle-confirmation";
 import { turnRunnerIntoVolunteer, turnVolunteerIntoRunner } from "@/modules/volunteers/transform";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
@@ -26,7 +27,9 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
  *   the event's row and then the person's, in that order (`changeVolunteer`, `transform.ts`) — taken the other way
  *   round by one of them, PostgreSQL would abort one press with a deadlock (40P01);
  * - runners turned into volunteers at once on a full race free their places through the one allocator: each place is
- *   offered once, nobody is left on both lists, and the volunteers' V numbers are all different.
+ *   offered once, nobody is left on both lists, and the volunteers' V numbers are all different;
+ * - §NNN: «Confirmă pentru tombolă» draws its V number under the same lock as «Confirmă»: the two pressed at once on twenty
+ *   people draw twenty different numbers, and both pressed on one person draw one, never a second.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -138,6 +141,32 @@ describe("§1023 BR-REQ-050-02 the volunteers' V numbers and the transforms, pre
     expect(outcomes(settled)).toEqual(Array.from({ length: 20 }, () => "ok"));
     const numbers = (await db.select({ volunteerNumber: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))).map((row) => row.volunteerNumber);
     expect([...numbers].sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual(Array.from({ length: 20 }, (_, index) => 1 + index));
+  });
+
+  it("§NNN «Confirmă pentru tombolă» and «Confirmă» pressed at the same instant draw different V numbers — on twenty people, and both on one person", async () => {
+    const { eventId, roleId } = await race(100);
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
+    const people = await Promise.all(Array.from({ length: 20 }, (_, index) => offered(eventId, roleId, `raffle-${index}`)));
+    const forRaffle = (id: string) => confirmVolunteerForRaffle(db, admin!, { eventId, volunteerId: id, guardianAgreed: false, guardianWay: "", accepted: false }, NOW);
+    const asVolunteer = (id: string) => changeVolunteer(db, admin!, { kind: "setState", eventId, id, state: "CONFIRMED" }, NOW, { sendEmail: false });
+
+    // Half confirmed for the raffle alone, half as volunteers: one line under the event row's lock, twenty numbers.
+    const settled = await Promise.allSettled(people.map((id, index) => (index % 2 === 0 ? forRaffle(id) : asVolunteer(id))));
+    expect(outcomes(settled)).toEqual(Array.from({ length: 20 }, () => "ok"));
+    const numbersOf = async () => (await db.select({ volunteerNumber: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))).map((row) => row.volunteerNumber);
+    expect([...(await numbersOf())].sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual(Array.from({ length: 20 }, (_, index) => 1 + index));
+
+    // Both presses on one person at once, round after round: a line, never a deadlock, and one number each — never a second.
+    for (let round = 0; round < 8; round++) {
+      const id = await offered(eventId, roleId, `raffle-both-${round}`);
+      const both = await Promise.allSettled([forRaffle(id), asVolunteer(id)]);
+      expect(outcomes(both), `round ${round}`).toEqual(["ok", "ok"]);
+      const [row] = await db.select({ state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, id));
+      expect(row.state, `round ${round}`).toBe("CONFIRMED");
+      expect(row.volunteerNumber, `round ${round}`).toBe(21 + round);
+    }
+    const drawn = (await numbersOf()).flatMap((number) => (number === null ? [] : [number]));
+    expect(new Set(drawn).size).toBe(drawn.length);
   });
 
   it("«Confirmă» and «Transformă în alergător» pressed on one person at once both go through, round after round: a line, never a deadlock", async () => {

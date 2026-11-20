@@ -22,6 +22,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import { RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
 import { canTakeRaffleList, raffleWithoutNumber, readRaffleRoster } from "@/modules/volunteers/raffle-list";
 import type { RaffleRosterRow } from "@/modules/volunteers/raffle-roster";
+import { raffleConfirmationWords, raffleConfirmForm } from "@/modules/volunteers/ui/RaffleLines";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import ChipLink from "@/shared/ui/ChipLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -31,7 +32,7 @@ import PrintButton from "@/shared/ui/PrintButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
-import { raffleDeleteEntryAction, raffleDeskSignUpAction, raffleElitePresentAction, raffleExclusionAction, raffleSignUpAction } from "./actions";
+import { raffleConfirmVolunteerAction, raffleDeleteEntryAction, raffleDeskSignUpAction, raffleElitePresentAction, raffleExclusionAction, raffleSignUpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -53,7 +54,7 @@ const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
 const ONLY_ON_PAPER = { display: "none", "@media print": { display: "block" } } as const;
 
 /** The refusals the page's alert says, by code — the rest are the generic ones the backoffice knows. */
-const ALERT_CODES = ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RAFFLE_SIGN_UP_CLOSED", "RAFFLE_NOT_ELIGIBLE", "RAFFLE_RULES_NOT_ACCEPTED"] as const;
+const ALERT_CODES = ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RAFFLE_SIGN_UP_CLOSED", "RAFFLE_NOT_ELIGIBLE", "RAFFLE_RULES_NOT_ACCEPTED", "RAFFLE_NOT_HELD", "RAFFLE_GUARDIAN_MISSING"] as const;
 
 /**
  * «Ziua cursei» → «Tombolă» (§984; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
@@ -146,8 +147,39 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const closedWhy = roster && signUpMode && roster.settings.signUpOpen && roster.gateClosed !== null ? t("raffle.settings.why", { why: t(`raffle.settings.closedWhy.${roster.gateClosed}`) }) : null;
 
   // The organizers' own exclusion, «scos de organizatori», is said to them alone — every other desk role reads «Nu» there, as at the desk (§984).
+  // A volunteer confirmed for the raffle alone (§NNN) says so beside «Da», to every desk role: a raffle's confirmation, not a volunteer's.
   const reasonWords = (row: RaffleRosterRow) =>
-    row.reason === "in" ? t("raffle.yes") : !organizer && row.reason === "takenOut" ? t("raffle.no") : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`;
+    row.reason === "in"
+      ? row.raffleConfirmation
+        ? `${t("raffle.yes")} · ${raffleConfirmationWords(t, row.raffleConfirmation.guardianWay)}`
+        : t("raffle.yes")
+      : !organizer && row.reason === "takenOut"
+        ? t("raffle.no")
+        : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`;
+
+  // «Confirmă pentru tombolă» (§NNN): the organizers' press on a volunteer who is not confirmed, one form per row that may be — each
+  // asked first and worded on the server before the table is drawn (the table draws a row twice, the phone's card and the wide row).
+  const confirmForms = new Map<string, ReactNode>();
+  if (organizer) {
+    for (const row of everybody.filter((one) => one.mayConfirmForRaffle && keeps(filter)(one))) {
+      confirmForms.set(
+        row.ref.id,
+        await raffleConfirmForm({
+          confirmAction: raffleConfirmVolunteerAction,
+          hidden: (
+            <>
+              {hidden(row)}
+              <input type="hidden" name="back" value="raffle" />
+            </>
+          ),
+          name: row.name,
+          minor: row.minor,
+          signUpMode,
+          testId: "raffle-confirm-form",
+        }),
+      );
+    }
+  }
 
   // The desk's «Înscrie la tombolă» (DESK, §1014) on a row, for a desk role that is not an organizer: the person accepted the rules on
   // paper or aloud, which the tick records; back to the tab at the row, the filter kept. A registration alone: the desk's door takes no other.
@@ -169,6 +201,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
 
   const organizerActions = (row: RaffleRosterRow): ReactNode => (
     <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", ...NOT_ON_PAPER }}>
+      {confirmForms.get(row.ref.id)}
       {row.maySignUp && (
         <Box component="form" action={raffleSignUpAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="raffle-sign-up-form">
           {hidden(row)}

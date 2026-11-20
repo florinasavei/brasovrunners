@@ -503,8 +503,18 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <TickButton checked={row.inRaffle} aria-label={`${t("volunteers.screen.raffleTick")}: ${shortText(row.name)}`} data-testid="volunteer-raffle-tick">
         {t("volunteers.screen.raffleTick")}
       </TickButton>
-      {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words. */}
-      {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
+      {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words — and a volunteer who takes part without being
+          «Confirmat» is one the organizers confirmed for the raffle alone (§NNN): said so, a raffle's confirmation, not a volunteer's. */}
+      {raffleReasons.has(row.id) && (
+        <RaffleStandingNote
+          words={
+            raffleReasons.get(row.id) === "in" && row.state !== "CONFIRMED"
+              ? `${raffleNoteWords(t, "in")} · ${t("raffle.confirm.state")}`
+              : raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")
+          }
+          takesPart={raffleReasons.get(row.id) === "in"}
+        />
+      )}
     </Box>
   );
 

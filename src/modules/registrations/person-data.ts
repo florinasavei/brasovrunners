@@ -251,6 +251,14 @@ export type PersonData = {
     /** «Prezent» (§983): whether the organizers marked the person present on the day — unticked is absent — a column of the row like any other (art. 15 GDPR). */
     present: boolean;
     /**
+     * «Confirmă pentru tombolă» (§NNN): when the organizers confirmed the person for the event's raffle alone — null while they did
+     * not —, and, for a minor, that the parent or guardian agreed and how (by telephone, in person, in writing): columns of the row like
+     * any other (art. 15 GDPR). The staff account that pressed it is the club's own record, as a note's author is (§777): not listed.
+     */
+    raffleConfirmedAt: Date | null;
+    raffleGuardianAgreed: boolean | null;
+    raffleGuardianWay: (typeof eventVolunteers.$inferSelect)["raffleGuardianWay"];
+    /**
      * «Planul voluntarilor» (§949): the point of the route the organizers put the person at, by the name the club gave it; null while
      * they stand at none — what the row's `checkpoint_id` says, a column of the row like any other (art. 15 GDPR).
      */
@@ -567,6 +575,9 @@ async function collectPersonData<T extends Record<string, unknown>>(
       hasKit: eventVolunteers.hasKit,
       inRaffle: eventVolunteers.inRaffle,
       present: eventVolunteers.present,
+      raffleConfirmedAt: eventVolunteers.raffleConfirmedAt,
+      raffleGuardianAgreed: eventVolunteers.raffleGuardianAgreed,
+      raffleGuardianWay: eventVolunteers.raffleGuardianWay,
       checkpointName: eventCheckpoints.nameRo,
       raceDayDecision: eventVolunteers.raceDayDecision,
       shirtSize: eventVolunteers.shirtSize,
