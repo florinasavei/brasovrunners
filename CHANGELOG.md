@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.85-2026-11-20
+
+- **«PR Kit» for the whole team** — a new tab in the backoffice, for every role including the volunteers: the club's logo and its mountains in the club's colour, white and black as SVG, PNG and vector PDF, six A4 sticker sheets (with a QR code to the site, or the logo alone), the A4 «Suntem pe YouTube» poster, and the club's colour for a print shop. §1015.
 ## BR-V4.84-2026-11-20
 
 - **«Clasament» offers every time «Cronometrare» recorded for a number** — under a line's «Timp», «Timpi la sosire» lists each time its number was pressed, with who pressed it and when, and «Folosește» makes one of them the line's time after a question, with no reload while other runners keep arriving; a disqualified runner is left as decided, the places follow and «Istoricul sosirilor» says who chose it. §1012.
