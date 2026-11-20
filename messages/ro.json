@@ -3925,6 +3925,17 @@
             "toPrint": "de tipărit: {count}",
             "spares": "rezervă {from}–{to}"
           },
+          "raffle": {
+            "off": "nu avem",
+            "groups": {
+              "RUNNER": "alergători",
+              "ELITE": "elite",
+              "VOLUNTEER": "voluntari"
+            },
+            "nobody": "nicio grupă bifată",
+            "automatic": "din oficiu",
+            "signUp": "cu înscriere separată"
+          },
           "bibDesign": {
             "parts": "{parts}",
             "footer": "subsol: {parts}"
@@ -4144,6 +4155,7 @@
         }
       },
       "raffle": {
+        "title": "Tombolă",
         "who": "Cine poate participa la tombolă",
         "runners": "Alergătorii",
         "elites": "Elitele",
@@ -9978,6 +9990,14 @@
               ]
             },
             {
+              "title": "Tombola în ziua cursei",
+              "steps": [
+                "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
+                "Voluntarii participă doar cu număr. Dacă sub «Voluntari: …» scrie câți voluntari confirmați nu au număr, apasă «Mergi la numerele voluntarilor», scrie la «Numerele voluntarilor încep de la» un număr peste ale alergătorilor și apasă «Salvează numerele»: fiecare voluntar confirmat primește pe loc un număr.",
+                "Înapoi la «Tombolă», linia a dispărut și voluntarii confirmați participă."
+              ]
+            },
+            {
               "title": "O schimbare la eveniment",
               "steps": [
                 "«Alergări» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
@@ -10291,6 +10311,18 @@
                 "Cineva înscris, chiar cu BIB-ul tipărit, primește un BIB gol? «Înscrieri» → înscrierea lui → «Dă-i un BIB gol» → la «BIB-ul gol» alege numărul de pe hârtie → «Dă-i BIB-ul». Numărul vechi se retrage, iar BIB-ul tipărit cu el nu mai e bun.",
                 "O invitație poate da un BIB gol: la «Trimite invitații noi» bifează «La confirmare primește un BIB gol»; când se confirmă, persoana primește cel mai mic BIB gol liber atunci.",
                 "Cine are fiecare BIB gol dat apare sub «Numere de rezervă pentru înscrierile de la fața locului»: numărul, apoi numele, cu link spre înscriere."
+              ]
+            },
+            {
+              "title": "Tombola: cine participă și cum",
+              "steps": [
+                "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Tombolă». Închisă, bara ei spune cine participă și cum, de pildă „Alergători, elite, voluntari · din oficiu”.",
+                "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
+                "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
+                "Voluntarii participă doar cu număr. În cardul «Voluntari» al evenimentului, la «Numerele voluntarilor încep de la» scrie un număr peste ale alergătorilor și apasă «Salvează numerele»: fiecare voluntar confirmat primește pe loc un număr, iar cei confirmați mai târziu, la confirmare.",
+                "Până atunci, sub «Voluntarii» scrie câți voluntari confirmați nu au număr, deci nu intră la tombolă; «Mergi la numerele voluntarilor» te duce la căsuța lor.",
+                "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
+                "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți și dacă participă; aceeași linie despre voluntarii fără număr stă sub «Voluntari: …»."
               ]
             },
             {
@@ -13236,7 +13268,7 @@
       "title": "Tombolă",
       "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
       "noEvent": "Niciun eveniment de arătat.",
-      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
+      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs” → „Tombolă”.",
       "event": "Evenimentul",
       "show": "Arată",
       "settings": {
@@ -13273,6 +13305,12 @@
         "VOLUNTEER": "Voluntari: {count}",
         "present": "Prezenți dintre ei: {count}"
       },
+      "volunteersWithoutNumber": {
+        "one": "{count} voluntar confirmat nu are număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.",
+        "few": "{count} voluntari confirmați nu au număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.",
+        "other": "{count} de voluntari confirmați nu au număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr."
+      },
+      "volunteersWithoutNumberLink": "Mergi la numerele voluntarilor",
       "filters": {
         "label": "Filtru",
         "all": "Toți: {count}",

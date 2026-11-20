@@ -9,18 +9,20 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { listEventsAcceptingRegistrations, listEventsForDesk } from "@/modules/registrations/admin-repository";
-import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
+import { canEditEventFields, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import { RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
+import { leftOutForNoNumber, RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
 import { canTakeRaffleList, readRaffleRoster } from "@/modules/volunteers/raffle-list";
 import type { RaffleRosterRow } from "@/modules/volunteers/raffle-roster";
+import RaffleNumberHint, { VOLUNTEER_NUMBERS_ANCHOR } from "@/modules/volunteers/ui/RaffleNumberHint";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import ChipLink from "@/shared/ui/ChipLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -104,6 +106,14 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const eventLabel = (candidate: (typeof events)[number]) =>
     `${candidate.title ?? candidate.id} · ${typedStartOrNull(candidate) ? formatDay(candidate.startsAt, { locale, timeZone: candidate.timezone, style: "short" }) : t("editor.dateToBeAnnounced")}`;
   const tabPath = getPathname({ locale, href: "/admin/checkin/tombola" });
+  // The event's editor, where the raffle's settings («Tombolă», `#box-raffle`) and the volunteers' series (`#box-volunteer-numbers`) are.
+  const editorPath = eventId ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } }) : null;
+  /*
+    Why the volunteers are out (§NNN): the confirmed volunteers the roster's one answer leaves out for want of a number alone — none
+    while «Voluntarii» is unticked (`groupNotAllowed` comes first) — counted from the rows read above, no query of its own. Said to
+    whoever can act on it: the volunteers' series is set by who works the volunteers (`canManageVolunteers`, the card's own door).
+  */
+  const volunteersOut = roster && canManageVolunteers(actor) ? leftOutForNoNumber(roster.rows, "VOLUNTEER") : 0;
   const filterHref = (value: Filter) => `${tabPath}?${new URLSearchParams({ ...(eventId ? { eventId } : {}), ...(value === "all" ? {} : { filter: value }) }).toString()}`;
 
   // What every form of a row posts besides its own boxes: the page's language, its event, the filter in force and the person.
@@ -307,12 +317,13 @@ export default async function RafflePage({ params, searchParams }: Props) {
                 {closedWhy}
               </Typography>
             )}
-            {/* The settings are the editor's, whose save is the Administrator's (§542): the way there for who may press it. */}
+            {/* The settings are the editor's, whose save is the Administrator's (§542): the way there for who may press it — to the
+                «Tombolă» fold itself (§NNN), which opens with every card around it on arrival (`OpenFoldFromHash`). */}
             {canEditEventFields(actor) && (
               <Box sx={NOT_ON_PAPER}>
                 <GlyphButton
                   icon="edit"
-                  href={`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-bibs`}
+                  href={`${editorPath}#box-raffle`}
                   variant="text"
                   size="small"
                   sx={TAP_TARGET}
@@ -331,6 +342,22 @@ export default async function RafflePage({ params, searchParams }: Props) {
               t("raffle.counts.present", { count: String(roster.counts.present) }),
             ].join(" · ")}
           </Typography>
+          {/*
+            Why the volunteers are out (§NNN; the owner, 2026-11-20: «deși voluntarii sunt bifați aici… cumva sunt excluși de pe lista de
+            la tombolă»): right under «Voluntari: N», how many confirmed volunteers wear no number and how they get one — the volunteers'
+            series on the editor page, which numbers every confirmed one at once. Gone once they all have one or «Voluntarii» is
+            unticked; never on paper, where the table is the draw's sheet.
+          */}
+          {volunteersOut > 0 && editorPath && (
+            <Box sx={NOT_ON_PAPER}>
+              <RaffleNumberHint
+                text={t(`raffle.volunteersWithoutNumber.${countForm(volunteersOut, locale)}`, { count: volunteersOut })}
+                linkLabel={t("raffle.volunteersWithoutNumberLink")}
+                href={`${editorPath}#${VOLUNTEER_NUMBERS_ANCHOR}`}
+                testId="raffle-volunteers-without-number"
+              />
+            </Box>
+          )}
 
           {/* The four views, the house's filter pills (`ChipLink`, as the «Voluntari» list's «Prezenți» and «Absenți»): each says how
               many it holds, the one in force is marked, and pressing it again is «Toți». «Doar prezenții» are the present-only file's people. */}

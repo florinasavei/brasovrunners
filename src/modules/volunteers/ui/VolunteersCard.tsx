@@ -31,6 +31,7 @@ import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { badgeRoleText } from "../badges/badge-design";
 import RoleColourFields from "../badges/ui/RoleColourFields";
 import RoleColourSample from "../badges/ui/RoleColourSample";
+import { VOLUNTEER_NUMBERS_ANCHOR } from "./RaffleNumberHint";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
 import { countForm } from "@/i18n/count-form";
@@ -873,8 +874,9 @@ export default async function VolunteersCard({
           </Box>
           {/* «Numerele voluntarilor încep de la» (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — «Serie proprie»): the first
               number of the volunteers' own series, a box with its own «Salvează» like the card's ticks — never the editor's save. Saved, every confirmed
-              volunteer without a number gets theirs at once; emptied, nobody new draws one and the numbers given stay. */}
-          <Box component="form" action={setVolunteerNumbersStartAction} data-testid="volunteer-numbers-form">
+              volunteer without a number gets theirs at once; emptied, nobody new draws one and the numbers given stay. Its anchor (§NNN)
+              is where the raffle's line «… voluntari confirmați nu au număr» sends the reader, from the editor and from «Tombolă». */}
+          <Box component="form" action={setVolunteerNumbersStartAction} id={VOLUNTEER_NUMBERS_ANCHOR} sx={{ scrollMarginTop: 16 }} data-testid="volunteer-numbers-form">
             {hidden}
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "flex-start" }}>
               <RecallField
