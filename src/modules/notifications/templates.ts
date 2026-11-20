@@ -2012,11 +2012,12 @@ function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[
 /**
  * The sign-in steps of a colleague's or a member's invitation (§1000; the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»), numbered, in this half's language, each its own paragraph —
- * so a text the club saves from the editor keeps them as it keeps any sentence. Right whichever email arrives first.
+ * so a text the club saves from the editor keeps them as it keeps any sentence.
  *
  * `zitadel` — the press asked Zitadel for the account: who sends which email, Zitadel's named by its subject (in the
- * account's language, `zitadelSubject`); Zitadel's first, then the button; a line for an account that already signs in;
- * and the trap. Zitadel's sign-in page sends a new code each time somebody without a password yet types their address —
+ * account's language, `zitadelSubject`) and said to come first, about a minute and a half before this one — the press lets
+ * the club's go that long after Zitadel answered (§NNN, `staff-identity/service.ts#INVITATION_GAP_MS`); Zitadel's first,
+ * then the button; a line for an account that already signs in; and the trap. Zitadel's sign-in page sends a new code each time somebody without a password yet types their address —
  * an attempt before step 1, or its «Resend code» — and a new code cancels the one before, so the link in Zitadel's first
  * email stops working. `self` — no key, or Zitadel refused: the button, then the account made at the sign-in page with
  * exactly this address. The page's labels as it shows them (`ZITADEL_LOGIN_LABELS`).
@@ -2040,7 +2041,7 @@ function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, 
       ];
     }
     return [
-      `Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „**${subject}**” și butonul „**${accept}**” (caută-l și în Spam). Pașii, în ordine:`,
+      `Primești două emailuri: întâi unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „**${subject}**” și butonul „**${accept}**”, cam cu un minut și jumătate înaintea acestuia (caută-l și în Spam); apoi acesta, de la noi. Pașii, în ordine:`,
       `1. Deschide emailul de la Zitadel, apasă „${accept}” și alege-ți parola.`,
       `2. Apoi apasă „${button}”, mai jos, și intră cu adresa ${email} și parola aleasă.${access}`,
       "Ai deja cont (ai mai intrat la noi)? Sari peste pasul 1.",
@@ -2060,7 +2061,7 @@ function signInStepsWords(locale: EmailLocale, d: TemplateData, button: string, 
     ];
   }
   return [
-    `You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “**${subject}**” and the button “**${accept}**” (look in your spam folder too). The steps, in order:`,
+    `You get two emails: first one from Zitadel, our sign-in system, with the subject “**${subject}**” and the button “**${accept}**”, about a minute and a half before this one (look in your spam folder too); then this one, from us. The steps, in order:`,
     `1. Open the email from Zitadel, press “${accept}” and choose your password.`,
     `2. Then press “${button}”, below, and sign in with ${email} and the password you chose.${access}`,
     "Already have an account (signed in with us before)? Skip step 1.",

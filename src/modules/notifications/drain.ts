@@ -128,9 +128,9 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
 }
 
 /**
- * A press's own rows sent at their turn, after its response (§NNN, amending §1000; the owner, 2026-11-20: «iarasi, astea vin
- * in avelasi timp, ti-am zis sa fie un pic de delay!»): the club's invitation, which the press let go a minute and a half after
- * Zitadel answered with its own email on the way (`staff-identity/service.ts#releaseInvitationHold`). The same one-shot
+ * A press's own rows sent at their turn, after its response (§NNN, amending §1000: the two sign-in emails still arrived
+ * together, and the owner had asked for a delay between them): the club's invitation, which the press let go a minute and a
+ * half after Zitadel answered with its own email on the way (`staff-identity/service.ts#releaseInvitationHold`). The same one-shot
  * `after()` as «Trimite acum»'s above, limited to these ids and sent whatever «Când pleacă emailurile» says — but it waits
  * first, once, until `dueAt`, the last of their turns, as the relay's drain below waits for its retries (§778); a turn further
  * than `TURN_WAIT_MAX_MS` is not waited for (`send-rows-now.ts#sendOutboxRowsAtTurn`). The staff page's `maxDuration` is

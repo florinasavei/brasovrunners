@@ -452,9 +452,9 @@ function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_
 }
 
 /**
- * The gap between Zitadel's email and the club's (§NNN, amending §1000; the owner, 2026-11-20: «iarasi, astea vin in avelasi
- * timp, ti-am zis sa fie un pic de delay!»): when Zitadel answered a press with its own email on the way, the club's invitation
- * is due this long after that answer (`releaseInvitationHold`), and the press's own drain sends it then
+ * The gap between Zitadel's email and the club's (§NNN, amending §1000, whose ask was «cumva trebuie un delay intre mailurile
+ * de logare» — and the two still arrived together): when Zitadel answered a press with its own email on the way, the club's
+ * invitation is due this long after that answer (`releaseInvitationHold`), and the press's own drain sends it then
  * (`sendInvitationsAtTheirTurn`) — so the person opens Zitadel's first, chooses the password, and finds the steps after it.
  */
 export const INVITATION_GAP_MS = 90_000;

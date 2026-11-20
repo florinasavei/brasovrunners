@@ -339,8 +339,9 @@ describe("the banner after «Adaugă mai mulți membri» says an invitation was 
 
 /**
  * §1000 — after «Adaugă» or «Retrimite invitația», one line on the page says what the person receives, by Zitadel's answer:
- * two emails, Zitadel's (named by its button) and the club's — in no promised order, which neither sender can keep; the club's
- * alone; or the one email with the person's own steps — a refusal with its reason.
+ * two emails, Zitadel's (named by its button) now and the club's a minute and a half later — the order and the gap the press
+ * keeps since §NNN, sending ours itself at that gap; the club's alone; or the one email with the person's own steps — a
+ * refusal with its reason.
  */
 describe("§1000 the inviter's one line after a press, as the page draws it", () => {
   async function line(query: Record<string, string>) {
@@ -353,7 +354,10 @@ describe("§1000 the inviter's one line after a press, as the page draws it", ()
 
   it("after «Adaugă», for each answer Zitadel gives", async () => {
     expect(await line({ saved: "invited", invite: "invited" })).toEqual([
-      { severity: "success", words: "Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii." },
+      {
+        severity: "success",
+        words: "Adăugat. Primește două emailuri: unul de la Zitadel acum, cu butonul „Acceptare invitație”, pentru parolă, și, după un minut și jumătate, unul de la noi, cu pașii.",
+      },
     ]);
     expect((await line({ saved: "invited", invite: "exists" }))[0].words).toContain("cu un cod nou");
     expect((await line({ saved: "invited", invite: "ready" }))[0].words).toContain("primește doar emailul nostru");
@@ -369,7 +373,7 @@ describe("§1000 the inviter's one line after a press, as the page draws it", ()
   it("after «Retrimite invitația», and none after «… fără invitație» or another press", async () => {
     expect((await line({ saved: "reinvited", invite: "invited" }))[0]).toEqual({
       severity: "success",
-      words: "Trimisă din nou. Primește două emailuri: unul de la Zitadel, cu un cod nou (cel vechi nu mai merge), și unul de la noi, cu pașii.",
+      words: "Trimisă din nou. Primește două emailuri: unul de la Zitadel acum, cu un cod nou (cel vechi nu mai merge), și, după un minut și jumătate, unul de la noi, cu pașii.",
     });
     expect((await line({ saved: "reinvited", invite: "ready" }))[0].words).toContain("doar de la noi");
     expect((await line({ saved: "reinvited", invite: "unconfigured" }))[0].severity).toBe("info");

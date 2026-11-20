@@ -1362,11 +1362,14 @@ it "Add" creates the account too and Zitadel sends the password link.
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
 5. Check: Echipa → add yourself with a second address → the alert says two emails are on their
-   way, Zitadel's first, and two mails arrive: Zitadel's from `noreply@mail.<club domain>`
-   (Zitadel's SMTP, §35), subject «Invitație la …» («Invitation to …» for an English account),
-   and the club's (through Mailgun), whose numbered steps say to open Zitadel's first. The
-   club's leaves only once Zitadel has answered (`DECISIONS.md` §1000). A colleague who never
-   signed in has "Resend the invitation" on their row.
+   way, Zitadel's now and ours a minute and a half later, and two mails arrive in that order:
+   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35), subject «Invitație la …»
+   («Invitation to …» for an English account), and about ninety seconds after it the club's
+   (through Mailgun), whose numbered steps say to open Zitadel's first. The club's leaves only
+   once Zitadel has answered (`DECISIONS.md` §1000), and the press itself sends it that gap
+   after the answer, whatever «Când pleacă emailurile» says (`DECISIONS.md` §NNN) — so wait
+   the minute and a half before calling it lost. A colleague who never signed in has "Resend
+   the invitation" on their row.
 6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §1000).
    Zitadel writes its invitation in its default words; written here, the two emails speak the
    same language. Zitadel console → **Organization** → **Settings** → **Message Texts** →

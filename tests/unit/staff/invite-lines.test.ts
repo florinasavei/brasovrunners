@@ -8,7 +8,8 @@ import { INVITE_LINE_KEYS, inviteLineOf } from "@/modules/staff-identity/domain/
 /**
  * §1000 — «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»): what the person receives — two emails, Zitadel's first, or
- * the club's alone — for each answer Zitadel gives, in both languages.
+ * the club's alone — for each answer Zitadel gives, in both languages. Since §NNN (2026-11-20: the two still arrived
+ * together) the two say when: Zitadel's now, ours a minute and a half later — the press sends it at that gap itself.
  */
 const staff = { ro: ro.Admin.staff as Record<string, unknown>, en: en.Admin.staff as Record<string, unknown> };
 
@@ -44,16 +45,28 @@ describe("§1000 the inviter's one line after a press", () => {
         expect((line as string).length, `${locale} staff.${key}`).toBeLessThanOrEqual(200);
       }
     }
-    // Two emails and who sends which — never an order, which neither Zitadel nor the outbox promises (the review, §1000).
-    expect(staff.ro.inviteSent).toBe("Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii.");
-    expect(staff.en.inviteSent).toBe("Added. They get two emails: one from Zitadel, with the “Accept invite” button, for the password, and one from us, with the steps.");
+    // Two emails, who sends which and — since §NNN, which makes it true — when: Zitadel's now, ours a minute and a half later.
+    expect(staff.ro.inviteSent).toBe(
+      "Adăugat. Primește două emailuri: unul de la Zitadel acum, cu butonul „Acceptare invitație”, pentru parolă, și, după un minut și jumătate, unul de la noi, cu pașii.",
+    );
+    expect(staff.en.inviteSent).toBe(
+      "Added. They get two emails: one from Zitadel now, with the “Accept invite” button, for the password, and, a minute and a half later, one from us, with the steps.",
+    );
     for (const key of ["inviteExists", "resendSent"]) {
-      expect(staff.ro[key], key).toContain("unul de la Zitadel");
-      expect(staff.en[key], key).toContain("one from Zitadel");
+      expect(staff.ro[key], key).toContain("unul de la Zitadel acum");
+      expect(staff.ro[key], key).toContain("și, după un minut și jumătate, unul de la noi, cu pașii");
+      expect(staff.en[key], key).toContain("one from Zitadel now");
+      expect(staff.en[key], key).toContain("and, a minute and a half later, one from us, with the steps");
     }
+    // Zitadel's comes first in each sentence, as it does in the inbox.
     for (const key of ["inviteSent", "inviteExists", "resendSent"]) {
-      expect(staff.ro[key], key).not.toContain("întâi");
-      expect(staff.en[key], key).not.toContain("first from");
+      expect(staff.ro[key] as string, key).toMatch(/de la Zitadel acum.*după un minut și jumătate, unul de la noi/);
+      expect(staff.en[key] as string, key).toMatch(/from Zitadel now.*a minute and a half later, one from us/);
+    }
+    // Where no email of Zitadel's is coming, no gap is said.
+    for (const key of ["inviteReady", "inviteManual", "inviteFailed", "resendReady", "resendManual", "resendFailed"]) {
+      expect(staff.ro[key], key).not.toContain("minut și jumătate");
+      expect(staff.en[key], key).not.toContain("a minute and a half");
     }
     for (const key of ["inviteReady", "inviteFailed", "resendFailed"]) {
       expect(staff.ro[key], key).toContain("doar emailul nostru");
@@ -84,7 +97,14 @@ describe("§1000 the inviter's one line after a press", () => {
     for (const locale of ["ro", "en"] as const) {
       expect(Object.keys(outcomes(locale)).sort()).toEqual(["created", "failed", "invited", "ready", "unconfigured"]);
     }
-    expect(outcomes("ro").created).toContain("întâi de la Zitadel");
+    // §NNN: Zitadel's now, ours a minute and a half later, for every member Zitadel emailed.
+    for (const key of ["created", "invited"]) {
+      expect(outcomes("ro")[key], key).toContain("unul de la Zitadel acum");
+      expect(outcomes("ro")[key], key).toContain("după un minut și jumătate, unul de la noi");
+      expect(outcomes("en")[key], key).toContain("one from Zitadel now");
+      expect(outcomes("en")[key], key).toContain("a minute and a half later, one from us");
+      for (const locale of ["ro", "en"] as const) expect(outcomes(locale)[key].length, `${locale} ${key}`).toBeLessThanOrEqual(200);
+    }
     expect(outcomes("ro").ready).toBe("are deja cont, cu parolă: doar emailul nostru");
     expect(outcomes("en").ready).toBe("already has an account with a password: only our email");
   });
