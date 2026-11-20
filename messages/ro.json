@@ -2913,7 +2913,9 @@
       "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
       "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
-      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start."
+      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start.",
+      "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
+      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
     },
     "editor": {
       "draftPreview": {
@@ -9606,7 +9608,7 @@
             {
               "title": "Ce poate fiecare rol",
               "steps": [
-                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența — și tabul «Tombolă», când cursa are tombolă. Vede nume, stare și număr, niciodată o adresă de email.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
                 "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă; lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
                 "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
@@ -9727,6 +9729,15 @@
                 "Vin mai mulți deodată: apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
+              "title": "La tombolă: cine participă, și înscrie pe cineva",
+              "steps": [
+                "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
+                "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
+                "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
+                "Fișierele pentru extragere, scoaterea cuiva de la tombolă, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i."
               ]
             },
             {
@@ -10010,7 +10021,7 @@
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
-                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
+                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând. Un număr trecut de mai multe ori la «Cronometrare» își arată sub «Timp» toți timpii prinși, cu cine l-a trecut și când: «Folosește» pune alt timp în clasament, după o întrebare — nu și la un descalificat, a cărui «Stare» o schimbi de mână.",
                 "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul. Ați făcut o probă înainte de cursă? Administratorul o șterge cu «Resetează clasamentul»."
               ]
             },
@@ -12708,7 +12719,7 @@
       "delete": "Șterge",
       "deleteFor": "Șterge rezultatul: {runner}",
       "deleteTitle": "Ștergi rezultatul?",
-      "deleteBody": "Rezultatul alergătorului cu numărul {bibNumber} dispare din clasament. Locurile celorlalți se recalculează.",
+      "deleteBody": "Rezultatul alergătorului cu numărul {bibNumber} dispare din clasament. Locurile celorlalți se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
       "publish": {
         "title": "Pe pagina evenimentului",
         "label": "Clasamentul e public pe pagina evenimentului",
@@ -12841,6 +12852,7 @@
           "created": "a adăugat {runner}: {status}",
           "updated": "a modificat {runner}: {status}",
           "updatedBoxes": "a modificat {runner}: {status} ({boxes})",
+          "chosen": "a ales pentru {runner} timpul {time} dintre cele înregistrate",
           "deleted": "a șters rezultatul {runner} ({status})",
           "gunSet": "a dat startul la {time}",
           "gunMoved": "a mutat startul la {time} (era {previous})",
@@ -12864,6 +12876,17 @@
           "registration": "înscriere",
           "nameAgreed": "acordul pentru nume"
         }
+      },
+      "recorded": {
+        "title": "Timpi la sosire:",
+        "by": "{name}, la {at}",
+        "current": "în clasament",
+        "use": "Folosește",
+        "useFor": "Folosește {time} pentru {runner}",
+        "confirmTitle": "Folosești acest timp?",
+        "confirmBody": "Pui {time} ca timp pentru {runner}? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
+        "confirmBodyAny": "Pui timpul ales ca timp al alergătorului? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
+        "changed": "Timpul nu s-a schimbat: între timp altcineva a modificat rândul acestui alergător. Uită-te din nou la rând și alege din nou."
       },
       "reset": {
         "title": "Resetează clasamentul",
@@ -13260,6 +13283,7 @@
         "few": "{count} participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
         "other": "{count} de participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului."
       },
+      "introDesk": "Toți alergătorii, elitele și voluntarii evenimentului: cine participă la tombolă și cine e prezent. Cu înscriere separată, înscrie aici un alergător după ce a acceptat regulamentul.",
       "noEvent": "Niciun eveniment de arătat.",
       "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
       "event": "Evenimentul",
@@ -15646,6 +15670,8 @@
         "other": "Am citit {count} de rânduri din CSV. Numerele fără înscriere ({new}) sunt rânduri noi: scrie-le numele. Nimic nu s-a salvat încă."
       },
       "resultDeleted": "Rezultat șters. Locurile celorlalți s-au recalculat.",
+      "resultTimeChosen": "#{bib}: timpul ales e acum în clasament, iar locurile s-au recalculat.",
+      "resultTimeUnchanged": "#{bib} avea deja acest timp; nimic de schimbat.",
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
