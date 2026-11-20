@@ -14,6 +14,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
+import { sealFormDraft } from "@/modules/registrations/form-draft";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -33,7 +34,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * The races start in 2099, so the pages' own clock keeps the gate open; the made-up people are nobody.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, locale: "ro" as "ro" | "en" }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, locale: "ro" as "ro" | "en", draft: null as string | null }));
 
 vi.mock("next-intl/server", async (importOriginal) => {
   const { createTranslator } = await import("next-intl");
@@ -60,7 +61,8 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 vi.mock("next/headers", () => ({
   headers: async () => new Headers(),
-  cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }),
+  // What a refused post kept, sealed as the action seals it (`form-draft.ts`), when a test hands one back; else no cookie at all.
+  cookies: async () => ({ get: (name: string) => (name === "br_form_draft" && state.draft ? { value: state.draft } : undefined), set: () => {}, delete: () => {} }),
 }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
@@ -99,6 +101,7 @@ afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
   state.locale = "ro";
+  state.draft = null;
   ({ eventId, slug } = await race());
 });
 
@@ -322,6 +325,34 @@ describe("§984 BR-REQ-050-02 the raffle's own page: the form while the gate is 
     const unknown = words((await rafflePage({ tombola: "anything" })) as string);
     expect(unknown).not.toContain(ro.Event.raffle.noMatch);
     expect(unknown).not.toContain(ro.Event.raffle.done);
+  });
+
+  it("says under a runner's number refused for «V7» that a number starting with V is a volunteer's, «Sunt voluntar» to tick (§NNN)", async () => {
+    await approveTexts();
+    // The box's pattern lets «V7» through for the volunteers; the service refuses it as a race number and the action keeps what was typed.
+    state.draft = sealFormDraft({ number: "V7", name: "Ion Voluntar", volunteer: "" });
+    const refused = (await rafflePage({ tombola: "invalid", fields: "number" })) as string;
+    expect(words(refused)).toContain(ro.Event.raffle.errors.volunteerNumber);
+    expect(words(refused)).not.toContain(ro.Event.raffle.errors.number);
+    expect(tagOf(refused, 'name="number"')).toMatch(/value="V7"/);
+    expect(ro.Event.raffle.errors.volunteerNumber).toContain(`„${ro.Event.raffle.volunteer}”`);
+    // In English, the box's own words.
+    const english = words((await rafflePage({ tombola: "invalid", fields: "number" }, "en")) as string);
+    expect(english).toContain(en.Event.raffle.errors.volunteerNumber);
+    expect(en.Event.raffle.errors.volunteerNumber).toContain(`“${en.Event.raffle.volunteer}”`);
+    // A runner's malformed number, or a volunteer's with the box ticked: the plain words, as before.
+    for (const typed of [{ number: "7a", volunteer: "" }, { number: "V7a", volunteer: "on" }]) {
+      state.draft = sealFormDraft({ ...typed, name: "Ion Voluntar" });
+      const plain = words((await rafflePage({ tombola: "invalid", fields: "number" })) as string);
+      expect(plain, typed.number).toContain(ro.Event.raffle.errors.number);
+      expect(plain, typed.number).not.toContain(ro.Event.raffle.errors.volunteerNumber);
+    }
+    // Where the volunteers may not take part, «Sunt voluntar» is not drawn to be ticked: the plain words.
+    ({ eventId, slug } = await race({ raffleVolunteers: false }));
+    state.draft = sealFormDraft({ number: "V7", name: "Ion Voluntar", volunteer: "" });
+    const noVolunteers = words((await rafflePage({ tombola: "invalid", fields: "number" })) as string);
+    expect(noVolunteers).toContain(ro.Event.raffle.errors.number);
+    expect(noVolunteers).not.toContain(ro.Event.raffle.errors.volunteerNumber);
   });
 
   it("speaks English at /en/events/<slug>/raffle, the English rules filled", async () => {

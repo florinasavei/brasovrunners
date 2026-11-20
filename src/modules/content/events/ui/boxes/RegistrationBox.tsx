@@ -31,7 +31,6 @@ import {
 } from "@/modules/registrations/domain/hold-deadlines";
 import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
-import RaffleNumberHint, { VOLUNTEER_NUMBERS_ANCHOR } from "@/modules/volunteers/ui/RaffleNumberHint";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import MailLine from "@/shared/feedback/MailLine";
@@ -145,7 +144,6 @@ export default async function RegistrationBox({
   bibPrint,
   bibPrintSaved = false,
   raffleSaved = false,
-  volunteersWithoutNumber = 0,
   locale,
   now,
   clubDeadlines,
@@ -156,15 +154,9 @@ export default async function RegistrationBox({
 }: BoxProps & {
   /**
    * The page is back from the save that moved the raffle's settings (§NNN, `?raffle=1`): «Tombolă», the race numbers' card and this
-   * box open by themselves (`openWhen.saved`), so what was saved — and the line under «Voluntarii» — is in sight.
+   * box open by themselves (`openWhen.saved`), so what was saved is in sight.
    */
   raffleSaved?: boolean;
-  /**
-   * The event's confirmed volunteers who wear no number (§NNN), counted by the page from the «Voluntari» card's own read: said under
-   * «Voluntarii» while it is ticked — the raffle leaves them out until the volunteers' series numbers them. Nought on the create form
-   * and for a role that reads no volunteers.
-   */
-  volunteersWithoutNumber?: number;
   /**
    * The club's settings for the «Vii?» email (§823), read by the page, so the tick under «Acceptă răspunsuri „Vin!”» can say what it
    * does in the club's own numbers: how many days before, from what hour («Termene») and to whom («Emailuri», cut by the notice in force:
@@ -770,27 +762,6 @@ export default async function RegistrationBox({
   );
 
   /*
-    Why the volunteers are out of the raffle (§NNN; the owner, 2026-11-20: «deși voluntarii sunt bifați aici… cumva sunt excluși de pe
-    lista de la tombolă»): a confirmed volunteer without a number takes no part (§984's `noNumber`), and the numbers are the volunteers'
-    own series — «Voluntari» → «Numerele voluntarilor încep de la» (§948), which numbers every confirmed one at once. Said under
-    «Voluntarii» only while some are out, and following that box as it is ticked (`OnlyWhenTicked`: hidden, never removed); the link
-    opens the card's form on this page. Nothing here gives a number: the series' start is the club's, above the runners'.
-  */
-  const volunteersOutLine =
-    volunteersWithoutNumber > 0 ? (
-      <OnlyWhenTicked name="event.raffleVolunteers" initiallyTicked={event?.raffleVolunteers ?? true}>
-        <Box sx={{ pt: 0.5, pl: { sm: 4 } }}>
-          <RaffleNumberHint
-            text={t(`raffle.volunteersWithoutNumber.${countForm(volunteersWithoutNumber, locale)}`, { count: volunteersWithoutNumber })}
-            linkLabel={t("raffle.volunteersWithoutNumberLink")}
-            href={`#${VOLUNTEER_NUMBERS_ANCHOR}`}
-            testId="raffle-volunteers-without-number"
-          />
-        </Box>
-      </OnlyWhenTicked>
-    ) : null;
-
-  /*
     6.3 — the kit and the race numbers, the day's two cards that belong to registering here: shown
     only for a type that takes registrations, registering on the site (§111, §350) — hidden, never
     removed, like every field that follows the type and the mode.
@@ -876,9 +847,9 @@ export default async function RegistrationBox({
                             The raffle's settings (§984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii
                             și elitele și voluntarii» and «tombolă din oficiu vs tombolă cu înscriere separată»), under «Avem tombolă» while it
                             is ticked — hidden, never removed, so they still post. «Cine poate participa»: three ticks, all on by default, each
-                            with its marker, «Voluntarii» with the line saying who of them is out for want of a number (§NNN); «Cum»: a native
-                            select of its two answers, so it always posts one; «Înscrierile … deschise»: a tick. Saved with the event — the
-                            Administrator's save (§542) — and one edition's own: no series edit, copy or event file carries them.
+                            with its marker; «Cum»: a native select of its two answers, so it always posts one; «Înscrierile … deschise»: a
+                            tick. Saved with the event — the Administrator's save (§542) — and one edition's own: no series edit, copy or event
+                            file carries them.
                           */}
                           <OnlyWhenTicked name="event.hasRaffle" initiallyTicked={event?.hasRaffle ?? false}>
                             <Stack spacing={1} sx={{ pl: { sm: 4 } }} data-testid="raffle-settings">
@@ -898,7 +869,6 @@ export default async function RegistrationBox({
                                   <CheckboxField name={name} defaultChecked={on} help={help}>
                                     {label}
                                   </CheckboxField>
-                                  {name === "event.raffleVolunteers" ? volunteersOutLine : null}
                                 </Box>
                               ))}
                               <BoxNote>{t("editor.raffle.whoHelp")}</BoxNote>

@@ -7,25 +7,26 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import type { LanguageEntry } from "@/modules/content/events/ui/boxes/box-kit";
 import { type SummaryWords, raffleSummary } from "@/modules/content/events/ui/box-summaries";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
+import { raffleSettingsMoved, type RaffleSettingsRow } from "@/modules/volunteers/domain/raffle";
 import { revealField } from "@/shared/forms/ActionFormIsland";
 import { type Recall, RecallProvider } from "@/shared/forms/recall";
 import type { FoldNode } from "@/shared/ui/fold";
 
 /**
- * §NNN, BR-REQ-050-02 — «Tombolă», a folded section of the event editor's race numbers' card, and why the volunteers are out of the
- * raffle, said under «Voluntarii» (the owner, 2026-11-20: «vreau să le dau automat numere și voluntarilor, pentru că văd că deși
- * voluntarii sunt bifați aici… cumva sunt excluși de pe lista de la tombolă: plus că aici ar trebui să fie o secțiune colapsată cu
- * „Tombola”»), rendered to the HTML the server sends:
+ * §NNN, BR-REQ-050-02 — «Tombolă», a folded section of the event editor's race numbers' card (the owner, 2026-11-20: «plus că aici ar
+ * trebui să fie o secțiune colapsată cu „Tombola”»; his other half, «vreau să le dau automat numere și voluntarilor», is the volunteers'
+ * V series, numbered at «Confirmă»), rendered to the HTML the server sends:
  *
  * - every raffle box — «Avem tombolă», «Cine poate participa la tombolă» and its three ticks, «Cum participă», «Înscrierile la tombolă
  *   sunt deschise» — inside one level-4 fold `#box-raffle` of «Numere de concurs (BIB)», closed on arrival, with the same names and
  *   markers as before (the save is `tests/integration/cms/raffle-settings.test.ts`, unchanged);
  * - its bar's line: «nu avem», or who takes part and how, in both languages;
- * - open by itself right after the save that moved its boxes (`raffleSaved`), with the cards around it, and around a refused box;
- * - the line «N voluntari confirmați nu au număr…» under «Voluntarii», in the three Romanian forms and in English, with the way to the
- *   «Voluntari» card's numbers (`#box-volunteer-numbers`), only while some are out, hidden — never removed — while «Voluntarii» is unticked.
+ * - open by itself right after the save that moved its boxes (`raffleSaved`), with the cards around it, and around a refused box — and
+ *   which save that is (`raffleSettingsMoved`);
+ * - nothing about the volunteers' numbers: no line under «Voluntarii», no way to a numbers form, since every confirmed volunteer wears
+ *   a V number by themselves.
  *
- * The tab's twin and the page's count are `tests/integration/volunteers/raffle-volunteers-without-number.test.ts`.
+ * The page's flag, the save's answer and the tab's way in are `tests/integration/volunteers/raffle-fold.test.ts`.
  */
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en" }));
 
@@ -85,7 +86,7 @@ const language = (locale: "ro" | "en"): LanguageEntry => ({
 });
 const declarations = [{ id: "22222222-2222-2222-2222-222222222222", key: "EVENT_DECLARATION_ROAD" as const, version: 3, title: "Declarație" }];
 
-type Extra = Pick<Parameters<typeof RegistrationBox>[0], "raffleSaved" | "volunteersWithoutNumber">;
+type Extra = Pick<Parameters<typeof RegistrationBox>[0], "raffleSaved">;
 
 /** The box as the server streams it: inside a kept form's recall when one is given, with or without Emotion's styles. */
 async function render(event: EditableEvent, options: { locale?: "ro" | "en"; extra?: Extra; recall?: Recall; styles?: boolean } = {}): Promise<string> {
@@ -177,19 +178,7 @@ function refusedInside(markup: string, name: string): { node: HTMLElement; folds
   return { node: { tagName: "SELECT", parentElement: parent, dispatchEvent: () => true } as unknown as HTMLElement, folds: chain };
 }
 
-/** Whether the element carrying `testId` sits inside a block `OnlyWhenTicked` hides (`data-hidden-block`, display none). */
-function hiddenAround(markup: string, testId: string): boolean {
-  const at = markup.indexOf(`data-testid="${testId}"`);
-  expect(at, `${testId} is drawn`).toBeGreaterThan(-1);
-  const open: boolean[] = [];
-  for (const match of markup.slice(0, markup.lastIndexOf("<", at)).matchAll(/<(\/?)div\b[^>]*>/g)) {
-    if (match[1] === "/") open.pop();
-    else open.push(/\sdata-hidden-block=/.test(match[0]));
-  }
-  return open.some(Boolean);
-}
-
-const HINT = "raffle-volunteers-without-number";
+const SETTINGS: RaffleSettingsRow = { hasRaffle: true, raffleRunners: true, raffleElites: true, raffleVolunteers: true, raffleSignUp: false, raffleSignUpOpen: false };
 
 describe("§NNN BR-REQ-050-02 «Tombolă»: one fold of «Numere de concurs (BIB)» for everything about the raffle", () => {
   it("holds «Avem tombolă» and every setting under it, closed on arrival, a level-4 fold inside the race numbers' card", async () => {
@@ -272,60 +261,38 @@ describe("§NNN BR-REQ-050-02 «Tombolă»: one fold of «Numere de concurs (BIB
   });
 });
 
-describe("§NNN BR-REQ-050-02 why the volunteers are out of the raffle, under «Voluntarii»", () => {
-  it("says how many confirmed volunteers wear no number, in Romanian's three forms, right under the «Voluntarii» tick", async () => {
-    for (const [count, sentence] of [
-      [1, "1 voluntar confirmat nu are număr, deci nu intră la tombolă."],
-      [3, "3 voluntari confirmați nu au număr, deci nu intră la tombolă."],
-      [20, "20 de voluntari confirmați nu au număr, deci nu intră la tombolă."],
-    ] as const) {
-      const markup = await render(RACE, { extra: { volunteersWithoutNumber: count } });
-      const own = foldMarkup(markup, "box-raffle");
-      const at = own.indexOf(`data-testid="${HINT}"`);
-      expect(at, String(count)).toBeGreaterThan(-1);
-      expect(words(own.slice(at))).toContain(`${sentence} Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.`);
-      // Under the volunteers' tick, before «Cum participă».
-      expect(own.indexOf('name="event.raffleVolunteers"')).toBeLessThan(at);
-      expect(at).toBeLessThan(own.indexOf('name="event.raffleSignUp"'));
-      expect(hiddenAround(markup, HINT)).toBe(false);
+describe("§NNN BR-REQ-050-02 the save that opens «Tombolă»: one that moved a raffle setting", () => {
+  it("is any of the six settings moved, and never a save that wrote them as they were", () => {
+    expect(raffleSettingsMoved(SETTINGS, { ...SETTINGS })).toBe(false);
+    for (const column of ["hasRaffle", "raffleRunners", "raffleElites", "raffleVolunteers", "raffleSignUp", "raffleSignUpOpen"] as const) {
+      expect(raffleSettingsMoved(SETTINGS, { ...SETTINGS, [column]: !SETTINGS[column] }), column).toBe(true);
     }
   });
 
-  it("links to the «Voluntari» card's numbers on the same page, where the series is set", async () => {
-    const markup = await render(RACE, { extra: { volunteersWithoutNumber: 2 } });
-    const link = new RegExp(`<a\\b[^>]*href="#box-volunteer-numbers"[^>]*data-testid="${HINT}-link"|<a\\b[^>]*data-testid="${HINT}-link"[^>]*href="#box-volunteer-numbers"`);
-    expect(markup).toMatch(link);
-    expect(words(markup)).toContain(ro.Admin.raffle.volunteersWithoutNumberLink);
+  it("reads the raffle's columns alone: anything else on the row moving opens nothing", () => {
+    // Whole rows, as the save hands them over: the other columns ride along and are never read.
+    const before = { ...SETTINGS, capacity: 100, title: "Crosul" };
+    const after = { ...before, capacity: 150, title: "Crosul Tâmpei" };
+    expect(raffleSettingsMoved(before, after)).toBe(false);
+  });
+});
+
+describe("§NNN BR-REQ-050-02 nothing in the fold about the volunteers' numbers: each confirmed volunteer wears a V number by themselves", () => {
+  it("draws «Voluntarii» with its tick and its help alone — no count, no way to a numbers form — in both languages", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const own = foldMarkup(await render(RACE, { locale }), "box-raffle");
+      expect(own, locale).toContain('name="event.raffleVolunteers"');
+      expect(words(own), locale).toContain((locale === "ro" ? ro : en).Admin.editor.raffle.volunteersHelp);
+      expect(own, locale).not.toContain('data-testid="raffle-volunteers-without-number"');
+      expect(own, locale).not.toContain("#box-volunteer-numbers");
+      expect(words(own), locale).not.toMatch(/Numerele voluntarilor încep de la|Volunteers' numbers start at|nu au număr|have no number/);
+    }
   });
 
-  it("is gone when every confirmed volunteer has a number", async () => {
-    expect(await render(RACE, { extra: { volunteersWithoutNumber: 0 } })).not.toContain(`data-testid="${HINT}"`);
-    expect(await render(RACE)).not.toContain(`data-testid="${HINT}"`);
-  });
-
-  it("hides while «Voluntarii» is unticked — kept in the page, so ticking the box shows it at once", async () => {
-    const markup = await render({ ...RACE, raffleVolunteers: false } as EditableEvent, { extra: { volunteersWithoutNumber: 3 } });
-    expect(hiddenAround(markup, HINT)).toBe(true);
-    // With the box ticked, nothing hides it.
-    expect(hiddenAround(await render(RACE, { extra: { volunteersWithoutNumber: 3 } }), HINT)).toBe(false);
-  });
-
-  it("speaks English on the English editor", async () => {
-    const one = words(await render(RACE, { locale: "en", extra: { volunteersWithoutNumber: 1 } }));
-    expect(one).toContain("1 confirmed volunteer has no number, so is not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.");
-    const many = words(await render(RACE, { locale: "en", extra: { volunteersWithoutNumber: 4 } }));
-    expect(many).toContain("4 confirmed volunteers have no number, so are not in the raffle.");
-    expect(many).toContain(en.Admin.raffle.volunteersWithoutNumberLink);
-    expect(many).not.toContain("voluntari confirmați");
-  });
-
-  it("keeps every form of the sentence within the house's 200 characters, in both languages", () => {
+  it("keeps no words for such a line in either catalogue", () => {
     for (const catalogue of [ro, en]) {
-      for (const form of ["one", "few", "other"] as const) {
-        const sentence = catalogue.Admin.raffle.volunteersWithoutNumber[form];
-        expect(sentence).toContain("{count}");
-        expect(sentence.replace("{count}", "100").length, `${form}: ${sentence}`).toBeLessThanOrEqual(200);
-      }
+      expect(Object.keys(catalogue.Admin.raffle)).not.toContain("volunteersWithoutNumber");
+      expect(Object.keys(catalogue.Admin.raffle)).not.toContain("volunteersWithoutNumberLink");
     }
   });
 });

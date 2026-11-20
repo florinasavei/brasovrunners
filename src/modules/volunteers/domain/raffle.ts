@@ -72,29 +72,6 @@ export function raffleSettingsMoved(before: RaffleSettingsRow, after: RaffleSett
 }
 
 /**
- * The confirmed volunteers who wear no number (§NNN; the owner, 2026-11-20: «deși voluntarii sunt bifați aici… cumva sunt excluși de
- * pe lista de la tombolă»): the ones `raffleParticipation` leaves out as `noNumber` while «Voluntarii» is ticked — the event has no
- * volunteers' series yet, or one was confirmed before it. Counted whatever the tick says: the editor's line under «Voluntarii» follows
- * the box as it is ticked. A cancelled volunteer, or one registered and not confirmed yet, is not counted; a number is the series' to give, never this count's.
- */
-export function confirmedVolunteersWithoutNumber(people: Iterable<{ state: string; bibNumber: number | null }>): number {
-  let count = 0;
-  for (const person of people) if (person.state === "CONFIRMED" && person.bibNumber === null) count += 1;
-  return count;
-}
-
-/**
- * How many of `kind` the raffle leaves out for want of a number alone (§NNN): the rows whose answer is `noNumber`. For the volunteers,
- * the confirmed ones of a ticked «Voluntarii» who wear none — what «Ziua cursei» → «Tombolă» says beside «Voluntari: N»; nought while
- * the group is unticked, since `groupNotAllowed` is asked first.
- */
-export function leftOutForNoNumber(rows: Iterable<{ kind: RaffleKind; reason: RaffleReason }>, kind: RaffleKind): number {
-  let count = 0;
-  for (const row of rows) if (row.kind === kind && row.reason === "noNumber") count += 1;
-  return count;
-}
-
-/**
  * Whether the event's raffle asks a sign-up of its own (§984): «Avem tombolă» and «Cu înscriere separată», open or not. What the
  * raffle's page asks before it says the thank-you to a person reading the answer to their own post — never on an event that asks none.
  */

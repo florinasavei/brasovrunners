@@ -26,7 +26,6 @@ import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/doma
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { volunteerEventAhead, volunteerEventDay, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
-import { confirmedVolunteersWithoutNumber } from "@/modules/volunteers/domain/raffle";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
 import { listVolunteerInvitations } from "@/modules/volunteers/invitations";
 import { listVolunteerCategories, listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
@@ -593,12 +592,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         };
       })()
     : null;
-  /*
-    «Tombolă» (§NNN): the confirmed volunteers who wear no number, from the card's own read above — no query of its own — for the line
-    under the editor's «Voluntarii» (the raffle leaves them out until the volunteers' series numbers them); and whether the page is back
-    from the save that moved the raffle's settings (`?raffle=1`, the save's own answer), which opens the fold and the cards around it.
-  */
-  const volunteersWithoutNumber = volunteersCard ? confirmedVolunteersWithoutNumber(volunteersCard.people) : 0;
+  // «Tombolă» (§NNN): back from the save that moved the raffle's settings (`?raffle=1`, the save's own answer), the fold and the cards around it open.
   const raffleSaved = (saved === "event" || saved === "eventSeries") && query.raffle === "1";
   const volunteerErrorCode = (
     ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED", "VINVITE_NOBODY", "VINVITE_TOO_MANY", "VINVITE_BAD_ADDRESS", "VINVITE_MESSAGE_LONG", "VINVITE_MESSAGE_ONE_LANGUAGE", "VINVITE_NOT_INVITED_ONLY", "VINVITE_EVENT_CLOSED", "VINVITE_NOT_OPEN", "VINVITE_NOT_FOUND"] as const
@@ -1415,7 +1409,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     interests={interestsWaiting}
                     bibPrintSaved={eliteSaved}
                     raffleSaved={raffleSaved}
-                    volunteersWithoutNumber={volunteersWithoutNumber}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard

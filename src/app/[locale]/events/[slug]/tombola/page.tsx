@@ -100,6 +100,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const volunteersMay = raffle.settings.groups.VOLUNTEER;
   const typed = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
   const refused = new Set((one(asked.fields) ?? "").split(",").filter((box): box is (typeof BOXES)[number] => (BOXES as readonly string[]).includes(box)));
+  // A volunteer's V number refused from a runner («V7», «Sunt voluntar» unticked, §NNN): the box's pattern lets the V through for the
+  // volunteers, so the refusal says whose number that is — only where «Sunt voluntar» is drawn to be ticked.
+  const volunteerNumberTyped = volunteersMay && typed.volunteer !== "on" && /^\s*[Vv]/.test(typed.number ?? "");
   // The widget as the other public forms draw it (§254, §675): only while the Administrator's switch is on and its keys are set.
   const siteKey = await cachedBotCheckSiteKey();
   // A corrected form is timed from the render it corrects (§146), as the volunteers' page times it: a second press seconds after a
@@ -166,7 +169,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
             <TextField
               name="number"
               label={t("raffle.number")}
-              helperText={refused.has("number") ? t("raffle.errors.number") : t("raffle.numberHelp")}
+              helperText={refused.has("number") ? t(volunteerNumberTyped ? "raffle.errors.volunteerNumber" : "raffle.errors.number") : t("raffle.numberHelp")}
               error={refused.has("number")}
               defaultValue={typed.number ?? ""}
               required

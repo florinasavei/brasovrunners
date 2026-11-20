@@ -2766,10 +2766,9 @@ An agent never approves either text.
    poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they decide in both modes —, **«Cum
    participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt deschise»**. Save: the page comes
    back with «Tombolă» open on what was saved. None of the four travels to a series' other dates, a copy or the event's file.
-   **A volunteer takes part only with a number** (`DECISIONS.md` §NNN): in the event's «Voluntari» card type «Numerele voluntarilor
-   încep de la» — a number above the runners' — and «Salvează numerele»; every confirmed volunteer gets one at once, every later one at
-   their confirmation. Until then a line under «Voluntarii», and on «Ziua cursei» → «Tombolă», says how many confirmed volunteers are
-   out, with «Mergi la numerele voluntarilor» to that box. Nothing picks the start by itself.
+   **Nothing to set for the volunteers** (`DECISIONS.md` §NNN): each draws the event's next volunteer number, «V001», «V002»…, the
+   moment the organizers confirm them, and takes part with it; a volunteer is out only while not confirmed, when the organizers took
+   them out or, «Cu înscriere separată», until they sign up — each row of «Ziua cursei» → «Tombolă» says why.
 4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
    (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
    volunteer's own number, «V007» or just 7 — `DECISIONS.md` §NNN) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A

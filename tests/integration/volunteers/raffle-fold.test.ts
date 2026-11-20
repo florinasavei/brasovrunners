@@ -15,16 +15,16 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — why the volunteers are out of the raffle, said where it is seen (the owner, 2026-11-20: «vreau să le dau
- * automat numere și voluntarilor, pentru că văd că deși voluntarii sunt bifați aici… cumva sunt excluși de pe lista de la tombolă»),
- * and the editor's «Tombolă» fold opening after its save, read from a real database:
+ * §NNN, BR-REQ-050-02 — the editor's «Tombolă» fold (the owner, 2026-11-20: «plus că aici ar trebui să fie o secțiune colapsată cu
+ * „Tombola”»), and the volunteers in the raffle with the V numbers they draw at «Confirmă» (his other half: «vreau să le dau automat
+ * numere și voluntarilor… cumva sunt excluși de pe lista de la tombolă»), read from a real database:
  *
- * - «Ziua cursei» → «Tombolă»: under «Voluntari: N», how many confirmed volunteers wear no number and the way to the volunteers'
- *   series (`/admin/events/<id>#box-volunteer-numbers`) — only while «Voluntarii» is ticked and some are out; a registered (not yet confirmed) or cancelled
- *   volunteer is not counted; in both languages; gone once «Salvează numerele» numbered them, who then take part;
+ * - «Ziua cursei» → «Tombolă»: the confirmed volunteers counted with their V numbers, after the race numbers, and nothing on the page
+ *   about setting numbers — no line, no way to a numbers form; a confirmed volunteer the deployment left without a V number for a few
+ *   minutes reads «Nu · fără număr» on its own row, nothing more; reading the tab or the editor gives nobody a number;
  * - «Schimbă în editor» opens the «Tombolă» fold itself (`#box-raffle`);
- * - the editor page counts the same people from the «Voluntari» card's own read and hands the count to the registration card, and
- *   opens «Tombolă» only when back from the save that moved the raffle's settings (`?saved=event&raffle=1`), which the save says.
+ * - the editor page opens «Tombolă» only when back from the save that moved the raffle's settings (`?saved=event&raffle=1`), which the
+ *   save says.
  *
  * The events start in 2099, so the pages' own clock keeps them ahead; the made-up people are nobody.
  */
@@ -87,7 +87,6 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 const { default: RafflePage } = await import("@/app/[locale]/admin/checkin/tombola/page");
 const { default: EditEventPage } = await import("@/app/[locale]/admin/events/[id]/page");
 const { default: RegistrationBox } = await import("@/modules/content/events/ui/boxes/RegistrationBox");
-const { setVolunteerNumbersStartAction } = await import("@/app/[locale]/admin/events/[id]/volunteer-actions");
 const { saveEventAndTranslationsAction } = await import("@/app/[locale]/admin/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -117,7 +116,6 @@ const words = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&amp;
 
 const START = new Date("2099-11-21T07:00:00.000Z");
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
-const HINT = "raffle-volunteers-without-number";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -142,7 +140,7 @@ beforeEach(async () => {
   ({ eventId, roleId } = await race());
 });
 
-/** A race in 2099 holding a raffle «Din oficiu», every group ticked, with no volunteers' series yet. */
+/** A race in 2099 holding a raffle «Din oficiu», every group ticked. */
 async function race(over: Partial<typeof events.$inferInsert> = {}) {
   serial += 1;
   const [event] = await db
@@ -186,100 +184,79 @@ async function runner(name: string, bibNumber: number | null): Promise<string> {
   return row.id;
 }
 
-async function volunteer(name: string, bibNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
+/** A volunteer, confirmed unless told otherwise, holding the V number given (§NNN: «V001» is 1) — or none yet. */
+async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
-    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, bibNumber, ...more })
+    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, volunteerNumber, ...more })
     .returning({ id: eventVolunteers.id });
   await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: row.id, roleId });
   return row.id;
 }
 
-/** The owner's Saturday: two runners with numbers, two confirmed volunteers without one, one registered but not confirmed, one cancelled. */
+/**
+ * The owner's Saturday: two runners with numbers; two volunteers confirmed — V001 and V002, as «Confirmă» numbered them —, one
+ * registered and not confirmed yet, and one cancelled, who keeps the V003 they drew, retired.
+ */
 async function saturday() {
   await runner("Ana Popescu", 7);
   await runner("Bogdan Ionescu", 12);
-  await volunteer("Ion Voluntar", null);
-  await volunteer("Maria Voluntar", null);
+  await volunteer("Ion Voluntar", 1);
+  await volunteer("Maria Voluntar", 2);
   await volunteer("Petru În Așteptare", null, { state: "REGISTERED" });
-  await volunteer("Radu Anulat", null, { state: "CANCELLED" });
+  await volunteer("Radu Anulat", 3, { state: "CANCELLED" });
 }
 
 const tab = async (query: Record<string, string> = {}) => html(await RafflePage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, ...query }) }));
-/** The line's markup, from its own tag to the end of its link, or null when it is not drawn. */
-const hintOf = (page: string) => {
-  const at = page.indexOf(`data-testid="${HINT}"`);
-  return at === -1 ? null : page.slice(page.lastIndexOf("<", at), page.indexOf("</a>", page.indexOf(`data-testid="${HINT}-link"`, at)) + 4);
-};
 const countsOf = (page: string) => words(/data-testid="raffle-counts"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "");
+/** The table's rows, once each — the table's own `<tr>`s, not the phone cards. */
+const rowsOf = (page: string) => [...page.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((match) => words(match[1])).filter((row) => row !== "" && !row.startsWith(ro.Admin.raffle.columns.number) && !row.startsWith(en.Admin.raffle.columns.number));
+/** What the fold's first round drew to send the reader to a numbers form: gone, the volunteers being numbered by themselves. */
+const NUMBERS_LINE = /raffle-volunteers-without-number|box-volunteer-numbers|Numerele voluntarilor încep de la|Volunteers' numbers start at|nu au număr|have no number/;
+/** The page's markup and its words, so an id, a link or a sentence of that line would all be found. */
+const markupAndWords = (page: string) => `${page}\n${words(page)}`;
 
-describe("§NNN «Ziua cursei» → «Tombolă» says why the volunteers are out", () => {
-  it("says beside «Voluntari: N» how many confirmed volunteers wear no number, and the way to the volunteers' series", async () => {
+describe("§NNN «Ziua cursei» → «Tombolă» with the volunteers numbered by themselves", () => {
+  it("counts the confirmed volunteers with their V numbers, after the race numbers, and says nothing about setting numbers", async () => {
     await saturday();
     const page = await tab();
-    // The one not confirmed yet and the cancelled one are not counted: only the two confirmed without a number.
-    expect(countsOf(page)).toBe("Participă: 2 · Alergători: 2 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 0");
-    const hint = hintOf(page);
-    expect(hint, "the line is drawn").not.toBeNull();
-    expect(words(hint ?? "")).toContain("2 voluntari confirmați nu au număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.");
-    // Right under the counts, before the filters.
-    expect(page.indexOf('data-testid="raffle-counts"')).toBeLessThan(page.indexOf(`data-testid="${HINT}"`));
-    expect(page.indexOf(`data-testid="${HINT}"`)).toBeLessThan(page.indexOf('data-testid="raffle-filters"'));
-    // Its link: the event's editor, at the «Voluntari» card's numbers form.
-    expect(hint).toMatch(new RegExp(`href="/ro/admin/events/${eventId}#box-volunteer-numbers"`));
-    expect(words(hint ?? "")).toContain(ro.Admin.raffle.volunteersWithoutNumberLink);
-    // The two say «Nu · fără număr» on their rows, as before: the line says why, the rows say who.
-    expect(words(page)).toContain("Ion Voluntar Voluntar Nu · fără număr");
-  });
-
-  it("says it in the one form for one person, and in English on the English page", async () => {
-    await volunteer("Ion Voluntar", null);
-    expect(words(hintOf(await tab()) ?? "")).toContain("1 voluntar confirmat nu are număr, deci nu intră la tombolă.");
-    state.locale = "en";
-    const page = await tab();
-    expect(words(hintOf(page) ?? "")).toContain("1 confirmed volunteer has no number, so is not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.");
-    expect(hintOf(page)).toMatch(new RegExp(`href="/en/admin/events/${eventId}#box-volunteer-numbers"`));
-  });
-
-  it("is gone while every confirmed volunteer has a number, or while «Voluntarii» is unticked", async () => {
-    await volunteer("Ion Voluntar", 500);
-    await volunteer("Petru În Așteptare", null, { state: "REGISTERED" });
-    expect(hintOf(await tab())).toBeNull();
-    await volunteer("Maria Voluntar", null);
-    expect(hintOf(await tab())).not.toBeNull();
-    await db.update(events).set({ raffleVolunteers: false }).where(eq(events.id, eventId));
-    const unticked = await tab();
-    expect(hintOf(unticked)).toBeNull();
-    expect(words(unticked)).toContain("Maria Voluntar Voluntar Nu · grupa nu e bifată");
-  });
-
-  it("is gone once «Salvează numerele» numbered them — the series' start the club chose — and they take part", async () => {
-    await saturday();
-    expect(hintOf(await tab())).not.toBeNull();
-    // The «Voluntari» card's own form, its own action: the Organizer works the volunteers.
-    const form = new FormData();
-    form.set("uiLocale", "ro");
-    form.set("eventId", eventId);
-    form.set("start", "500");
-    await expect(setVolunteerNumbersStartAction(form)).rejects.toThrow("NEXT_REDIRECT");
-    expect(state.redirected[0]).toBe(`/ro/admin/events/${eventId}#box-volunteers`);
-    const numbered = await db.select({ name: eventVolunteers.name, number: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
-    expect(Object.fromEntries(numbered.map((row) => [row.name, row.number]))).toEqual({ "Ion Voluntar": 500, "Maria Voluntar": 501, "Petru În Așteptare": null, "Radu Anulat": null });
-    const page = await tab();
-    expect(hintOf(page)).toBeNull();
+    // The one not confirmed yet is out, and the cancelled one is not on the tab at all: the two confirmed take part, with the numbers
+    // «Confirmă» gave them, after the race numbers.
     expect(countsOf(page)).toBe("Participă: 4 · Alergători: 2 · Elite: 0 · Voluntari: 2 · Prezenți dintre ei: 0");
+    expect(rowsOf(page)).toEqual([
+      expect.stringMatching(/^7 Ana Popescu Alergător Da /),
+      expect.stringMatching(/^12 Bogdan Ionescu Alergător Da /),
+      expect.stringMatching(/^V001 Ion Voluntar Voluntar Da /),
+      expect.stringMatching(/^V002 Maria Voluntar Voluntar Da /),
+      expect.stringMatching(/^— Petru În Așteptare Voluntar Nu · neconfirmat /),
+    ]);
+    expect(markupAndWords(page)).not.toMatch(NUMBERS_LINE);
+    state.locale = "en";
+    const english = await tab();
+    expect(rowsOf(english).find((row) => row.includes("Ion Voluntar"))).toMatch(/^V001 Ion Voluntar Volunteer Yes /);
+    expect(markupAndWords(english)).not.toMatch(NUMBERS_LINE);
   });
 
-  it("chooses no number by itself: reading the tab, or the editor, gives nobody a number", async () => {
-    await saturday();
+  it("says «Nu · fără număr» on the row alone of a confirmed volunteer the deployment left without a V number yet — no line, no link", async () => {
+    // Confirmed in the minutes between the migration and the new deployment: the maintenance job numbers them (§NNN); until then the
+    // row says why, as every other row does.
+    await volunteer("Ion Voluntar", null);
+    const page = await tab();
+    expect(countsOf(page)).toBe("Participă: 0 · Alergători: 0 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 0");
+    expect(rowsOf(page)).toEqual([expect.stringMatching(/^— Ion Voluntar Voluntar Nu · fără număr /)]);
+    expect(markupAndWords(page)).not.toMatch(NUMBERS_LINE);
+  });
+
+  it("gives nobody a number by being read: the V number is drawn at «Confirmă», never by a page", async () => {
+    await volunteer("Ion Voluntar", null);
+    await volunteer("Petru În Așteptare", null, { state: "REGISTERED" });
     await tab();
     state.actor = admin;
     await EditEventPage({ params: Promise.resolve({ locale: "ro", id: eventId }), searchParams: Promise.resolve({}) } as never);
-    const rows = await db.select({ number: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
-    expect(rows.every((row) => row.number === null)).toBe(true);
-    expect((await db.select({ start: events.volunteerBibStart }).from(events).where(eq(events.id, eventId)))[0].start).toBeNull();
+    const rows = await db.select({ number: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+    expect(rows.map((row) => row.number)).toEqual([null, null]);
   });
 
   it("sends «Schimbă în editor» to the «Tombolă» fold itself", async () => {
@@ -292,21 +269,13 @@ describe("§NNN «Ziua cursei» → «Tombolă» says why the volunteers are out
   });
 });
 
-describe("§NNN the editor page: the count, and «Tombolă» open after its save", () => {
+describe("§NNN the editor page: «Tombolă» open after its save", () => {
   const registrationBox = async (searchParams: Record<string, string> = {}) => {
     const tree = await EditEventPage({ params: Promise.resolve({ locale: "ro", id: eventId }), searchParams: Promise.resolve(searchParams) } as never);
     const box = everything(tree).find((element) => element.type === RegistrationBox);
     expect(box, "the registration card is drawn").toBeDefined();
-    return box!.props as { volunteersWithoutNumber?: number; raffleSaved?: boolean };
+    return box!.props as { raffleSaved?: boolean };
   };
-
-  it("hands the registration card the confirmed volunteers without a number, from the «Voluntari» card's own read", async () => {
-    await saturday();
-    state.actor = admin;
-    expect((await registrationBox()).volunteersWithoutNumber).toBe(2);
-    await db.update(eventVolunteers).set({ bibNumber: 600 }).where(eq(eventVolunteers.name, "Ion Voluntar"));
-    expect((await registrationBox()).volunteersWithoutNumber).toBe(1);
-  });
 
   it("opens «Tombolă» only when back from the save that moved the raffle's settings", async () => {
     state.actor = admin;
@@ -317,6 +286,12 @@ describe("§NNN the editor page: the count, and «Tombolă» open after its save
     expect((await registrationBox({ saved: "event" })).raffleSaved).toBe(false);
     expect((await registrationBox({ raffle: "1" })).raffleSaved).toBe(false);
     expect((await registrationBox({ saved: "eliteAdded", raffle: "1" })).raffleSaved).toBe(false);
+  });
+
+  it("hands the registration card nothing to count about the volunteers' numbers", async () => {
+    await saturday();
+    state.actor = admin;
+    expect(Object.keys(await registrationBox())).not.toContain("volunteersWithoutNumber");
   });
 });
 

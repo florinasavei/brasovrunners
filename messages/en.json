@@ -1048,6 +1048,7 @@
       "fix": "Check what you typed below.",
       "errors": {
         "number": "Type the race number, digits only.",
+        "volunteerNumber": "A number starting with V is a volunteer's: tick “I'm a volunteer” below. A runner's race number is digits only.",
         "name": "Type the name, at most 120 characters.",
         "accept": "Tick that you accept the raffle rules."
       },
@@ -10026,8 +10027,8 @@
               "title": "The raffle on race day",
               "steps": [
                 "«Race day» → «Raffle»: every runner, elite and volunteer of the event, each with «Taking part» and, when not, why. Who takes part and how is the Administrator's choice, in the event's editor.",
-                "Volunteers take part only with a number. If under «Volunteers: …» a line says how many confirmed volunteers have no number, press «Go to the volunteers' numbers», type under «Volunteers' numbers start at» a number above the runners' and press «Save the numbers»: every confirmed volunteer gets a number at once.",
-                "Back on «Raffle», the line is gone and the confirmed volunteers take part."
+                "Volunteers take part with their volunteer number, V001, V002…, which they get by themselves the moment you confirm them: you set nothing.",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. Their row says why."
               ]
             },
             {
@@ -10363,10 +10364,9 @@
                 "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Raffle». Closed, its bar says who takes part and how, for example “Runners, elites, volunteers · automatically”.",
                 "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
                 "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
-                "Volunteers take part only with a number. In the event's «Volunteers» card, under «Volunteers' numbers start at» type a number above the runners' and press «Save the numbers»: every confirmed volunteer gets a number at once, and those confirmed later, when confirmed.",
-                "Until then, under «The volunteers» a line says how many confirmed volunteers have no number, and so are not in the raffle; «Go to the volunteers' numbers» takes you to their box.",
+                "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it. A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up.",
                 "Press «Save». After the save «Raffle» stays open, with what you saved.",
-                "On race day, «Race day» → «Raffle» shows everybody and whether they take part; the same line about the volunteers without a number stands under «Volunteers: …»."
+                "On race day, «Race day» → «Raffle» shows everybody, whether they take part and, when not, why."
               ]
             },
             {
@@ -13438,12 +13438,6 @@
         "VOLUNTEER": "Volunteers: {count}",
         "present": "Present among them: {count}"
       },
-      "volunteersWithoutNumber": {
-        "one": "{count} confirmed volunteer has no number, so is not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.",
-        "few": "{count} confirmed volunteers have no number, so are not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.",
-        "other": "{count} confirmed volunteers have no number, so are not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once."
-      },
-      "volunteersWithoutNumberLink": "Go to the volunteers' numbers",
       "filters": {
         "label": "Filter",
         "all": "Everybody: {count}",

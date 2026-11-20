@@ -1048,6 +1048,7 @@
       "fix": "Verifică ce ai scris mai jos.",
       "errors": {
         "number": "Scrie numărul de concurs, doar cifre.",
+        "volunteerNumber": "Un număr care începe cu V e al unui voluntar: bifează „Sunt voluntar” mai jos. Numărul de concurs al unui alergător are doar cifre.",
         "name": "Scrie numele, cel mult 120 de caractere.",
         "accept": "Bifează că accepți Regulamentul tombolei."
       },
@@ -10026,8 +10027,8 @@
               "title": "Tombola în ziua cursei",
               "steps": [
                 "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
-                "Voluntarii participă doar cu număr. Dacă sub «Voluntari: …» scrie câți voluntari confirmați nu au număr, apasă «Mergi la numerele voluntarilor», scrie la «Numerele voluntarilor încep de la» un număr peste ale alergătorilor și apasă «Salvează numerele»: fiecare voluntar confirmat primește pe loc un număr.",
-                "Înapoi la «Tombolă», linia a dispărut și voluntarii confirmați participă."
+                "Voluntarii participă cu numărul lor de voluntar, V001, V002…, pe care îl primesc singuri în clipa în care îi confirmi: nu setezi nimic.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ați scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
               ]
             },
             {
@@ -10363,10 +10364,9 @@
                 "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Tombolă». Închisă, bara ei spune cine participă și cum, de pildă „Alergători, elite, voluntari · din oficiu”.",
                 "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
                 "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
-                "Voluntarii participă doar cu număr. În cardul «Voluntari» al evenimentului, la «Numerele voluntarilor încep de la» scrie un număr peste ale alergătorilor și apasă «Salvează numerele»: fiecare voluntar confirmat primește pe loc un număr, iar cei confirmați mai târziu, la confirmare.",
-                "Până atunci, sub «Voluntarii» scrie câți voluntari confirmați nu au număr, deci nu intră la tombolă; «Mergi la numerele voluntarilor» te duce la căsuța lor.",
+                "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el. Un voluntar nu participă cât timp nu e confirmat, dacă l-ați scos de la tombolă sau, cu înscriere separată, până se înscrie.",
                 "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
-                "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți și dacă participă; aceeași linie despre voluntarii fără număr stă sub «Voluntari: …»."
+                "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți, dacă participă și, când nu participă, de ce."
               ]
             },
             {
@@ -13438,12 +13438,6 @@
         "VOLUNTEER": "Voluntari: {count}",
         "present": "Prezenți dintre ei: {count}"
       },
-      "volunteersWithoutNumber": {
-        "one": "{count} voluntar confirmat nu are număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.",
-        "few": "{count} voluntari confirmați nu au număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr.",
-        "other": "{count} de voluntari confirmați nu au număr, deci nu intră la tombolă. Setează „Numerele voluntarilor încep de la” în cardul «Voluntari»: fiecare confirmat primește pe loc un număr."
-      },
-      "volunteersWithoutNumberLink": "Mergi la numerele voluntarilor",
       "filters": {
         "label": "Filtru",
         "all": "Toți: {count}",
