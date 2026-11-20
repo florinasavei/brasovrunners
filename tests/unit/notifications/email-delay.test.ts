@@ -154,6 +154,8 @@ describe("§623 judgeEmailDelay", () => {
       "VOLUNTEER_CLUB_NOTICE",
       // «Trimite fiecăruia punctul lui» (§956): an organizer's press, to people on no page.
       "VOLUNTEER_POINT",
+      // The desk's eye (§1017): a desk role's press, to somebody standing at the table.
+      "LIST_CONSENT_RECORDED",
     ] as const) {
       expect(isWaitedFor(type, false), type).toBe(false);
     }
