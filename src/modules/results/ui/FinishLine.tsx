@@ -12,6 +12,8 @@ import { countForm, type CountForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
+import { useToast } from "@/shared/feedback/toast-context";
+import { afterPaint } from "@/shared/forms/after-paint";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
   asksBeforeAgain,
@@ -22,10 +24,12 @@ import {
   entryStateOf,
   FINISH_GUN_ASK_MS,
   FINISH_PRESS_SLOW_MS,
+  FINISH_TOAST_MS,
   type FinishClockAnswer,
   type FinishEntry,
   type FinishEntryOutcome,
   type FinishLineState,
+  finishPress,
   type FinishPressAnswer,
   type FinishUndoAnswer,
   finishRetryDelay,
@@ -41,6 +45,7 @@ import {
   nextRetryAt,
   nextToSend,
   pressEntry,
+  readBox,
   type RecentFinisherView,
   settleEntry,
   stampedGunTime,
@@ -66,7 +71,8 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   elite's number. A line with no number is drawn disabled with what to do — or, for a viewer who writes the elite list
  *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
- * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
+ * - **The box**: the numeric keypad, Enter, «Sosit» — or «⏱ Finish» with something typed (§NNN) — records, and the box is empty at
+ *   once, keeping the focus for the next number, given inside the press's own tap so a phone's keyboard stays up (`sendBox`).
  *   **A finished elite's number typed again is asked first** (§1010): an elite already «Sosit» as this page last heard — at its load or
  *   in the answer to any press since — or whose press waits or was saved on this phone (`asksBeforeAgain`) gets the house's one dialog
  *   (`ConfirmDialog`), «Anulează» focused, so a second Enter or Esc cancels: nothing is recorded and no kept moment is used.
@@ -75,9 +81,19 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   answer's own tap, so a phone's keyboard comes back with it. Any other number, an elite who has not crossed yet, and one whose
  *   crossing this page has not heard of — pressed on another phone since its last answer — go at once as before; the server keeps the
  *   first time all the same.
- * - **«⏱ Finish»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
- *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
- *   the line is read or pressed, and a line says its time, for paper (`staleKept`).
+ * - **«⏱ Finish»** for a bunch: with the box empty, each press keeps one moment (oldest first, each with its age and its ✕); the
+ *   next number or elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it
+ *   is dropped when the line is read or pressed, and a line says its time, for paper (`staleKept`). **With something typed in the
+ *   box, «Finish» is the box's own press** (§NNN, amending §1008; `finishPress`): exactly «Sosit»'s — the same queue, a finished
+ *   elite's number asked first, the oldest kept moment taken —, keeping no moment; the box is empty and keeps the focus. The line
+ *   under the box says so in one sentence (`boxHelp`).
+ * - **A toast after every press that did something** (§NNN; `finishToastSentence`): a number the server answered recorded — the
+ *   box's, «Finish»'s or an elite's button — «Nr. 205 — sosit la 0:23:41», at the time the line shows for it, and a moment «Finish»
+ *   kept, «Timp prins la 0:23:41 — scrie numărul», as its chip says it. The house's toast (`useToast`), shown after the next paint,
+ *   never inside the press (§371), for two and a half seconds (`FINISH_TOAST_MS`): polite for a screen reader, never taking the
+ *   focus, the newest in the place of the one on screen (`lane`) and no tap landing on it (`passThrough`) — so neither the box nor a
+ *   button under it ever waits for it. A press refused, a number already stored, a press still waiting and a question cancelled
+ *   toast nothing: the press's own line under the box says what became of it.
  * - **The times** are stamped at the press on the server's clock (`server-clock.ts`: the phone's wall clock and the offset measured
  *   by a round trip as the page wakes — again every time it is shown — and by every answer), so a phone whose clock is wrong, or
  *   whose screen locked between two finishers, stamps right; the server floors them and holds them to its bounds.
@@ -133,7 +149,15 @@ export type FinishLineWords = {
   eliteAgain: { title: string; body: string; bodyBy: string; second: string; cancel: string; confirm: string };
   boxLabel: string;
   bibHint: string;
+  /** The one line under the box (§NNN): a number, then «Finish» or «Sosit», records it; «Finish» with no number catches a time. */
+  boxHelp: string;
   record: string;
+  /**
+   * The toast after a press (§NNN), templates the island fills: a number recorded — «Nr. {bib} — sosit la {time}», an elite's
+   * «Nr. {bib} ({label}) — sosit la {time}», words of the number, never of the person (§1010) — and a moment kept by «Finish»,
+   * «Timp prins la {time} — scrie numărul».
+   */
+  toast: { recorded: string; recordedElite: string; kept: string };
   keep: string;
   keepHelp: string;
   keptTitle: string;
@@ -244,6 +268,31 @@ export function eliteAgainQuestion(words: FinishLineWords, again: EliteAgain): C
   };
 }
 
+/**
+ * What the toast after a press says (§NNN): a number the server answered recorded, with its elite's label when it is one, at its time
+ * since the gun — the line's own —; or a moment «Finish» kept, as its chip says it (`time`: the time since the gun, or the clock's
+ * hour before the gun).
+ */
+export type FinishToast = { kind: "recorded"; bibNumber: number; label: string | null; gunTimeMs: number } | { kind: "kept"; time: string };
+
+/** How much of a label a toast carries: an elite line's is 80 characters at most (`ELITE_NAME_MAX`), a registration's name may be longer. */
+const TOAST_LABEL_MAX = 80;
+
+/**
+ * The toast's sentence in the page's words (§NNN): «Nr. 205 — sosit la 0:23:41», «Nr. 7 (Andrei) — sosit la 0:31:05» for an elite —
+ * of the number, never of the person (§1010) —, «Timp prins la 0:23:41 — scrie numărul» for a kept moment; a label longer than
+ * `TOAST_LABEL_MAX` cut, so the sentence stays a toast's, under 200 characters. Apart from the island so a Node render reads it.
+ */
+export function finishToastSentence(words: FinishLineWords, said: FinishToast): string {
+  if (said.kind === "kept") return fill(words.toast.kept, { time: said.time });
+  const label = said.label?.trim() ?? "";
+  const values = { bib: String(said.bibNumber), time: formatResultTime(said.gunTimeMs), label: [...label].length > TOAST_LABEL_MAX ? `${[...label].slice(0, TOAST_LABEL_MAX - 1).join("")}…` : label };
+  return fill(label === "" ? words.toast.recorded : words.toast.recordedElite, values);
+}
+
+/** The lane of the finish line's toasts (`FormNotice.lane`): the newest press's sentence in the place of the one on screen. */
+const FINISH_TOAST_LANE = "finishLine";
+
 /** The phone's wall clock, which keeps time while the screen is locked: the round trips are measured on it (`server-clock.ts`). */
 const wallNow = () => Date.now();
 
@@ -308,6 +357,25 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   // The site was deployed again under the page: its actions are gone until a reload, so nothing more is sent.
   const outdated = useRef(false);
   const box = useRef<HTMLInputElement>(null);
+  // Whether the island is still on the page: a press answered after it left — another race chosen — toasts nothing on the next one.
+  const onPage = useRef(true);
+  const toast = useToast();
+
+  /**
+   * The toast after a press that did something (§NNN): the house's, after the next paint — never inside the press (§371) —, two and
+   * a half seconds, the newest of the line's in the place of the one on screen (`lane`) and no tap landing on it (`passThrough`), so
+   * the box keeps the focus and a button under it its press.
+   */
+  const say = useCallback(
+    (said: FinishToast) => {
+      const sentence = finishToastSentence(words, said);
+      afterPaint(() => {
+        if (!onPage.current) return;
+        toast.show({ kind: said.kind === "recorded" ? "success" : "info", key: FINISH_TOAST_LANE, sentence, autoHideMs: FINISH_TOAST_MS, lane: FINISH_TOAST_LANE, passThrough: true });
+      });
+    },
+    [toast, words],
+  );
 
   // Each write keeps the event's title with its line, for another event's page to name it.
   const commitEntries = useCallback(
@@ -423,15 +491,19 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
         if (answer.state) adopt(answer.state);
         const outcome: FinishEntryOutcome = answer.outcome;
         commitEntries((current) => settleEntry(current, next.id, outcome));
+        // Recorded — the server had it, or has it now: the toast says the number and its time (§NNN). A number already stored and a
+        // refusal toast nothing: the press's own line says what became of it.
+        if (outcome.kind === "recorded") say({ kind: "recorded", bibNumber: outcome.bibNumber, label: outcome.label, gunTimeMs: outcome.gunTimeMs });
       }
     } finally {
       pumping.current = false;
     }
-  }, [adopt, commitEntries, eventId, markOutdated, record, staffId, storageKey]);
+  }, [adopt, commitEntries, eventId, markOutdated, record, say, staffId, storageKey]);
 
   // Waking: the server's clock and the gun asked, the clock ticking, a kept moment too old dropped, whatever this phone kept waiting
   // sent at once — and all of it again every time the page is shown, comes back from the browser's memory or finds its signal again.
   useEffect(() => {
+    onPage.current = true;
     seedServerClock(initial.serverNowMs);
     const tick = setInterval(() => {
       setNowMs(serverClockNow());
@@ -452,6 +524,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     askClock();
     void pump();
     return () => {
+      onPage.current = false;
       clearInterval(tick);
       window.removeEventListener("online", wake);
       window.removeEventListener("pageshow", wake);
@@ -464,6 +537,10 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
 
   // The gun the line counts from and says: the newer of the last state the server answered with and the clock's question (§986).
   const gun = lineGun(state, heardGun);
+  const time = (ms: number | null) => (ms === null ? "—" : formatResultTime(ms));
+  const clockAt = (ms: number) => formatTimeWithSeconds(new Date(ms), { locale: uiLocale, timeZone: CLUB_TIME_ZONE });
+  /** A kept moment as its chip, the paper line and its toast say it: its time since the gun, or — kept before the gun — the clock's hour. */
+  const momentOf = (atMs: number) => (atMs >= gun.atMs ? time(stampedGunTime(atMs, gun.atMs)) : clockAt(atMs));
 
   // Before the first finisher the gun may still be pressed, moved or taken off — on the organizer's phone: the clock, which carries it,
   // is asked every half minute while the page is shown. From the first finisher the gun is fixed, and nothing is asked on a timer —
@@ -508,21 +585,24 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     [commitEntries, commitKept, pump, staffId, storageKey],
   );
 
-  const onBox = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  /**
+   * The box sent — by Enter, «Sosit», or «⏱ Finish» with something typed (§NNN): emptied at once and given the focus, inside the
+   * press's own tap, so a phone's keyboard stays up for the next number; what is no number says the hint (`readBox`).
+   */
+  const sendBox = () => {
     const input = box.current;
-    const typed = (input?.value ?? "").trim();
+    const reading = readBox(input?.value ?? "");
     if (input) {
       input.value = "";
       input.focus();
     }
-    if (typed === "") return;
-    if (!/^\d{1,6}$/.test(typed) || Number(typed) <= 0) {
+    if (reading.kind === "empty") return;
+    if (reading.kind === "notNumber") {
       setHint(true);
       return;
     }
     setHint(false);
-    const bibNumber = Number(typed);
+    const bibNumber = reading.bibNumber;
     // The moment is the tap's, read now — whether the number goes at once or after the question below (§1010).
     const tap = tapNow();
     // An elite already «Sosit», or whose press waits or was saved on this phone: asked first, nothing pressed yet (§1010).
@@ -533,6 +613,26 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
       return;
     }
     press(bibNumber, null, tap);
+  };
+
+  const onBox = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    sendBox();
+  };
+
+  /**
+   * «⏱ Finish» (§NNN, amending §986 and §1008; `finishPress`): with something typed in the box it is the box's own press — exactly
+   * «Sosit»'s, the box emptied and focused inside this tap —; with the box empty it keeps one moment for a bunch, as before, and the
+   * toast says it as its chip does — unless «Finish» already holds the most it keeps (`KEPT_TIMES_MAX`), which keeps nothing.
+   */
+  const onFinish = () => {
+    if (finishPress(box.current?.value ?? "") === "box") {
+      sendBox();
+      return;
+    }
+    const atMs = serverClockNow();
+    const before = keptOf(finishLineSnapshot(storageKey), staffId).length;
+    if (keptOf(commitKept((current) => keepTime(current, atMs)), staffId).length > before) say({ kind: "kept", time: momentOf(atMs) });
   };
 
   /**
@@ -598,8 +698,6 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     }));
   };
 
-  const time = (ms: number | null) => (ms === null ? "—" : formatResultTime(ms));
-  const clockAt = (ms: number) => formatTimeWithSeconds(new Date(ms), { locale: uiLocale, timeZone: CLUB_TIME_ZONE });
   const who = (bibNumber: number, label: string | null) => (label ? `${label} (#${bibNumber})` : `#${bibNumber}`);
   const gunAtMs = gun.atMs;
   // The gun's sentence, of the gun the clock counts from: pressed — the hour in the event's zone, as the page says it — or the plan.
@@ -769,7 +867,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
         </Box>
       )}
 
-      {/* The box: the numeric keypad, Enter or «Sosit», empty at once for the next number. */}
+      {/* The box: the numeric keypad, Enter, «Sosit» or «Finish» with a number (§NNN), empty at once for the next number. */}
       <Box component="form" action={recordForm} onSubmit={onBox} autoComplete="off" data-testid="finish-form">
         {hidden}
         <Stack direction="row" sx={{ gap: 1, alignItems: "stretch", flexWrap: "wrap" }}>
@@ -813,16 +911,23 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
             {words.bibHint}
           </Typography>
         )}
+        {/* The one line of help under the box (§NNN): it names «Finish», which only the page draws — none with scripts off. */}
+        {hydrated && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="finish-box-help">
+            {words.boxHelp}
+          </Typography>
+        )}
       </Box>
 
       {/* A finished elite's number typed again, asked first (§1010): the house's one dialog, «Anulează» focused — Enter and Esc cancel. */}
       <ConfirmDialog spec={asked?.question ?? null} open={askOpen} onCancel={() => answerAgain(false)} onConfirm={() => answerAgain(true)} />
 
-      {/* «⏱ Finish» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. */}
+      {/* «⏱ Finish» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. With a number in
+          the box it is the box's press (§NNN); with the box empty it keeps a moment. */}
       {hydrated && (
         <Box data-testid="finish-keep">
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-            <GlyphButton type="button" icon="keepTime" variant="outlined" sx={BIG_SX} onClick={() => commitKept((current) => keepTime(current, serverClockNow()))} data-testid="finish-keep-button">
+            <GlyphButton type="button" icon="keepTime" variant="outlined" sx={BIG_SX} onClick={onFinish} data-testid="finish-keep-button">
               {words.keep}
             </GlyphButton>
             {kept.length > 0 && (
@@ -831,7 +936,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
               </Typography>
             )}
             {kept.map((atMs, index) => {
-              const label = atMs >= gunAtMs ? time(stampedGunTime(atMs, gunAtMs)) : clockAt(atMs);
+              const label = momentOf(atMs);
               const age = keptAge(atMs, nowMs);
               const aged = `${label} · ${fill(age.unit === "seconds" ? words.keptAgeSeconds : words.keptAgeMinutes, { count: String(age.value) })}`;
               return (
@@ -868,7 +973,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
             >
               {fill(words.keptStale[countForm(staleTimes.length, uiLocale)], {
                 count: String(staleTimes.length),
-                times: staleTimes.map((atMs) => (atMs >= gunAtMs ? time(stampedGunTime(atMs, gunAtMs)) : clockAt(atMs))).join(", "),
+                times: staleTimes.map(momentOf).join(", "),
               })}
             </Alert>
           )}

@@ -53,6 +53,17 @@ export type FormNotice = {
   sentence?: string;
   /** How long this toast stays, in milliseconds, when not `TOAST_AUTO_HIDE_MS`. */
   autoHideMs?: number;
+  /**
+   * The toasts of one run of quick presses share a lane (§NNN: «Cronometrare»'s finish line, a press a second in a bunch): the
+   * newest takes the place of its lane's toast on screen, and of one waiting its turn, rather than being read seconds late behind
+   * them. A notice with no lane waits its turn as every toast does. Set in the browser only, never carried by a flash.
+   */
+  lane?: string;
+  /**
+   * A toast no tap lands on (§NNN): no close button, and every tap goes through it to the page under it — for a short toast over a
+   * page pressed fast, where a button under the toast must never miss its press. It goes by itself. Set in the browser only.
+   */
+  passThrough?: boolean;
 };
 
 /** The flash cookie: not `httpOnly`, because the island clears it once the toast is shown. */
@@ -283,9 +294,10 @@ export function decodeFlash(raw: string | undefined | null): FormNotice | null {
 }
 
 /**
- * One toast at a time (the provider's rule): the one showing, and the ones waiting their turn.
- * A reducer, so the order — show, dismiss, the next one up — is a pure function the unit suite
- * can drive without a DOM; the provider owns the timer and the `Snackbar`.
+ * One toast at a time (the provider's rule): the one showing, and the ones waiting their turn —
+ * a lane's newest in the place of its lane's own (`FormNotice.lane`, §NNN). A reducer, so the
+ * order — show, dismiss, the next one up — is a pure function the unit suite can drive without
+ * a DOM; the provider owns the timer and the `Snackbar`.
  */
 export type ToastQueue = {
   /** The toast on screen, or none. `id` changes with every toast so the Snackbar re-enters. */
@@ -300,9 +312,16 @@ export type ToastQueueAction = { type: "show"; notice: FormNotice } | { type: "d
 
 export function toastQueueReducer(state: ToastQueue, action: ToastQueueAction): ToastQueue {
   switch (action.type) {
-    case "show":
-      if (state.current === null) return { ...state, current: { ...action.notice, id: state.nextId }, nextId: state.nextId + 1 };
-      return { ...state, waiting: [...state.waiting, action.notice] };
+    case "show": {
+      const { lane } = action.notice;
+      // The newest of a lane in the place of its lane's toast (§NNN): a new id, so the Snackbar enters again and its clock starts over.
+      if (state.current === null || (lane !== undefined && state.current.lane === lane)) {
+        return { ...state, current: { ...action.notice, id: state.nextId }, nextId: state.nextId + 1 };
+      }
+      // …and of its lane's one waiting its turn, in that turn — at most one waits a lane —; any other toast waits at the back.
+      const at = lane === undefined ? -1 : state.waiting.findIndex((notice) => notice.lane === lane);
+      return { ...state, waiting: at < 0 ? [...state.waiting, action.notice] : state.waiting.map((notice, index) => (index === at ? action.notice : notice)) };
+    }
     case "dismiss": {
       const [next, ...rest] = state.waiting;
       if (next === undefined) return { ...state, current: null };

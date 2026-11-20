@@ -53,6 +53,32 @@ describe("§384 the toast queue", () => {
     expect(TOAST_AUTO_HIDE_MS).toBeGreaterThanOrEqual(5000);
     expect(TOAST_AUTO_HIDE_MS).toBeLessThanOrEqual(6000);
   });
+
+  // §NNN — «Cronometrare»'s presses come a second apart in a bunch: each says the newest, never one read seconds late behind the others.
+  it("puts a lane's newest toast in the place of its lane's own, shown or waiting, with a new id; any other waits its turn as before", () => {
+    const press = (bib: string) => ({ kind: "success" as const, key: "finishLine", sentence: `Nr. ${bib}`, lane: "finishLine", passThrough: true });
+    let queue = toastQueueReducer(EMPTY_TOAST_QUEUE, { type: "show", notice: press("205") });
+    queue = toastQueueReducer(queue, { type: "show", notice: press("206") });
+    expect(queue.current).toEqual({ ...press("206"), id: 2 });
+    expect(queue.waiting).toEqual([]);
+    // Another toast on screen: the lane waits behind it — its newest only, in the older one's turn, which it takes.
+    queue = toastQueueReducer(EMPTY_TOAST_QUEUE, { type: "show", notice: saved });
+    queue = toastQueueReducer(queue, { type: "show", notice: press("205") });
+    queue = toastQueueReducer(queue, { type: "show", notice: archived });
+    queue = toastQueueReducer(queue, { type: "show", notice: press("206") });
+    expect(queue.current).toEqual({ ...saved, id: 1 });
+    expect(queue.waiting).toEqual([press("206"), archived]);
+    queue = toastQueueReducer(queue, { type: "dismiss" });
+    expect(queue.current).toEqual({ ...press("206"), id: 2 });
+    expect(queue.waiting).toEqual([archived]);
+    // A toast with no lane never takes the place of a lane's: it waits its turn.
+    queue = toastQueueReducer(EMPTY_TOAST_QUEUE, { type: "show", notice: press("205") });
+    queue = toastQueueReducer(queue, { type: "show", notice: saved });
+    expect(queue.current).toEqual({ ...press("205"), id: 1 });
+    expect(queue.waiting).toEqual([saved]);
+    queue = toastQueueReducer(queue, { type: "dismiss" });
+    expect(queue.current).toEqual({ ...saved, id: 2 });
+  });
 });
 
 describe("§384 the notice a redirect's outcome becomes", () => {

@@ -34,10 +34,11 @@ import { isUuid } from "@/shared/ids";
  *   before its own clock, else the server's own (`raceGunMoment`); it may be pressed from three hours before the planned gun to
  *   six hours after (`raceGunWindowOpen`); a second «Start» of the same organizer heard within ten seconds of their last is the
  *   same press sent twice, and changes nothing (`raceGunRepeats`).
- * - **«⏱ Finish».** Each press keeps one instant, oldest first; the next number or elite pressed takes the oldest kept
- *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`). The
- *   moment a press stands for is read at the tap (`tapMoment`) and handed to the press, which then lets go of the kept one it took
- *   (`keptAfterPress`) — so a question asked between the two never moves it (§1010).
+ * - **«⏱ Finish».** With the box empty, each press keeps one instant, oldest first; the next number or elite pressed takes the
+ *   oldest kept one instead of now (`takeOldestKept`). With anything typed in the box it is the box's own press, «Sosit»'s, and
+ *   keeps nothing (`finishPress`, §NNN; the box read by `readBox`). The kept instants are the staff account's that kept them
+ *   (`keptOf`, `withKept`). The moment a press stands for is read at the tap (`tapMoment`) and handed to the press, which then lets
+ *   go of the kept one it took (`keptAfterPress`) — so a question asked between the two never moves it (§1010).
  * - **A finished elite typed again** (§1010): a number the box is given that is an elite's who is already «Sosit» as this page last
  *   heard — at its load or in the answer to any press since — or whose press waits or was saved on this phone, is asked about first
  *   (`asksBeforeAgain`); any other number goes at once, as before.
@@ -449,6 +450,35 @@ export function keptAfterPress(kept: readonly number[], taken: number | null, no
   const { fresh, stale } = staleKept(at < 0 ? kept : dropKept(kept, at), nowMs);
   return { rest: fresh, stale };
 }
+
+// ---- The box, and «Finish» with a number ------------------------------------------------------------
+
+/** What the box holds as it is sent: nothing — spaces alone are nothing —, a race number, or something that is none. */
+export type BoxReading = { kind: "empty" } | { kind: "number"; bibNumber: number } | { kind: "notNumber" };
+
+/**
+ * The box read as it is sent (§986), by Enter, «Sosit» or «Finish»: trimmed, nothing is nothing to press; one to six digits, more
+ * than nought, is a race number; anything else is no number, and the box says so under it (`bibHint`).
+ */
+export function readBox(typed: string): BoxReading {
+  const text = typed.trim();
+  if (text === "") return { kind: "empty" };
+  return /^\d{1,6}$/.test(text) && Number(text) > 0 ? { kind: "number", bibNumber: Number(text) } : { kind: "notNumber" };
+}
+
+/**
+ * What «⏱ Finish» does (§NNN, amending §986 and §1008; the owner, 2026-11-20: «si duoa ce apas aici "Finish" trebuie sa se golasca
+ * inoutul si a am un mic toast»): with anything typed in the box it is the box's own press, exactly «Sosit»'s (`box`) — the number
+ * recorded at the tap's moment (`tapMoment`: the oldest kept moment still young, else now), a finished elite's asked first
+ * (`asksBeforeAgain`), what is no number the hint, the box emptied either way —; with the box empty it keeps one moment for a bunch
+ * (`keep`, `keepTime`), as before.
+ */
+export function finishPress(typed: string): "box" | "keep" {
+  return readBox(typed).kind === "empty" ? "keep" : "box";
+}
+
+/** How long the toast after a press stays on «Cronometrare» (§NNN): two and a half seconds — read at a glance, gone before the next runner. */
+export const FINISH_TOAST_MS = 2_500;
 
 // ---- What the server answers ----------------------------------------------------------------------------
 

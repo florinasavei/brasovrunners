@@ -1692,10 +1692,14 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
   it — never given up, a later press of its number waiting behind it; one whose request hangs, neither answered nor
   failed, is still awaited, and after ten seconds the line says the signal is weak (`FINISH_PRESS_SLOW_MS`); a site
-  deployed under the page asks for a reload. **«⏱ Finish»** keeps one moment a press, each account its own, each
-  chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
+  deployed under the page asks for a reload. **«⏱ Finish»** with the box empty keeps one moment a press, each account
+  its own, each chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
   (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
-  line says its time, to be written on paper.
+  line says its time, to be written on paper. With anything typed in the box, «Finish» is the box's own press,
+  exactly «Sosit»'s, and keeps no moment (`domain/finish-line.ts#finishPress`, §NNN). A press the server answers
+  recorded, and a moment kept, are said in the house's toast (`useToast`) for two and a half seconds — after the
+  paint, polite, the newest in the place of the one shown (`FormNotice.lane`) and no tap landing on it
+  (`passThrough`); a refusal, a duplicate, a press still waiting and a cancelled question toast nothing.
 - **The same number twice.** The first stored wins and its row is never touched (`domain/finish-line.ts#pressMeets`). A
   retry — the same press sent again, known by its id in the trail's metadata (`results.ts#loadSavedPress`,
   `domain/finish-line.ts#savedPressOf`) — is answered as it was answered the first time and writes nothing, but a retry

@@ -14,9 +14,11 @@ import {
   FINISH_CLAIM_AHEAD_MS,
   FINISH_RETRY_FIRST_MS,
   FINISH_RETRY_MAX_MS,
+  FINISH_TOAST_MS,
   FINISH_UNDO_WINDOW_MS,
   FINISH_WINDOW_MS,
   type FinishEntry,
+  finishPress,
   finishRetryDelay,
   finishStamp,
   finishStorageKey,
@@ -42,6 +44,7 @@ import {
   raceGunMoment,
   raceGunRepeats,
   raceGunWindowOpen,
+  readBox,
   readStoredClockSample,
   readStoredFinishLine,
   type RecentFinisherView,
@@ -457,6 +460,57 @@ describe("§1010 the moment of the tap: read as «Sosit» is pressed, taken from
     expect(keptAfterPress([at(39, 30)], tap.kept, at(40, 5))).toEqual({ rest: [at(39, 30)], stale: [] });
     // Another moment gone stale meanwhile goes for paper; the tap's, still kept, is taken whatever its age now.
     expect(keptAfterPress([at(30), at(30, 1)], at(30), at(40, 5))).toEqual({ rest: [], stale: [at(30, 1)] });
+  });
+});
+
+/**
+ * §NNN — «Finish» with a number typed records it (the owner, 2026-11-20: after pressing «Finish» the box must empty, and a small
+ * toast): the box read as it is sent, and the rule that decides what «Finish» does — the box's own press, exactly «Sosit»'s, with
+ * anything typed; one kept moment with the box empty —; the number taking the oldest kept moment still young, as any number does, and
+ * keeping none; and the toast's few seconds.
+ */
+describe("§NNN «Finish»: with a number typed, the box's own press; with the box empty, one moment kept", () => {
+  it("reads the box as it is sent: nothing, a race number, or something that is none", () => {
+    expect(readBox("")).toEqual({ kind: "empty" });
+    expect(readBox("   ")).toEqual({ kind: "empty" });
+    expect(readBox("205")).toEqual({ kind: "number", bibNumber: 205 });
+    expect(readBox(" 7 ")).toEqual({ kind: "number", bibNumber: 7 });
+    expect(readBox("999999")).toEqual({ kind: "number", bibNumber: 999_999 });
+    for (const none of ["0", "000", "1234567", "20a", "-5", "2 05", "٢٠٥"]) expect(readBox(none), none).toEqual({ kind: "notNumber" });
+  });
+
+  it("is the box's press with anything typed — a number, or what the hint answers — and keeps a moment only with the box empty", () => {
+    expect(finishPress("205")).toBe("box");
+    expect(finishPress(" 7 ")).toBe("box");
+    // What is no number is «Sosit»'s too: the box emptied and the hint, never a moment kept in its place.
+    expect(finishPress("20a")).toBe("box");
+    expect(finishPress("0")).toBe("box");
+    expect(finishPress("")).toBe("keep");
+    expect(finishPress("  ")).toBe("keep");
+  });
+
+  it("records a typed number at the oldest kept moment still young and keeps none — as «Sosit» does —, while the empty box keeps one more", () => {
+    const kept = [at(30), at(30, 4)];
+    const now = at(30, 10);
+    // 205 typed, «Finish»: the box's press, standing for the oldest kept moment, which leaves the kept ones — the next is left.
+    expect(finishPress("205")).toBe("box");
+    const tap = tapMoment(kept, now);
+    expect(tap).toEqual({ atMs: at(30), kept: at(30) });
+    expect(keptAfterPress(kept, tap.kept, now)).toEqual({ rest: [at(30, 4)], stale: [] });
+    const [pressed] = pressEntry([], { id: "p1", staffId: "vlad", bibNumber: 205, label: null, pressedAtMs: tap.atMs });
+    expect(pressed).toEqual({ id: "p1", staffId: "vlad", bibNumber: 205, label: null, pressedAtMs: at(30), outcome: null });
+    // The box empty, «Finish»: one moment more, kept oldest first — nothing pressed.
+    expect(finishPress("")).toBe("keep");
+    expect(keepTime(kept, now)).toEqual([at(30), at(30, 4), now]);
+    // No kept moment, or only one older than ten minutes: the typed number stands for the tap itself, the stale one left for paper.
+    expect(tapMoment([], now)).toEqual({ atMs: now, kept: null });
+    expect(tapMoment([at(10)], now)).toEqual({ atMs: now, kept: null });
+    expect(keptAfterPress([at(10)], null, now)).toEqual({ rest: [], stale: [at(10)] });
+  });
+
+  it("says a press in a toast of two to three seconds", () => {
+    expect(FINISH_TOAST_MS).toBeGreaterThanOrEqual(2_000);
+    expect(FINISH_TOAST_MS).toBeLessThanOrEqual(3_000);
   });
 });
 

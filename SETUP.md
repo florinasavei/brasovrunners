@@ -2649,8 +2649,10 @@ enter them; **only the Administrator and the Superadministrator make them public
    - **The elites first:** a big button per elite — a registration marked «Elită» with a race number, and a line of the elite list with
      a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
      disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
-   - **Everyone else:** type the number on the bib and press «Sosit» (or Enter); the box empties at once for the next number. Several
-     at once: «Finish» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
+   - **Everyone else:** type the number on the bib and press «Sosit», «Finish» or Enter — the same press; the box empties at once for
+     the next number, and a short toast at the top says the number and its time once the site has it (nothing for a press refused,
+     a number already in or one still waiting: its own line says it). Several at once: with the box empty, «Finish» once for each —
+     its toast says the time caught —, then the numbers in order — each takes the oldest caught time. Every press is saved at
      once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
      right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
      it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. A press the site answers

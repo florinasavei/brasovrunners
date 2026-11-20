@@ -25,10 +25,10 @@ function databaseUrl(): string {
 }
 
 /**
- * A race whose planned gun was a few minutes ago, with runners 101 and 102 and an elite line «Andrei <tag>» wearing 7 — and a raffle
- * («Avem tombolă»), so the organizers' row of «Ziua cursei» holds all five tabs.
+ * A race whose planned gun was a few minutes ago, with runners 101 and 102 — and any `more` — and an elite line «Andrei <tag>»
+ * wearing 7 — and a raffle («Avem tombolă»), so the organizers' row of «Ziua cursei» holds all five tabs.
  */
-async function seedRace(tag: string): Promise<string> {
+async function seedRace(tag: string, more: ReadonlyArray<{ bib: number; name: string }> = []): Promise<string> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
@@ -43,10 +43,7 @@ async function seedRace(tag: string): Promise<string> {
       `timing-${tag}`,
       `The timed race ${tag}`,
     ]);
-    for (const runner of [
-      { bib: 101, name: `Ana Popescu ${tag}` },
-      { bib: 102, name: `Bia Marin ${tag}` },
-    ]) {
+    for (const runner of [{ bib: 101, name: `Ana Popescu ${tag}` }, { bib: 102, name: `Bia Marin ${tag}` }, ...more]) {
       const email = `timing-${runner.bib}-${tag}@test.invalid`;
       const { rows: person } = await client.query<{ id: string }>(
         `INSERT INTO participants (delivery_email, normalized_email, canonical_email, canonicalization_version, default_name) VALUES ($1, $1, $1, 1, $2) RETURNING id`,
@@ -96,20 +93,25 @@ function resultTime(ms: number): string {
 }
 
 /**
- * Whether the box holds the focus as each tap on the question ends (§1010): read at the window, after the page's own handler and the
- * render it commits, before any frame — iOS Safari raises the keyboard only for a focus a tap's own handler gives, never for one given
- * a frame later. Each read returns what was seen since the last one, a tap at a time.
+ * Whether the box holds the focus as each tap on the question — or on what `within` names, «Finish» (§NNN) — ends (§1010): read at
+ * the window, after the page's own handler and the render it commits, before any frame — iOS Safari raises the keyboard only for a
+ * focus a tap's own handler gives, never for one given a frame later. Each read returns what was seen since the last one, a tap at a
+ * time.
  */
-async function focusAtTapEnd(page: Page): Promise<() => Promise<boolean[]>> {
-  await page.evaluate(() => {
-    const seen: boolean[] = [];
-    (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd = seen;
-    window.addEventListener("click", (event) => {
-      if (!(event.target instanceof Element) || !event.target.closest('[data-testid="confirm-dialog"]')) return;
-      seen.push(document.activeElement === document.querySelector('[data-testid="finish-bib"]'));
-    });
-  });
-  return () => page.evaluate(() => (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd.splice(0));
+async function focusAtTapEnd(page: Page, within = '[data-testid="confirm-dialog"]'): Promise<() => Promise<boolean[]>> {
+  const name = `boxAtTapEnd${within.replace(/\W/g, "")}`;
+  await page.evaluate(
+    ([key, selector]) => {
+      const seen: boolean[] = [];
+      (window as unknown as Record<string, boolean[]>)[key] = seen;
+      window.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest(selector)) return;
+        seen.push(document.activeElement === document.querySelector('[data-testid="finish-bib"]'));
+      });
+    },
+    [name, within] as const,
+  );
+  return () => page.evaluate((key) => (window as unknown as Record<string, boolean[]>)[key].splice(0), name);
 }
 
 /**
@@ -485,6 +487,132 @@ test.describe("§986 «Cronometrare»", () => {
     await expect(page.locator('[data-testid="finish-entry"][data-bib="102"][data-state="duplicate"]')).toHaveCount(1, { timeout: 15_000 });
     await expect(dialog).toHaveCount(0);
     await expect(box).toBeFocused();
+    await noHorizontalScroll(page);
+  });
+
+  /**
+   * §NNN — the owner, 2026-11-20, of «Finish» pressed with a number in the box: «si duoa ce apas aici "Finish" trebuie sa se golasca
+   * inoutul si a am un mic toast». The desk Volunteer types 205 and presses «Finish»: recorded as «Sosit» records it — the box empty
+   * and focused as the tap ends, no moment kept, the line under «Ultimii sosiți» — and a short toast says «Nr. 205 — sosit la …», the
+   * line's time: polite, no tap landing on it, clear of the box and its two buttons, gone in a few seconds. «Finish» with the box empty
+   * keeps a moment and says it; «Sosit» and «Finish» after it each give their number that moment and say it; an elite's button says its
+   * number and label. A refusal toasts nothing, and nor does a finished elite's number typed again — asked first (§1010) — cancelled.
+   */
+  test("«Finish» with a number typed records it as «Sosit» does, the box empty and focused, and a short toast says the number and its time; the box empty, it keeps a moment and says so; a refusal and a cancelled question toast nothing", async ({
+    page,
+  }) => {
+    const tag = `${test.info().project.name}-toast-${Date.now().toString(36)}`;
+    const eventId = await seedRace(tag, [{ bib: 205, name: `Cora Ionescu ${tag}` }]);
+    const storedTime = async (bib: number) => {
+      const [row] = await query<{ gun: number }>(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = $2`, [eventId, bib]);
+      return resultTime(row.gun);
+    };
+    await signIn(page, "Dev Contributor");
+    await page.goto(`/ro/admin/checkin/cronometrare?eventId=${eventId}`);
+    await hydrated(page);
+    const box = page.getByTestId("finish-bib");
+    const finish = page.getByTestId("finish-keep-button");
+    const toast = page.getByTestId("toast");
+    const kept = page.getByTestId("finish-kept");
+    const boxAtFinishEnd = await focusAtTapEnd(page, '[data-testid="finish-keep-button"]');
+
+    // The one line under the box says what «Finish» does now.
+    await expect(page.getByTestId("finish-box-help")).toHaveText("Cu un număr scris, «Finish» sau «Sosit» îl trece; fără număr, «Finish» prinde doar timpul, pentru un grup.");
+
+    // 205 typed, «Finish»: the box empty and focused as the tap ends, no moment kept, the press saved under «Ultimii sosiți».
+    await box.fill("205");
+    await finish.click();
+    await expect(box).toHaveValue("");
+    await expect(box).toBeFocused();
+    expect(await boxAtFinishEnd()).toEqual([true]);
+    await expect(kept).toHaveCount(0);
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="205"]').first()).toHaveAttribute("data-state", "saved", { timeout: 15_000 });
+    await expect(page.locator('[data-testid="finish-recent-row"][data-bib="205"]')).toContainText(`#205 Cora Ionescu ${tag}`);
+    // The toast: the number and the time the line keeps for it, inside the polite live region.
+    await expect(toast).toHaveText(`Nr. 205 — sosit la ${await storedTime(205)}`, { timeout: 15_000 });
+    const seenAt = Date.now();
+    await expect(page.getByTestId("toast-live")).toHaveAttribute("role", "status");
+    await expect(page.getByTestId("toast-live")).toHaveAttribute("aria-live", "polite");
+    await expect(page.getByTestId("toast-live").getByTestId("toast")).toHaveCount(1);
+    // Nothing to tap on it, every tap through it to the page, and clear of the box and its two buttons; the box keeps the focus.
+    const geometry = await page.evaluate(() => {
+      const shown = document.querySelector('[data-testid="toast"]') as HTMLElement;
+      const area = shown.getBoundingClientRect();
+      const under = document.elementFromPoint(area.left + area.width / 2, area.top + area.height / 2);
+      const clear = ['[data-testid="finish-bib"]', '[data-testid="finish-record"]', '[data-testid="finish-keep-button"]'].map((selector) => {
+        const other = (document.querySelector(selector) as HTMLElement).getBoundingClientRect();
+        return other.bottom <= area.top || other.top >= area.bottom || other.right <= area.left || other.left >= area.right;
+      });
+      return { pointerEvents: getComputedStyle(shown).pointerEvents, through: under !== null && !shown.contains(under), buttons: shown.querySelectorAll("button").length, clear, inside: area.left >= 0 && area.right <= document.documentElement.clientWidth };
+    });
+    expect(geometry).toEqual({ pointerEvents: "none", through: true, buttons: 0, clear: [true, true, true], inside: true });
+    await expect(box).toBeFocused();
+    // Short: gone by itself in a few seconds.
+    await expect(toast).toHaveCount(0, { timeout: 4_000 });
+    expect(Date.now() - seenAt).toBeLessThan(4_000);
+
+    // The box empty, «Finish»: one moment kept — nothing recorded — and the toast says it as its chip does.
+    await finish.click();
+    await expect(kept).toHaveCount(1);
+    const caught = ((await kept.textContent()) ?? "").split(" · ")[0];
+    expect(caught).toMatch(/^0:\d\d:\d\d$/);
+    await expect(toast).toHaveText(`Timp prins la ${caught} — scrie numărul`);
+    await expect(page.locator('[data-testid="finish-entry"]')).toHaveCount(1);
+
+    // 101 typed, «Sosit»: it takes that moment, as any number does, and the toast — the newest in the place of the one shown — says it.
+    await box.fill("101");
+    await page.getByTestId("finish-record").click();
+    await expect(box).toHaveValue("");
+    await expect(box).toBeFocused();
+    await expect(kept).toHaveCount(0);
+    await expect(toast).toHaveText(`Nr. 101 — sosit la ${caught}`, { timeout: 15_000 });
+    expect(await storedTime(101)).toBe(caught);
+
+    // A moment caught, then 102 typed and «Finish»: the number takes the moment — no second one kept.
+    await finish.click();
+    await expect(kept).toHaveCount(1);
+    const caughtAgain = ((await kept.textContent()) ?? "").split(" · ")[0];
+    // The box empty, «Finish» leaves the focus where it was, as before: only the press with a number is read below.
+    await boxAtFinishEnd();
+    await box.fill("102");
+    await finish.click();
+    await expect(box).toHaveValue("");
+    await expect(box).toBeFocused();
+    expect(await boxAtFinishEnd()).toEqual([true]);
+    await expect(kept).toHaveCount(0);
+    await expect(toast).toHaveText(`Nr. 102 — sosit la ${caughtAgain}`, { timeout: 15_000 });
+    expect(await storedTime(102)).toBe(caughtAgain);
+
+    // Andrei's button: the toast names the number and his label — of the number, never of the person.
+    const andrei = page.locator('[data-testid="finish-elite"][data-bib="7"]').getByTestId("finish-elite-button");
+    await andrei.click();
+    await expect(page.locator('[data-testid="finish-recent-row"][data-bib="7"]')).toContainText(`Andrei (#7) Andrei ${tag}`, { timeout: 15_000 });
+    await expect(andrei).toBeDisabled();
+    await expect(toast).toHaveText(`Nr. 7 (Andrei) — sosit la ${await storedTime(7)}`, { timeout: 15_000 });
+
+    // A number nobody holds, «Finish»: refused on its line, and no toast.
+    await expect(toast).toHaveCount(0, { timeout: 5_000 });
+    await box.fill("900");
+    await finish.click();
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="900"]').first()).toHaveAttribute("data-state", "refused", { timeout: 15_000 });
+    await page.waitForTimeout(800);
+    await expect(toast).toHaveCount(0);
+
+    // Andrei's number typed again and «Finish»: asked first (§1010) — no toast —; «Anulează» records nothing and toasts nothing.
+    await box.fill("7");
+    await finish.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(`Andrei (Andrei ${tag}) a sosit deja la ${await storedTime(7)}`);
+    await expect(toast).toHaveCount(0);
+    await dialog.getByTestId("confirm-dialog-cancel").click();
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    await expect(box).toHaveValue("");
+    await page.waitForTimeout(800);
+    await expect(toast).toHaveCount(0);
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="7"]')).toHaveCount(1);
+    expect(await query(`SELECT count(*)::int AS count FROM audit_logs WHERE entity_id = $1 AND action = 'event_result.finish_duplicate'`, [eventId])).toEqual([{ count: 0 }]);
     await noHorizontalScroll(page);
   });
 });
