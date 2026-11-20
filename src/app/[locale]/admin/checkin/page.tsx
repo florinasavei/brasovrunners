@@ -29,11 +29,12 @@ import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
+import SparesTip from "@/modules/registrations/ui/SparesTip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-line";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
-import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canEnterAtDesk, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { type RaffleLine, readRaffleDeskLines } from "@/modules/volunteers/raffle-roster";
@@ -147,7 +148,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
   });
   // The chosen event's free desk spares (§444), in one line beside the counts (§979): what «Adaugă pe cineva» picks from.
   const spareLine = eventId ? await spareLineWords((await readSpareLines(db, [eventId]))[eventId] ?? { kind: "none" }, locale) : null;
-  const walkInHref = eventId
+  // «Adaugă pe cineva» is the organizers' (§NNN, `canEnterAtDesk`): every other desk role reads, in its place, that an organizer adds them.
+  const mayEnter = canEnterAtDesk(actor);
+  const walkInHref = eventId && mayEnter
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
     : null;
 
@@ -276,13 +279,24 @@ export default async function DeskPage({ params, searchParams }: Props) {
               {t("desk.walkIn")}
             </GlyphButton>
           )}
+          {!mayEnter && (
+            <Typography variant="body2" color="text.secondary" data-testid="desk-walk-in-call">
+              {t("desk.walkInCall")}
+            </Typography>
+          )}
         </Stack>
       )}
-      {/* The free spares (§979, §444): the blank bibs a walk-in is handed, as ranges — or why there are none. */}
+      {/* The free spares (§979, §444): the blank bibs a walk-in is handed, as ranges — or why there are none — and beside them an
+          «i» that says how a spare is given, in the words of the reader's role (§NNN). */}
       {counts && spareLine && (
-        <Typography variant="body2" color="text.secondary" data-testid="desk-spares">
-          {spareLine}
-        </Typography>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+          <Typography variant="body2" color="text.secondary" data-testid="desk-spares">
+            {spareLine}
+          </Typography>
+          <Box data-testid="desk-spares-tip" sx={{ flexShrink: 0 }}>
+            <SparesTip role={actor.role} />
+          </Box>
+        </Stack>
       )}
 
       {/* What the buttons on a row do, in one line, always visible (the owner: "I do not

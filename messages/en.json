@@ -7989,7 +7989,7 @@
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
         "Everyone at the table signs in with their own account, never someone else's: “Log” shows who scanned each code and who marked each runner present.",
-        "No email addresses, and nobody can be cancelled from here.",
+        "They see no email address, cancel nobody and add nobody who is not on the list: for that, they call an organizer.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
         "Under the row it says “Scanned before: …”? The code was opened at the desk before: check the person has not already picked up their number.",
         "Or search by name or by race number.",
@@ -7998,7 +7998,7 @@
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
-        "Never registered at all: “Add somebody”. Name and email.",
+        "Never registered at all: an organizer or an administrator presses “Add somebody” — name and email. A volunteer calls one of them.",
         "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history and in “Log”, with your name on it.",
@@ -8022,6 +8022,7 @@
       },
       "closed": "The event has finished. The desk is closed: the list still reads, but nobody is checked in any more.",
       "walkIn": "Add somebody",
+      "walkInCall": "Somebody not on the list? Call an organizer: only an organizer can add them.",
       "foundByCode": "Found by code.",
       "unknownCode": "No participant has this code. Check the letters, or search by name.",
       "nobody": "Nobody matches.",
@@ -8102,6 +8103,16 @@
           "other": "Free spare numbers ({count}): {numbers}"
         },
         "none": "No spare numbers for this race: an Administrator prints them from “Allocate and print”."
+      },
+      "sparesTip": {
+        "what": "Spares are bibs printed in advance with an empty name line, for people who come on race day. The usual number allocation never gives one.",
+        "desk": "On a row with no number, «Confirm on paper» and «Save no.» already hold the lowest free spare: hand over that bib and write the name on it.",
+        "callOrganizer": "Somebody not on the list: call an organizer, who adds them with the lowest free spare already chosen.",
+        "walkIn": "In «Add somebody», «Number given now» already has the lowest free spare chosen; you can pick another.",
+        "blankBib": "On the registration's page, «Give a blank bib» gives a spare to a confirmed runner who has no number yet.",
+        "blankBibReplace": "On the registration's page, «Give a blank bib» gives a spare to a confirmed runner, also in place of their number (a lost or wrong bib), which is retired.",
+        "invitation": "An invitation sent with «Gets a blank bib when confirmed» gives the person the lowest free spare when they are confirmed.",
+        "given": "A number given leaves this list and is never given to anybody else. An Administrator prints the spares in the event's editor, under «Allocate and print»."
       },
       "handedBibPickHelp": "Choose the spare bib you hand them (the lowest is already chosen). “Another number…” if you hand another number from the box; “No number now” and the site picks one.",
       "handedBibOther": "Another number…",
@@ -9623,9 +9634,9 @@
             {
               "title": "What each role can do",
               "steps": [
-                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in — and the «Raffle» tab, when the race holds a raffle. Sees a name, a state and a number, never an email address.",
+                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in — and the «Raffle» tab, when the race holds a raffle. Sees a name, a state and a number, never an email address. Does not add somebody who is not on the list: calls an organizer.",
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
-                "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk; leaves internal notes on a registration. Does not change an event, cancel or erase a registration.",
+                "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk, adding there somebody who is not on the list («Add somebody»); leaves internal notes on a registration. Does not change an event, cancel or erase a registration.",
                 "The Tehnic role: the site's configuration page, for troubleshooting. Does not change events and does not see the registrations.",
                 "The Administrator runs the club: everything the Organizer and the Redactor do, plus the events («New event», «Edit», «Create and publish»), correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
                 "The Superadministrator: everything the Administrator does, plus the technical settings that can stop the service — «How often the site checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
@@ -9710,7 +9721,8 @@
             {
               "title": "Never registered",
               "steps": [
-                "Press «Add somebody».",
+                "A Volunteer, a Redactor or the Tehnic role? You have no «Add somebody»: call an organizer or an administrator — only they add somebody who is not on the list.",
+                "The organizer or the administrator presses «Add somebody».",
                 "Fill in the first name, the last name, the birth date, the phone and «Participant email address».",
                 "The «This person is at the desk…» tick is already set — leave it.",
                 "Tick «I confirm this person asked me to register them…».",
@@ -9733,7 +9745,7 @@
                 "Searched by race number, the row appears in the section «Cancelled or expired», open.",
                 "The person no longer has a place, even with the email in hand: give no number and do not mark them present.",
                 "If it says the number was printed, pull that bib from the pile — numbers are never reused.",
-                "Call an organizer. If places are left, you register them again with «Add somebody»."
+                "Call an organizer. If places are left, the organizer registers them again with «Add somebody»."
               ]
             },
             {

@@ -3201,6 +3201,14 @@ BR-REQ-037-05):
    - **The fast track on entry.** `createRegistrationByStaff` with `fastTrack` skips the
      verification email and confirms in the same request; it ignores the public window (the
      desk decides) and nothing else — a cancelled event and a non-local mode still refuse.
+     The entry itself — «Adaugă pe cineva» on the desk, the staff entry it opens and that entry's
+     action and service — is the Organizer's, the Administrator's and the Superadministrator's since
+     `DECISIONS.md` §NNN (`canEnterAtDesk`, written as `canReadRegistrations`): the desk's Volunteer,
+     the Redactor and Tehnic read, in the button's place, that an organizer adds somebody who is not on
+     the list; for them the page is the 404 an unknown page gets and the action and the service refuse
+     (FORBIDDEN, the boxes kept, nothing written). From the desk the entry's «Numărul dat acum» holds the
+     lowest free spare (§444), and the desk's line of free spares carries an «i» that says how a spare is
+     given, in the words of the reader's role.
    - **A place ahead of the queue.** `promoteFromWaitlistByStaff` is the exceptional promotion
      of §2, only into a place that is free under the lock; "full" is refused with a sentence.
    - **The address vouched for remotely** (`DECISIONS.md` §637). «Dă-i un loc acum» on a
@@ -3293,7 +3301,8 @@ BR-REQ-037-05):
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
      a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
      desk included (§984, the person having accepted its rules), and the finish line «Cronometrare»
-     beside it (`canRecordFinishes`, §10.11). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
+     beside it (`canRecordFinishes`, §10.11) — every one but the entry of a walk-in, the Organizer's and
+     the Administrators' since §NNN (`canEnterAtDesk`, above; the desk's other roles call one of them). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§948) stay
      Administrator-only (`canManageRegistrations`). Each verb is audited under the volunteer's own id.

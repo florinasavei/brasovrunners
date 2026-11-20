@@ -342,11 +342,12 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
   });
 
   /**
-   * Since `DECISIONS.md` §67 the entry form is a desk verb: a walk-in on race morning is
-   * typed in by whoever is at the table, and that is a volunteer — the lowest role. What a
-   * Contributor still cannot do is anything past the desk: cancel, erase, rename, resend.
+   * Since `DECISIONS.md` §67 the entry form is a desk verb, and since §NNN the organizers' one: a
+   * walk-in on race morning is typed in by the Organizer or an Administrator, and the desk's
+   * volunteer — the lowest role — calls one of them and is refused here. What the Organizer still
+   * cannot do is anything past the entry: cancel, erase, rename, resend.
    */
-  it("is open to a Contributor at the desk, who still cannot cancel", async () => {
+  it("is open to the Organizer at the desk, who still cannot cancel — and refused to the desk's volunteer", async () => {
     const event = await createInternalEvent(10);
 
     const created = await codeOf(
@@ -369,6 +370,21 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
 
     const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(await codeOf(cancelRegistrationByStaff(db, editor, row.id, "no", NOW))).toBe("FORBIDDEN");
+
+    const [volunteer] = await db
+      .insert(staffUsers)
+      .values({ email: "contributor@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+      .returning();
+    const refused = await codeOf(
+      createRegistrationByStaff(
+        db,
+        volunteer,
+        { eventId: event.id, firstName: "Walk", lastName: "In", email: "walkin@example.org", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true },
+        NOW,
+      ),
+    );
+    expect(refused).toBe("FORBIDDEN");
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(1);
   });
 
   it("writes an audit row naming the organizer", async () => {

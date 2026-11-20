@@ -181,7 +181,8 @@ describe("§992 §444 BR-REQ-038-01 an invitation's blank bib, on two connection
     const walkIn = () =>
       createRegistrationByStaff(
         db,
-        desk(),
+        // A walk-in is entered by an organizer or an Administrator since §NNN; the desk's volunteer confirms on paper.
+        { id: adminId as string, role: "ADMIN" as const },
         {
           eventId,
           firstName: "Mara",

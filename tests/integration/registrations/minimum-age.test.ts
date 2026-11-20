@@ -43,18 +43,18 @@ const FOURTEEN_THE_DAY_AFTER = "2012-11-22";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
-let volunteer: StaffUser;
+let organizer: StaffUser;
 let admin: StaffUser;
 
 /*
   The staff form's action, for the one thing only the action decides: what the refusal says.
   Getters, resolved when the action calls them (`signature-name.test.ts` does the same): the
-  database under test, and the Voluntar at the desk as the signed-in staff member.
+  database under test, and the Organizer at the desk as the signed-in staff member (the walk-in is theirs since §NNN).
 */
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("@/modules/staff-identity/session", () => ({
-  requireStaff: async () => volunteer,
-  requireStaffCapability: async () => admin,
+  requireStaff: async () => organizer,
+  requireStaffCapability: async () => organizer,
 }));
 
 const { createRegistrationAction: createRegistrationActionNow } = await import("@/app/[locale]/admin/registrations/actions");
@@ -87,10 +87,10 @@ beforeEach(async () => {
       now: NOW,
     });
   }
-  [volunteer] = await db
+  [organizer] = await db
     .insert(staffUsers)
-    // The Voluntar (§103): the desk only, which is exactly who enters a walk-in on race morning.
-    .values({ email: "voluntar@dev.test", displayName: "Voluntar", role: "CONTRIBUTOR" })
+    // The Organizer: who enters a walk-in on race morning since §NNN (the desk's volunteer calls one).
+    .values({ email: "organizator@dev.test", displayName: "Organizator", role: "MODERATOR" })
     .returning();
   [admin] = await db
     .insert(staffUsers)
@@ -252,7 +252,7 @@ describe("§321 a staff entry and the desk's walk-in", () => {
     const event = await createRace();
     for (const fastTrack of [false, true]) {
       const refused = await refusal(
-        createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_THE_DAY_AFTER, fastTrack), NOW),
+        createRegistrationByStaff(db, organizer, staffEntry(event, FOURTEEN_THE_DAY_AFTER, fastTrack), NOW),
       );
       // The marker is what the backoffice turns into its own sentence (`UNDER_MINIMUM_AGE`).
       expect(refused?.code).toBe("VALIDATION_ERROR");
@@ -270,16 +270,16 @@ describe("§321 a staff entry and the desk's walk-in", () => {
       is entered at the desk, the parent on the row. An adult's entry goes all the way too.
     */
     // At NOW, as the guardian rule reads the real clock (§712): the fourteen-year-old is a minor then.
-    const refused = await refusal(atTheClock(NOW, () => createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true), NOW)));
+    const refused = await refusal(atTheClock(NOW, () => createRegistrationByStaff(db, organizer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true), NOW)));
     expect(refused?.fields ?? []).not.toContain(UNDER_MINIMUM_AGE);
     expect(refused?.fields).toContain("guardianName");
     expect(
-      await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true, "Maria Ionescu"), NOW)),
+      await refusal(createRegistrationByStaff(db, organizer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true, "Maria Ionescu"), NOW)),
     ).toBeNull();
     const [minor] = await db.select().from(registrations).where(eq(registrations.birthDate, FOURTEEN_ON_RACE_DAY));
     expect(minor.guardianName).toBe("Maria Ionescu");
 
-    expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, "1990-05-17", true, "Nobody"), NOW))).toBeNull();
+    expect(await refusal(createRegistrationByStaff(db, organizer, staffEntry(event, "1990-05-17", true, "Nobody"), NOW))).toBeNull();
     const [adult] = await db.select().from(registrations).where(eq(registrations.birthDate, "1990-05-17"));
     // An adult's stray parent names nobody (§108).
     expect(adult.guardianName).toBeNull();
@@ -317,7 +317,7 @@ describe("§321 a staff entry and the desk's walk-in", () => {
 
   it("accepts an entry that gives no birth date: nothing to count, and BR-REQ-031-04 criterion 5 stands", async () => {
     const event = await createRace();
-    expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, undefined), NOW))).toBeNull();
+    expect(await refusal(createRegistrationByStaff(db, organizer, staffEntry(event, undefined), NOW))).toBeNull();
     const [row] = await db.select().from(registrations);
     expect(row.birthDate).toBeNull();
   });
@@ -325,7 +325,7 @@ describe("§321 a staff entry and the desk's walk-in", () => {
   it("comes back to the staff form with the rule's own sentence, the birth date named, and every box kept", async () => {
     /*
       The form keeps what was typed (§315) through `refused`, which carries the service's code
-      and field names as they are — so without the action's own mapping the volunteer would read
+      and field names as they are — so without the action's own mapping the organizer would read
       the generic VALIDATION_ERROR, and the summary would list the rule's marker as if it were a
       box, under its raw name. The sentence is `Admin.errors.UNDER_MINIMUM_AGE`; the marker is
       not a box, so it is not a link.
@@ -473,7 +473,7 @@ describe("§515 an older event saved with no minimum binds at fourteen", () => {
       const refused = await refusal(submitRegistration(db, event, submission({ birthDate }), NOW));
       expect(refused?.fields, birthDate).toEqual(expect.arrayContaining(["birthDate", UNDER_MINIMUM_AGE]));
     }
-    const staff = await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(event, FOURTEEN_THE_DAY_AFTER, true), NOW));
+    const staff = await refusal(createRegistrationByStaff(db, organizer, staffEntryFor(event, FOURTEEN_THE_DAY_AFTER, true), NOW));
     expect(staff?.fields).toContain(UNDER_MINIMUM_AGE);
     await nothingWritten();
     expect(await refusal(submitRegistration(db, event, submission({ birthDate: FOURTEEN_ON_RACE_DAY }), NOW))).toBeNull();
@@ -497,9 +497,9 @@ describe("§329 an event that never said", () => {
     expect(row.minAge).toBe(14);
 
     // The staff door reads the row itself (`admin-service.ts#eventForRegistration`).
-    const refused = await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(event, FOURTEEN_THE_DAY_AFTER, true), NOW));
+    const refused = await refusal(createRegistrationByStaff(db, organizer, staffEntryFor(event, FOURTEEN_THE_DAY_AFTER, true), NOW));
     expect(refused?.fields).toContain(UNDER_MINIMUM_AGE);
-    const onTheDay = await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(event, FOURTEEN_ON_RACE_DAY, true), NOW));
+    const onTheDay = await refusal(createRegistrationByStaff(db, organizer, staffEntryFor(event, FOURTEEN_ON_RACE_DAY, true), NOW));
     expect(onTheDay?.fields ?? []).not.toContain(UNDER_MINIMUM_AGE);
   });
 });
@@ -510,11 +510,11 @@ describe("§329 a staff entry and the desk's walk-in follow the chosen event", (
     const open = await createRace(RACE_START, "Europe/Bucharest", 14);
     for (const fastTrack of [false, true]) {
       const refused = await refusal(
-        createRegistrationByStaff(db, volunteer, staffEntryFor(adultsOnly, TWENTY_ON_RACE_DAY, fastTrack), NOW),
+        createRegistrationByStaff(db, organizer, staffEntryFor(adultsOnly, TWENTY_ON_RACE_DAY, fastTrack), NOW),
       );
       expect(refused?.code).toBe("VALIDATION_ERROR");
       expect(refused?.fields).toContain(UNDER_MINIMUM_AGE);
-      expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(open, TWENTY_ON_RACE_DAY, fastTrack), NOW))).toBeNull();
+      expect(await refusal(createRegistrationByStaff(db, organizer, staffEntryFor(open, TWENTY_ON_RACE_DAY, fastTrack), NOW))).toBeNull();
     }
     const rows = await db.select().from(registrations);
     expect(rows.map((row) => row.eventId)).toEqual([open.id, open.id]);
@@ -523,7 +523,7 @@ describe("§329 a staff entry and the desk's walk-in follow the chosen event", (
   it("takes twenty-one on the race day at the race that asks for twenty-one", async () => {
     const adultsOnly = await createRace(RACE_START, "Europe/Bucharest", 21);
     expect(
-      await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(adultsOnly, TWENTY_ONE_ON_RACE_DAY, true), NOW)),
+      await refusal(createRegistrationByStaff(db, organizer, staffEntryFor(adultsOnly, TWENTY_ONE_ON_RACE_DAY, true), NOW)),
     ).toBeNull();
   });
 

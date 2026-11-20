@@ -40,7 +40,7 @@ import { routing } from "@/i18n/routing";
 import { noticeDescribesListStates, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { listStateWords } from "@/modules/registrations/list-state-words";
-import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canEnterAtDesk, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { findReserveEntry } from "@/modules/registrations/reserve-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { CLUB_NAME } from "@/theme/brand";
@@ -57,7 +57,9 @@ export const dynamic = "force-dynamic";
 /**
  * Enter a registration for somebody who asked in person (BR-REQ-037-05).
  *
- * Every staff role since `DECISIONS.md` §67 — the desk enters walk-ins — asserted here and
+ * The Organizer, the Administrator and the Superadministrator (`canEnterAtDesk`, §NNN, amending
+ * §67, which opened it to every desk role): from the desk's «Adaugă pe cineva» and from the
+ * registrations list alike. Any other role gets the 404 an unknown page gets — asserted here and
  * again in the action and once more in the service. The form is short on purpose: the club is
  * typing it while somebody waits, and every field it does not ask for is one the participant
  * answers themselves from the email that follows.
@@ -74,7 +76,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canWorkTheDesk(actor.role)) notFound();
+  if (!canEnterAtDesk(actor.role)) notFound();
 
   const { eventId, error, back, reserve } = await searchParams;
   const fromDesk = back === "desk";
@@ -133,9 +135,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   return (
     <Stack spacing={3}>
       <Typography variant="body2">
-        {/* Back where they came from: the desk for a volunteer, the list for whoever has one
-            (§289 — the Organizer does now). */}
-        {fromDesk || !canReadRegistrations(actor.role) ? (
+        {/* Back where they came from: the desk, or the list — every role that enters reads it (§289, §NNN). */}
+        {fromDesk ? (
           <Link href="/admin/checkin">{t("desk.backToDesk")}</Link>
         ) : (
           <Link href="/admin/registrations">{t("registrations.backToList")}</Link>

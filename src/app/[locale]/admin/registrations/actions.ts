@@ -65,6 +65,7 @@ import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
 import { CLUB_NAME } from "@/theme/brand";
+import { canEnterAtDesk } from "@/modules/staff-identity/domain/roles";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -393,9 +394,10 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     // The row the entry wrote or restarted: the desk comes back to it, in the section its state put it in (§1002).
     let createdId: string | null = null;
     try {
-      // Every role: a walk-in on race morning is entered by the volunteer at the table
-      // (BR-REQ-037-07). The service asserts the same.
-      const actor = await requireStaff();
+      // The organizers' (§NNN): a walk-in on race morning is entered by the Organizer or an
+      // Administrator (BR-REQ-037-07), the desk's other roles call one of them — refused here
+      // (FORBIDDEN, the boxes kept) and again in the service.
+      const actor = await requireStaffCapability(canEnterAtDesk);
       press.by(actor.id);
       const created = await createRegistrationByStaff(
         getDb(),
