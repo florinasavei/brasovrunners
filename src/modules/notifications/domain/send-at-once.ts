@@ -88,6 +88,29 @@ export function leavesNow(
   );
 }
 
+/**
+ * The payload's mark on a row its press sends itself at the row's own turn (§NNN, amending §1000): the club's invitation
+ * to the team or the members' zone, let go a minute and a half after Zitadel answered with its own email on the way
+ * (`staff-identity/service.ts#releaseInvitationHold`). The press's drain after its response waits for that turn and sends
+ * the row whatever «Când pleacă emailurile» says (`drain.ts#drainOutboxRowsAtTurnAfterResponse`); the queue panel,
+ * «Emailuri azi» and the toast say the turn (`departure.ts`). The renderer ignores it.
+ */
+export const SENT_AT_TURN_FLAG = "sentAtTurn";
+
+/**
+ * The turn a row its press sends itself leaves at (§NNN), or null for any other row: marked `sentAtTurn`, still waiting,
+ * never tried and never handed back (no error on it — a provider's pause gives the row a moment of its own), with its
+ * turn set — and that turn not further back than the press's drain could still be sending it (`LEAVES_NOW_WITHIN_MS`).
+ * Past that the drain is over — a function stopped mid-wait — and the row waits for the outbox job like any other.
+ */
+export function pressTurnOf(
+  row: { status: string; attemptCount: number; sentAtTurn?: boolean; nextAttemptAt: Date | null; lastError: string | null },
+  now: Date,
+): Date | null {
+  if (row.sentAtTurn !== true || row.status !== "PENDING" || row.attemptCount !== 0 || row.lastError !== null || row.nextAttemptAt === null) return null;
+  return now.getTime() - row.nextAttemptAt.getTime() <= LEAVES_NOW_WITHIN_MS ? row.nextAttemptAt : null;
+}
+
 /** The choice's words, as the server worded them (`send-now-choice.ts`). */
 export type SendNowWords = { choice: ConfirmChoice; note: string; confirmLabel: string };
 

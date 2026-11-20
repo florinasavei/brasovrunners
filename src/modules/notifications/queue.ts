@@ -3,7 +3,7 @@ import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db
 import type { Database } from "@/db/types";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
-import { SENT_NOW_FLAG } from "./domain/send-at-once";
+import { SENT_AT_TURN_FLAG, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { gmailRoadCondition } from "./outbox";
 import { readOutboxRoads } from "./outbox-roads";
 
@@ -47,6 +47,8 @@ export type QueuedMessage = {
   familyHeld: boolean;
   /** A press asked for it now, past the scheduled pass (§540): the payload's `sentNow` flag. */
   sentNow: boolean;
+  /** Its press sends it itself at its own turn (§NNN): the payload's `sentAtTurn` flag. */
+  sentAtTurn: boolean;
   /**
    * Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`): only such a row waits for
    * Mailgun's hour, so only it is «not late» while the hour binds (§605, as `/api/health` counts it).
@@ -116,6 +118,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       isManualResend: emailOutbox.isManualResend,
       familyHeld: sql<boolean>`coalesce((${familyFlag}), false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
+      sentAtTurn: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
       onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
     })
     .from(emailOutbox)

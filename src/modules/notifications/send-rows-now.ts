@@ -55,3 +55,48 @@ export async function sendOutboxRowsNow(
   }
   return total;
 }
+
+/**
+ * The longest a press's drain waits for its rows' turn (§NNN): the club's invitation, let go a minute and a half after
+ * Zitadel answered (`INVITATION_GAP_MS`), with half a minute to spare for the press's own work after the release. A turn
+ * further away is not waited for: the rows stay PENDING and due at that turn, for the outbox job.
+ */
+export const TURN_WAIT_MAX_MS = 120_000;
+
+/** The clock a wait reads, and how it sleeps: the real ones, or a test's. */
+export type TurnClock = { now: () => Date; sleep: (ms: number) => Promise<void> };
+
+const REAL_CLOCK: TurnClock = { now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)) };
+
+/**
+ * A press's own rows sent at their turn (§NNN, amending §1000): one wait — up to `TURN_WAIT_MAX_MS` — until `dueAt`, the last
+ * of the rows' turns (a members' press waits once, for its last member), then exactly these rows, `SEND_NOW_ROW_LIMIT` at a
+ * time, by the worker «Trimite acum» runs (`sendOutboxRowsNow`, §540) — whatever «Când pleacă emailurile» says. The claim's
+ * instant is never before `dueAt`, so a timer that fires a moment early still finds the rows due; a row not yet due is never
+ * claimed by any drain, the job included, because every claim honours `next_attempt_at`.
+ *
+ * Null when the turn is too far to wait for: nothing was sent. A wait that never ends — the platform stopped the function
+ * first — sends nothing either, and the rows stay PENDING and due at their turn, for the outbox job's next pass. Called inside
+ * the press's `after()` (`drain.ts#drainOutboxRowsAtTurnAfterResponse`), and by the tests with a clock of their own.
+ */
+export async function sendOutboxRowsAtTurn(
+  db: Database<{ emailOutbox: typeof emailOutbox }>,
+  ids: readonly string[],
+  dueAt: Date,
+  clock: TurnClock = REAL_CLOCK,
+): Promise<OutboxBatchSummary | null> {
+  const total: OutboxBatchSummary = { claimed: 0, sent: 0, retrying: 0, deferred: 0, failed: 0, bounced: 0 };
+  if (ids.length === 0) return total;
+  const wait = dueAt.getTime() - clock.now().getTime();
+  if (wait > TURN_WAIT_MAX_MS) return null;
+  if (wait > 0) await clock.sleep(wait);
+  const at = new Date(Math.max(clock.now().getTime(), dueAt.getTime()));
+  for (let start = 0; start < ids.length; start += SEND_NOW_ROW_LIMIT) {
+    const summary = await sendOutboxRowsNow(db, ids.slice(start, start + SEND_NOW_ROW_LIMIT), at);
+    for (const key of OUTBOX_SUMMARY_COUNTS) total[key] += summary[key];
+    if (summary.carried) total.carried = { stop: summary.carried.stop, viaGmail: (total.carried?.viaGmail ?? 0) + summary.carried.viaGmail };
+    // The provider said stop: the outbox job takes the rest, as after «Trimite acum».
+    if (summary.deferred > 0) break;
+  }
+  return total;
+}
