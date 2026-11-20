@@ -46,6 +46,11 @@ export type ManagedPerson = {
   bibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
+  /**
+   * On «Lista de invitați speciali» (§643): read only so the list's block never tells such a person off the list that they are a
+   * «Participant (nume ascuns)» row — the public list never draws them (§743, §1016). Display only.
+   */
+  outsideCapacity: boolean;
   /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */
   promoConsent: boolean;
   /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§570). */
@@ -104,6 +109,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
       listOptOut: registrations.listOptOut,
+      outsideCapacity: registrations.outsideCapacity,
       promoConsent: registrations.promoConsent,
       promoConsentAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
@@ -177,6 +183,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     checkedInAt: row.checkedInAt,
     bibNumber: row.bibNumber,
     listOptOut: row.listOptOut,
+    outsideCapacity: row.outsideCapacity,
     promoConsent: row.promoConsent,
     promoConsentAt: row.promoConsentAt,
     privacyNoticeVersion: row.privacyNoticeVersion,
