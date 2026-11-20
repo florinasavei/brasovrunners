@@ -20,7 +20,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
-import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canEnterAtDesk, canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
@@ -106,6 +106,13 @@ function assertAdministrator(actor: Pick<StaffUser, "role">): void {
 function assertDesk(actor: Pick<StaffUser, "role">): void {
   if (!canWorkTheDesk(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not work the desk`);
+  }
+}
+
+/** Entering somebody (BR-REQ-037-05, -07): the Organizer's and the Administrators' since §1025, never a desk role's alone. */
+function assertDeskEntry(actor: Pick<StaffUser, "role">): void {
+  if (!canEnterAtDesk(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter a registration; an organizer enters a walk-in`);
   }
 }
 
@@ -589,8 +596,10 @@ function assertHandedBibNumber(bibNumber: number | undefined): void {
  * `fastTrack` says they are standing at the desk, in which case `confirmRegistrationByStaff`
  * takes it from there (BR-REQ-037-07).
  *
- * A desk verb since `DECISIONS.md` §67: a walk-in on race morning is entered by whoever is at
- * the table, and that is a volunteer.
+ * A desk verb since `DECISIONS.md` §67, the organizers' since §1025: a walk-in on race morning is
+ * entered by the Organizer, the Administrator or the Superadministrator (`canEnterAtDesk`); the
+ * desk's other roles call one of them, and a post of theirs is refused here (FORBIDDEN) before
+ * anything is read or written.
  */
 export async function createRegistrationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -598,7 +607,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   input: CreateRegistrationByStaffInput,
   now: Date,
 ): Promise<StaffEntryResult> {
-  assertDesk(actor);
+  assertDeskEntry(actor);
 
   if (!input.relayedByParticipantRequest) {
     throw new DomainError(

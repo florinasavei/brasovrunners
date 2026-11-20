@@ -575,13 +575,10 @@ export const events = pgTable(
      */
     volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
     /**
-     * «Numerele voluntarilor încep de la» (migration `0203`, §948; the owner, 2026-11-15: «și voluntarii trebuie să aibă
-     * un „Nr de concurs"» — and, asked which numbers, «Serie proprie»): the first number of the volunteers' own series at
-     * this event. A volunteer draws the next free number of it when the organizers confirm them
-     * (`event_volunteers.bib_number`, `registrations/bibs.ts#pickVolunteerNumber`), under the event row's lock like every
-     * draw — never a number a runner, a line of the elite list or another volunteer wears. Null: the event gives its
-     * volunteers no number. Set by the «Voluntari» card's own form, never by the editor's save; above the runners'
-     * numbers (`volunteers.ts#setVolunteerNumbersStart`).
+     * «Numerele voluntarilor încep de la» (migration `0203`, §948) — **kept, read by nothing** since §1023: the first number of
+     * the volunteers' old series, which drew into `event_volunteers.bib_number`. The volunteers are numbered V001, V002, … by
+     * themselves now (`event_volunteers.volunteer_number`), so the box left the «Voluntari» card and nothing draws from this
+     * start; what it holds stays, untouched. Expand only: dropped by a later contract release once no serving code reads it.
      */
     volunteerBibStart: integer("volunteer_bib_start"),
     /**

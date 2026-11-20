@@ -52,8 +52,6 @@ export type DomainErrorCode =
   | "VOLUNTEER_AGREEMENT_REPRINT"
   // «Confirmă» on a volunteer under eighteen whose parent or guardian has not accepted the agreement (§768): «Acordul părintelui lipsește».
   | "VOLUNTEER_GUARDIAN_MISSING"
-  // «Numerele voluntarilor încep de la» set at or below the runners' numbers (§948): the two series would run into each other.
-  | "VOLUNTEER_NUMBERS_IN_RACE_SERIES"
   // «Transformă în voluntar» on a runner under eighteen on the event's day (§948): a minor volunteers only with a parent's agreement, asked by the hand entry.
   | "RUNNER_TO_VOLUNTEER_MINOR"
   // «Transformă în alergător» on a volunteer the club typed without an address (§948): a registration is its address.

@@ -35,12 +35,12 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 
 type Seeded = { eventId: string; participantId: string; runner: string; ana: string; dan: string };
 
-/** A race a week away that holds a raffle, its volunteers' numbers from 500, one role, a runner the desk checked in wearing number 1, and two confirmed volunteers. */
+/** A race a week away that holds a raffle, one role, a runner the desk checked in wearing number 1, and two confirmed volunteers holding V001 and V002 (§1023). */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, bib_start_number, volunteer_bib_start, accepts_volunteers, has_raffle)
-       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 10, 'Parcul Tractorul', 1, 500, true, true) RETURNING id`,
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, bib_start_number, accepts_volunteers, has_raffle)
+       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 10, 'Parcul Tractorul', 1, true, true) RETURNING id`,
     );
     const eventId = rows[0].id;
     await client.query(`INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES ($1, 'ro', $2, $3, 'O cursă.'), ($1, 'en', $4, $5, 'A race.')`, [
@@ -67,15 +67,15 @@ async function seed(tag: string): Promise<Seeded> {
     const volunteer = async (name: string, number: number) => {
       const address = `${name.split(" ")[0].toLowerCase()}-prezent-${tag}@test.invalid`;
       const { rows: inserted } = await client.query<{ id: string }>(
-        `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, bib_number)
+        `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, volunteer_number)
          VALUES ($1, $2, $3, $4, $4, 1, '+40712345678', 'CONFIRMED', 'STAFF', $5) RETURNING id`,
         [eventId, roles[0].id, name, address, number],
       );
       await client.query(`INSERT INTO event_volunteer_role_assignments (volunteer_id, role_id) VALUES ($1, $2)`, [inserted[0].id, roles[0].id]);
       return inserted[0].id;
     };
-    const ana = await volunteer(`Ana Prezentă ${tag}`, 500);
-    const dan = await volunteer(`Dan Absent ${tag}`, 501);
+    const ana = await volunteer(`Ana Prezentă ${tag}`, 1);
+    const dan = await volunteer(`Dan Absent ${tag}`, 2);
     return { eventId, participantId: participants[0].id, runner, ana, dan };
   });
 }
@@ -159,10 +159,15 @@ test.describe("§983 «Prezent» on the «Voluntari» list and the raffle among 
       expect(response.status()).toBe(200);
       expect(response.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-prezenti-\d{4}-\d{2}-\d{2}\.csv"/);
       const lines = (await response.text()).replace(/^﻿/, "").split("\r\n");
-      expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `500,${anaName},Voluntar,Da`, ""]);
+      expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `V001,${anaName},Voluntar,Da`, ""]);
       // The whole file beside it keeps everybody, Dan's «Prezent» said «Nu».
       const whole = await page.request.get((await page.getByTestId("volunteers-raffle-list").getAttribute("href")) as string);
-      expect((await whole.text()).replace(/^﻿/, "").split("\r\n")).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `500,${anaName},Voluntar,Da`, `501,Dan Absent ${tag},Voluntar,Nu`, ""]);
+      expect((await whole.text()).replace(/^﻿/, "").split("\r\n")).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `V001,${anaName},Voluntar,Da`, `V002,Dan Absent ${tag},Voluntar,Nu`, ""]);
+      // «Descarcă pentru random.org — doar prezenții» (§1023), from the same screen: the same two, numbers only.
+      const present = page.getByTestId("volunteers-raffle-random-org-present");
+      expect((await present.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      expect(await present.getAttribute("href")).toBe(`/api/admin/events/${seeded.eventId}/raffle?format=random-org&present=1&lang=ro`);
+      expect(await (await page.request.get((await present.getAttribute("href")) as string)).text()).toBe("1\r\nV001\r\n");
 
       expect(hydrationWarnings, "hydration warnings").toEqual([]);
     } finally {

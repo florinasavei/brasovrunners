@@ -40,12 +40,12 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
   }
 }
 
-/** A race of ten places a month away, its volunteers' numbers from 500, one role, one confirmed runner wearing number 1 and one volunteer. */
+/** A race of ten places a month away, one role, one confirmed runner wearing number 1 and one volunteer holding V001 (§1023). */
 async function seed(tag: string) {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, bib_start_number, volunteer_bib_start)
-       VALUES ('RACE', now() + interval '30 days', 'INTERNAL', 10, 'Parcul Tractorul', 1, 500) RETURNING id`,
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, bib_start_number)
+       VALUES ('RACE', now() + interval '30 days', 'INTERNAL', 10, 'Parcul Tractorul', 1) RETURNING id`,
     );
     const eventId = rows[0].id;
     await client.query(`INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES ($1, 'ro', $2, $3, 'O cursă.'), ($1, 'en', $4, $5, 'A race.')`, [
@@ -68,11 +68,11 @@ async function seed(tag: string) {
        VALUES ($1, $2, 'CONFIRMED', 'ro', $3, $3, 'Radu', $4, 1, now(), false, 1, now(), 1) RETURNING id`,
       [eventId, people[0].id, runner, `Munteanu ${tag}`],
     );
-    // A volunteer of the Organizer's walk and of the raffle list: confirmed, with the role given and a number of the series.
+    // A volunteer of the Organizer's walk and of the raffle list: confirmed, with the role given and the event's first V number.
     const other = `voluntar-${tag}@test.invalid`;
     const { rows: volunteers } = await client.query<{ id: string }>(
-      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, bib_number)
-       VALUES ($1, $2, $3, $4, $4, 1, '+40712345678', 'CONFIRMED', 'STAFF', 510) RETURNING id`,
+      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, volunteer_number)
+       VALUES ($1, $2, $3, $4, $4, 1, '+40712345678', 'CONFIRMED', 'STAFF', 1) RETURNING id`,
       [eventId, roles[0].id, `Oana Voluntar ${tag}`, other],
     );
     await client.query(`INSERT INTO event_volunteer_role_assignments (volunteer_id, role_id) VALUES ($1, $2)`, [volunteers[0].id, roles[0].id]);
@@ -81,7 +81,7 @@ async function seed(tag: string) {
 }
 
 const volunteersOf = (eventId: string, email: string) =>
-  withDatabase(async (client) => (await client.query<{ id: string; state: string; bib: number | null; name: string }>("SELECT id, state, bib_number AS bib, name FROM event_volunteers WHERE event_id = $1 AND email = $2", [eventId, email])).rows);
+  withDatabase(async (client) => (await client.query<{ id: string; state: string; number: number | null; name: string }>("SELECT id, state, volunteer_number AS number, name FROM event_volunteers WHERE event_id = $1 AND email = $2", [eventId, email])).rows);
 const registrationsOf = (eventId: string, name: string) =>
   withDatabase(async (client) => (await client.query<{ id: string; status: string; bib: number | null }>("SELECT id, status, bib_number AS bib FROM registrations WHERE event_id = $1 AND registered_name = $2 ORDER BY created_at", [eventId, name])).rows);
 
@@ -121,16 +121,16 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     await expect(dialog.getByTestId("confirm-dialog-skip-email")).toHaveText("Transformă în voluntar fără email");
     await confirmDialog(page, "Transformi alergătorul în voluntar?");
 
-    // ---- On the volunteer's own page: confirmed, the role given, the first number of the volunteers' series ---------
+    // ---- On the volunteer's own page: confirmed, the role given, the event's next V number (§1023): V002, after Oana's V001 ----
     await expect(page).toHaveURL(/\/ro\/admin\/volunteers\/[0-9a-f-]{36}\?saved=runnerBecameVolunteer/, { timeout: 30_000 });
     await expect(page.getByTestId("toast-live")).toContainText("Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.", { timeout: 30_000 });
     await hydrated(page);
     await expect(page.getByRole("heading", { level: 2, name: runner })).toBeVisible();
     await expect(page.getByTestId("volunteer-state")).toHaveText(/Confirmat/);
-    await expect(page.locator('[data-testid="volunteer-number"]:visible').first()).toHaveText(/Nr\. 500/);
+    await expect(page.locator('[data-testid="volunteer-number"]:visible').first()).toHaveText(/Nr\. V002/);
     const [volunteer, ...moreVolunteers] = await volunteersOf(eventId, email);
     expect(moreVolunteers).toEqual([]);
-    expect(volunteer).toMatchObject({ state: "CONFIRMED", bib: 500, name: runner });
+    expect(volunteer).toMatchObject({ state: "CONFIRMED", number: 2, name: runner });
     // The registration: cancelled, its number kept — retired — never the volunteer's.
     expect(await registrationsOf(eventId, runner)).toEqual([{ id: registrationId, status: "CANCELLED", bib: 1 }]);
 
@@ -158,11 +158,11 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     await expect(page.getByTestId("toast-live")).toContainText("Era un loc liber: persoana l-a primit și are de semnat declarația.", { timeout: 30_000 });
     const standing = (await registrationsOf(eventId, runner)).filter((row) => row.status !== "CANCELLED");
     expect(standing.map((row) => row.status)).toEqual(["PENDING_DECLARATION"]);
-    expect(await volunteersOf(eventId, email)).toEqual([{ id: volunteer.id, state: "CANCELLED", bib: 500, name: runner }]);
+    expect(await volunteersOf(eventId, email)).toEqual([{ id: volunteer.id, state: "CANCELLED", number: 2, name: runner }]);
     await fits(page);
   });
 
-  test("«Lista pentru tombolă» on the event's registrations list downloads the runners and the volunteers by their numbers", async ({ page }) => {
+  test("«Lista pentru tombolă» on the event's registrations list downloads the runners and the volunteers by their numbers — the race numbers, then the V numbers — and the file for random.org beside it", async ({ page }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}`;
     const { eventId, runner } = await seed(tag);
     await signIn(page, "Dev Administrator");
@@ -178,7 +178,16 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     expect(response.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}\.csv"/);
     const lines = (await response.text()).replace(/^\uFEFF/, "").split("\r\n");
     // «Prezent» (§949, §983): the runner was not checked in at the desk, and nobody ticked the volunteer «Prezent» on the «Voluntari» list.
-    expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `510,Oana Voluntar ${tag},Voluntar,Nu`, ""]);
+    expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `V001,Oana Voluntar ${tag},Voluntar,Nu`, ""]);
+    // «Descarcă pentru random.org» (§1023): the same people, one number per line and nothing else, its «?» beside it.
+    const randomOrg = page.getByTestId("registrations-raffle-random-org");
+    await expect(randomOrg).toHaveText(/Descarcă pentru random\.org/);
+    expect((await randomOrg.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const text = await page.request.get((await randomOrg.getAttribute("href")) as string);
+    expect(text.headers()["content-type"]).toBe("text/plain; charset=utf-8");
+    expect(text.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}-random-org\.txt"/);
+    expect(await text.text()).toBe("1\r\nV001\r\n");
+    await expect(page.getByTestId("registrations-raffle-random-org-help")).toHaveAccessibleName(/^Un număr pe rând, fără nume/);
     await fits(page);
   });
 

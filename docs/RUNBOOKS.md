@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.90-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.93-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -15,6 +15,7 @@
 | [Release from the phone](#release-from-the-phone) | A release with the PC off — the owner on holiday, GitHub's app in hand |
 | [Copy an event from production to QA and back](#copy-an-event-from-production-to-qa-and-back) | A change to a live event is to be tried and approved on QA first, then brought back |
 | [The domain stops answering](#the-domain-stops-answering) | The site, the backoffice and QA «cannot be found» at once; the monitor on the public name is red |
+| [The raffle on race day: drawing the winner](#the-raffle-on-race-day-drawing-the-winner) | An event's raffle is drawn: the numbers, the file for random.org, the winner by number |
 | [Google Calendar will not add the calendar again](#google-calendar-will-not-add-the-calendar-again) | Somebody removed or hid the club's calendar, or deleted an event, and the site's buttons now do nothing |
 
 
@@ -1072,6 +1073,48 @@ A corrected answer on a registration (sex, birth date) or an erased registration
 erased runner's row stays nameless on its number with its overall place, its category cleared. Three years after
 the race the retention sweep deletes the results with the registrations; delete the downloaded CSV within the same
 period. «Toate datele unei persoane» lists a person's results.
+
+## The raffle on race day: drawing the winner
+
+How an event's raffle is drawn (`DECISIONS.md` §948, §949, §983, §984 and §1023). The club's own procedure for a raffle with a
+sign-up of its own is `SETUP.md` §47; the colleagues' version is the backoffice «Ghid», section Organizator, «Tombola: numerele
+voluntarilor și extragerea pe random.org». The draw is never made on the site: the site hands out who takes part, numbers only, and
+random.org shuffles them.
+
+Related requirements: `BR-REQ-050-02`, `BR-REQ-071-01`, `BR-REQ-060-01`.
+
+### Who does what
+
+| Step | Who |
+| --- | --- |
+| Ticks «Prezent» for each volunteer who came (on «Voluntari») | Organizer or Administrator |
+| Checks the runners in at the desk | Any staff role that works the desk |
+| Takes «Descarcă pentru random.org» and the CSV, draws on random.org | Organizer or Administrator |
+
+### The numbers
+
+Every runner and elite takes part with their race number, written as the event writes it (§735: «7», or «007» under `pad3`). Every
+volunteer takes part with their **volunteer number**, «V001», «V002», … — given by itself the moment the volunteer is confirmed, in
+the order of confirmation; nothing is set first, and a cancelled or deleted volunteer's number is never given again. «V007» and race
+number 7 are two different people: the two series never meet. A line of the elite list nobody numbered yet has no number to draw:
+«Tombolă» says how many such participants there are — number them first with «Dă număr elitelor fără număr» in the event's editor.
+
+### The draw
+
+1. **Close the sign-up** (a raffle «Cu înscriere separată» only): untick «Înscrierile la tombolă sunt deschise» in the editor.
+2. **Mark who is there**, if the draw is among the present only: «Prezent» on «Voluntari» for the volunteers; the desk's check-in for
+   the runners.
+3. **Take the file.** «Ziua cursei» → «Tombolă» (or the registrations list, or «Voluntari», with the event chosen): **«Descarcă
+   pentru random.org»** — or **«Descarcă pentru random.org — doar prezenții»** — a text file, `tombola-<zi>-random-org.txt`, one
+   number per line, the race numbers first, then the V numbers. No names: a name would leave the site for a service the privacy
+   notice does not name.
+4. **Draw.** On random.org → «List Randomizer», paste the whole content of the file and press «Randomize». The first number of the
+   shuffled list is the winner; the next ones, if there are several prizes.
+5. **Find the name.** Look the number up on «Tombolă» or in «Lista pentru tombolă (CSV)» of the same scope (the CSV holds the same
+   numbers, in the same order, with the names). Announce the winner as the rules say; nothing is published on the site.
+
+Each download is recorded in the trail (`event.raffle_list_exported`, `format` `csv` or `random-org`) with the counts, never a name.
+Delete the downloaded files once the prizes are given.
 
 ## Google Calendar will not add the calendar again
 
