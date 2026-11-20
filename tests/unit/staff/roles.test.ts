@@ -426,8 +426,9 @@ describe("BR-REQ-060-01 «Tombolă» is every desk role's (§1014)", () => {
 describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives each role the sections it may open and nothing it may not", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
-    // volunteer's whole backoffice: a person handing out numbers is not offered the events.
-    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
+    // volunteer's whole backoffice: a person handing out numbers is not offered the events. «PR Kit»
+    // (§1015) is every role's too — the owner: «even the volunteers can do that».
+    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "prKit", "guide"]);
     // A club member (§524) has no backoffice at all: not one section, not even the guide — the
     // session answers "no staff" for them before any section is asked (`session.ts`).
     expect(visibleAdminSections("MEMBER")).toEqual([]);
@@ -451,6 +452,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "settings",
       "tasks",
       "legal",
+      "prKit",
       "guide",
     ]);
     // The Organizer gained the registrations in §289 — the owner: "ca si organizator ar trebui
@@ -471,6 +473,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "settings",
       "tasks",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -510,6 +513,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "tasks",
       "staff",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -528,6 +532,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "tasks",
       "staff",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -854,8 +859,8 @@ describe("BR-REQ-060-01 «Gestionează magazinul» — a grant on top of the rol
   });
 
   it("a volunteer holding it is offered «Magazin» and nothing else new, in the bar's order", () => {
-    expect(visibleAdminSections(holder("CONTRIBUTOR"))).toEqual(["checkin", "shop", "guide"]);
-    expect(visibleAdminSections(without("CONTRIBUTOR"))).toEqual(["checkin", "guide"]);
+    expect(visibleAdminSections(holder("CONTRIBUTOR"))).toEqual(["checkin", "shop", "prKit", "guide"]);
+    expect(visibleAdminSections(without("CONTRIBUTOR"))).toEqual(["checkin", "prKit", "guide"]);
     for (const role of ORDER) {
       const added = visibleAdminSections(holder(role)).filter((section) => !visibleAdminSections(role).includes(section));
       expect(added, role).toEqual(roles.canHoldPermission(role, "shop.manage") && !roles.canReadShop(role) ? ["shop"] : []);

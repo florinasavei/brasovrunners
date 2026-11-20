@@ -7,6 +7,21 @@
   },
   "colours": {
     "emailBand": "#1a1aff",
-    "primaryInk": "#0b2fb8"
+    "primaryInk": "#0b2fb8",
+    "primary": "#0000ff"
+  },
+  "kit": {
+    "public/brand/kit/brasovrunners-logo-primary.svg": "472a2c890427cc3d2423790988279b7ea106cc6988d8c04eb6cd0ed25d293de8",
+    "public/brand/kit/brasovrunners-logo-primary-4000px.png": "645911049fca2320e43d6b05be30e5090c4c58b624928f37f71356955c0d2777",
+    "public/brand/kit/brasovrunners-logo-white.svg": "50a09677f6251cc66a8aa1cac9d90e5a5ad382dd6e6718d5412ba943d197e2b8",
+    "public/brand/kit/brasovrunners-logo-white-4000px.png": "c66cdab7d7d27d6dacc27685da073bbbad75472afb55494e13894b78501f2f54",
+    "public/brand/kit/brasovrunners-logo-black.svg": "1b15247fd5cc0402cb8959d384eeec08747a9616d617af7df0f69e1d3183131c",
+    "public/brand/kit/brasovrunners-logo-black-4000px.png": "084e334cacf1b8d35a50b0183999ce4303fd87ef056eebd07c0e1651d6c21a85",
+    "public/brand/kit/brasovrunners-mountains-primary.svg": "0f31a65578a79769ec484acad24d507af7684ae3b551836d2c5212593aa512c3",
+    "public/brand/kit/brasovrunners-mountains-primary-4000px.png": "594c57d381506a7ea0db49464a823078bb983005a74d5df18a28017ff6e5e3b3",
+    "public/brand/kit/brasovrunners-mountains-white.svg": "51081bb90bf46e4873bedbc0bb6e8ef715668727edb9648bf4255a13287e706c",
+    "public/brand/kit/brasovrunners-mountains-white-4000px.png": "bc9ecfbc9aa8d2de2451a8aaf8be443022a378de438511ff7ac9130212c49078",
+    "public/brand/kit/brasovrunners-mountains-black.svg": "b8b5542cc17a8ab5f6924d36a94c9a8c08088ee2c35e50c9efe7dee2ccc66e9e",
+    "public/brand/kit/brasovrunners-mountains-black-4000px.png": "b10412cff744869bb1080477165dd303e96f804e889ea5c0f9a5511d1d34dbe6"
   }
 }

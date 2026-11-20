@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.84-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.85-2026-11-20 -->
 
 # Running this locally
 
-**Baseline `BR-V4.84-2026-11-20`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.85-2026-11-20`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -130,8 +130,11 @@ yarn calendar:preview    «Salvează ca imagine» drawn without a server: five s
                          is drawn also without the legend and without the details, and fails on a month's race missing from the picture
 yarn brand:assets        the logo's rasters — the PDFs' lockup, the emails' letterhead, the «Nu mai pot ajunge» glyph — from
                          public/brand/*.svg in the colours of club/club.json's palette (the email band `tints.emailBand`, or
-                         the primary when it is left out, and the primary's ink), then
-                         club/assets.lock.json: each source's sha256 (LF line endings) and those colours. Run it after changing
+                         the primary when it is left out, and the primary's ink); the «PR Kit»'s logo files in public/brand/kit/
+                         — the lockup and its mountains in the primary, white and black, each an SVG framed 4 % outside the
+                         drawing as measured from its path data, 200 mm wide, and a 4000-pixel PNG, named from the slug
+                         (scripts/brand-kit.mjs); then
+                         club/assets.lock.json: each source's sha256 (LF line endings), those colours and each kit file's sha256. Run it after changing
                          an SVG or the palette and commit what it writes; tests/unit/theme/brand-assets-lock.test.ts fails with
                          «run yarn brand:assets» until you do. --lock-only rewrites the lock alone (§885)
 ```

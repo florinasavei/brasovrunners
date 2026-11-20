@@ -1155,7 +1155,8 @@
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter",
-      "shop": "Magazin"
+      "shop": "Magazin",
+      "prKit": "PR Kit"
     },
     "outbox": {
       "status": {
@@ -4212,9 +4213,9 @@
       "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
       "revokeTitle": "Retragi accesul?",
       "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
-      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar ziua cursei: masa de ridicare și «Cronometrare».",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd ziua cursei (masa de ridicare și «Cronometrare») și «PR Kit».",
       "roles": {
-        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr, înscrie la tombolă; la «Cronometrare» trece sosirile și își anulează apăsarea. Atât.",
+        "CONTRIBUTOR": "masa de ridicare: scanează, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie numărul, înscrie la tombolă; «Cronometrare»: trece sosirile, își anulează apăsarea; descarcă «PR Kit». Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
         "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
@@ -9595,7 +9596,19 @@
                 "«Setări» → «Aspect» → «Sistemul de design»: culorile, literele, butoanele și pastilele site-ului, așa cum sunt în cod, și planul redesign-ului — pentru oricine citește conținutul clubului.",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
+                "«PR Kit»: logo-ul clubului, autocolantele și afișul de YouTube, de descărcat oricând — pentru toată echipa.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
+              ]
+            },
+            {
+              "title": "PR Kit: logo, autocolante și afiș",
+              "steps": [
+                "Deschide «PR Kit» din bara de sus — îl are toată echipa, voluntarii inclusiv.",
+                "«Logo»: logo-ul complet și doar munții, fiecare în culoarea clubului, alb și negru. Tipografiei îi dai SVG-ul sau PDF-ul: se măresc oricât fără să se strice.",
+                "PNG-ul e pentru Word, Canva, PowerPoint sau rețele. Albul e pentru fundaluri închise sau fotografii (pe alb nu se vede, e normal), negrul pentru tipar într-o singură culoare.",
+                "«Autocolante»: foi A4 gata de tăiat — cu cod QR spre site sau doar cu logo-ul. Tipărește PDF-ul la 100% („Dimensiune reală”), nu „Potrivește în pagină”, ca tăieturile să cadă la locul lor.",
+                "«Afiș YouTube»: un afiș A4 cu codul spre canalul clubului. Dacă scrie că adresa canalului nu e setată, spune-i unui Administrator.",
+                "«Culori»: codul culorii clubului. Pe hârtie iese puțin mai închisă decât pe ecran: cere-i tipografiei s-o potrivească după logo."
               ]
             },
             {
@@ -10737,6 +10750,77 @@
       "familyPending": "Încă nu e pornit pe acest mediu: baza de date păstrează o singură înscriere pe adresă la un eveniment. Până atunci, a doua trimitere cu altă persoană retrimite doar emailul primei înscrieri.",
       "network": "Salvarea nu merge de pe laptopul de la birou?",
       "networkLink": "Verifică rețeaua"
+    },
+    "prKit": {
+      "title": "PR Kit",
+      "intro": "Logo-ul clubului, autocolantele și afișul de YouTube, de descărcat oricând și de dus la tipografie.",
+      "logo": {
+        "title": "Logo",
+        "intro": "SVG sau PDF pentru tipografie, PNG pentru Word, Canva sau rețele.",
+        "introMore": "Albul e pentru fundaluri închise sau fotografii, negrul pentru tipar într-o singură culoare. PNG-ul are 4000 px lățime și fundal transparent.",
+        "shape": {
+          "lockup": "Logo complet",
+          "mountains": "Doar munții"
+        },
+        "ink": {
+          "primary": "în culoarea clubului",
+          "white": "alb",
+          "black": "negru"
+        },
+        "tile": "{shape} · {ink}",
+        "format": {
+          "svg": "SVG",
+          "png": "PNG",
+          "pdf": "PDF"
+        },
+        "download": "Descarcă {name} ({format})"
+      },
+      "stickers": {
+        "title": "Autocolante",
+        "intro": "Foi A4 gata de tăiat. Tipărește PDF-ul la 100%, nu „Potrivește în pagină”.",
+        "introMore": "Liniile gri punctate sunt tăieturile. În jurul codului QR rămâne marginea albă de care telefonul are nevoie ca să-l citească.",
+        "withCode": "Cu cod QR spre site",
+        "codeTo": "Codul duce la {address}.",
+        "logoOnly": "Doar logo-ul",
+        "sheet": {
+          "qr12": "12 pe foaie",
+          "qr24": "24 pe foaie",
+          "logo12": "12 pe foaie",
+          "logo24": "24 pe foaie",
+          "logo40": "40 pe foaie",
+          "logo12Primary": "12 pe foaie, pe culoarea clubului"
+        },
+        "what": {
+          "qr12": "Mari: logo-ul, codul și adresa, unul sub altul.",
+          "qr24": "Mici: logo-ul și adresa în stânga, codul în dreapta.",
+          "logo12": "Logo-ul mare.",
+          "logo24": "Logo-ul mediu.",
+          "logo40": "Logo-ul mic.",
+          "logo12Primary": "Logo-ul alb, pe fundal în culoarea clubului."
+        },
+        "download": "Descarcă PDF",
+        "downloadLabel": "Descarcă PDF: {name}"
+      },
+      "poster": {
+        "title": "Afiș YouTube",
+        "intro": "Un afiș A4 cu codul QR spre canalul de YouTube al clubului.",
+        "codeTo": "Codul duce la {address}.",
+        "unset": "Adresa canalului de YouTube al clubului nu e setată: se pune în CLUB_YOUTUBE_URL, în variabilele proiectului Vercel, apoi refă deploy-ul.",
+        "download": "Descarcă afișul (PDF)",
+        "kicker": "Suntem pe",
+        "brand": "YouTube",
+        "lead": "Cursele, antrenamentele și oamenii din club — urmărește-ne și abonează-te!",
+        "tab": "SCANEAZĂ-MĂ",
+        "scan": "Deschide camera telefonului și îndreapt-o spre cod"
+      },
+      "colours": {
+        "title": "Culori",
+        "intro": "Culoarea clubului, pentru tipografie.",
+        "primary": "Culoarea clubului",
+        "hex": "HEX {hex}",
+        "rgb": "RGB {r}, {g}, {b}",
+        "paper": "Pe hârtie iese puțin mai închisă decât pe ecran: cere-i tipografiei s-o potrivească după logo."
+      }
     },
     "eventJson": {
       "title": "Importă un eveniment (JSON)",
