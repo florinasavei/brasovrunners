@@ -1,6 +1,6 @@
-import { and, desc, eq, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { legalDocuments } from "@/db/schema/legal-documents";
-import { staffTeamAgreementAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
+import { staffTeamAgreementAcceptances, staffTeamAgreementSignInAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -13,7 +13,7 @@ import { type CurrentLegalDocument, findCurrentApprovedDocument } from "@/module
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { mustAcceptTeamAgreement } from "./domain/roles";
-import { teamAgreementName } from "./domain/team-agreement";
+import { teamAgreementName, teamAgreementOwedThisSession } from "./domain/team-agreement";
 
 /**
  * The team's undertaking at sign-in (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
@@ -21,8 +21,13 @@ import { teamAgreementName } from "./domain/team-agreement";
  *
  * **In force** is what every legal text's «in force» is (`findCurrentApprovedVersionId`): the highest version of
  * `STAFF_DATA_AGREEMENT` that is approved, not withdrawn and whose `effective_at` has passed. While there is none, nobody is
- * asked — a text the club has not approved binds nobody — and «Sarcini» carries the club's row. A new version in force is asked
- * once more, at the next request, of every colleague who has not accepted *it*.
+ * asked — a text the club has not approved binds nobody — and «Sarcini» carries the club's row.
+ *
+ * **Owed at every sign-in since §NNN** (amending §1006, which asked it once per account and version): a session owes the version in
+ * force unless the account accepted it at or after the moment the session was signed in (`teamAgreementOwedThisSession`). Every
+ * acceptance is kept, with the sign-in it answers (`staff_team_agreement_sign_in_acceptances`); the acceptances made once per
+ * account under §1006 (`staff_team_agreement_acceptances`) stay where they are, for «Echipa» and as reliances on their version,
+ * and answer no sign-in. A new version in force is asked at the next request, as before.
  */
 
 /** The version of the undertaking in force — its id and its number — or null. */
@@ -54,31 +59,39 @@ function inForce(now: Date) {
 }
 
 /**
- * The version in force this account has not accepted, or null — the gate's one question, one query. Asked only of a role that
- * must accept (`mustAcceptTeamAgreement`): the session never reads it for an Administrator, and asks it once per request however
- * many doors ask (`session.ts`, React's `cache`).
+ * The version in force this session owes, or null — the gate's one question, one query (§NNN: owed at every sign-in). `signedInAt`
+ * is the moment the session was signed in, null for a session signed in before §NNN; the rule is `teamAgreementOwedThisSession`'s.
+ * A role that is not asked (`mustAcceptTeamAgreement`) is answered with no query: an Administrator's request reads nothing more.
+ * The session asks it once per request however many doors ask (`session.ts`, React's `cache`).
  */
 export async function outstandingTeamAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
-  staffUserId: string,
+  account: { id: string; role: StaffUser["role"] },
+  signedInAt: Date | null,
   now: Date,
 ): Promise<TeamAgreementVersion | null> {
+  if (!mustAcceptTeamAgreement(account.role)) return null;
   /*
     A join, never a correlated `exists` in the selection: with one table in its FROM, Drizzle writes a selection's columns bare,
-    and a bare `"id"` inside the subquery would be the acceptance's own. At most one row joins — one acceptance per account and
-    version (`staff_team_agreement_acceptances_once`).
+    and a bare `"id"` inside the subquery would be the acceptance's own. The version in force comes first and, beside it, the
+    account's newest acceptance of it in the per-sign-in record — or nothing, a left join's nulls last.
   */
   const [row] = await db
-    .select({ id: legalDocuments.id, version: legalDocuments.version, acceptanceId: staffTeamAgreementAcceptances.id })
+    .select({ id: legalDocuments.id, version: legalDocuments.version, lastAcceptedAt: staffTeamAgreementSignInAcceptances.acceptedAt })
     .from(legalDocuments)
     .leftJoin(
-      staffTeamAgreementAcceptances,
-      and(eq(staffTeamAgreementAcceptances.legalDocumentId, legalDocuments.id), eq(staffTeamAgreementAcceptances.staffUserId, staffUserId)),
+      staffTeamAgreementSignInAcceptances,
+      and(
+        eq(staffTeamAgreementSignInAcceptances.legalDocumentId, legalDocuments.id),
+        eq(staffTeamAgreementSignInAcceptances.staffUserId, account.id),
+      ),
     )
     .where(inForce(now))
-    .orderBy(desc(legalDocuments.version))
+    .orderBy(desc(legalDocuments.version), sql`${staffTeamAgreementSignInAcceptances.acceptedAt} desc nulls last`)
     .limit(1);
-  return row && row.acceptanceId === null ? { id: row.id, version: row.version } : null;
+  if (!row) return null;
+  const owed = teamAgreementOwedThisSession({ subject: account.role, inForce: true, signedInAt, lastAcceptedAt: row.lastAcceptedAt });
+  return owed ? { id: row.id, version: row.version } : null;
 }
 
 /** The text a colleague reads on `/admin/acord`: the version in force in the page's language, or undefined. */
@@ -99,6 +112,8 @@ export type TeamAgreementAcceptanceInput = {
   accepted: boolean;
   /** The page's language: the text read, and the language of the hash. */
   locale: Locale;
+  /** The sign-in this acceptance answers (§NNN): the moment the press's session was signed in, null for one from before §NNN. */
+  signedInAt: Date | null;
   /** The press's IP address and browser (§771). */
   trace?: SignatureTrace;
 };
@@ -107,15 +122,18 @@ export type TeamAgreementAcceptanceInput = {
 export type TeamAgreementOutcome = "accepted" | "already" | "notRequired";
 
 /**
- * «Accept și intru» (§1006): the acceptance of the version in force, once per account and version, with the declarations' proof
- * (§556, §771) — the version and its own hash, the language, the name typed, the SHA-256 of the exact text read in that language
- * (`signedTextHash`, the title and every paragraph; the text has no blanks), the moment, the IP address and browser — and the
- * trail's row `staff.team_agreement_accepted`, which names the version and never the name typed.
+ * «Accept și intru» (§1006, §NNN): the acceptance of the version in force at this sign-in, **every one kept** — a row of
+ * `staff_team_agreement_sign_in_acceptances` per account, version and sign-in, so the club can show the colleague accepted at each
+ * sign-in — with the declarations' proof (§556, §771): the version and its own hash, the language, the name typed, the SHA-256 of
+ * the exact text read in that language (`signedTextHash`, the title and every paragraph; the text has no blanks), the moment, the IP
+ * address and browser, and the sign-in it answers (`signedInAt`); and the trail's row `staff.team_agreement_accepted`, which names
+ * the version and that sign-in and never the name typed.
  *
  * Refused, with nothing written: a name empty or over 200 characters (`fullName`), the tick missing (`accepted`), a version that
- * is not the one in force any more (`CONFLICT` — the page reloads on the new text). A second press finds the first row and writes
- * nothing (`already`), so a double tap on a phone is one acceptance and one trail row. A role that is not asked, or a press while
- * no version is in force, writes nothing either (`notRequired`): the page sends them on.
+ * is not the one in force any more (`CONFLICT` — the page reloads on the new text). A second press for the same sign-in finds the
+ * first row and writes nothing (`already`), so a double tap on a phone is one acceptance and one trail row; the next sign-in is a
+ * new row. A role that is not asked, or a press while no version is in force, writes nothing either (`notRequired`): the page sends
+ * them on.
  */
 export async function acceptTeamAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -139,7 +157,7 @@ export async function acceptTeamAgreement<T extends Record<string, unknown>>(
 
   return db.transaction(async (tx) => {
     const [row] = await tx
-      .insert(staffTeamAgreementAcceptances)
+      .insert(staffTeamAgreementSignInAcceptances)
       .values({
         staffUserId: actor.id,
         legalDocumentId: document.id,
@@ -150,18 +168,32 @@ export async function acceptTeamAgreement<T extends Record<string, unknown>>(
         textHash,
         ip: trace.ip,
         userAgent: trace.userAgent,
+        signedInAt: input.signedInAt,
         acceptedAt: now,
       })
-      .onConflictDoNothing({ target: [staffTeamAgreementAcceptances.staffUserId, staffTeamAgreementAcceptances.legalDocumentId] })
-      .returning({ id: staffTeamAgreementAcceptances.id });
+      // Once per account, version and sign-in (`staff_team_agreement_sign_in_acceptances_once`, NULLS NOT DISTINCT).
+      .onConflictDoNothing({
+        target: [
+          staffTeamAgreementSignInAcceptances.staffUserId,
+          staffTeamAgreementSignInAcceptances.legalDocumentId,
+          staffTeamAgreementSignInAcceptances.signedInAt,
+        ],
+      })
+      .returning({ id: staffTeamAgreementSignInAcceptances.id });
     if (!row) return "already";
-    // The trail: who (the actor and the row), which version, which language — never the name typed (§12.12).
+    // The trail: who (the actor and the row), which version, which language, which sign-in — never the name typed (§12.12).
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "staff.team_agreement_accepted",
       entityType: "staff_user",
       entityId: actor.id,
-      metadata: { legalDocumentId: document.id, version: document.version, locale: input.locale, acceptanceId: row.id },
+      metadata: {
+        legalDocumentId: document.id,
+        version: document.version,
+        locale: input.locale,
+        acceptanceId: row.id,
+        signedInAt: input.signedInAt?.toISOString() ?? null,
+      },
       now,
     });
     return "accepted";
@@ -176,9 +208,11 @@ export type TeamAgreementState =
 
 /**
  * Every colleague's state at once, for «Echipa», by account id: a role that is not asked reads «Nu e cerut»; a role that is reads
- * «Acceptat» with the version in force it accepted, its moment and the name typed — or, while a version is in force that they
- * have not accepted, «Neacceptat». While nothing is in force, the newest version a colleague ever accepted still says so, and a
- * colleague who never accepted one reads «Neacceptat». One query of the acceptances, the team's handful.
+ * «Acceptat» with the version in force it accepted — its **newest** acceptance (§NNN: one at every sign-in), its moment and the
+ * name typed — or, while a version is in force that they have not accepted, «Neacceptat». While nothing is in force, the newest
+ * version a colleague ever accepted still says so, and a colleague who never accepted one reads «Neacceptat». The acceptances made
+ * once per account under §1006 count here as well: they are acceptances, though they answer no sign-in. Two queries of the
+ * acceptances, the team's handful each.
  */
 export async function teamAgreementStates<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -186,16 +220,17 @@ export async function teamAgreementStates<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<Map<string, TeamAgreementState>> {
   const current = await findTeamAgreementInForce(db, now);
-  const rows = await db
-    .select({
-      staffUserId: staffTeamAgreementAcceptances.staffUserId,
-      legalDocumentId: staffTeamAgreementAcceptances.legalDocumentId,
-      version: staffTeamAgreementAcceptances.documentVersion,
-      acceptedAt: staffTeamAgreementAcceptances.acceptedAt,
-      typedName: staffTeamAgreementAcceptances.typedName,
-    })
-    .from(staffTeamAgreementAcceptances)
-    .orderBy(desc(staffTeamAgreementAcceptances.documentVersion), desc(staffTeamAgreementAcceptances.acceptedAt));
+  const columnsOf = (table: typeof staffTeamAgreementAcceptances | typeof staffTeamAgreementSignInAcceptances) => ({
+    staffUserId: table.staffUserId,
+    legalDocumentId: table.legalDocumentId,
+    version: table.documentVersion,
+    acceptedAt: table.acceptedAt,
+    typedName: table.typedName,
+  });
+  const rows = [
+    ...(await db.select(columnsOf(staffTeamAgreementSignInAcceptances)).from(staffTeamAgreementSignInAcceptances)),
+    ...(await db.select(columnsOf(staffTeamAgreementAcceptances)).from(staffTeamAgreementAcceptances)),
+  ].sort((a, b) => b.version - a.version || b.acceptedAt.getTime() - a.acceptedAt.getTime());
 
   const states = new Map<string, TeamAgreementState>();
   for (const member of team) {

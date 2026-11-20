@@ -4807,7 +4807,7 @@
     },
     "teamAgreement": {
       "title": "Angajamentul echipei",
-      "intro": "Înainte să lucrezi în backoffice, citește angajamentul de mai jos și acceptă-l. Îl accepți o singură dată pentru fiecare versiune.",
+      "intro": "Înainte să lucrezi în backoffice, citește angajamentul de mai jos și acceptă-l. Îl accepți la fiecare intrare în cont.",
       "fullName": "Numele tău complet",
       "fullNameHelp": "Prenumele și numele de familie, ca semnătură.",
       "accept": "Am citit și accept angajamentul",
@@ -5743,14 +5743,14 @@
         "teamAgreement": {
           "title": "Angajamentul echipei",
           "todo": "Niciun angajament al echipei nu e în vigoare: voluntarii, redactorii, organizatorii și tehnicii nu l-au acceptat. Aprobă-l înainte de ziua cursei.",
-          "done": "Angajamentul echipei e în vigoare: fiecare coleg, în afară de administratori, îl acceptă la prima intrare.",
+          "done": "Angajamentul echipei e în vigoare: fiecare coleg, în afară de administratori, îl acceptă la fiecare intrare în cont.",
           "how": [
             "/admin/legal → „Versiune nouă” → sub „Pornește de la șablon”, „Angajament de confidențialitate și protecția datelor pentru echipă”.",
             "Nici „Aprobă acum textele care lipsesc…”, nici „Aprobă ciornele” nu îl aprobă, chiar dacă „Regenerează din șabloane” i-a făcut ciorna: se aprobă separat, citit pentru el.",
             "Un jurist ar trebui să-l citească întâi: autoritatea clubului (art. 29 și 32 alin. (4) GDPR), confidențialitatea după rol, răspunderea și cât se păstrează acceptarea.",
             "Completează datele clubului rămase între paranteze unghiulare, în ambele limbi, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare coleg care nu e administrator e oprit la prima pagină până îl acceptă.",
-            "„Echipa” arată, pe rândul fiecărui coleg, dacă l-a acceptat."
+            "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare coleg care nu e administrator e oprit la prima pagină până îl acceptă, apoi la fiecare intrare în cont.",
+            "„Echipa” arată, pe rândul fiecărui coleg, ultima acceptare."
           ]
         }
       },
@@ -9573,12 +9573,13 @@
               ]
             },
             {
-              "title": "Angajamentul echipei, la prima intrare",
+              "title": "Angajamentul echipei, la fiecare intrare",
               "steps": [
-                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la prima intrare după ce clubul aprobă angajamentul echipei se deschide pagina lui, în locul paginii pe care ai cerut-o.",
+                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la fiecare intrare în cont, cât timp clubul are un angajament al echipei în vigoare, se deschide întâi pagina lui, în locul paginii pe care ai cerut-o.",
                 "Citește textul până la capăt: ce date vezi, cum le păstrezi confidențiale, ce faci cu listele tipărite și ce faci dacă pierzi telefonul.",
                 "Scrie-ți numele în «Numele tău complet», bifează «Am citit și accept angajamentul» și apasă «Accept și intru».",
-                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Angajamentul îl accepți o singură dată; o versiune nouă ți se cere din nou, tot o dată.",
+                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Cât rămâi în cont nu ți se mai cere, decât dacă clubul aprobă între timp o versiune nouă. După «Ieși din cont», la următoarea intrare îl accepți din nou.",
+                "Pentru ziua cursei: intră în cont pe telefonul tău cu o zi înainte și nu apăsa «Ieși din cont» — așa nu îl citești la masă.",
                 "Până accepți, nicio pagină a backoffice-ului nu se deschide. «Ieși din cont» rămâne sus.",
                 "Administratorii nu îl acceptă aici: ei aprobă textul în «Documente legale»."
               ]
@@ -10421,7 +10422,7 @@
                 "Nu a primit-o: apasă rândul ei, apoi «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Pe rândul persoanei (apasă-l ca să se deschidă): alt rol — «Rol», apoi «Schimbă rolul»; a plecat din echipă — «Retrage accesul», ultimul.",
                 "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede.",
-                "Un coleg nou care nu e administrator acceptă angajamentul echipei la prima intrare, dacă unul e în vigoare: rândul lui din «Echipa» arată dacă l-a acceptat."
+                "Un coleg care nu e administrator acceptă angajamentul echipei la fiecare intrare, dacă unul e în vigoare: rândul lui din «Echipa» arată ultima acceptare."
               ]
             },
             {
@@ -10540,9 +10541,9 @@
                 "«Documente legale» → «Versiune nouă» → sub «Pornește de la șablon», «Angajament de confidențialitate și protecția datelor pentru echipă».",
                 "Completează datele clubului rămase de forma <…>, în română și în engleză, și apasă «Salvează ciorna». Un jurist ar trebui să citească textul întâi.",
                 "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
-                "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă.",
+                "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă, apoi la fiecare intrare în cont.",
                 "Nu e printre textele din «Aprobă acum textele care lipsesc…» și nici din «Aprobă ciornele», chiar dacă «Regenerează din șabloane» i-a făcut ciorna: se aprobă separat, citit pentru el.",
-                "«Echipa» arată pe rândul fiecărui coleg dacă a acceptat — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
+                "«Echipa» arată pe rândul fiecărui coleg ultima acceptare — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
               ]
             },
             {

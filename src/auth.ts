@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Zitadel from "next-auth/providers/zitadel";
 import { getDb } from "@/db/client";
-import { resolveStaffUserId, resolveZitadelSignIn } from "@/modules/staff-identity/auth-callbacks";
+import { resolveZitadelSignIn, staffTokenAt } from "@/modules/staff-identity/auth-callbacks";
 
 /**
  * Auth.js, configured with the Zitadel OAuth provider (AGENTS.md §13.1, DECISIONS.md §26).
@@ -34,23 +34,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       );
     },
 
-    /** Carries only the row id. Role and email are re-read from `staff_users` on every
-     * request (`getCurrentStaffUser`), so a revoked or demoted row takes effect immediately
-     * rather than waiting for the token to expire. */
+    /** Carries the row id and, since §NNN, the moment of the sign-in — both written at a
+     * sign-in alone (`account` is present only then) and kept as the token is refreshed
+     * (`staffTokenAt`). Role and email are re-read from `staff_users` on every request
+     * (`getCurrentStaffUser`), so a revoked or demoted row takes effect immediately rather than
+     * waiting for the token to expire. */
     async jwt({ token, account, profile }) {
-      if (account?.provider === "zitadel" && account.providerAccountId) {
-        const staffUserId = await resolveStaffUserId(getDb(), {
-          subject: account.providerAccountId,
-          email: typeof profile?.email === "string" ? profile.email : null,
-        });
-        if (staffUserId) token.staffUserId = staffUserId;
-      }
-      return token;
+      const signIn =
+        account?.provider === "zitadel" && account.providerAccountId
+          ? { subject: account.providerAccountId, email: typeof profile?.email === "string" ? profile.email : null }
+          : null;
+      return staffTokenAt(getDb(), token, signIn, new Date());
     },
 
     async session({ session, token }) {
       if (typeof token.staffUserId === "string") {
         session.staffUserId = token.staffUserId;
+      }
+      // The moment of the sign-in, for the team's undertaking (§NNN); a token from before it has none.
+      if (typeof token.signedInAt === "number") {
+        session.signedInAt = token.signedInAt;
       }
       return session;
     },

@@ -32,14 +32,15 @@ export const dynamic = "force-dynamic";
 
 /**
  * The team's undertaking, read and accepted (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră
- * în platformă»): where the gate (`requireStaff`, the admin layout) sends a colleague below the Administrator who has not accepted
- * the version of `STAFF_DATA_AGREEMENT` in force — the text as the other legal pages draw it, its version line, «Numele tău
- * complet», «Am citit și accept angajamentul» and «Accept și intru», then back to where they were going (`returnTo`, a same-site
+ * în platformă»): where the gate (`requireStaff`, the admin layout) sends a colleague below the Administrator whose session has not
+ * accepted the version of `STAFF_DATA_AGREEMENT` in force — at every sign-in since §NNN, the intro saying so — the text as the
+ * other legal pages draw it, its version line, «Numele tău complet» (typed each time, never filled in for them), «Am citit și
+ * accept angajamentul» (never ticked for them) and «Accept și intru», then back to where they were going (`returnTo`, a same-site
  * path only, else the backoffice's first page).
  *
  * The one backoffice page such a colleague may open (`requireStaffBeforeTeamAgreement`); the shell above it draws no tabs and
- * keeps «Ieși din cont». Nothing owed — an Administrator, nothing in force, the version accepted already — and the page sends the
- * reader straight on: it is never a second way to read or accept a text.
+ * keeps «Ieși din cont». Nothing owed — an Administrator, nothing in force, the version accepted at this sign-in already — and the
+ * page sends the reader straight on: it is never a second way to read or accept a text.
  */
 export default async function TeamAgreementPage({ params, searchParams }: Props) {
   const { locale } = await params;

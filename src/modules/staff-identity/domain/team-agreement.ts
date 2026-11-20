@@ -1,12 +1,51 @@
 import { TEAM_AGREEMENT_NAME_MAX } from "@/db/schema/staff-team-agreement-acceptances";
 import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
+import { mustAcceptTeamAgreement, type StaffSubject } from "./roles";
 
 /**
  * The team's undertaking at sign-in (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
- * platformă»), the parts that are rules rather than reads: which request is a page being drawn, where a refused page wanted to
- * go, the undertaking's own address, and the name typed under it. Pure: headers arrive as an object with `get`, so a unit test
- * needs no request.
+ * platformă»), the parts that are rules rather than reads: whether this session owes it (§NNN: at every sign-in), the moment a
+ * session was signed in, which request is a page being drawn, where a refused page wanted to go, the undertaking's own address,
+ * and the name typed under it. Pure: headers arrive as an object with `get`, so a unit test needs no request.
  */
+
+/**
+ * Whether this session owes the version of the undertaking in force (§NNN, amending §1006 — owed once per sign-in, not once per
+ * account).
+ *
+ * - **The Administrators never**, as §1006 has them (`mustAcceptTeamAgreement`): nor does anybody while no version is in force.
+ * - **A session that carries its sign-in moment** (`signedInAt`, written by the `jwt` callback at a sign-in, and by the
+ *   development sign-in) owes it unless the account accepted the version in force **at or after** that moment: accepted before
+ *   the sign-in — at the previous one — is owed again; at or after it — on this sign-in, or on another device signed in since —
+ *   is not.
+ * - **A session signed in before §NNN** carries no moment (`signedInAt` null): it owes the version in force unless the account
+ *   accepted it under this rule at all — `lastAcceptedAt` is read from the per-sign-in record, every row of which was written
+ *   since §NNN shipped, so the acceptances made once per account under §1006 never answer. Such a session is asked once and not
+ *   again until its next sign-in, which writes the moment: no token is rewritten, nobody is signed out, nothing loops.
+ *
+ * `lastAcceptedAt` is the newest acceptance of the version in force by this account in that record, or null.
+ */
+export function teamAgreementOwedThisSession(input: {
+  subject: StaffSubject;
+  inForce: boolean;
+  signedInAt: Date | null;
+  lastAcceptedAt: Date | null;
+}): boolean {
+  if (!mustAcceptTeamAgreement(input.subject) || !input.inForce) return false;
+  if (input.lastAcceptedAt === null) return true;
+  return input.signedInAt !== null && input.lastAcceptedAt.getTime() < input.signedInAt.getTime();
+}
+
+/**
+ * The moment a session was signed in, as its claim carries it (§NNN): milliseconds since the epoch — a number in the token
+ * Auth.js signs, digits in the development sign-in's cookie. Null for anything else: a session signed in before §NNN carries
+ * none, and a value that is not a whole, positive, finite number of milliseconds is no moment.
+ */
+export function signInMomentOf(claim: unknown): Date | null {
+  const value = typeof claim === "string" && /^\d{1,15}$/.test(claim) ? Number(claim) : claim;
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) return null;
+  return new Date(value);
+}
 
 /** The undertaking's page, without its locale: the same spelling in both, like every backoffice path. */
 export const TEAM_AGREEMENT_PATH = "/admin/acord";

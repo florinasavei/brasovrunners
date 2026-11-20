@@ -67,11 +67,13 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     en: "df01842273e0a6c3947ce57204a4e6cc88daed90bc7bfb6a904b2a54556d9467",
     both: "882c63752ec8a9afbbf008a8f2e2274931ab2403c88c3b6e27a1a78a3a62a35b",
   },
-  // The team's undertaking (§1006): a new template, recorded as written.
+  // The team's undertaking (§1006): a new template, recorded as written. Edited on purpose (§NNN): the second paragraph of
+  // section 10 says it is accepted at every sign-in, each acceptance recorded with the sign-in it answers — no longer «la prima
+  // intrare». A draft for the club to approve; a version in force keeps its words until then.
   STAFF_DATA_AGREEMENT: {
-    ro: "02d60c654e8a5cf0dd148047559bad8709ae05be1fa2c14edd06d7aaf72bee45",
-    en: "c31b4ef87a62a2c1de8b35f78c6b2acf91e954b6ccba1ad62dcacac75a14a839",
-    both: "00b74bd53bca4c083e2b767fbf89d626dd4851a638c1399124e3724943ff461e",
+    ro: "07120154e8d0959889a47df707fd0ec099555334c4addcaa61f53892a8c1273c",
+    en: "cfa3915383d1fd6e99d41525643a2c2f8b95321e1a3dddc126a91ddc716bdff3",
+    both: "d8368033c92337e4f1e6a7d4dffa71628dc72758bc8147139b569cbb8117d98b",
   },
 };
 
