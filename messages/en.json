@@ -9608,7 +9608,7 @@
             {
               "title": "What each role can do",
               "steps": [
-                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
+                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in — and the «Raffle» tab, when the race holds a raffle. Sees a name, a state and a number, never an email address.",
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
                 "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk; leaves internal notes on a registration. Does not change an event, cancel or erase a registration.",
                 "The Tehnic role: the site's configuration page, for troubleshooting. Does not change events and does not see the registrations.",
@@ -9729,6 +9729,15 @@
                 "Several at once: press «Finish» once for each, then type the numbers in order.",
                 "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
                 "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
+              ]
+            },
+            {
+              "title": "At the raffle: who takes part, and signing somebody up",
+              "steps": [
+                "When the race holds a raffle, every desk role opens «Race day» → «Raffle»: the Volunteer, the Redactor, the Organizer, the Tehnic role and the Administrators. Pick the race under «Event» and press «Show».",
+                "You see everybody by number: the name, the group, «Taking part» and «Present». The filters above the table choose whom you see: everybody, those taking part, those not, or only those present.",
+                "With a separate sign-up, a runner who has not signed up has «Accepted the rules» and «Sign up» on their row. Tick it only once the person has accepted the raffle rules, on paper or aloud, then press «Sign up».",
+                "The files for the draw, taking somebody out of the raffle, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them."
               ]
             },
             {
@@ -13246,6 +13255,7 @@
     "raffle": {
       "title": "Raffle",
       "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "introDesk": "Every runner, elite and volunteer of the event: who takes part in the raffle and who is present. With a separate sign-up, sign a runner up here once they have accepted the rules.",
       "noEvent": "No event to show.",
       "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
       "event": "Event",

@@ -1119,7 +1119,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) — and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) —, «Ziua cursei» → «Tombolă» read, a runner signed up there by the desk's door (`canReadRaffle` = `canWorkTheDesk`, §NNN) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
 MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
@@ -3532,12 +3532,18 @@ a volunteer's page and on the tab, a line of the elite list's only door. Nobody 
 
 *Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
 raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a
-volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, the Organizer's and the
-Administrators', drawn among the tabs only for an event that holds a raffle) has the settings in one line, the counts by
-group and how many of them were there, the filters «Toți», «Participă», «Nu participă», «Doar prezenții», everybody of the
-three groups in one table — number, name, group, «Participă» with the reason, how and when they signed up, «Prezent» —, the
-organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked first) and a line's «Prezent», both files, and
-prints without its controls. The draw itself is the club's, outside the site.
+volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, every desk role's since
+§NNN — `canReadRaffle` = `canWorkTheDesk`, a 404 to a member —, drawn among the tabs only for an event that holds a raffle)
+has the settings in one line, the counts by group and how many of them were there, the filters «Toți», «Participă», «Nu
+participă», «Doar prezenții», everybody of the three groups in one table — number, name, group, «Participă» with the reason,
+how and when they signed up, «Prezent» —, the organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked
+first) and a line's «Prezent», both files, and prints without its controls. A desk role that is not an organizer reads the
+same table, counts and filters with words of its own above them, but not how and when anybody signed up, nor the reason
+«scos de organizatori» (a plain «Nu», as at the desk), and gets one press: the desk's «Înscrie la tombolă» on a registration
+that may still sign up and was not taken out, the person having accepted the rules on paper or aloud (DESK, its recorder);
+the organizers' presses, the way to the editor and both files stay `canTakeRaffleList`', and the file's route refuses
+anybody else. Never an address, an email or a telephone: the roster carries none. The draw itself is the club's, outside the
+site.
 
 Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
 §983; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
@@ -3551,8 +3557,9 @@ the event's and the search's «Înscris» and «Confirmat» (a cancelled person 
 that filters the list to those people (`present=yes|no`), combined with the list's other filters as «Cu kit» is: with
 «Doar membrii» or a state chosen it lists the ones that filter keeps too, fewer than the figure. The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
 them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
-(below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
-never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
+(below), «Toate datele unei persoane» and «Ziua cursei» → «Tombolă», which says it in words beside whether the person takes
+part — every desk role's tab since §NNN, the tick and its press staying the list's; never by a public page, an email, a badge,
+the desk — which checks runners in, never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
 card or the volunteers' Excel and CSV until a change of their own (`tests/unit/volunteers/presence-never-leaves.test.ts`).
 No state, role, point, number, tick or email moves, no public cache is expired, and the person is not told.
 

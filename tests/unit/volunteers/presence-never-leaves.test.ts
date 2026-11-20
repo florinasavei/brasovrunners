@@ -22,8 +22,9 @@ import { importsModule } from "../../helpers/module-imports";
  * reads any `present` at all. A reader is also found by what it imports — the «Voluntari» screen's actions, which hold the press —
  * by any spelling: the `@/` alias or a relative path, resolved from the importing file (`tests/helpers/module-imports.ts`).
  *
- * Since §984 the raffle's roster and «Ziua cursei» → «Tombolă» read it too: that tab is the organizers' (`canTakeRaffleList`),
- * not the desk, and shows who was there beside whether they take part. Since §996 «Ziua cursei» → «Jurnal» and the «Voluntari»
+ * Since §984 the raffle's roster and «Ziua cursei» → «Tombolă» read it too, and show who was there beside whether they take part:
+ * the organizers' tab, and since §NNN every desk role's (`canReadRaffle`) — which amends «never the desk» for that one tab, where the
+ * mark is said in words («Da» / «Nu»), the tick and its press staying the «Voluntari» list's. Since §996 «Ziua cursei» → «Jurnal» and the «Voluntari»
  * list's «Org1, 08:20» read the trail of who ticked it: that tab is the organizers' too (`canReadRaceDayJournal`), never the desk's.
  * The desk's own pages stay held to reading none — and to importing none of the log's two modules, which the sweep exempts: the
  * scanned page's «Scanat înainte» reads its scans through the desk's own (`registrations/code-scans.ts`), held like the rest.
@@ -77,8 +78,9 @@ const READERS = new Set(
     // «Toate datele unei persoane» (art. 15): the offer's own row, and the line that draws it.
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
-    // §984: the raffle's roster reads it beside each volunteer, for the files and «Ziua cursei» → «Tombolă» — the organizers' tab
-    // (`canTakeRaffleList`), whose «Doar prezenții», «Prezent» column and present-only download are the raffle's, not the desk's.
+    // §984: the raffle's roster reads it beside each volunteer, for the files and «Ziua cursei» → «Tombolă» — every desk role's tab
+    // since §NNN (`canReadRaffle`), whose «Doar prezenții» and «Prezent» column say it in words; the present-only download stays the
+    // organizers' (`canTakeRaffleList`).
     "src/modules/volunteers/raffle-roster.ts",
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
     // §984: a line of the race's elite list's own «Prezent» (`event_elite_entries.present`), named alike — the organizers' tick on that tab.
@@ -104,7 +106,8 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 
 /** The surfaces that read volunteers or a race's people, where no `present` of any kind is read: a leak there would be the field itself. */
 function readsVolunteers(at: string): boolean {
-  // «Ziua cursei» → «Tombolă» (§984) is the organizers' raffle tab, not the desk: who was there is what its «Doar prezenții» filters by.
+  // «Ziua cursei» → «Tombolă» (§984) is the raffle's tab, every desk role's since §NNN: who was there is what its «Doar prezenții»
+  // filters by, said in words — the tick and its press stay on the «Voluntari» list, which only the organizers open.
   if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
   // «Ziua cursei» → «Jurnal» (§996) is the organizers' log, not the desk: a volunteer's «Prezent» ticked and unticked is its lines.
   if (at.startsWith("src/app/[locale]/admin/checkin/jurnal/") || at === "src/modules/race-day/journal.ts" || at === "src/modules/race-day/domain/journal.ts") return false;
