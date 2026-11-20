@@ -415,11 +415,12 @@ them *here*. The process leaves room for everything that goes wrong at a table: 
 arrived, the QR is on a dead phone, the person never registered. A volunteer can confirm a
 pending registration on the spot — the address vouched for by the volunteer, the declaration
 signed by the participant on a printed copy of the approved text and recorded under the
-volunteer's name — enter a walk-in, give a number by hand, undo a mistake. What a volunteer
-cannot do is see an address, cancel, erase or export: those stay with the administrator. And
-nothing at the desk places anybody past the event's capacity: a walk-in at a full event joins
-the waiting list, and a place is given only when one is free. Participants can also say "I am
-here" from their own link from the day before the start.
+volunteer's name — give a number by hand, undo a mistake; somebody who never registered is
+entered by an organizer or an administrator, whom the volunteer calls (`DECISIONS.md` §NNN).
+What a volunteer cannot do is see an address, cancel, erase or export: those stay with the
+administrator. And nothing at the desk places anybody past the event's capacity: a walk-in at a
+full event joins the waiting list, and a place is given only when one is free. Participants can
+also say "I am here" from their own link from the day before the start.
 
 The backoffice shows, for each registration:
 
