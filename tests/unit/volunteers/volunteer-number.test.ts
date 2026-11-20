@@ -74,23 +74,24 @@ describe("§1023 BR-REQ-071-01 the raffle with two series: the race numbers, the
   });
 });
 
-describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
+describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one person per line, the number and the name, nothing else", () => {
   const raffleRow = (number: number | null, label: string | null, name: string, kind: RaffleKind, present = false): RaffleRow => ({ number, label, name, kind, present });
 
-  it("is one line per participant, each the number as the raffle writes it and CRLF — no header, no name, no blank line, no BOM", () => {
+  it("is one line per participant, each the number as the raffle writes it, a space, the name and CRLF — no header, no blank line, no BOM", () => {
     const rows = [raffleRow(1, "1", "Ana Pop", "RUNNER"), raffleRow(7, "7", "Eliud K.", "ELITE"), raffleRow(1, "V001", "Ion Lupu", "VOLUNTEER", true), raffleRow(2, "V002", "Oana", "VOLUNTEER")];
     const text = buildRaffleRandomOrgText(rows);
-    expect(text).toBe("1\r\n7\r\nV001\r\nV002\r\n");
+    expect(text).toBe("1 Ana Pop\r\n7 Eliud K.\r\nV001 Ion Lupu\r\nV002 Oana\r\n");
     expect(text.charCodeAt(0)).not.toBe(0xfeff);
     expect(text).not.toMatch(/\r\n\r\n|^\r\n/);
-    expect(text).not.toMatch(/Ana|Eliud|Ion|Oana/);
+    // A name on one line, its spaces folded: a stray line break would make two entries.
+    expect(buildRaffleRandomOrgText([raffleRow(4, "4", " Maria\n  Pop ", "RUNNER")])).toBe("4 Maria Pop\r\n");
     // The order is the rows' own: the caller hands them in the raffle's order.
-    expect(buildRaffleRandomOrgText([...rows].reverse())).toBe("V002\r\nV001\r\n7\r\n1\r\n");
+    expect(buildRaffleRandomOrgText([...rows].reverse())).toBe("V002 Oana\r\nV001 Ion Lupu\r\n7 Eliud K.\r\n1 Ana Pop\r\n");
   });
 
   it("leaves out a participant who has no number to write, and is empty — not one blank line — for nobody", () => {
     const rows = [raffleRow(null, null, "Ingrid Pop", "ELITE"), raffleRow(3, "003", "Ana Pop", "RUNNER"), raffleRow(null, "", "Nobody", "ELITE")];
-    expect(buildRaffleRandomOrgText(rows)).toBe("003\r\n");
+    expect(buildRaffleRandomOrgText(rows)).toBe("003 Ana Pop\r\n");
     expect(raffleWithoutNumber(rows)).toBe(2);
     expect(buildRaffleRandomOrgText([])).toBe("");
     expect(raffleWithoutNumber([])).toBe(0);

@@ -331,7 +331,7 @@ describe("§983 «Lista pentru tombolă — doar prezenții» on the registratio
       expect(order.indexOf("registrations-raffle-random-org"), role).toBeGreaterThan(order.indexOf("registrations-raffle-present"));
       expect(order.indexOf("registrations-raffle-random-org-present"), role).toBe(order.indexOf("registrations-raffle-random-org") + 1);
       const help = elements(tree).find((element) => element.props.testId === "registrations-raffle-random-org-help");
-      expect(help?.props.text, role).toBe("Un număr pe rând, fără nume: îl lipești în random.org → List Randomizer, apoi cauți câștigătorul după număr în lista CSV.");
+      expect(help?.props.text, role).toBe("Un rând pe persoană, cu număr și nume: îl lipești în random.org → List Randomizer și apeși Randomize. Primul rând e câștigătorul.");
     }
     // In English, the help line under 200 characters in both languages.
     state.actor = await staff("ADMIN");

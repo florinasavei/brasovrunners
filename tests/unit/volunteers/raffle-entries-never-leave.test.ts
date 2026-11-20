@@ -42,6 +42,9 @@ const READERS = new Set(
     "src/app/[locale]/admin/checkin/tombola/actions.ts",
     // «Transformă în voluntar» / «în alergător»: the person's sign-up moves to the row they become, in the transform's transaction.
     "src/modules/volunteers/transform.ts",
+    // §1028 «Confirmă pentru tombolă»: «Cu înscriere separată» the volunteer is signed up by the organizers' own door (STAFF), in the
+    // confirmation's transaction, through the one writer.
+    "src/modules/volunteers/raffle-confirmation.ts",
     // The sweep: thirty days after the event's start.
     "src/modules/jobs/retention.ts",
     // «Toate datele unei persoane» (art. 15).

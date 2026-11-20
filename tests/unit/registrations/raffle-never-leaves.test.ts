@@ -84,6 +84,9 @@ const READERS = new Set(
     // §1020: the desk's own «Scoate de la tombolă» / «Pune înapoi la tombolă» — the line posting the state it wants, and its press.
     "src/modules/volunteers/ui/RaffleLines.tsx",
     "src/app/[locale]/admin/checkin/raffle-actions.ts",
+    // §1028: «Confirmă pentru tombolă» — the organizers' press on a volunteer not confirmed asks whether the event holds a raffle
+    // («Avem tombolă», through the gate's facts) and reads the person's exclusion; it writes the confirmation, never a tick.
+    "src/modules/volunteers/raffle-confirmation.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 

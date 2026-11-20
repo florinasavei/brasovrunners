@@ -38,8 +38,9 @@ describe("§996 the address's filters", () => {
     expect(journalWhoValue({ kind: "removed" })).toBe("removed");
   });
 
-  it("reads `kind` as one of the seven, or every kind", () => {
-    for (const kind of ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"]) expect(journalKindOf(kind)).toBe(kind);
+  it("reads `kind` as one of the eight, or every kind", () => {
+    // §1028: «raffleConfirmed», a volunteer confirmed for the raffle alone, beside the raffle's two kinds of §1020.
+    for (const kind of ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "raffleConfirmed", "volunteerPresent", "volunteerAbsent"]) expect(journalKindOf(kind)).toBe(kind);
     for (const junk of [undefined, "", "SCANNED", "all", ["scanned"], "raffle"]) expect(journalKindOf(junk)).toBeNull();
     expect(runnerKindOf("registration.code_scanned")).toBe("scanned");
     expect(runnerKindOf("registration.checked_in")).toBe("checkedIn");
@@ -52,20 +53,24 @@ describe("§996 the address's filters", () => {
 
   it("asks each read only what the filter can show", () => {
     const everyRunnerKind = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn"];
-    expect(journalReads(null, { kind: "all" })).toEqual({ runnerKinds: everyRunnerKind, volunteerTicks: [true, false], selfCheckIns: true });
-    expect(journalReads("scanned", { kind: "all" })).toEqual({ runnerKinds: ["scanned"], volunteerTicks: [], selfCheckIns: false });
-    expect(journalReads("checkedIn", { kind: "all" })).toEqual({ runnerKinds: ["checkedIn"], volunteerTicks: [], selfCheckIns: true });
-    expect(journalReads("volunteerAbsent", { kind: "all" })).toEqual({ runnerKinds: [], volunteerTicks: [false], selfCheckIns: false });
+    expect(journalReads(null, { kind: "all" })).toEqual({ runnerKinds: everyRunnerKind, volunteerTicks: [true, false], raffleConfirmations: true, selfCheckIns: true });
+    expect(journalReads("scanned", { kind: "all" })).toEqual({ runnerKinds: ["scanned"], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
+    expect(journalReads("checkedIn", { kind: "all" })).toEqual({ runnerKinds: ["checkedIn"], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: true });
+    expect(journalReads("volunteerAbsent", { kind: "all" })).toEqual({ runnerKinds: [], volunteerTicks: [false], raffleConfirmations: false, selfCheckIns: false });
     // §1020: the raffle's two kinds are the runners' audit rows alone — never a volunteer's tick, never the person's own «Am ajuns».
-    expect(journalReads("raffleOut", { kind: "all" })).toEqual({ runnerKinds: ["raffleOut"], volunteerTicks: [], selfCheckIns: false });
-    expect(journalReads("raffleIn", { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: ["raffleIn"], volunteerTicks: [], selfCheckIns: false });
-    expect(journalReads("raffleOut", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], selfCheckIns: false });
+    expect(journalReads("raffleOut", { kind: "all" })).toEqual({ runnerKinds: ["raffleOut"], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
+    expect(journalReads("raffleIn", { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: ["raffleIn"], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
+    expect(journalReads("raffleOut", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
     // One account, or the deleted ones: never the participants' own «Am ajuns», which has no account.
-    expect(journalReads(null, { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: everyRunnerKind, volunteerTicks: [true, false], selfCheckIns: false });
-    expect(journalReads("checkedIn", { kind: "removed" })).toEqual({ runnerKinds: ["checkedIn"], volunteerTicks: [], selfCheckIns: false });
+    expect(journalReads(null, { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: everyRunnerKind, volunteerTicks: [true, false], raffleConfirmations: true, selfCheckIns: false });
+    expect(journalReads("checkedIn", { kind: "removed" })).toEqual({ runnerKinds: ["checkedIn"], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
     // The participants: their own check-ins alone.
-    expect(journalReads(null, { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], selfCheckIns: true });
-    expect(journalReads("scanned", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], selfCheckIns: false });
+    expect(journalReads(null, { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: true });
+    expect(journalReads("scanned", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
+    // §1028: a volunteer confirmed for the raffle alone is the volunteers' read's, a staff row — never the participants' own.
+    expect(journalReads("raffleConfirmed", { kind: "all" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: true, selfCheckIns: false });
+    expect(journalReads("raffleConfirmed", { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: true, selfCheckIns: false });
+    expect(journalReads("raffleConfirmed", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
   });
 });
 
@@ -111,10 +116,10 @@ describe("§996 the counts per account", () => {
       "ro",
     );
     expect(rows).toEqual([
-      { who: { kind: "staff", id: ACCOUNT, name: "QR1" }, counts: { scanned: 3, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, volunteerTicks: 1 } },
-      { who: { kind: "staff", id: OTHER, name: "QR2" }, counts: { scanned: 0, checkedIn: 2, undone: 0, raffleOut: 0, raffleIn: 0, volunteerTicks: 0 } },
-      { who: { kind: "removed" }, counts: { scanned: 0, checkedIn: 0, undone: 1, raffleOut: 0, raffleIn: 0, volunteerTicks: 0 } },
-      { who: { kind: "participant" }, counts: { scanned: 0, checkedIn: 4, undone: 0, raffleOut: 0, raffleIn: 0, volunteerTicks: 0 } },
+      { who: { kind: "staff", id: ACCOUNT, name: "QR1" }, counts: { scanned: 3, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, raffleConfirmed: 0, volunteerTicks: 1 } },
+      { who: { kind: "staff", id: OTHER, name: "QR2" }, counts: { scanned: 0, checkedIn: 2, undone: 0, raffleOut: 0, raffleIn: 0, raffleConfirmed: 0, volunteerTicks: 0 } },
+      { who: { kind: "removed" }, counts: { scanned: 0, checkedIn: 0, undone: 1, raffleOut: 0, raffleIn: 0, raffleConfirmed: 0, volunteerTicks: 0 } },
+      { who: { kind: "participant" }, counts: { scanned: 0, checkedIn: 4, undone: 0, raffleOut: 0, raffleIn: 0, raffleConfirmed: 0, volunteerTicks: 0 } },
     ]);
     expect(accounts.map((who) => (who.kind === "staff" ? who.name : who.kind))).toEqual(["QR1", "QR2", "removed", "participant"]);
   });
@@ -129,9 +134,20 @@ describe("§996 the counts per account", () => {
       ],
       "ro",
     );
-    expect(rows).toEqual([{ who: { kind: "staff", id: ACCOUNT, name: "QR1" }, counts: { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 2, raffleIn: 1, volunteerTicks: 0 } }]);
+    expect(rows).toEqual([{ who: { kind: "staff", id: ACCOUNT, name: "QR1" }, counts: { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 2, raffleIn: 1, raffleConfirmed: 0, volunteerTicks: 0 } }]);
     // The account that pressed on a test row alone is still offered to the filter, as for every other kind.
     expect(accounts.map((who) => (who.kind === "staff" ? who.name : who.kind))).toEqual(["Org1", "QR1"]);
+  });
+
+  it("counts the volunteers each account confirmed for the raffle alone (§1028)", () => {
+    const { rows } = journalSummary(
+      [
+        { actorId: ACCOUNT, actorName: "Org1", kind: "raffleConfirmed", count: 2, test: false },
+        { actorId: ACCOUNT, actorName: "Org1", kind: "volunteerTicks", count: 1, test: false },
+      ],
+      "ro",
+    );
+    expect(rows).toEqual([{ who: { kind: "staff", id: ACCOUNT, name: "Org1" }, counts: { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, raffleConfirmed: 2, volunteerTicks: 1 } }]);
   });
 
   it("offers an account that worked test rows alone, and counts it nowhere", () => {

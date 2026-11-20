@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.96-2026-11-20
+
+- **«Confirmă pentru tombolă»** — on «Ziua cursei» → «Tombolă» and on a volunteer's page, the Organizer or an Administrator confirms a volunteer who is not confirmed for the raffle alone: they get their V number and take part, still unconfirmed as a volunteer; a minor only with the parent's or guardian's agreement ticked and how it was given (by phone, in person, in writing), kept with who decided in «Jurnal». **«Scanează» works on an iPhone too** (a QR reader in JavaScript where the browser has none), and **«Descarcă pentru random.org» writes each number with its name**. §1028.
 ## BR-V4.95-2026-11-20
 
 - **«Finish» with a number typed records it, and a toast says each press** — on «Cronometrare» a number in the box then «Finish» is entered as «Sosit» enters it, the box emptied and keeping the focus; with the box empty «Finish» still catches a time for a bunch. A two-and-a-half-second toast says «Nr. 205 — sosit la 0:23:41» once the site has the press, or the time caught — nothing for a press refused, already in or still waiting. §1027.

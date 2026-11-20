@@ -1424,10 +1424,10 @@
         "presentButton": "Lista pentru tombolă — doar prezenții (CSV)",
         "presentButtonLabel": "Lista pentru tombolă — doar prezenții (CSV): cei care participă și au fost prezenți — alergătorii marcați la masă sau cu „Am ajuns” din linkul lor, voluntarii și elitele bifați „Prezent”",
         "randomOrgButton": "Descarcă pentru random.org",
-        "randomOrgButtonLabel": "Descarcă pentru random.org: un fișier text cu un număr pe rând, fără nume — numerele de concurs, apoi numerele de voluntar (V001…)",
+        "randomOrgButtonLabel": "Descarcă pentru random.org: un fișier text cu un rând pe persoană, număr și nume — numerele de concurs, apoi numerele de voluntar (V001…)",
         "randomOrgPresentButton": "Descarcă pentru random.org — doar prezenții",
-        "randomOrgPresentButtonLabel": "Descarcă pentru random.org — doar prezenții: un număr pe rând, fără nume, doar cei care participă și au fost prezenți",
-        "randomOrgHelp": "Un număr pe rând, fără nume: îl lipești în random.org → List Randomizer, apoi cauți câștigătorul după număr în lista CSV.",
+        "randomOrgPresentButtonLabel": "Descarcă pentru random.org — doar prezenții: un rând pe persoană, număr și nume, doar cei care participă și au fost prezenți",
+        "randomOrgHelp": "Un rând pe persoană, cu număr și nume: îl lipești în random.org → List Randomizer și apeși Randomize. Primul rând e câștigătorul.",
         "columns": {
           "number": "Număr",
           "name": "Nume",
@@ -2927,7 +2927,8 @@
       "LIST_WISH_ADDRESS_UNCONFIRMED": "Adresa de email nu e confirmată: confirmă întâi înscrierea aici („Confirmă pe hârtie”), apoi apasă din nou pe ochi.",
       "LIST_WISH_DESK_CLOSED": "Evenimentul s-a încheiat sau a fost anulat: masa e închisă și nu mai înregistrează nimic.",
       "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
-      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
+      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul».",
+      "RAFFLE_GUARDIAN_MISSING": "Pentru un minor bifează că părintele sau tutorele a fost de acord și alege cum: telefonic, la fața locului sau în scris. Nu s-a scris nimic."
     },
     "editor": {
       "draftPreview": {
@@ -8011,7 +8012,7 @@
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
         "Fiecare om de la masă intră cu contul lui, nu cu al altcuiva: „Jurnal” arată cine a scanat fiecare cod și cine a marcat prezent pe fiecare.",
         "Nu văd adrese de email, nu pot anula pe nimeni și nu pot adăuga pe cineva care nu e pe listă: pentru asta cheamă un organizator.",
-        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
+        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
         "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
         "Lista e împărțită pe stări, cu câți sunt în fiecare. „De ridicat numărul” și „Fără declarație semnată” stau deschise; „Prezenți”, „Pe lista de așteptare” și celelalte se deschid din titlu.",
@@ -9740,7 +9741,7 @@
               "title": "Participant cu codul QR",
               "steps": [
                 "Participantul îți arată codul QR din emailul de confirmare.",
-                "Apasă «Scanează» și ține codul în cadru (merge pe Android). Pe iPhone: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
+                "Apasă «Scanează» și ține codul în cadru. Dacă butonul lipsește: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
                 "Se deschide rândul persoanei: verifică numele cu ea.",
                 "Sub rând scrie «Scanat înainte: …»? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul; dacă și l-a luat, cheamă un organizator.",
                 "Apasă «Marchează prezent». Nu te întreabă nimic; jos apare un mesaj.",
@@ -9843,7 +9844,7 @@
                 "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
                 "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
                 "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
-                "Fișierele pentru extragere, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i.",
+                "Fișierele pentru extragere, ștergerea unei înscrieri, înscrierea unui voluntar sau a unei elite și «Confirmă pentru tombolă» sunt ale Organizatorului și Administratorilor: cheamă-i.",
                 "Un alergător îl scoți de la tombolă, sau îl pui înapoi, de pe rândul lui din «Prezența»: «Scoate de la tombolă» întreabă întâi."
               ]
             },
@@ -10123,7 +10124,11 @@
               "steps": [
                 "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
                 "Voluntarii participă cu numărul lor de voluntar, V001, V002…, pe care îl primesc singuri în clipa în care îi confirmi: nu setezi nimic.",
-                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce.",
+                "Un voluntar neconfirmat (de exemplu un minor fără acordul părintelui pentru voluntariat) îl confirmi doar pentru tombolă cu «Confirmă pentru tombolă», pe rândul sau pe pagina lui.",
+                "Pentru un minor alege întâi «Cum și-a dat acordul părintele». În întrebare bifează «Părintele sau tutorele a fost de acord să participe la tombolă», apoi «Da, confirmă pentru tombolă».",
+                "Primește număr de voluntar, dacă nu are, și intră la tragere. Ca voluntar rămâne neconfirmat. Cu înscriere separată bifează și «A acceptat regulamentul»: îl și înscrie.",
+                "În «Jurnal» rămâne cine a decis, când și, pentru un minor, cum și-a dat acordul părintele."
               ]
             },
             {
@@ -10169,8 +10174,8 @@
                 "Voluntarii au numere de la sine: V001, V002, V003… Fiecare primește următorul număr în clipa în care îl confirmi; nu setezi nimic. Numărul apare lângă nume pe «Voluntari», pe pagina persoanei, în plan și în Excel.",
                 "Un număr de voluntar nu se dă a doua oară: cine e anulat sau șters își păstrează numărul retras. V007 și numărul de concurs 7 sunt doi oameni diferiți.",
                 "În ziua cursei bifează «Prezent» la voluntarii veniți, pe «Voluntari»; alergătorii îi marchează masa.",
-                "«Ziua cursei» → «Tombolă» (sau lista de înscrieri, sau «Voluntari», cu evenimentul ales): «Descarcă pentru random.org» — sau «Descarcă pentru random.org — doar prezenții» —, un fișier text cu un număr pe rând, fără nume.",
-                "Pe random.org → List Randomizer: lipește tot conținutul fișierului și apasă Randomize. Primul număr din listă e câștigătorul.",
+                "«Ziua cursei» → «Tombolă» (sau lista de înscrieri, sau «Voluntari», cu evenimentul ales): «Descarcă pentru random.org» — sau «Descarcă pentru random.org — doar prezenții» —, un fișier text cu un rând pe persoană: număr și nume.",
+                "Pe random.org → List Randomizer: lipește tot conținutul fișierului și apasă Randomize. Primul rând din listă e câștigătorul.",
                 "Cauți numărul câștigător în «Lista pentru tombolă (CSV)» sau pe «Tombolă»: acolo e numele. Numerele de concurs sunt ale alergătorilor și elitelor, cele cu V ale voluntarilor."
               ]
             },
@@ -10460,7 +10465,7 @@
                 "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
                 "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
                 "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el.",
-                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Unul neconfirmat îl confirmi cu «Confirmă pentru tombolă».",
                 "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
                 "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți, dacă participă și, când nu participă, de ce."
               ]
@@ -13425,7 +13430,7 @@
       },
       "journal": {
         "title": "Jurnalul zilei cursei",
-        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii, cine a bifat voluntarii și cine a scos pe cineva de la tombolă sau l-a pus înapoi, cel mai nou primul.",
+        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii, cine a bifat voluntarii, cine a scos de la tombolă sau a pus înapoi și cine a confirmat pentru tombolă, cel mai nou primul.",
         "ownAccount": "Ca jurnalul să numească omul, fiecare lucrează la masă cu contul lui.",
         "account": "Cont",
         "accounts": {
@@ -13441,6 +13446,7 @@
           "undone": "Prezențe anulate",
           "raffleOut": "Scoși de la tombolă",
           "raffleIn": "Puși înapoi la tombolă",
+          "raffleConfirmed": "Confirmați pentru tombolă",
           "volunteerPresent": "Voluntari bifați prezenți",
           "volunteerAbsent": "Voluntari debifați"
         },
@@ -13472,6 +13478,11 @@
             "few": "{count} puși înapoi la tombolă",
             "other": "{count} de puși înapoi la tombolă"
           },
+          "raffleConfirmed": {
+            "one": "{count} confirmat pentru tombolă",
+            "few": "{count} confirmați pentru tombolă",
+            "other": "{count} de confirmați pentru tombolă"
+          },
           "volunteerTicks": {
             "one": "{count} bifă la voluntari",
             "few": "{count} bife la voluntari",
@@ -13485,6 +13496,7 @@
           "undone": "a anulat prezența",
           "raffleOut": "a scos de la tombolă",
           "raffleIn": "a pus înapoi la tombolă",
+          "raffleConfirmed": "a confirmat pentru tombolă",
           "volunteerPresent": "a bifat prezent",
           "volunteerAbsent": "a debifat prezent"
         },
@@ -13497,6 +13509,7 @@
           "volunteer": "{name} (voluntar)"
         },
         "timeOnDay": "{time} ({day})",
+        "guardian": "· acordul părintelui: {way}",
         "more": {
           "one": "și încă {count} rând, mai vechi",
           "few": "și încă {count} rânduri, mai vechi",
@@ -13532,7 +13545,7 @@
     },
     "raffle": {
       "title": "Tombolă",
-      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Un voluntar neconfirmat îl confirmi doar pentru tombolă, de pe rândul lui. Extragerea o faceți voi, din fișier.",
       "randomOrgMissing": {
         "one": "{count} participant fără număr nu e în fișierul pentru random.org: dă-i întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
         "few": "{count} participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
@@ -13644,7 +13657,27 @@
       "deleteBody": "Persoana nu mai participă la tombolă până nu se înscrie din nou. Nu i se trimite niciun e-mail.",
       "cancel": "Renunță",
       "print": "Tipărește",
-      "empty": "Nimeni de arătat aici."
+      "empty": "Nimeni de arătat aici.",
+      "confirm": {
+        "button": "Confirmă pentru tombolă",
+        "buttonFor": "Confirmă pentru tombolă: {name}",
+        "title": "Confirmi pe {name} pentru tombolă?",
+        "body": "Primește un număr de voluntar, dacă nu are, și intră la tragere. Ca voluntar rămâne neconfirmat. Rămâne scris cine a decis.",
+        "bodyMinor": "{name} are sub 18 ani: participă doar cu acordul părintelui sau al tutorelui, dat {way}. Ca voluntar rămâne neconfirmat, fără acordul pentru voluntariat. Rămâne scris cine a decis.",
+        "guardianAgreed": "Părintele sau tutorele a fost de acord să participe la tombolă",
+        "way": "Cum și-a dat acordul părintele",
+        "wayChoose": "Alege cum",
+        "ways": {
+          "PHONE": "telefonic",
+          "IN_PERSON": "la fața locului",
+          "WRITING": "în scris"
+        },
+        "confirm": "Da, confirmă pentru tombolă",
+        "cancel": "Anulează",
+        "state": "confirmat doar pentru tombolă",
+        "guardianLine": "acordul părintelui: {way}",
+        "pageLine": "Confirmat doar pentru tombolă, nu ca voluntar"
+      }
     },
     "timing": {
       "title": "Cronometrare",
@@ -16037,7 +16070,10 @@
       "rafflePutBack": "Pus înapoi la tombolă.",
       "rafflePresentOn": "Bifat: prezent.",
       "rafflePresentOff": "Debifat: absent.",
-      "raffleUnchanged": "Era deja așa; nimic de schimbat."
+      "raffleUnchanged": "Era deja așa; nimic de schimbat.",
+      "raffleConfirmed": "Confirmat pentru tombolă: numărul intră la tragere.",
+      "raffleConfirmedSignedUp": "Confirmat și înscris la tombolă: numărul intră la tragere.",
+      "raffleConfirmedAlready": "Participa deja la tombolă; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

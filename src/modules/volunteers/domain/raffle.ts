@@ -1,3 +1,4 @@
+import type { VolunteerRaffleGuardianWay } from "@/db/schema/event-volunteers";
 import { nextMidnightIn } from "@/i18n/dates";
 import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { formatVolunteerNumber } from "./volunteer-number";
@@ -14,6 +15,9 @@ import { formatVolunteerNumber } from "./volunteer-number";
     înscriere separată» — and «Înscrierile la tombolă sunt deschise».
   - **The gate** (`raffleSignUpClosedFor`): whether a sign-up may be taken now, and why not.
   - **Who takes part** (`raffleParticipation`): one answer and its reason, for both modes.
+  - **A volunteer confirmed for the raffle alone** (§1028, `volunteerConfirmedForRaffle`, `raffleGuardianRecord`,
+    `raffleConfirmationOffered`): the organizers' «Confirmă pentru tombolă», which lets a volunteer not confirmed take part — a
+    minor only with the parent's or guardian's agreement recorded, and how.
   - **The public form's matcher** (`typedNameMatches`): a typed name against the registered one, folded.
 */
 
@@ -172,8 +176,15 @@ export type RafflePerson = {
    */
   confirmed: boolean;
   /**
+   * A volunteer the organizers confirmed **for the raffle alone** (§1028, amending §984: «Confirmă pentru tombolă»), not as a
+   * volunteer — `volunteerConfirmedForRaffle`: not cancelled, and, under eighteen, only with the parent's or guardian's agreement
+   * recorded. It stands for `confirmed` in the raffle and nowhere else (`raffleConfirmed`); absent or false for everybody else.
+   */
+  confirmedForRaffle?: boolean;
+  /**
    * Wears a number: a registration's race number, a volunteer's V number (§1023, amending §948 — every confirmed volunteer has one,
-   * drawn by itself at the confirmation). A line of the elite list takes part by name: always true.
+   * drawn by itself at the confirmation, and so has one confirmed for the raffle alone, §1028). A line of the elite list takes part
+   * by name: always true.
    */
   hasNumber: boolean;
   /** «Participă la tombolă»: not taken out by the organizers (§949; a line's own tick, §984). */
@@ -187,15 +198,96 @@ export type RafflePerson = {
  * the counts, the «Tombolă» tab, the lists' «Tombolă» columns, the person's pages and the desk read. In the order a person is told:
  * the group ticked in «Cine poate participa» (both modes), the state, the number, the organizers' exclusion, and — only «Cu
  * înscriere separată» — the sign-up. «Din oficiu» is §949's file for the ticked groups: everybody confirmed with a number and not
- * taken out. Presence is no condition here: «Doar prezenții» is a second file over the same answer.
+ * taken out. Presence is no condition here: «Doar prezenții» is a second file over the same answer. Since §1028 a volunteer the
+ * organizers confirmed for the raffle alone is confirmed here (`raffleConfirmed`): the state's step and nothing else.
  */
 export function raffleParticipation(person: RafflePerson, settings: Pick<RaffleSettings, "groups" | "signUp">): RaffleReason {
   if (!settings.groups[person.kind]) return "groupNotAllowed";
-  if (!person.confirmed) return "notConfirmed";
+  if (!raffleConfirmed(person)) return "notConfirmed";
   if (!person.hasNumber) return "noNumber";
   if (!person.inRaffle) return "takenOut";
   if (settings.signUp && !person.signedUp) return "notSignedUp";
   return "in";
+}
+
+// ---------------------------------------------------------------------------------------------
+// «Confirmă pentru tombolă» (§1028, amending §984 and §1023)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Confirmed as the raffle takes it: in the raffle's state (`confirmed` — a registration confirmed and real, a volunteer confirmed,
+ * a line of the elite list always), or a volunteer the organizers confirmed for the raffle alone (§1028, `confirmedForRaffle`). What
+ * `raffleParticipation` asks at its second step and `raffle-roster.ts#raffleEligible` asks of every door. Pure.
+ */
+export function raffleConfirmed(person: Pick<RafflePerson, "confirmed" | "confirmedForRaffle">): boolean {
+  return person.confirmed || person.confirmedForRaffle === true;
+}
+
+/** How a minor's parent or guardian agreed to the raffle (§1028), in the order the dialog offers them: «telefonic», «la fața locului», «în scris». */
+export const RAFFLE_GUARDIAN_WAYS = ["PHONE", "IN_PERSON", "WRITING"] as const satisfies readonly VolunteerRaffleGuardianWay[];
+export type RaffleGuardianWay = VolunteerRaffleGuardianWay;
+
+export function isRaffleGuardianWay(value: unknown): value is RaffleGuardianWay {
+  return typeof value === "string" && (RAFFLE_GUARDIAN_WAYS as readonly string[]).includes(value);
+}
+
+/** A volunteer's row as «Confirmă pentru tombolă» reads it (§1028). */
+export type VolunteerRaffleFacts = {
+  state: "REGISTERED" | "CONFIRMED" | "CANCELLED";
+  /** Under eighteen on the event's day (`domain/volunteer.ts#isVolunteerMinor`): the age «Acordul părintelui lipsește» is decided by. */
+  minor: boolean;
+  raffleConfirmedAt: Date | null;
+  raffleGuardianAgreed: boolean | null;
+};
+
+/**
+ * Whether a volunteer is confirmed for the raffle alone (§1028): the organizers pressed «Confirmă pentru tombolă», the person is not
+ * cancelled — a cancelled volunteer takes part in nothing —, and a minor's parent or guardian agreed, as the press recorded. A
+ * confirmation recorded for an adult whose date of birth is corrected since to a minor's counts no longer, and the press is offered
+ * again, with the parent's agreement to tick. Not the volunteer's state: «Confirmat» stays the organizers' «Confirmă». Pure.
+ */
+export function volunteerConfirmedForRaffle(volunteer: VolunteerRaffleFacts): boolean {
+  if (volunteer.state === "CANCELLED" || volunteer.raffleConfirmedAt === null) return false;
+  return !volunteer.minor || volunteer.raffleGuardianAgreed === true;
+}
+
+/** The dialog's two answers a minor's confirmation needs, by the names the form posts them under: what a refusal names. */
+export const RAFFLE_GUARDIAN_FIELDS = { agreed: "raffleGuardianAgreed", way: "raffleGuardianWay" } as const;
+
+/** What a confirmation records of the parent's agreement: nothing for an adult; for a minor, the tick and its way. */
+export type RaffleGuardianRecord = { ok: true; agreed: true | null; way: RaffleGuardianWay | null } | { ok: false; missing: string[] };
+
+/**
+ * What «Confirmă pentru tombolă» records of the parent's or guardian's agreement (§1028; the approved «Regulamentul tombolei»: «Un
+ * participant minor se înscrie cu acordul părintelui sau al tutorelui său.»). An adult: nothing, whatever a form posts. A minor: the
+ * box «Părintele sau tutorele a fost de acord să participe la tombolă» ticked — a real `true` — and one of the three ways; else the
+ * refusal names what is missing, by the form's own names. Pure: the service asks it before anything is written.
+ */
+export function raffleGuardianRecord(input: { minor: boolean; agreed: unknown; way: unknown }): RaffleGuardianRecord {
+  if (!input.minor) return { ok: true, agreed: null, way: null };
+  const way = isRaffleGuardianWay(input.way) ? input.way : null;
+  const missing = [...(input.agreed === true ? [] : [RAFFLE_GUARDIAN_FIELDS.agreed]), ...(way === null ? [RAFFLE_GUARDIAN_FIELDS.way] : [])];
+  return missing.length > 0 || way === null ? { ok: false, missing } : { ok: true, agreed: true, way };
+}
+
+/**
+ * Whether the «Tombolă» tab and the volunteer's page offer «Confirmă pentru tombolă» (§1028) — to the organizers alone, which the
+ * caller asks —: a volunteer of an event that holds a raffle and takes its volunteers («Cine poate participa»), who is «Înscris» (not
+ * confirmed, not cancelled), not confirmed for the raffle already (a minor's earlier confirmation without the parent's agreement
+ * offers it again) and not taken out by the organizers — «Pune înapoi» first, as the desk's sign-up is never offered to a person
+ * taken out. «Cu înscriere separată» the press signs the person up too, by the organizers' own door, so it is offered only while the
+ * sign-up's gate is open for the volunteers: a page never offers a press the server refuses. Pure.
+ */
+export function raffleConfirmationOffered(input: {
+  volunteer: VolunteerRaffleFacts & { inRaffle: boolean };
+  settings: Pick<RaffleSettings, "hasRaffle" | "groups" | "signUp">;
+  /** The gate's answer for the volunteers (`raffleSignUpClosedFor(facts, now, "VOLUNTEER")`): null while a sign-up may be taken. */
+  gateClosed: RaffleGateClosed | null;
+}): boolean {
+  const { volunteer, settings } = input;
+  if (!settings.hasRaffle || !settings.groups.VOLUNTEER) return false;
+  if (volunteer.state !== "REGISTERED" || volunteerConfirmedForRaffle(volunteer) || !volunteer.inRaffle) return false;
+  return !settings.signUp || input.gateClosed === null;
 }
 
 /**

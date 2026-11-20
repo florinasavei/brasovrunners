@@ -179,15 +179,15 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     const lines = (await response.text()).replace(/^\uFEFF/, "").split("\r\n");
     // «Prezent» (§949, §983): the runner was not checked in at the desk, and nobody ticked the volunteer «Prezent» on the «Voluntari» list.
     expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `V001,Oana Voluntar ${tag},Voluntar,Nu`, ""]);
-    // «Descarcă pentru random.org» (§1023): the same people, one number per line and nothing else, its «?» beside it.
+    // «Descarcă pentru random.org» (§1023): the same people, one per line, the number and the name, its «?» beside it.
     const randomOrg = page.getByTestId("registrations-raffle-random-org");
     await expect(randomOrg).toHaveText(/Descarcă pentru random\.org/);
     expect((await randomOrg.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     const text = await page.request.get((await randomOrg.getAttribute("href")) as string);
     expect(text.headers()["content-type"]).toBe("text/plain; charset=utf-8");
     expect(text.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}-random-org\.txt"/);
-    expect(await text.text()).toBe("1\r\nV001\r\n");
-    await expect(page.getByTestId("registrations-raffle-random-org-help")).toHaveAccessibleName(/^Un număr pe rând, fără nume/);
+    expect(await text.text()).toBe(`1 ${runner}\r\nV001 Oana Voluntar ${tag}\r\n`);
+    await expect(page.getByTestId("registrations-raffle-random-org-help")).toHaveAccessibleName(/^Un rând pe persoană, cu număr și nume/);
     await fits(page);
   });
 

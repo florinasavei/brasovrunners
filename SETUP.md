@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.96-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2776,7 +2776,8 @@ An agent never approves either text.
    back with «Tombolă» open on what was saved. None of the four travels to a series' other dates, a copy or the event's file.
    **Nothing to set for the volunteers** (`DECISIONS.md` §1023): each draws the event's next volunteer number, «V001», «V002»…, the
    moment the organizers confirm them, and takes part with it; a volunteer is out only while not confirmed, when the organizers took
-   them out or, «Cu înscriere separată», until they sign up — each row of «Ziua cursei» → «Tombolă» says why.
+   them out or, «Cu înscriere separată», until they sign up — each row of «Ziua cursei» → «Tombolă» says why. One not confirmed — a
+   minor whose parent has not given the volunteering agreement, for instance — can be confirmed for the raffle alone (step 5).
 4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
    (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
    volunteer's own number, «V007» or just 7 — `DECISIONS.md` §1023) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
@@ -2797,6 +2798,18 @@ An agent never approves either text.
    one number per line, no names — the race numbers, then the volunteers' «V001», «V002»… (`DECISIONS.md` §1023). Paste it into
    random.org → «List Randomizer», «Randomize», and look the first number up in «Lista pentru tombolă (CSV)» or on «Tombolă» for the
    name. The steps: `docs/RUNBOOKS.md` § The raffle on race day.
+
+   **A volunteer not confirmed** (`DECISIONS.md` §1028) — «Înscris», for instance a minor whose parent has not given the
+   volunteering agreement yet («Acordul părintelui lipsește») — reads «Nu · neconfirmat» on «Tombolă». The Organizer or an
+   Administrator presses **«Confirmă pentru tombolă»** on that row, or on the volunteer's own page, and answers the question that
+   names the person. For a minor, choose first **«Cum și-a dat acordul părintele»** — «telefonic», «la fața locului» or «în
+   scris» — and tick, in the question, **«Părintele sau tutorele a fost de acord să participe la tombolă»**: the approved
+   «Regulamentul tombolei» takes a minor only with that agreement, so the button refuses without both. «Cu înscriere separată»,
+   tick «A acceptat regulamentul» too: the press signs the person up. The person gets their volunteer number if they have none and
+   takes part; the row says «Da · confirmat doar pentru tombolă». They stay unconfirmed as a volunteer — the volunteering agreement
+   still missing, the parent's link as it was — and «Jurnal» keeps who decided, when and how the parent agreed. The privacy
+   notice's template does not yet name this record of how a parent agreed (`docs/OWNER-TODO.md`): the club's lawyer reads it at the
+   next approval.
 6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
    the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing
    else is asked of anybody. Sign-ups already made are kept until their thirty days; they count again if the event goes back to the

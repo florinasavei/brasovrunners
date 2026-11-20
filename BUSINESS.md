@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.96-2026-11-20 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -703,7 +703,11 @@ no way of signing up opens — and with a sign-up of its own nobody takes part w
 club leaves the raffle «din oficiu». A sign-up sends no email, publishes no name and is
 deleted thirty days after the event; a participant withdraws before the draw from the same page, or by telling the
 organizers. The form never says whether a number exists: a number and a name that do not belong together get one
-neutral answer. The draw itself happens at the event, outside the site, among those signed up.
+neutral answer. The draw itself happens at the event, outside the site, among those signed up. A volunteer the
+organizers have not confirmed — a minor whose parent has not yet agreed to the volunteering, for instance — may be
+confirmed by an organizer **for the raffle alone** (2026-11-20, `DECISIONS.md` §1028): they take part with their volunteer
+number and stay unconfirmed as a volunteer; a minor only once the parent or guardian agreed to the raffle, as the rules
+ask, the organizer recording how — by telephone, in person or in writing — and who decided.
 
 ### BR-BUS-060 — Staff roles and least privilege
 
@@ -715,7 +719,7 @@ list of roles, so adding a role later cannot silently take one away.
 | --- | --- |
 | Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number, takes a runner off the raffle or puts them back — asked first, kept with who pressed (`DECISIONS.md` §1020); somebody who is not on the list is an organizer's to add, so the volunteer calls one (`DECISIONS.md` §1025); the finish line, «Cronometrare»: records a finisher by the bib's number or an elite's button, and undoes their own press for ten minutes (`DECISIONS.md` §986); and the raffle's tab, «Tombolă», for an event that holds a raffle: reads who takes part and who was there — names and numbers, never an address — and signs a runner up who accepted the rules (`DECISIONS.md` §1014), the raffle's files staying the organizers'. Nothing else (`DECISIONS.md` §103) |
 | Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
-| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; at the race-day desk, adds somebody who is not on the list («Adaugă pe cineva», with the Administrators, `DECISIONS.md` §1025); messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §986) |
+| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; at the race-day desk, adds somebody who is not on the list («Adaugă pe cineva», with the Administrators, `DECISIONS.md` §1025); messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §986); confirms a volunteer who is not confirmed for the raffle alone, a minor with the parent's or guardian's agreement and how it was given (`DECISIONS.md` §1028) |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Every event — creating, configuring, publishing, cancelling, a series (§542); changing registrations, participants, waiting lists, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |

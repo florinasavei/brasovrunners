@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNotNull, ne, or } from "drizzle-orm";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventRaffleEntries, RAFFLE_TYPED_NAME_MAX, type RaffleEntryMethod } from "@/db/schema/event-raffle-entries";
@@ -93,54 +93,86 @@ function personColumns(ref: RafflePersonRef): { registrationId: string | null; v
 
 export type RaffleSignUpOutcome = "created" | "already";
 
+type SignUpInput = { person: RafflePersonFacts; method: RaffleEntryMethod; accepted: boolean; locale: Locale; typedName?: string | null; trace?: SignatureTrace; recordedBy?: string | null };
+
 /**
- * The person's sign-up, written once: the rules' tick given, the gate asked again for the person's group, the person eligible
- * (confirmed, real, a number; a line of the elite list always), then the row and its audit row — or nothing, when the person is in
- * already. Refusals write nothing: `RAFFLE_RULES_NOT_ACCEPTED`, `RAFFLE_SIGN_UP_CLOSED`, `RAFFLE_NOT_ELIGIBLE`.
+ * The checks every sign-up passes before a word is written: the rules' tick given, the gate asked again for the person's group, the
+ * person eligible (confirmed, real, a number; a line of the elite list always). Refusals write nothing: `RAFFLE_RULES_NOT_ACCEPTED`,
+ * `RAFFLE_SIGN_UP_CLOSED`, `RAFFLE_NOT_ELIGIBLE`. The gate's facts, read on `db` — the caller's transaction, when it holds one.
  */
-async function signUp<T extends Record<string, unknown>>(
-  db: Database<T>,
-  input: { person: RafflePersonFacts; method: RaffleEntryMethod; accepted: boolean; locale: Locale; typedName?: string | null; trace?: SignatureTrace; recordedBy?: string | null },
-  now: Date,
-): Promise<RaffleSignUpOutcome> {
+async function assertMaySignUp<T extends Record<string, unknown>>(db: Database<T>, input: SignUpInput, now: Date): Promise<RaffleGateFacts> {
   if (!input.accepted) throw new DomainError("RAFFLE_RULES_NOT_ACCEPTED", "a raffle sign-up needs the rules accepted", ["accept"]);
   const facts = await readRaffleGateFacts(db, input.person.eventId, now);
   assertOpen(facts, now, input.person.kind);
   if (!raffleEligible(input.person.person)) throw new DomainError("RAFFLE_NOT_ELIGIBLE", "the raffle takes confirmed people with a number");
-  if (await findRaffleEntry(db, input.person.ref)) return "already";
+  return facts;
+}
 
-  const acceptance = await acceptanceColumns(db, input.person.eventId, facts.settings, input.locale, now);
+/**
+ * The row and its audit row, in the transaction given — or nothing, when a press at the same instant wrote the person's row first
+ * (the person's column is unique). The entry's id when it was written.
+ */
+async function writeEntry<T extends Record<string, unknown>>(tx: Database<T>, input: SignUpInput, acceptance: AcceptanceColumns, now: Date): Promise<{ outcome: RaffleSignUpOutcome; entryId: string | null }> {
   const electronic = input.method === "LINK" || input.method === "FORM";
   const trace = traceColumns(input.trace, electronic);
   const recorder = electronic ? null : (input.recordedBy ?? null);
-  return db.transaction(async (tx) => {
-    const [row] = await tx
-      .insert(eventRaffleEntries)
-      .values({
-        eventId: input.person.eventId,
-        ...personColumns(input.person.ref),
-        method: input.method,
-        ...acceptance,
-        typedName: input.method === "FORM" ? (input.typedName ?? null) : null,
-        ip: trace.ip,
-        userAgent: trace.userAgent,
-        recordedByStaffUserId: recorder,
-        createdAt: now,
-      })
-      .onConflictDoNothing()
-      .returning({ id: eventRaffleEntries.id });
-    // Two presses at once: the person's column is unique, and the second finds the first.
-    if (!row) return "already" as const;
-    await recordAuditEvent(tx, {
-      actorStaffUserId: recorder,
-      action: "event_raffle.entry_created",
-      entityType: "event",
-      entityId: input.person.eventId,
-      metadata: { entryId: row.id, method: input.method, kind: input.person.kind },
-      now,
-    });
-    return "created" as const;
+  const [row] = await tx
+    .insert(eventRaffleEntries)
+    .values({
+      eventId: input.person.eventId,
+      ...personColumns(input.person.ref),
+      method: input.method,
+      ...acceptance,
+      typedName: input.method === "FORM" ? (input.typedName ?? null) : null,
+      ip: trace.ip,
+      userAgent: trace.userAgent,
+      recordedByStaffUserId: recorder,
+      createdAt: now,
+    })
+    .onConflictDoNothing()
+    .returning({ id: eventRaffleEntries.id });
+  // Two presses at once: the person's column is unique, and the second finds the first.
+  if (!row) return { outcome: "already", entryId: null };
+  await recordAuditEvent(tx, {
+    actorStaffUserId: recorder,
+    action: "event_raffle.entry_created",
+    entityType: "event",
+    entityId: input.person.eventId,
+    metadata: { entryId: row.id, method: input.method, kind: input.person.kind },
+    now,
   });
+  return { outcome: "created", entryId: row.id };
+}
+
+/**
+ * The person's sign-up, written once: the checks (`assertMaySignUp`), then the row and its audit row — or nothing, when the person
+ * is in already.
+ */
+async function signUp<T extends Record<string, unknown>>(db: Database<T>, input: SignUpInput, now: Date): Promise<RaffleSignUpOutcome> {
+  const facts = await assertMaySignUp(db, input, now);
+  if (await findRaffleEntry(db, input.person.ref)) return "already";
+  const acceptance = await acceptanceColumns(db, input.person.eventId, facts.settings, input.locale, now);
+  return db.transaction(async (tx) => (await writeEntry(tx, input, acceptance, now)).outcome);
+}
+
+/**
+ * The organizers' sign-up (STAFF) of a volunteer they have just confirmed for the raffle (§1028, «Confirmă pentru tombolă» on an
+ * event «Cu înscriere separată»), written **inside the confirmation's own transaction** — the caller holds the event row's lock and
+ * has asked the role (`canTakeRaffleList`), and `person` is the volunteer as the confirmation leaves them (confirmed for the raffle,
+ * with their V number). The same checks, row and audit row as the organizers' «Înscrie» (`signUpForRaffleByStaff`): the person's
+ * acceptance of the rules on paper or aloud, which the press's own tick records (`accepted`), the version in force in the person's
+ * language, the staff member as the recorder. The entry's id when it was written; none when the person held a sign-up already.
+ */
+export async function signUpConfirmedVolunteerInTransaction<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  input: { person: RafflePersonFacts; accepted: boolean; recordedBy: string },
+  now: Date,
+): Promise<{ outcome: RaffleSignUpOutcome; entryId: string | null }> {
+  const signUpInput: SignUpInput = { person: input.person, method: "STAFF", accepted: input.accepted, locale: input.person.locale, recordedBy: input.recordedBy };
+  const facts = await assertMaySignUp(tx, signUpInput, now);
+  if (await findRaffleEntry(tx, input.person.ref)) return { outcome: "already", entryId: null };
+  const acceptance = await acceptanceColumns(tx, input.person.eventId, facts.settings, signUpInput.locale, now);
+  return writeEntry(tx, signUpInput, acceptance, now);
 }
 
 /** Takes a person's sign-up away, audited; false when there was none. Who and why is the caller's (`by`). */
@@ -273,15 +305,22 @@ export async function signUpForRaffleByForm<T extends Record<string, unknown>>(d
 }
 
 /**
- * The person a number and a name name at the event: a confirmed real registration by its race number, or a confirmed volunteer by
- * their V number (§1023) — or nobody.
+ * The person a number and a name name at the event: a confirmed real registration by its race number, or a volunteer by their V
+ * number (§1023) — confirmed by «Confirmă», or confirmed for the raffle alone (§1028), never a cancelled one: the caller asks the one
+ * answer of whoever is found (`raffleEligible`, a minor's confirmation counting only with the parent's agreement) — or nobody.
  */
 async function matchRafflePerson<T extends Record<string, unknown>>(db: Database<T>, eventId: string, number: number, volunteer: boolean, typed: string): Promise<RafflePersonRef | null> {
   if (volunteer) {
     const rows = await db
       .select({ id: eventVolunteers.id, name: eventVolunteers.name })
       .from(eventVolunteers)
-      .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.volunteerNumber, number), eq(eventVolunteers.state, "CONFIRMED")));
+      .where(
+        and(
+          eq(eventVolunteers.eventId, eventId),
+          eq(eventVolunteers.volunteerNumber, number),
+          or(eq(eventVolunteers.state, "CONFIRMED"), and(ne(eventVolunteers.state, "CANCELLED"), isNotNull(eventVolunteers.raffleConfirmedAt))),
+        ),
+      );
     const match = rows.find((row) => typedNameMatches(typed, row.name));
     return match ? { table: "volunteer", id: match.id } : null;
   }

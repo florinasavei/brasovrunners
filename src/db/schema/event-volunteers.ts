@@ -33,6 +33,16 @@ export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["F
 export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LINK", "PAPER"]);
 
 /**
+ * How a minor volunteer's parent or guardian agreed that the minor takes part in the event's raffle, as the organizer who
+ * pressed «Confirmă pentru tombolă» records it (§1028): by telephone («PHONE», «telefonic»), in person at the event («IN_PERSON»,
+ * «la fața locului») or in writing («WRITING», «în scris»). A closed set held by the table's CHECK
+ * (`event_volunteers_raffle_guardian_whole`), not an enum type: a fourth way is a migration either way, and a CHECK is the
+ * smaller one to widen.
+ */
+export const VOLUNTEER_RAFFLE_GUARDIAN_WAYS = ["PHONE", "IN_PERSON", "WRITING"] as const;
+export type VolunteerRaffleGuardianWay = (typeof VOLUNTEER_RAFFLE_GUARDIAN_WAYS)[number];
+
+/**
  * A heading the club groups an event's roles under (§774; the owner, 2026-10-14: «Pentru „ce sunt dispus să fac” trebuie să
  * am categorii cu sub-categorii, eg: aș pune activități Start/Finish și am putea adăuga ex: direcționare, foto/video, punct
  * hidratare; Traseu: direcționare, punct hidratare, foto/video. Toate astea configurabile.»): «Start / Sosire», «Traseu».
@@ -339,6 +349,23 @@ export const eventVolunteers = pgTable(
      * deleted with the row.
      */
     raceDayDecision: text("race_day_decision"),
+    /*
+      «Confirmă pentru tombolă» (migration `0227_volunteer_raffle_confirmation`, §1028, amending §984 and §1023; the owner,
+      2026-11-20, the day before the race, of a volunteer of seventeen whose parents' agreement to volunteering was still missing:
+      «vreau să pot să o confirm și pe [ea] pentru tombolă, chiar și fără acordul părinților»): the organizers confirmed the person
+      **for the raffle alone** — when, and by which staff account (`SET NULL`: an account deleted since is «cont șters»). It is not
+      the volunteer's state: «Confirmat» stays the organizers' «Confirmă», which a minor still reaches only with the parent's
+      volunteering agreement (§768); this one only lets a person not confirmed take part in the event's raffle
+      (`domain/raffle.ts#volunteerConfirmedForRaffle`). For a volunteer under eighteen on the event's day the press records that
+      the parent or guardian agreed to the raffle (`raffle_guardian_agreed`, true) and how — by telephone, in person or in writing
+      (`raffle_guardian_way`, `VOLUNTEER_RAFFLE_GUARDIAN_WAYS`) — both or neither (the CHECKs below); an adult's confirmation
+      keeps neither. Written once, by `volunteers/raffle-confirmation.ts`, under the event row's lock; never on a public page, in an
+      email or on a badge. Kept and deleted with the row.
+    */
+    raffleConfirmedAt: timestamp("raffle_confirmed_at", { withTimezone: true }),
+    raffleConfirmedByStaffUserId: uuid("raffle_confirmed_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+    raffleGuardianAgreed: boolean("raffle_guardian_agreed"),
+    raffleGuardianWay: text("raffle_guardian_way").$type<VolunteerRaffleGuardianWay>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
@@ -473,6 +500,17 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_guardian_token_expiry", sql`(${t.guardianTokenHash} IS NULL) = (${t.guardianTokenExpiresAt} IS NULL)`),
     // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.
     index("event_volunteers_guardian_document_idx").on(t.guardianDocumentId).where(sql`${t.guardianDocumentId} IS NOT NULL`),
+    // «Confirmă pentru tombolă» (§1028): nothing of a raffle confirmation — who, the parent's agreement, its way — without its moment.
+    check(
+      "event_volunteers_raffle_confirmation_whole",
+      sql`${t.raffleConfirmedAt} IS NOT NULL OR (${t.raffleConfirmedByStaffUserId} IS NULL AND ${t.raffleGuardianAgreed} IS NULL AND ${t.raffleGuardianWay} IS NULL)`,
+    ),
+    // A minor's parent or guardian agreed to the raffle, and how: the tick and one of the three ways together, or neither. Written
+    // with IS TRUE and IS NOT NULL, never `= true` alone: a CHECK passes on NULL, so a tick without a way would slip through.
+    check(
+      "event_volunteers_raffle_guardian_whole",
+      sql`(${t.raffleGuardianAgreed} IS NULL AND ${t.raffleGuardianWay} IS NULL) OR (${t.raffleGuardianAgreed} IS TRUE AND ${t.raffleGuardianWay} IS NOT NULL AND ${t.raffleGuardianWay} IN ('PHONE', 'IN_PERSON', 'WRITING'))`,
+    ),
   ],
 );
 
