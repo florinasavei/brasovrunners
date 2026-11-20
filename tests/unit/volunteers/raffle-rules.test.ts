@@ -169,7 +169,7 @@ describe("§984 BR-REQ-071-01 who takes part, and why not — one answer for bot
     expect(raffleKindOfRegistration({ elite: false })).toBe("RUNNER");
   });
 
-  it("orders the rows by the number, then the numberless lines of the elite list by name", () => {
+  it("orders the rows by the race number, then the volunteers by their V number (§NNN), then the numberless lines of the elite list by name", () => {
     const rows = [
       { number: null, name: "Zoe Elita", kind: "ELITE" as const },
       { number: 12, name: "Radu", kind: "RUNNER" as const },
@@ -177,7 +177,8 @@ describe("§984 BR-REQ-071-01 who takes part, and why not — one answer for bot
       { number: 3, name: "Ion", kind: "VOLUNTEER" as const },
       { number: 3, name: "Ana", kind: "RUNNER" as const },
     ];
-    expect([...rows].sort(compareRaffleRows).map((row) => `${row.number ?? "—"} ${row.name}`)).toEqual(["3 Ana", "3 Ion", "12 Radu", "— Ana Elita", "— Zoe Elita"]);
+    // Ion's 3 is V003 — a series of its own, after every race number, never beside the runner wearing 3.
+    expect([...rows].sort(compareRaffleRows).map((row) => `${row.number ?? "—"} ${row.name}`)).toEqual(["3 Ana", "12 Radu", "3 Ion", "— Ana Elita", "— Zoe Elita"]);
   });
 });
 

@@ -710,13 +710,18 @@ export type AuditAction =
   /** «Oferim tricouri voluntarilor» (§765), entity `event`: metadata `{ on }`. */
   | "event.volunteers_shirts_switched"
   // «Numerele voluntarilor încep de la» (§948): the series' first number set, moved or switched off — from, to and how many
-  // confirmed volunteers the press gave a number; never a person.
+  // confirmed volunteers the press gave a number; never a person. Written by nothing since §NNN (the box left the card); kept for its rows.
   | "event.volunteer_numbers_start_set"
+  // The volunteers' V numbers (§NNN) given by the maintenance job to confirmed volunteers who had none — a volunteer the code serving
+  // during migration `0224` confirmed (`volunteers/volunteer-numbers.ts#numberWaitingVolunteers`), no actor: how many, the first and
+  // the last number given; never a person.
+  | "event.volunteer_numbers_given"
   // «Cel mult câte roluri poate bifa o persoană» (§951): the public form's limit on the roles ticked set, moved or taken off —
   // from and to (a number, or null for no limit); never a person.
   | "event.volunteer_choices_max_set"
   // «Lista pentru tombolă» downloaded (§948, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
-  // volunteers the file held — never a name or a number.
+  // volunteers the file held — never a name or a number. Since §NNN `format` says which file: `csv`, or `random-org` for
+  // «Descarcă pentru random.org» (one number per line).
   | "event.raffle_list_exported"
   // The picture of «Planul voluntarilor» (§952, `volunteers/plan.ts`), entity `event`: uploaded or changed (`set`: the stored
   // picture's id and the one it replaced, null for the first) or taken off (`removed`: the id it was). Ids only — never a

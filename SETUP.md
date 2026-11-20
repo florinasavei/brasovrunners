@@ -2767,7 +2767,7 @@ An agent never approves either text.
    deschise»**. Save. None of the four travels to a series' other dates, a copy or the event's file.
 4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
    (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
-   volunteer's own number) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
+   volunteer's own number, «V007» or just 7 — `DECISIONS.md` §NNN) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
    number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
    tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
@@ -2776,10 +2776,13 @@ An agent never approves either text.
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the
-   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. Every other desk
+   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the files. Every other desk
    role — a Voluntar at the raffle's table — opens the same tab since §1014: the same table, counts and filters, without how and when
    anybody signed up, and one press, «Înscrie» on a runner's row, with «A acceptat regulamentul» ticked once the person accepted. **At the draw,
-   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take «Lista pentru tombolă» (or «— doar prezenții») and draw from it.
+   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take **«Descarcă pentru random.org»** (or «— doar prezenții»):
+   one number per line, no names — the race numbers, then the volunteers' «V001», «V002»… (`DECISIONS.md` §NNN). Paste it into
+   random.org → «List Randomizer», «Randomize», and look the first number up in «Lista pentru tombolă (CSV)» or on «Tombolă» for the
+   name. The steps: `docs/RUNBOOKS.md` § The raffle on race day.
 6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
    the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing
    else is asked of anybody. Sign-ups already made are kept until their thirty days; they count again if the event goes back to the

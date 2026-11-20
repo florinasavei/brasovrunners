@@ -214,12 +214,13 @@ async function runner(name: string, bibNumber: number | null, more: Partial<type
   return row.id;
 }
 
-async function volunteer(name: string, bibNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
+/** A confirmed volunteer holding the V number given (§NNN: «V001» is 1), or none. */
+async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
-    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, bibNumber, ...more })
+    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, volunteerNumber, ...more })
     .returning({ id: eventVolunteers.id });
   await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: row.id, roleId });
   return row.id;
@@ -263,7 +264,7 @@ async function saturday() {
   const ana = await runner("Ana Popescu", 7, { checkedInAt: EFFECTIVE });
   const eliud = await runner("Eliud Kipchoge", 3, { elite: true });
   const elena = await runner("Elena Waiting", null, { status: "WAITLISTED", confirmedAt: null, waitlistedAt: EFFECTIVE });
-  const ion = await volunteer("Ion Voluntar", 500);
+  const ion = await volunteer("Ion Voluntar", 1);
   const zoe = await eliteLine("Zoe Elita");
   return { ana, eliud, elena, ion, zoe };
 }
@@ -274,11 +275,12 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     const page = await tab();
     expect(words(/data-testid="raffle-settings-line"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe("Participă: alergătorii, elitele, voluntarii · din oficiu");
     expect(words(/data-testid="raffle-counts"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe("Participă: 4 · Alergători: 1 · Elite: 2 · Voluntari: 1 · Prezenți dintre ei: 1");
-    // Every person, by the number, the numberless last: number, name, group, «Participă» and its reason, «Prezent».
+    // Every person, by the race number, then the volunteers by their V number (§NNN), the numberless last: number, name, group,
+    // «Participă» and its reason, «Prezent».
     expect(rowsOf(page)).toEqual([
       expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu/),
       expect.stringMatching(/^7 Ana Popescu Alergător Da Da/),
-      expect.stringMatching(/^500 Ion Voluntar Voluntar Da Nu/),
+      expect.stringMatching(/^V001 Ion Voluntar Voluntar Da Nu/),
       expect.stringMatching(/^— Elena Waiting Alergător Nu · neconfirmat Nu/),
       expect.stringMatching(/^— Zoe Elita Elită Da Prezent/),
     ]);
@@ -300,6 +302,15 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     // The two files, for this event, and the page printable.
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?lang=ro"`);
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?present=1&amp;lang=ro"`);
+    // «Descarcă pentru random.org» and its present-only twin (§NNN), with the «?» that says how to use the file.
+    expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?format=random-org&amp;lang=ro"`);
+    expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?format=random-org&amp;present=1&amp;lang=ro"`);
+    expect(page).toContain(`aria-label="${ro.Admin.registrations.raffle.randomOrgHelp}"`);
+    // Every participant has a number: nothing to say about the file for random.org leaving anybody out — but the line of the
+    // elite list without one is taking part (Zoe), so it is said.
+    expect(words(/data-testid="raffle-random-org-missing"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe(
+      "1 participant fără număr nu e în fișierul pentru random.org: dă-i întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
+    );
     expect(page).toContain(ro.Admin.raffle.print);
   });
 
@@ -392,7 +403,8 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
       expect(rowsOf(page), role).toEqual([
         expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu$/),
         expect.stringMatching(/^7 Ana Popescu Alergător Da Da$/),
-        expect.stringMatching(/^500 Ion Voluntar Voluntar Da Nu$/),
+        // The volunteer by their V number (§NNN), after the race numbers.
+        expect.stringMatching(/^V001 Ion Voluntar Voluntar Da Nu$/),
         expect.stringMatching(/^— Elena Waiting Alergător Nu · neconfirmat Nu$/),
         // A line of the elite list: its «Prezent» in words — the tick is the organizers'.
         expect.stringMatching(/^— Zoe Elita Elită Da Nu$/),
@@ -412,7 +424,18 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
       expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? ""), role).toBe(ro.Admin.raffle.introDesk);
       // Nothing of the organizers': no file, no exclusion, no deletion, no elite tick, no way to the editor, no STAFF sign-up.
       const ids = testIdsOf(page);
-      for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-delete-form", "raffle-elite-present-form", "raffle-settings-edit", "raffle-sign-up-form"]) {
+      for (const id of [
+        "raffle-download",
+        "raffle-download-present",
+        "raffle-download-random-org",
+        "raffle-download-random-org-present",
+        "raffle-random-org-help",
+        "raffle-exclusion-form",
+        "raffle-delete-form",
+        "raffle-elite-present-form",
+        "raffle-settings-edit",
+        "raffle-sign-up-form",
+      ]) {
         expect(ids.has(id), `${role}: ${id}`).toBe(false);
       }
       expect(page, role).not.toContain(`/api/admin/events/${eventId}/raffle`);
@@ -426,7 +449,9 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
     state.actor = staff.MODERATOR;
     const theirs = await tab();
     expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(theirs)?.[1] ?? "")).toBe(ro.Admin.raffle.intro);
-    for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-elite-present-form"]) expect(testIdsOf(theirs).has(id), id).toBe(true);
+    for (const id of ["raffle-download", "raffle-download-present", "raffle-download-random-org", "raffle-download-random-org-present", "raffle-random-org-help", "raffle-exclusion-form", "raffle-elite-present-form"]) {
+      expect(testIdsOf(theirs).has(id), id).toBe(true);
+    }
     expect(await holding("raffle-exclusion-form")).toEqual([people.ana, people.eliud, people.elena, people.ion, people.zoe].sort());
     // English, for a desk role.
     state.actor = staff.CONTRIBUTOR;
@@ -555,7 +580,7 @@ describe("§984 BR-REQ-060-01 the tab's presses: each asks its capability and co
     });
     expect(await press(actions.raffleSignUpAction, { table: "volunteer", personId: people.ion, accepted: "on" })).toMatchObject({ toast: { key: "raffleAlready" } });
     // From a volunteer's own page, back to it: a refusal to the page's alert (`volunteerError`), a sign-up to the raffle's line.
-    const maria = await volunteer("Maria Voluntar", 501);
+    const maria = await volunteer("Maria Voluntar", 2);
     expect(await press(actions.raffleSignUpAction, { table: "volunteer", personId: maria, back: "volunteer" })).toEqual({
       to: `/ro/admin/volunteers/${maria}?volunteerError=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
       toast: null,

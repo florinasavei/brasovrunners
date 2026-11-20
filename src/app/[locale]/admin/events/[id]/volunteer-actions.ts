@@ -15,7 +15,6 @@ import {
   setVolunteersAccess,
   setVolunteersButtonShown,
   setVolunteerChoicesMax,
-  setVolunteerNumbersStart,
   setVolunteersShirts,
   setVolunteersShowCounts,
   type VolunteerCategoryRequest,
@@ -148,26 +147,6 @@ export async function switchVolunteersShirtsAction(form: FormData): Promise<void
     const actor = await requireStaff();
     const result = await setVolunteersShirts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
     return backToCard(form, { saved: result.changed ? (on ? "volunteersShirtsOn" : "volunteersShirtsOff") : "volunteerUnchanged" });
-  } catch (error) {
-    if (!isDomainError(error)) throw error;
-    return backToCard(form, { error: error.code });
-  }
-}
-
-/**
- * «Numerele voluntarilor încep de la» (§948): the card's box, the event's `volunteer_bib_start` — the first number of the
- * volunteers' own series. Digits alone, or empty for «no numbers»; anything else is refused on the box by the service's own
- * rule. The toast says the confirmed volunteers without a number got theirs.
- */
-export async function setVolunteerNumbersStartAction(form: FormData): Promise<void> {
-  const typed = field(form, "start").trim();
-  // «12.5», «1e3» and «0x10» are no number of a series: NaN, which the service refuses naming the box.
-  const start = typed === "" ? null : /^[0-9]{1,5}$/.test(typed) ? Number(typed) : Number.NaN;
-  try {
-    const actor = await requireStaff();
-    const result = await setVolunteerNumbersStart(getDb(), actor, { eventId: eventIdOf(form), start }, new Date());
-    if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
-    return backToCard(form, { saved: start === null ? "volunteerNumbersOff" : "volunteerNumbersOn" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

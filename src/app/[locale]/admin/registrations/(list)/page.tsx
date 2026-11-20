@@ -118,6 +118,7 @@ import { deleteInvitationAction, inviteAction, resendInvitationAction, withdrawI
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
@@ -1508,6 +1509,35 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             >
               {t("registrations.raffle.presentButton")}
             </GlyphButton>
+          )}
+          {/* «Descarcă pentru random.org» and its present-only twin (§NNN; the owner, 2026-11-20): the same people as the two files above, one
+              number per line and no name — a text file to paste into random.org's List Randomizer. The route asserts the role again. */}
+          {filters.eventId && canTakeRaffleList(actor.role) && (
+            <>
+              <GlyphButton
+                icon="download"
+                href={`/api/admin/events/${filters.eventId}/raffle?format=random-org&lang=${locale}`}
+                variant="text"
+                size="small"
+                sx={TAP_TARGET}
+                aria-label={t("registrations.raffle.randomOrgButtonLabel")}
+                data-testid="registrations-raffle-random-org"
+              >
+                {t("registrations.raffle.randomOrgButton")}
+              </GlyphButton>
+              <GlyphButton
+                icon="download"
+                href={`/api/admin/events/${filters.eventId}/raffle?format=random-org&present=1&lang=${locale}`}
+                variant="text"
+                size="small"
+                sx={TAP_TARGET}
+                aria-label={t("registrations.raffle.randomOrgPresentButtonLabel")}
+                data-testid="registrations-raffle-random-org-present"
+              >
+                {t("registrations.raffle.randomOrgPresentButton")}
+              </GlyphButton>
+              <QuietHelp text={t("registrations.raffle.randomOrgHelp")} testId="registrations-raffle-random-org-help" />
+            </>
           )}
           {/* With one event chosen, the organizer's own message to its registrants (§364) —
               the page lives under the event; this is the other door to it. */}

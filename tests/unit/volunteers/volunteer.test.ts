@@ -532,7 +532,7 @@ describe("§754 the CSV", () => {
         guardianEmail: "maria@example.test",
         guardianConsent: "Nu",
         hasKit: "Da",
-        bibNumber: 501,
+        volunteerNumber: "V007",
       },
     ]);
     expect(csv.startsWith("﻿Rolurile date,S-a oferit pentru,Nume")).toBe(true);
@@ -549,9 +549,9 @@ describe("§754 the CSV", () => {
     expect(csv.split("\r\n")[0].includes("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
     // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
     // §904: «Are kit», the organizers' own mark, appended after them as «Da» / «Nu» — no earlier column moves.
-    // §948: the volunteer's number, appended last — no earlier column moves.
+    // §948: the volunteer's number, appended last — no earlier column moves; since §NNN written as the V number, «V007».
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui,Are kit,Număr")).toBe(true);
-    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,1992-03-12,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu,Da,501')).toBe(true);
+    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,1992-03-12,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu,Da,V007')).toBe(true);
   });
 
   it("§765 leaves an unanswered box empty, never «null» or 0", () => {
@@ -578,7 +578,7 @@ describe("§754 the CSV", () => {
         guardianEmail: null,
         guardianConsent: "",
         hasKit: "Nu",
-        bibNumber: null,
+        volunteerNumber: null,
       },
     ]);
     // An adult: the three guardian columns are empty — never «null»; «Are kit» says «Nu» for a person nobody ticked; and a
@@ -610,7 +610,7 @@ describe("§754 the CSV", () => {
         guardianEmail: null,
         guardianConsent: "",
         hasKit: "Nu",
-        bibNumber: null,
+        volunteerNumber: null,
       },
     ]);
     const [, row] = csv.split("\r\n");

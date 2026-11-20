@@ -62,14 +62,14 @@ const PHONE = "+40712345678";
 
 /**
  * A published race a week away whose raffle asks a sign-up, open, every group ticked: two confirmed runners (Bogdan checked in), a
- * confirmed volunteer with a number, an address and a telephone, and a line of the elite list.
+ * confirmed volunteer with their V number (V001, §NNN), an address and a telephone, and a line of the elite list.
  */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number, volunteer_bib_start,
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number,
          accepts_volunteers, has_raffle, raffle_sign_up, raffle_sign_up_open)
-       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1, 500, true, true, true, true) RETURNING id`,
+       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1, true, true, true, true) RETURNING id`,
     );
     const eventId = rows[0].id;
     await client.query(`INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES ($1, 'ro', $2, $3, 'O cursă.'), ($1, 'en', $4, $5, 'A race.')`, [
@@ -102,8 +102,8 @@ async function seed(tag: string): Promise<Seeded> {
     const volunteer = `Vlad Voluntar ${tag}`;
     const address = `vlad-tab-${tag}@test.invalid`;
     const { rows: helpers } = await client.query<{ id: string }>(
-      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, bib_number)
-       VALUES ($1, $2, $3, $4, $4, 1, $5, 'CONFIRMED', 'STAFF', 500) RETURNING id`,
+      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, volunteer_number)
+       VALUES ($1, $2, $3, $4, $4, 1, $5, 'CONFIRMED', 'STAFF', 1) RETURNING id`,
       [eventId, roles[0].id, volunteer, address, PHONE],
     );
     await client.query(`INSERT INTO event_volunteer_role_assignments (volunteer_id, role_id) VALUES ($1, $2)`, [helpers[0].id, roles[0].id]);
@@ -179,10 +179,10 @@ test.describe("§1014 «Tombolă» for the desk's volunteer: the roster, the fil
         );
         await expect(page.getByTestId("raffle-settings-line")).toHaveText("Participă: alergătorii, elitele, voluntarii · cu înscriere separată · înscrieri deschise");
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 0 · Alergători: 0 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 0");
-        await expect(page.locator('[data-testid="raffle-row-name"]:visible')).toHaveText([seeded.ana, seeded.bogdan, seeded.volunteer, seeded.elite]);
+        await expect(page.locator('[data-testid="raffle-row-name"]:visible')).toHaveText([seeded.ana, seeded.bogdan, seeded.elite, seeded.volunteer]);
         await expect(page.locator('[data-testid="raffle-row-in"]:visible')).toHaveText(["Nu · nu s-a înscris", "Nu · nu s-a înscris", "Nu · nu s-a înscris", "Nu · nu s-a înscris"]);
         // The organizers' presses, ticks, way to the editor and files are not drawn for a volunteer.
-        for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion", "raffle-delete-form", "raffle-elite-present", "raffle-settings-edit", "raffle-sign-up"]) {
+        for (const id of ["raffle-download", "raffle-download-present", "raffle-download-random-org", "raffle-download-random-org-present", "raffle-random-org-help", "raffle-exclusion", "raffle-delete-form", "raffle-elite-present", "raffle-settings-edit", "raffle-sign-up"]) {
           await expect(page.getByTestId(id), id).toHaveCount(0);
         }
         // The desk's «Înscrie» on the two runners alone — never on the volunteer or the elite line, which are the organizers' to sign up.
@@ -201,12 +201,12 @@ test.describe("§1014 «Tombolă» for the desk's volunteer: the roster, the fil
         await out.click();
         await expect(page).toHaveURL(/[?&]filter=out(&|#|$)/, { timeout: 30_000 });
         await hydrated(page);
-        await expect(page.locator('[data-testid="raffle-row-name"]:visible')).toHaveText([seeded.ana, seeded.bogdan, seeded.volunteer, seeded.elite]);
+        await expect(page.locator('[data-testid="raffle-row-name"]:visible')).toHaveText([seeded.ana, seeded.bogdan, seeded.elite, seeded.volunteer]);
         await fitsTheScreen(page);
       });
 
-      await test.step("the file's address answers 403 to the volunteer, as before", async () => {
-        for (const query of ["?lang=ro", "?present=1&lang=ro"]) {
+      await test.step("the files' addresses answer 403 to the volunteer, as before — the random.org ones too (§NNN)", async () => {
+        for (const query of ["?lang=ro", "?present=1&lang=ro", "?format=random-org&lang=ro", "?format=random-org&present=1&lang=ro"]) {
           const response = await page.request.get(`/api/admin/events/${seeded.eventId}/raffle${query}`);
           expect(response.status(), query).toBe(403);
           expect(await response.text(), query).not.toContain(seeded.ana);

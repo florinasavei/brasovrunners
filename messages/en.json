@@ -1035,7 +1035,7 @@
       "name": "Name",
       "nameHelp": "The name you registered with, for example “Ana Popescu”.",
       "volunteer": "I'm a volunteer",
-      "volunteerHelp": "Then type your volunteer number above.",
+      "volunteerHelp": "Then type your volunteer number above: V007, or just 7.",
       "rules": "Read the raffle rules",
       "accept": "I have read and accept the raffle rules",
       "notice": "What we keep about the sign-up is in the <privacy>privacy notice</privacy>. You receive no email for it.",
@@ -1403,7 +1403,7 @@
       "toVolunteer": {
         "title": "Turn into a volunteer",
         "intro": "The registration is cancelled and its place freed, as with any cancellation. The person goes onto this event's volunteers, confirmed, with the role you choose.",
-        "numberNote": "The registration's race number stays retired. As a volunteer the person gets a number only if the event has the volunteers' number series.",
+        "numberNote": "The registration's race number stays retired. As a volunteer the person gets the next volunteer number at the confirmation, for example V007.",
         "role": "Volunteer role",
         "action": "Turn into a volunteer",
         "noRoles": "The event has no volunteer role yet. Add one in the event's «Volunteers» card, then come back here.",
@@ -1422,6 +1422,11 @@
         "buttonLabel": "Raffle list (CSV): the runners, elites and volunteers taking part, with the number, the name, the group and whether the person is present",
         "presentButton": "Raffle list — present only (CSV)",
         "presentButtonLabel": "Raffle list — present only (CSV): those taking part who were present — the runners checked in at the desk or with “I have arrived” from their own link, the volunteers and elites ticked “Present”",
+        "randomOrgButton": "Download for random.org",
+        "randomOrgButtonLabel": "Download for random.org: a text file with one number per line, no names — the race numbers, then the volunteer numbers (V001…)",
+        "randomOrgPresentButton": "Download for random.org — present only",
+        "randomOrgPresentButtonLabel": "Download for random.org — present only: one number per line, no names, only those taking part who were present",
+        "randomOrgHelp": "One number per line, no names: paste it into random.org → List Randomizer, then find the winner by number in the CSV list.",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -2837,7 +2842,6 @@
       "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour.",
       "BADGE_SIZE_TOO_SMALL": "Not saved: a {width} × {height} mm badge has no room for everything you ticked: {what}. Make it at least {minHeight} mm tall, or untick one.",
       "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
-      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "The volunteers' numbers must start above the runners': the race's places, the desk's spares and the numbers already given. Choose a higher number. Nothing was saved.",
       "RUNNER_TO_VOLUNTEER_MINOR": "The person is under 18 on the event's day. Add them by hand under «Volunteers», with the parent's or guardian's details. Nothing was changed.",
       "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then try again. Nothing was changed.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
@@ -6557,12 +6561,6 @@
         "withdrawTitle": "Withdraw the invitation?",
         "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
       },
-      "numbers": {
-        "label": "Volunteers' numbers start at",
-        "help": "Every confirmed volunteer gets a number of their own series, from here up — never one a runner wears. Choose a number above the runners' numbers. Empty: no numbers.",
-        "save": "Save the numbers",
-        "saving": "Saving…"
-      },
       "choicesMax": {
         "label": "The most roles one person may tick",
         "placeholder": "any number",
@@ -10050,6 +10048,17 @@
               ]
             },
             {
+              "title": "The raffle: the volunteers' numbers and the draw on random.org",
+              "steps": [
+                "Volunteers get their numbers by themselves: V001, V002, V003… Each gets the next number the moment you confirm them; you set nothing. The number shows beside the name on «Volunteers», on the person's page, on the plan and in the Excel file.",
+                "A volunteer number is never given twice: whoever is cancelled or deleted keeps theirs, retired. V007 and race number 7 are two different people.",
+                "On race day tick «Present» for the volunteers who came, on «Volunteers»; the desk checks the runners in.",
+                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one number per line and no names.",
+                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first number in the list is the winner.",
+                "Look the winning number up in «Raffle list (CSV)» or on «Raffle»: the name is there. Race numbers are the runners' and the elites', the ones with a V the volunteers'."
+              ]
+            },
+            {
               "title": "What the Administrator does, not you",
               "steps": [
                 "Creating, changing, publishing, duplicating and cancelling events, and telling the participants about a change.",
@@ -13353,6 +13362,11 @@
     "raffle": {
       "title": "Raffle",
       "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "randomOrgMissing": {
+        "one": "{count} participant without a number is not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
+        "few": "{count} participants without a number are not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
+        "other": "{count} participants without a number are not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor."
+      },
       "introDesk": "Every runner, elite and volunteer of the event: who takes part in the raffle and who is present. With a separate sign-up, sign a runner up here once they have accepted the rules.",
       "noEvent": "No event to show.",
       "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
@@ -15699,8 +15713,6 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
-      "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
-      "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
       "volunteerChoicesMaxOn": {
         "one": "The limit is saved: at most {count} role can be ticked on the public form.",
         "few": "The limit is saved: at most {count} roles can be ticked on the public form.",

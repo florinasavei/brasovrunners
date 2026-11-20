@@ -39,9 +39,10 @@ import { changeVolunteer } from "./volunteers";
   no declaration is signed for anybody, and every existing refusal of those verbs stands. Each is the Administrator's
   (`canManageRegistrations`), asserted here before anything is read and again by every verb underneath (BR-REQ-060-01).
 
-  **The numbers** (§948): a number is never reissued and never moves. The runner's stays retired with the cancelled
-  registration; as a volunteer the person draws one from the volunteers' own series, like every volunteer confirmed. The
-  volunteer's stays retired with the cancelled row; as a runner the person draws theirs when they are confirmed.
+  **The numbers** (§948, §NNN): a number is never reissued and never moves. The runner's stays retired with the cancelled
+  registration; as a volunteer the person draws the next V number at the confirmation («V007»), like every volunteer confirmed.
+  The volunteer's V number stays retired with the cancelled row; as a runner the person draws a race number when they are
+  confirmed. The two series never meet: a race number and a V number are compared with nothing of each other.
 
   **«Participă la tombolă» travels with the person** (§953, amending §948 and §949): somebody an organizer took out of the
   event's raffle is out of it on the other list too — the new row would otherwise start in, the column's default, and the
@@ -105,8 +106,8 @@ export type RunnerToVolunteerInput = {
 export type RunnerToVolunteerResult = {
   eventId: string;
   volunteerId: string;
-  /** The number the person drew from the volunteers' series, or null on an event that gives its volunteers none. */
-  bibNumber: number | null;
+  /** The V number the person drew at the confirmation (§NNN): every event numbers its volunteers, so null only for a row that kept none. */
+  volunteerNumber: number | null;
 };
 
 /**
@@ -122,7 +123,7 @@ export type RunnerToVolunteerResult = {
  *    the person gave for the same event. Never their place on a public list, which is the person's own tick (§821). An
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
- * 3. the person is confirmed, which draws their number from the volunteers' series (§948) — and a runner an organizer had
+ * 3. the person is confirmed, which draws their V number (§NNN, amending §948) — and a runner an organizer had
  *    taken out of the raffle is taken out as a volunteer too (§953), and a runner the desk had checked in is ticked «Prezent»
  *    as a volunteer (§983), each by the volunteers' own tick;
  * 4. the person's raffle sign-up, when they hold one, moves to the volunteer (`moveRaffleEntry`, §984);
@@ -223,8 +224,8 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
       metadata: { volunteerId, roleId, from: registration.status, ...(raffleEntryId ? { raffleEntryId } : {}) },
       now,
     });
-    const [volunteer] = await tx.select({ bibNumber: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, volunteerId)).limit(1);
-    return { eventId: registration.eventId, volunteerId, bibNumber: volunteer?.bibNumber ?? null };
+    const [volunteer] = await tx.select({ volunteerNumber: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, volunteerId)).limit(1);
+    return { eventId: registration.eventId, volunteerId, volunteerNumber: volunteer?.volunteerNumber ?? null };
   });
   // The freed place is on every public page that counts places (§333): told again now that the cancellation has committed.
   revalidatePublicContent("places");

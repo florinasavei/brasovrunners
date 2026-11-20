@@ -52,6 +52,7 @@ import {
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
+import { formatVolunteerNumber } from "@/modules/volunteers/domain/volunteer-number";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { readPresentTicks } from "@/modules/volunteers/present-by";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
@@ -77,6 +78,7 @@ import { isUuid } from "@/shared/ids";
 import { notesTip } from "@/shared/notes/note-text";
 import ChipLink from "@/shared/ui/ChipLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import RowNoteDialog from "@/shared/ui/RowNoteDialog";
@@ -526,6 +528,11 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           <Link href={{ pathname: "/admin/volunteers/[id]", params: { id: row.id } }} aria-label={t("volunteers.screen.openNamed", { name: row.name })}>
             {row.name}
           </Link>
+          {/* The person's V number (§NNN; the owner, 2026-11-20: «numar de voluntar V001 V002 la toti voluntarii automat»): drawn by itself
+              at the confirmation, so every confirmed row says it beside the name — «Nr. V007», as the person's page and the plan do. */}
+          {row.volunteerNumber !== null && (
+            <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: formatVolunteerNumber(row.volunteerNumber) })} testId="volunteer-list-number" />
+          )}
           {/* Typed by an organizer rather than offered on the form (§754): said once, on the row. */}
           {row.source === "STAFF" && <StatusChip glyph="club" variant="outlined" label={t("volunteers.sources.STAFF")} testId="volunteer-staff-chip" />}
           {notesOf(row)}
@@ -900,6 +907,31 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
                 >
                   {t("registrations.raffle.presentButton")}
                 </GlyphButton>
+                {/* «Descarcă pentru random.org» and its present-only twin (§NNN): the same people, one number per line and no name — the
+                    volunteers by their V number after the race numbers —, for random.org's List Randomizer. */}
+                <GlyphButton
+                  icon="download"
+                  href={`/api/admin/events/${scopeEvent.id}/raffle?format=random-org&lang=${locale}`}
+                  variant="text"
+                  size="small"
+                  sx={TAP_TARGET}
+                  aria-label={t("registrations.raffle.randomOrgButtonLabel")}
+                  data-testid="volunteers-raffle-random-org"
+                >
+                  {t("registrations.raffle.randomOrgButton")}
+                </GlyphButton>
+                <GlyphButton
+                  icon="download"
+                  href={`/api/admin/events/${scopeEvent.id}/raffle?format=random-org&present=1&lang=${locale}`}
+                  variant="text"
+                  size="small"
+                  sx={TAP_TARGET}
+                  aria-label={t("registrations.raffle.randomOrgPresentButtonLabel")}
+                  data-testid="volunteers-raffle-random-org-present"
+                >
+                  {t("registrations.raffle.randomOrgPresentButton")}
+                </GlyphButton>
+                <QuietHelp text={t("registrations.raffle.randomOrgHelp")} testId="volunteers-raffle-random-org-help" />
               </>
             )}
             {/*
