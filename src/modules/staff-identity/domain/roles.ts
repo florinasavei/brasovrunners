@@ -848,6 +848,22 @@ export function canRecordFinishes(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Tombolă» (§1014, amending §984's gate)** — an event's raffle tab: everybody of its three groups by the
+ * number, whether each takes part and whether they were there, the four filters, and the desk's «Înscrie la tombolă» for a
+ * runner who accepted the rules. The owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii
+ * văd acest tab». So **every staff role that works the desk** (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer,
+ * Tehnic and the Administrators), written as that function so the two lines move together; never a member, who is no staff
+ * (§524). The tab shows what the desk shows — a name, a number, a group, a state — and whether each was there, never an address,
+ * an email or a telephone. What stays the organizers' (`volunteers/raffle-list.ts#canTakeRaffleList`): the two files, whose names
+ * leave the site, taking a person out or putting them back, deleting a sign-up, an elite line's ticks, signing up a volunteer or a
+ * line of the elite list, how and when each person signed up, and saying «scos de organizatori». Asserted in the tab's entry, the
+ * page, the roster's read, the desk's sign-up action and its service (BR-REQ-060-01).
+ */
+export function canReadRaffle(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
+}
+
+/**
  * **«Ziua cursei» → «Jurnal» (§996)** — who scanned a runner's code, who marked a runner present or took it back and who ticked a
  * volunteer «Prezent», for one event, newest first, with how many each staff account did. The owner, 2026-11-19: «vreau si tracing
  * pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent». Whoever reads the participant list (`canReadRegistrations`): **the

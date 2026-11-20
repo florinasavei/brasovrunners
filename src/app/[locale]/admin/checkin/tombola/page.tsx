@@ -15,7 +15,7 @@ import { routing } from "@/i18n/routing";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { listEventsAcceptingRegistrations, listEventsForDesk } from "@/modules/registrations/admin-repository";
-import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
+import { canEditEventFields, canReadRaffle } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
@@ -29,7 +29,7 @@ import { HEADING_SX } from "@/shared/ui/heading-scale";
 import PrintButton from "@/shared/ui/PrintButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
-import { raffleDeleteEntryAction, raffleElitePresentAction, raffleExclusionAction, raffleSignUpAction } from "./actions";
+import { raffleDeleteEntryAction, raffleDeskSignUpAction, raffleElitePresentAction, raffleExclusionAction, raffleSignUpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -67,8 +67,18 @@ const ALERT_CODES = ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RAFFLE_SIGN_
  * beside it), «Scoate» / «Pune înapoi» (the exclusion, for the three kinds), «Șterge înscrierea» (asked first) and, on a line of the
  * elite list, «Prezent». Printed, it is the table without a control.
  *
- * The Organizer's and the Administrators' (`canTakeRaffleList`, §949: «doar adminul și organizatorul pot bifa și vedea asta»); anybody
- * else meets the 404 an unknown page gets, and every action and service asks again (BR-REQ-060-01). Nothing on it is public.
+ * **Every desk role's since §1014** (`canReadRaffle`; the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii
+ * și organizatorii văd acest tab»), amending §984's gate, which was §949's «doar adminul și organizatorul pot bifa și vedea asta»; a
+ * member meets the 404 an unknown page gets. A desk role that is not an organizer (`canTakeRaffleList`: the Organizer and the
+ * Administrators) reads the same table, counts, settings line and filters — a name, a number, a group, whether the person takes part
+ * and whether they were there, never an address, an email or a telephone, which the roster does not carry — and its own words above
+ * them; on a row it gets the desk's «Înscrie la tombolă» (DESK, `raffleDeskSignUpAction`) for a registration that may still sign up and
+ * was not taken out, the person having accepted the rules on paper or aloud, as at the desk. What stays the organizers': «Înscrie» of
+ * anybody (STAFF), «Scoate» / «Pune înapoi», «Șterge înscrierea», an elite line's «Prezent» tick, the two files — whose names leave the
+ * site —, the way to the editor, how and when each person signed up (the sign-up's own details, which the privacy notice gives the
+ * organizers and the administrators), and the reason «scos de organizatori», which every other desk role reads as «Nu» alone, as at the
+ * desk (§984). «Tipărește» stays everybody's: the browser prints whatever page it shows. Every action and service asks its role again
+ * (BR-REQ-060-01). Nothing on it is public.
  */
 export default async function RafflePage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -76,7 +86,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canTakeRaffleList(actor)) notFound();
+  if (!canReadRaffle(actor)) notFound();
+  // The organizers' presses, files and reasons (§984); every other desk role reads the table and signs a runner up at the desk's door.
+  const organizer = canTakeRaffleList(actor);
 
   const { eventId: requestedEventId, filter: requestedFilter, error } = await searchParams;
   const t = await getTranslations("Admin");
@@ -129,9 +141,29 @@ export default async function RafflePage({ params, searchParams }: Props) {
     : null;
   const closedWhy = roster && signUpMode && roster.settings.signUpOpen && roster.gateClosed !== null ? t("raffle.settings.why", { why: t(`raffle.settings.closedWhy.${roster.gateClosed}`) }) : null;
 
-  const reasonWords = (row: RaffleRosterRow) => (row.reason === "in" ? t("raffle.yes") : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`);
+  // The organizers' own exclusion, «scos de organizatori», is said to them alone — every other desk role reads «Nu» there, as at the desk (§984).
+  const reasonWords = (row: RaffleRosterRow) =>
+    row.reason === "in" ? t("raffle.yes") : !organizer && row.reason === "takenOut" ? t("raffle.no") : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`;
 
-  const actions = (row: RaffleRosterRow): ReactNode => (
+  // The desk's «Înscrie la tombolă» (DESK, §1014) on a row, for a desk role that is not an organizer: the person accepted the rules on
+  // paper or aloud, which the tick records; back to the tab at the row, the filter kept. A registration alone: the desk's door takes no other.
+  const deskSignUp = (row: RaffleRosterRow): ReactNode => (
+    <Box component="form" action={raffleDeskSignUpAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, ...NOT_ON_PAPER }} data-testid="raffle-desk-sign-up-form">
+      <input type="hidden" name="uiLocale" value={locale} />
+      <input type="hidden" name="back" value="raffle" />
+      <input type="hidden" name="eventId" value={eventId ?? ""} />
+      <input type="hidden" name="filter" value={filter === "all" ? "" : filter} />
+      <input type="hidden" name="registrationId" value={row.ref.id} />
+      <CheckboxField name="accepted" required dense help={t("raffle.acceptedHelp")} requiredMessage={t("errors.RAFFLE_RULES_NOT_ACCEPTED")}>
+        {t("raffle.accepted")}
+      </CheckboxField>
+      <GlyphButton icon="addPerson" type="submit" variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("raffle.signUpFor", { name: row.name })} data-testid="raffle-desk-sign-up">
+        {t("raffle.signUpShort")}
+      </GlyphButton>
+    </Box>
+  );
+
+  const organizerActions = (row: RaffleRosterRow): ReactNode => (
     <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", ...NOT_ON_PAPER }}>
       {row.maySignUp && (
         <Box component="form" action={raffleSignUpAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="raffle-sign-up-form">
@@ -180,9 +212,15 @@ export default async function RafflePage({ params, searchParams }: Props) {
     </Stack>
   );
 
+  // A row's presses: the organizers' (§984), or the desk's «Înscrie la tombolă» where it may be offered (§1014) — nothing else.
+  const actions = (row: RaffleRosterRow): ReactNode => (organizer ? organizerActions(row) : row.deskMaySignUp ? deskSignUp(row) : null);
+  // The column of presses: always the organizers'; for another desk role only while some row of the event offers the desk's sign-up.
+  const pressesShown = organizer || everybody.some((row) => row.deskMaySignUp);
+
   const presentCell = (row: RaffleRosterRow): ReactNode =>
-    // A line of the elite list: the organizers' own tick — the desk checks no line in. Everybody else: what the desk or the «Voluntari» list said.
-    row.ref.table === "elite" ? (
+    // A line of the elite list: the organizers' own tick — the desk checks no line in —, said in words to every other desk role.
+    // Everybody else: what the desk or the «Voluntari» list said.
+    row.ref.table === "elite" && organizer ? (
       <>
         <Box component="form" action={raffleElitePresentAction} sx={NOT_ON_PAPER} data-testid="raffle-elite-present-form">
           {hidden(row)}
@@ -225,7 +263,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
         </Box>
       ),
     },
-    ...(signUpMode
+    // How and when each signed up: the sign-up's own details, which the privacy notice says the organizers and the administrators
+    // see — every other desk role reads the answer alone, «Da» or «Nu · nu s-a înscris», as the desk says it (§984, §1014).
+    ...(signUpMode && organizer
       ? [
           {
             key: "how",
@@ -258,8 +298,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
         )}
       </Box>
 
-      <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER}>
-        {t("raffle.intro")}
+      {/* The organizers' words name the file the draw is made from; every other desk role's, what they can do here (§1014). */}
+      <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="raffle-intro">
+        {organizer ? t("raffle.intro") : t("raffle.introDesk")}
       </Typography>
 
       {events.length === 0 ? (
@@ -373,7 +414,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
                 actions: t("raffle.columns.actions"),
                 sortBy: (column) => t("list.sortBy", { column }),
               }}
-              rowActions={actions}
+              rowActions={pressesShown ? actions : undefined}
               paged={false}
               printable
               empty={
@@ -385,12 +426,17 @@ export default async function RafflePage({ params, searchParams }: Props) {
           </Box>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ flexWrap: "wrap", gap: 1, ...NOT_ON_PAPER }}>
-            <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.buttonLabel")} data-testid="raffle-download">
-              {t("registrations.raffle.button")}
-            </GlyphButton>
-            <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?present=1&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.presentButtonLabel")} data-testid="raffle-download-present">
-              {t("registrations.raffle.presentButton")}
-            </GlyphButton>
+            {/* The two files are the organizers' (`canTakeRaffleList`, which the route asks again): their names leave the site (§1014). */}
+            {organizer && (
+              <>
+                <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.buttonLabel")} data-testid="raffle-download">
+                  {t("registrations.raffle.button")}
+                </GlyphButton>
+                <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?present=1&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.presentButtonLabel")} data-testid="raffle-download-present">
+                  {t("registrations.raffle.presentButton")}
+                </GlyphButton>
+              </>
+            )}
             <PrintButton label={t("raffle.print")} />
           </Stack>
         </>

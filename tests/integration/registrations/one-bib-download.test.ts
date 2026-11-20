@@ -579,6 +579,22 @@ describe("§1004 the desk row's eye: by name or anonymous", () => {
     expect(ro.Admin.desk.siteAnonymous).toBe("Anonim");
   });
 
+  it("draws the partner's chip «Partener: {name}» on a partner's runner, for every desk role, and none on anybody else's row (§1013)", async () => {
+    const fromPartner = await runner("Radu Sima", { bibNumber: 17, partnerName: "Onlypus" });
+    const plain = await runner("Ilie Pana", { bibNumber: 18 });
+    const chipOf = async (id: string, role: StaffRole) => {
+      const row = await rowOf(id);
+      const chip = elements(await DeskRow({ row: row!, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false }, role })).find(
+        (element) => element.props.testId === "desk-partner-chip",
+      );
+      return chip ? chip.props.label : null;
+    };
+    for (const role of [...READERS, ...OTHERS]) {
+      expect(await chipOf(fromPartner, role), role).toBe(ro.Admin.partner.chip.replace("{name}", "Onlypus"));
+      expect(await chipOf(plain, role), role).toBeNull();
+    }
+  });
+
   it("draws no eye on a row that is over", async () => {
     const cancelled = await runner("Ana Pop", { bibNumber: 16, listOptOut: false, status: "CANCELLED" });
     const row = (await listDeskRegistrations(db, { eventId, query: "16", locale: "ro" })).find((candidate) => candidate.id === cancelled);
