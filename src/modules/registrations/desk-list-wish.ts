@@ -18,7 +18,7 @@ import { consentWord, listChoiceColumns } from "./list-consent";
 import { readResultsNameConsentLine } from "./results-consent";
 
 /**
- * «Anonim» → «Cu nume» at the race-day desk (§NNN, amending §143, §910, §1004 and BR-REQ-072-01 criterion 7): the runner standing at
+ * «Anonim» → «Cu nume» at the race-day desk (§1017, amending §143, §910, §1004 and BR-REQ-072-01 criterion 7): the runner standing at
  * the table says they want their name on the public list and in the results — or, the other way, that they no longer want it — and
  * the volunteer records it with the row's eye. The owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot
  * schimba în „Cu nume” la click, dar cu acordul lor».

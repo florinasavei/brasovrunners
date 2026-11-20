@@ -634,7 +634,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canResetResults: /*       */ [false, false, false, false, false, true, true],
     // §986: a finish recorded at the line («Cronometrare») — every role that works the desk, the desk Volunteer included; never a member.
     canRecordFinishes: /*     */ [false, true, true, true, true, true, true],
-    // §NNN: the desk's eye pressed — a runner's spoken wish to appear by name recorded — every role that works the desk; never a member.
+    // §1017: the desk's eye pressed — a runner's spoken wish to appear by name recorded — every role that works the desk; never a member.
     canRecordListWishAtDesk: /**/ [false, true, true, true, true, true, true],
     // §996: «Ziua cursei» → «Jurnal», who scanned and who marked present — the readers of the list; the desk's other roles are named in it, never shown it.
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],

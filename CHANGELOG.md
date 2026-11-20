@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.87-2026-11-20
+
+- **«Anonim» → «Cu nume» at the desk, on the runner's word** — the desk row's eye is a button for every desk role: it asks first whether the person just said they want their name on the participant list and in the results, records it as theirs with who recorded it, and emails them at once with a one-tap way back; «Cu nume» → «Anonim» the same way, with no email; a name the club hid stays hidden. §1017.
 ## BR-V4.86-2026-11-20
 
 - **The public-list choice stands out** — on «Gestionează înscrierea» (every person of a family's page too) and «Înscrierile mele», «Lista publică și clasamentul» is a tinted box of its own right under the QR: the state in bold beside the eye, «Participant (nume ascuns)» named where the public list draws the row so, and one full-width button that looks the same whichever way it goes. §1016.

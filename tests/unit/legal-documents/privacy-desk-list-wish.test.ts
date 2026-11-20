@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN (amending §143; BR-REQ-039-01, BR-REQ-053-01) — the privacy notice's template says the one new way the list's tick is
+ * §1017 (amending §143; BR-REQ-039-01, BR-REQ-053-01) — the privacy notice's template says the one new way the list's tick is
  * given: told to the organizers at the race-number desk, who record it for the person (who recorded it, and when, is kept), the
  * person emailed at once with the link to withdraw it at any time. In the public list's own paragraph of section 4, beside the
  * tick and its two ways out, once in each language. The TEMPLATE only: nothing in force moves until the club approves a version
@@ -16,7 +16,7 @@ const listParagraph = (body: typeof privacyNoticeRo, heading: RegExp, tick: RegE
   return found[0];
 };
 
-describe("§NNN the notice says the wish may be told at the desk", () => {
+describe("§1017 the notice says the wish may be told at the desk", () => {
   it("ro: told to the organizers at the desk, recorded with who and when, an email at once to withdraw it", () => {
     const paragraph = listParagraph(privacyNoticeRo, /^4\./, /Lista publică de participanți/);
     expect(paragraph).toMatch(/Dorința de a apărea cu numele le-o poți spune și organizatorilor, la masa de ridicare a numerelor/);

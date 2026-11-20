@@ -149,7 +149,7 @@ export type DomainErrorCode =
   | "RAFFLE_SIGN_UP_CLOSED"
   | "RAFFLE_NOT_ELIGIBLE"
   | "RAFFLE_RULES_NOT_ACCEPTED"
-  // The desk's eye pressed (§NNN, `desk-list-wish.ts`): on a registration that is over (cancelled or expired); on one whose address
+  // The desk's eye pressed (§1017, `desk-list-wish.ts`): on a registration that is over (cancelled or expired); on one whose address
   // was never confirmed — the email that tells the person would go where nobody vouched for it, so confirm it first («Confirmă
   // pe hârtie»); at an event completed or cancelled, whose desk is closed. Each writes nothing.
   | "LIST_WISH_OVER"

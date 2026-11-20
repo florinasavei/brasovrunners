@@ -60,7 +60,7 @@ import {
  *       that must not become a surprise. Every role sees it: a state and a number, never an
  *       address (`AGENTS.md` §15.11).
  *   Any state but those two and PENDING_EMAIL_CONFIRMATION → the eye «Anonim» / «Cu nume» is a
- *       press too (§NNN): the person's own spoken wish to appear by name, or no longer, asked
+ *       press too (§1017): the person's own spoken wish to appear by name, or no longer, asked
  *       first and recorded as theirs — showing emails them at once with the way back.
  *
  * `back` says where the buttons return to — this row inside the desk's search, or the page
@@ -156,7 +156,7 @@ export default async function DeskRow({
   const voidedAt = row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt;
 
   /*
-    The eye's press (§NNN): the person's own wish, recorded the other way — showing when they are anonymous by their own choice,
+    The eye's press (§1017): the person's own wish, recorded the other way — showing when they are anonymous by their own choice,
     hiding when they asked for their name. Every desk role, on an open desk, on a row whose address was confirmed (the email
     that tells the person needs one somebody vouched for); the action and the service ask the same again (BR-REQ-060-01).
   */
@@ -255,7 +255,7 @@ export default async function DeskRow({
               open with «Cu nume» when the person appears by name on the site — the list and the results —, crossed with «Anonim» when
               they did not tick it or the club hid them; for every desk role, from the desk's own query. Not on a row that is over.
 
-              A press since §NNN (the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot schimba în „Cu nume”
+              A press since §1017 (the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot schimba în „Cu nume”
               la click, dar cu acordul lor»): the same words and eye as a button, for every desk role, recording the person's own wish
               the other way — «Anonim» → «Cu nume» when they say they want their name shown, «Cu nume» → «Anonim» when they ask to be
               taken off. It asks first, naming the person (and, for a minor, the parent who says it) and what follows; «Anulează» has
@@ -337,7 +337,7 @@ export default async function DeskRow({
             )}
           </Stack>
           {/*
-            The club's hide stands (§910, §NNN): an Administrator unticked «Apare pe site» on this name, so the eye says «Anonim»
+            The club's hide stands (§910, §1017): an Administrator unticked «Apare pe site» on this name, so the eye says «Anonim»
             whatever the person wants — the line says so, and what their own wish is, which is all the press changes.
           */}
           {!terminal && row.hiddenByClub && (

@@ -371,7 +371,7 @@ export async function checkInAction(_previous: FormOutcome | null, form: FormDat
 }
 
 /**
- * The desk's eye pressed (§NNN): «Anonim» → «Cu nume» on the person's spoken wish to appear by name, or «Cu nume» → «Anonim»
+ * The desk's eye pressed (§1017): «Anonim» → «Cu nume» on the person's spoken wish to appear by name, or «Cu nume» → «Anonim»
  * when they ask to be taken off — asked first on the row, posting the wish it records (`listed`: «1» shows, «0» hides), never a
  * flip. Every desk role (`canRecordListWishAtDesk`), asserted here and again in the service (BR-REQ-060-01). An email press:
  * showing tells the person at once (`LIST_CONSENT_RECORDED`), and the toast says so. Back to the row, as every desk verb.

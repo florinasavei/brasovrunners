@@ -53,7 +53,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   confirmRegistrationNowAction: { file: REGISTRATIONS, causes: ["registrations.confirmPaper"], actor: "named" },
   promoteRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.givePlace"], actor: "named" },
   setBibNumberAction: { file: REGISTRATIONS, causes: ["registrations.setBib"], actor: "named" },
-  // The desk's eye (§NNN): showing tells the person at once, with the way back; hiding emails nobody.
+  // The desk's eye (§1017): showing tells the person at once, with the way back; hiding emails nobody.
   recordListWishAtDeskAction: { file: REGISTRATIONS, causes: ["registrations.deskListWish"], actor: "named" },
   // «Dă-i un BIB gol» (§989): a number given by hand too — the same cause, its own file beside the page.
   giveSpareBibAction: { file: SPARE_BIB, causes: ["registrations.setBib"], actor: "named" },

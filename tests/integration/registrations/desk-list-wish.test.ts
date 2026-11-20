@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { approvePrivacyNotice, approveTerms, createRace, registerRunner, resetNoticeCounter, type Runner } from "../../helpers/results";
 
 /**
- * §NNN (amending §143, §910, §1004 and BR-REQ-072-01 criterion 7; BR-REQ-039-01, BR-REQ-037-08, BR-REQ-060-01) — the desk's eye
+ * §1017 (amending §143, §910, §1004 and BR-REQ-072-01 criterion 7; BR-REQ-039-01, BR-REQ-037-08, BR-REQ-060-01) — the desk's eye
  * becomes a press for the person's own wish (the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot
  * schimba în „Cu nume” la click, dar cu acordul lor»), proved on a real database (PGlite):
  *
@@ -189,7 +189,7 @@ async function eyeOf(id: string, role: StaffRole | undefined, over: { readOnly?:
   };
 }
 
-describe("§NNN the desk's eye records the person's own wish, for every desk role", () => {
+describe("§1017 the desk's eye records the person's own wish, for every desk role", () => {
   it("«Anonim» → «Cu nume» and back, for each desk role: the person's own tick, one audit row each way with the colleague as the actor", async () => {
     for (const role of DESK_ROLES) {
       const actor = await colleague(role);
@@ -259,7 +259,7 @@ describe("§NNN the desk's eye records the person's own wish, for every desk rol
   });
 });
 
-describe("§NNN through the action: asserted on the server, back to the row", () => {
+describe("§1017 through the action: asserted on the server, back to the row", () => {
   const form = (id: string, listed: boolean) => {
     const data = new FormData();
     data.set("uiLocale", "ro");
@@ -337,7 +337,7 @@ describe("§NNN through the action: asserted on the server, back to the row", ()
   });
 });
 
-describe("§NNN the results' name, where the person's own page would ask it (§879, BR-REQ-072-01 criterion 7)", () => {
+describe("§1017 the results' name, where the person's own page would ask it (§879, BR-REQ-072-01 criterion 7)", () => {
   /** The notice the runner registered under (v1) did not describe the results; the club then approved one naming the tick (v2). */
   async function olderNoticeRunner(name: string) {
     await resetTables(db);
@@ -384,7 +384,7 @@ describe("§NNN the results' name, where the person's own page would ask it (§8
   });
 });
 
-describe("§NNN the person is told at once, with the way back", () => {
+describe("§1017 the person is told at once, with the way back", () => {
   it("queues one email, only when showing, whose button is the public list's switch — walked, it takes the name off", async () => {
     const actor = await colleague("CONTRIBUTOR");
     const ana = await anonymousRunner("Ana Email");
@@ -459,7 +459,7 @@ describe("§NNN the person is told at once, with the way back", () => {
   });
 });
 
-describe("§NNN the club's hide stands (§910)", () => {
+describe("§1017 the club's hide stands (§910)", () => {
   it("records an elite's own wish and keeps the name hidden: the eye stays «Anonim», the line says why", async () => {
     const actor = await colleague("CONTRIBUTOR");
     const elite = await anonymousRunner("Dana Elită");
@@ -480,7 +480,7 @@ describe("§NNN the club's hide stands (§910)", () => {
   });
 });
 
-describe("§NNN the eye on the row", () => {
+describe("§1017 the eye on the row", () => {
   it("is a press for every desk role — 44 pixels, asking first, naming the person and the email — and the chip for no role", async () => {
     const ana = await anonymousRunner("Ana Ochi");
     for (const role of DESK_ROLES) {

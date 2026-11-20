@@ -6,7 +6,7 @@ import { capturedEmail } from "./support/captured-email";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-039-01, BR-REQ-037-08, BR-REQ-041-01 criterion 6, `DECISIONS.md` §NNN — the desk's eye records the runner's own spoken
+ * BR-REQ-039-01, BR-REQ-037-08, BR-REQ-041-01 criterion 6, `DECISIONS.md` §1017 — the desk's eye records the runner's own spoken
  * wish (the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot schimba în „Cu nume” la click, dar cu
  * acordul lor»), walked by the desk's volunteer at 320 pixels and on a desktop against the production build:
  *
@@ -96,7 +96,7 @@ async function fitsTheScreen(page: Page): Promise<void> {
 
 const rowOf = (page: Page, seeded: Seeded): Locator => page.getByTestId("desk-row").filter({ hasText: seeded.name });
 
-test.describe("§NNN BR-REQ-039-01 the desk records the runner's spoken wish to appear by name", () => {
+test.describe("§1017 BR-REQ-039-01 the desk records the runner's spoken wish to appear by name", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("«Anonim» pressed and confirmed shows «Cu nume»; the email's link takes the name off in one press", async ({ page }) => {

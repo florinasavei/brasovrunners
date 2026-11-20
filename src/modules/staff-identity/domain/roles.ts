@@ -934,7 +934,7 @@ export function canWorkTheDesk(subject: StaffSubject): boolean {
 }
 
 /**
- * **Recording a runner's spoken wish to appear by name, at the desk (§NNN, amending §143, §910, §1004)** — the desk row's eye
+ * **Recording a runner's spoken wish to appear by name, at the desk (§1017, amending §143, §910, §1004)** — the desk row's eye
  * pressed: «Anonim» → «Cu nume» when the person standing at the table says they want their name on the public list and in the
  * results, and «Cu nume» → «Anonim» when they ask to be taken off. The owner, 2026-11-20: «dacă cineva are semnul ăsta de
  * „Anonim” trebuie să îl pot schimba în „Cu nume” la click, dar cu acordul lor». **Every staff role that works the desk**

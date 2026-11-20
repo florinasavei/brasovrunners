@@ -25,7 +25,7 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   // «Schimbă adresa»: neither carries a token; the old address no longer holds the registration, the new one gets its state's own message.
   REGISTRATION_ADDRESS_REMOVED: { button: false, why: "to the old address, which no longer holds the registration: no link of it may act" },
   REGISTRATION_ADDRESS_ADDED: { button: false, why: "a notice with no token; the state's own message that follows carries the button" },
-  // The desk's eye (§NNN): about the name, to somebody standing at the desk — its one button is the name's way back.
+  // The desk's eye (§1017): about the name, to somebody standing at the desk — its one button is the name's way back.
   LIST_CONSENT_RECORDED: { button: false, why: "about the public name, sent from the desk; its button is the list's own switch" },
   EVENT_REMINDER: { button: true, why: "the reminder: its one button" },
   EVENT_THANKS: { button: false, why: "after the fact" },

@@ -52,7 +52,7 @@ import { findRegistrationById } from "./repository";
  * choice made from two tabs — lands on the state the button said, and a second identical
  * request changes nothing and writes no audit row.
  *
- * **A fourth door, the desk (§NNN): the person's wish spoken at the table.** A desk role presses
+ * **A fourth door, the desk (§1017): the person's wish spoken at the table.** A desk role presses
  * the row's eye when the runner standing there says they want their name shown — or hidden
  * (`desk-list-wish.ts`). The same column and the same columns beside it (`listChoiceColumns`),
  * the same action in the trail with the door `DESK` — and, unlike the three above, the staff
@@ -60,7 +60,7 @@ import { findRegistrationById } from "./repository";
  * emailed at once with this module's `LIST_CONSENT` link to take it back.
  */
 
-/** Which door the change came through; audit metadata, never a name. `DESK`: a desk role recorded the person's spoken wish (§NNN). */
+/** Which door the change came through; audit metadata, never a name. `DESK`: a desk role recorded the person's spoken wish (§1017). */
 export type ListConsentSurface = "LIST_LINK" | "MY_REGISTRATIONS" | "MANAGE_LINK" | "DESK";
 
 /** The same fortnight every other participant link gets when it has no deadline to borrow. */

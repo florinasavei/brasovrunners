@@ -149,7 +149,7 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
-  // The wish recorded at the desk (§NNN): its one button is the public list's own switch, the way back in one tap — the same
+  // The wish recorded at the desk (§1017): its one button is the public list's own switch, the way back in one tap — the same
   // `LIST_CONSENT` page the confirmation's second token opens, minted here at the send and superseding the older one (§12.8).
   LIST_CONSENT_RECORDED: "LIST_CONSENT",
   // Another person on the same address, confirmed from the inbox (§389, §446) — only while the
@@ -376,7 +376,7 @@ async function renderRow(
   }
 
   /*
-    The wish recorded at the desk (§NNN, `desk-list-wish.ts`): it tells the person their name is now asked to show, with the way
+    The wish recorded at the desk (§1017, `desk-list-wish.ts`): it tells the person their name is now asked to show, with the way
     back. By the send, the name may be off the list again — the person's own link, another press at the desk — or the registration
     over or erased: then there is nothing to take back, and «ai cerut să apari cu numele» would be untrue, so the message (and the
     club's copy beside it) is withdrawn rather than sent.
@@ -1700,7 +1700,7 @@ async function renderRow(
         ? await extendHeldVerificationLink(db, registration.id, emailLinkExpiresAt(now, settings), now)
         : null;
     // A one-person sitting's reserved place (§543) keeps the sitting's fixed deadline: this send moves the link, never the place.
-    // The public list's switch (§NNN) borrows no deadline: a confirmed runner's old hold is not its life — the fortnight is.
+    // The public list's switch (§1017) borrows no deadline: a confirmed runner's old hold is not its life — the fortnight is.
     const placeUntil =
       purpose === "COMPLETE_DECLARATION"
         ? (eventStartsAt ?? holdExpiresAt)

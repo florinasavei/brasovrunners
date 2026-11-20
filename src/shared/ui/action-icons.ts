@@ -192,7 +192,7 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
-  // The desk's eye made a press (§NNN, amending §1004): the chip «Cu nume» / «Anonim» as a button, wearing the state it says —
+  // The desk's eye made a press (§1017, amending §1004): the chip «Cu nume» / «Anonim» as a button, wearing the state it says —
   // the outlined eye, open or struck through, never `preview`'s filled one, which is looking at something.
   | "siteNamed"
   | "siteAnonymous"

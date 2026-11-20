@@ -64,7 +64,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   REGISTRATION_ADDRESS_REMOVED: "confirmations",
   REGISTRATION_ADDRESS_ADDED: "confirmations",
   BIB_ASSIGNED: "confirmations",
-  // The wish recorded at the desk (§NNN): the answer to the runner's own word at the table, as a number given there is.
+  // The wish recorded at the desk (§1017): the answer to the runner's own word at the table, as a number given there is.
   LIST_CONSENT_RECORDED: "confirmations",
   DECLARATION_SIGNED: "confirmations",
   GROUP_RUN_DECLARATION_SIGNED: "confirmations",

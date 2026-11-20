@@ -96,7 +96,7 @@ export const EMAIL_AUDIENCE = {
   */
   REGISTRATION_ADDRESS_REMOVED: "participant",
   REGISTRATION_ADDRESS_ADDED: "participant",
-  // The wish recorded at the desk (§NNN): to the registration's own address, about that registration — the participant's own mail.
+  // The wish recorded at the desk (§1017): to the registration's own address, about that registration — the participant's own mail.
   LIST_CONSENT_RECORDED: "participant",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 

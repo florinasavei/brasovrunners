@@ -1496,7 +1496,7 @@ export type DeskRegistration = {
    */
   namedOnSite: boolean;
   /**
-   * The person's own wish alone (§NNN): `list_opt_out` — true when they did not tick «Vreau să apar pe lista de participanți &
+   * The person's own wish alone (§1017): `list_opt_out` — true when they did not tick «Vreau să apar pe lista de participanți &
    * rezultate», or asked since to be taken off. What the eye's press records the other way (`desk-list-wish.ts`): «Anonim» →
    * «Cu nume» sets it false, «Cu nume» → «Anonim» true.
    */
@@ -1552,7 +1552,7 @@ export type DeskRegistration = {
 /**
  * The club's half of the public list's one condition (`repository.ts#namedOnPublicList`, §910, §948): an Administrator's «Apare pe
  * site» unticked on a registration marked «Elită» or «Ambasador». The desk reads it as one fact — the club hides this name — and
- * never the mark it comes from (`ambassador-never-leaves.test.ts`): the eye's line (§NNN) and the press's outcome.
+ * never the mark it comes from (`ambassador-never-leaves.test.ts`): the eye's line (§1017) and the press's outcome.
  */
 const HIDDEN_BY_CLUB = sql`((${registrations.elite} or ${registrations.ambassador}) and ${registrations.eliteHiddenFromSite})`;
 
@@ -1587,7 +1587,7 @@ const DESK_COLUMNS = {
   partnerName: registrations.partnerName,
   // «Cu nume» / «Anonim» (§1004): the public list's own condition, so the desk's eye and the list never disagree.
   namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),
-  // Its two halves (§NNN): the person's own wish, which the eye's press records, and the club's hide, which it never touches.
+  // Its two halves (§1017): the person's own wish, which the eye's press records, and the club's hide, which it never touches.
   listOptOut: registrations.listOptOut,
   hiddenByClub: sql<boolean>`${HIDDEN_BY_CLUB}`.mapWith(Boolean),
   // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.

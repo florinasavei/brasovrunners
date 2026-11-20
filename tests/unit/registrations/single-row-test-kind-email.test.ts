@@ -28,7 +28,7 @@ function singleRowMailCalls(source: string, row: "row" | "registration"): string
 describe("§384 a TEST row's dialog names no participant the club counts", () => {
   it("hands the row's kind to the builder in every single-row email line on the desk", () => {
     const calls = singleRowMailCalls(read("src/modules/registrations/ui/DeskRow.tsx"), "row");
-    // confirm-on-paper, give-a-place, set-bib, and the eye's recorded wish to appear by name (§NNN)
+    // confirm-on-paper, give-a-place, set-bib, and the eye's recorded wish to appear by name (§1017)
     expect(calls).toHaveLength(4);
     expect(calls.every((call) => call.includes('test: row.kind === "TEST"'))).toBe(true);
   });

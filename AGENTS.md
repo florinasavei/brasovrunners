@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.86-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.87-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.86-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.87-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1570,7 +1570,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   form of an event whose list is switched on (§85); switching a list on later means asking the
   people already registered, because a question nobody put to that person cannot be answered
   on their behalf;
-- the person may also say it at the race-day desk, and a desk role records it (`DECISIONS.md` §NNN, amending
+- the person may also say it at the race-day desk, and a desk role records it (`DECISIONS.md` §1017, amending
   §143, §910 and §1004; the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot
   schimba în „Cu nume” la click, dar cu acordul lor»). The desk row's eye — «Anonim» / «Cu nume» — is a press
   for every role that works the desk (`canRecordListWishAtDesk`), asked first, naming the person — a minor's
@@ -3303,7 +3303,7 @@ BR-REQ-037-05):
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
-   - **The person's spoken wish to appear by name** (`DECISIONS.md` §NNN, amending §143, §910, §1004;
+   - **The person's spoken wish to appear by name** (`DECISIONS.md` §1017, amending §143, §910, §1004;
      §10.10). The row's eye — «Anonim» / «Cu nume» — is a press for every desk role
      (`canRecordListWishAtDesk`): «Anonim» → «Cu nume» when the person standing there says they want
      their name on the public list and in the results, «Cu nume» → «Anonim» when they ask to be taken
@@ -3846,7 +3846,7 @@ VOLUNTEER_POINT
 LIST_CONSENT_RECORDED
 ```
 
-`LIST_CONSENT_RECORDED` (§NNN; the desk's eye, §10.10, §15.11 verb 5) is queued by
+`LIST_CONSENT_RECORDED` (§1017; the desk's eye, §10.10, §15.11 verb 5) is queued by
 `registrations/desk-list-wish.ts#recordListWishAtDesk` alone — at a desk role's press, in its transaction, once
 per recorded wish (`registration:<id>:list-consent-recorded:<audit row>`), to the registration's own address in
 its language, and only when the press recorded the wish to appear by name: «La masa de ridicare a numerelor ai

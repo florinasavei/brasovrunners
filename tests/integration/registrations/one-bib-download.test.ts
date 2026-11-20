@@ -552,7 +552,7 @@ describe("§995 the desk row's identity document, by role", () => {
  */
 describe("§1004 the desk row's eye: by name or anonymous", () => {
   const rowOf = async (id: string) => (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
-  // Since §NNN the eye is a press for every desk role (`GlyphButton`, the outlined eye by name) — the same words and the same
+  // Since §1017 the eye is a press for every desk role (`GlyphButton`, the outlined eye by name) — the same words and the same
   // state, read here as the chip's glyph so the reading below stays the chip's.
   const pressGlyph: Record<string, string> = { siteNamed: "visible", siteAnonymous: "hidden" };
   const eyeOf = async (id: string, role: StaffRole = "CONTRIBUTOR") => {

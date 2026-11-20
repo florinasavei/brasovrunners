@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0224_list_consent_recorded_email` (§NNN; the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să
+ * Migration `0224_list_consent_recorded_email` (§1017; the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să
  * îl pot schimba în „Cu nume” la click, dar cu acordul lor»), proven on real PostgreSQL (PGlite): `LIST_CONSENT_RECORDED` becomes a
  * message type — after every value before it, each where it was — so the outbox takes the email the desk's eye queues, and a row
  * queued by the release before reads as it did. Nothing else: the wish is the registration's own `list_opt_out` and who recorded

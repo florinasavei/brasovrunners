@@ -2767,7 +2767,7 @@ const T = {
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     /*
-      The wish recorded at the desk (§NNN): a desk role pressed the row's eye on the person's spoken word. The fact is the body the
+      The wish recorded at the desk (§1017): a desk role pressed the row's eye on the person's spoken word. The fact is the body the
       club may reword; the way back — the button, the public list's own switch — and the sentence that offers it are the platform's
       (`listConsentRecordedUndo`), after the body whoever wrote it, so no rewording loses them. A minor's message goes to the parent
       or guardian, greeted by name (`guardianName`): it says whose name it is.
@@ -3248,7 +3248,7 @@ const T = {
     addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
       `Înscrierea are starea: ${status ?? "necunoscută"}.${nextStep ? " Pasul următor îl primești într-un email separat." : ""}`,
     addressAddedNotYours: (contactUrl?: string) => `Dacă înscrierea nu este a ta, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
-    // The wish recorded at the desk (§NNN): the way back, above its button, whoever wrote the words before it.
+    // The wish recorded at the desk (§1017): the way back, above its button, whoever wrote the words before it.
     listConsentRecordedUndo: "Dacă nu e așa, apasă butonul de mai jos și numele nu mai apare pe site. Alegerea se poate schimba oricând.",
     /** A group run's declaration signed for a minor (§769): who signed, in the signer's copy and in the club's archive copy. */
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
@@ -4957,7 +4957,7 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_ADDRESS_ADDED"
         ? [copy.addressAddedStatus(data.currentStatus, data.addressNextStep === true), copy.addressAddedNotYours(data.contactUrl)]
         : []),
-      // The wish recorded at the desk (§NNN): the way back, above its button — only where the button is (never a club copy, §320).
+      // The wish recorded at the desk (§1017): the way back, above its button — only where the button is (never a club copy, §320).
       ...(messageType === "LIST_CONSENT_RECORDED" && actionUrl ? [copy.listConsentRecordedUndo] : []),
       /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after
