@@ -251,6 +251,12 @@ export type RaffleRosterRow = {
   signUp: { entryId: string; method: RaffleEntryMethod; at: Date } | null;
   /** Whether «Înscrie» may be offered: the gate open for the group, the person eligible and not signed up. */
   maySignUp: boolean;
+  /**
+   * Whether the desk's «Înscrie la tombolă» (DESK) may be offered on the tab, to a desk role that is not an organizer (§1014): a
+   * registration — the desk's door takes no other —, `maySignUp`, and not taken out by the organizers, as `raffleLineOf` asks at the
+   * desk: a sign-up would leave the person «nu participă» while the press said they were in.
+   */
+  deskMaySignUp: boolean;
 };
 
 export type RaffleRoster = {
@@ -291,6 +297,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
 
   const row = (ref: RafflePersonRef, number: number | null, name: string, person: Omit<RafflePerson, "signedUp">, present: boolean): RaffleRosterRow => {
     const entry = entryOf.get(ref.id) ?? null;
+    const maySignUp = settings.signUp && entry === null && raffleEligible(person) && raffleSignUpClosedFor(facts, now, person.kind) === null;
     return {
       ref,
       kind: person.kind,
@@ -300,7 +307,8 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       present,
       inRaffle: person.inRaffle,
       signUp: settings.signUp && entry ? { entryId: entry.id, method: entry.method, at: entry.createdAt } : null,
-      maySignUp: settings.signUp && entry === null && raffleEligible(person) && raffleSignUpClosedFor(facts, now, person.kind) === null,
+      maySignUp,
+      deskMaySignUp: ref.table === "registration" && maySignUp && person.inRaffle,
     };
   };
 

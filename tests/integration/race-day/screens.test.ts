@@ -17,9 +17,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §979, §984, §986, §996 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs
  * on the desk, «Lucruri de adus», «Cronometrare», «Clasament» and «Jurnal» — the current one marked, the event carried, «Clasament»
- * not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone, the
- * organizers' «Tombolă» fourth of six for an event that holds a raffle and their «Jurnal» last, in a row that scrolls rather than
- * one that fits —; the «Lucruri de adus»
+ * not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone,
+ * «Tombolă» fourth of the organizers' six for an event that holds a raffle — and, since §1014, third of every other desk role's four —
+ * and their «Jurnal» last, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
  * page by role; the desk's line of free spares (§444) as ranges, and its two other states; and the walk-in's «Numărul dat acum» as a
  * select of the free spares, the lowest chosen.
  */
@@ -74,6 +74,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   setResultAgeBandsAction: vi.fn(),
   setResultAwardsAction: vi.fn(),
   resetEventResultsAction: vi.fn(),
+  chooseRecordedTimeAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
   recordFinishPressAction: vi.fn(),
@@ -294,11 +295,18 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(raw).toMatch(/<span hidden=""><\/span>/);
     expect(raw).toMatch(/overflow-x:auto/);
     expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(6);
-    // The desk's other roles keep their three, «Tombolă» being the organizers'.
+    // The desk's other roles see «Tombolă» too since §1014 — four entries, «Tombolă» before «Lucruri de adus», at the same address.
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
-      expect(tabs(await desk(id)).map((tab) => tab.label), role).toEqual(["Prezența", "Cronometrare Sosiri", "Lucruri de adus Lucruri"]);
+      expect(tabs(await desk(id)), role).toEqual([
+        { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: true },
+        { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
+        { href: `/ro/admin/checkin/tombola?eventId=${id}`, label: "Tombolă", current: false },
+        { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
+      ]);
     }
+    // A member (§524) has no desk at all, and so not this tab either.
+    expect(tabs(renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "desk", eventId: id, actor: "MEMBER" }), "ro")))).toEqual([]);
     state.actor = staff.MODERATOR;
     state.locale = "en";
     expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Raffle", "Things to bring Things", "Log"]);
