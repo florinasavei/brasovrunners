@@ -140,12 +140,12 @@ test.describe("§1023 the volunteers' V numbers and the raffle's file for random
       await expect(page.locator('[data-testid="raffle-row-name"]:visible')).toHaveText([seeded.runner, seeded.anaName, seeded.evaName]);
       await fitsTheScreen(page);
 
-      // ---- «Descarcă pentru random.org»: a text file, one number per line, no header, no name --------------------------------
+      // ---- «Descarcă pentru random.org»: a text file, one person per line, the number and the name, no header ------------------
       const button = page.getByTestId("raffle-download-random-org");
       await expect(button).toHaveText(/Descarcă pentru random\.org/);
       expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(page.getByTestId("raffle-random-org-help")).toHaveAccessibleName(
-        "Un număr pe rând, fără nume: îl lipești în random.org → List Randomizer, apoi cauți câștigătorul după număr în lista CSV.",
+        "Un rând pe persoană, cu număr și nume: îl lipești în random.org → List Randomizer și apeși Randomize. Primul rând e câștigătorul.",
       );
       const href = await button.getAttribute("href");
       expect(href).toBe(`/api/admin/events/${seeded.eventId}/raffle?format=random-org&lang=ro`);
@@ -154,14 +154,14 @@ test.describe("§1023 the volunteers' V numbers and the raffle's file for random
       expect(response.headers()["content-type"]).toBe("text/plain; charset=utf-8");
       expect(response.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}-random-org\.txt"/);
       const body = await response.text();
-      expect(body).toBe("1\r\nV001\r\nV002\r\n");
+      expect(body).toBe(`1 ${seeded.runner}\r\nV001 ${seeded.anaName}\r\nV002 ${seeded.evaName}\r\n`);
       const lines = body.split("\r\n");
       expect(lines.at(-1)).toBe("");
-      expect(lines.slice(0, -1).every((line) => /^V?\d+$/.test(line))).toBe(true);
+      expect(lines.slice(0, -1).every((line) => /^V?\d+ \S/.test(line))).toBe(true);
       // And pressed as a person presses it: the browser saves a file of that name holding the same lines, nothing else.
       const [download] = await Promise.all([page.waitForEvent("download"), button.click()]);
       expect(download.suggestedFilename()).toMatch(/^tombola-\d{4}-\d{2}-\d{2}-random-org\.txt$/);
-      expect(readFileSync(await download.path(), "utf8")).toBe("1\r\nV001\r\nV002\r\n");
+      expect(readFileSync(await download.path(), "utf8")).toBe(body);
       // The present-only one beside it: nobody checked in or ticked yet — an empty file, not a blank line.
       const present = await page.request.get((await page.getByTestId("raffle-download-random-org-present").getAttribute("href")) as string);
       expect(present.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-prezenti-\d{4}-\d{2}-\d{2}-random-org\.txt"/);

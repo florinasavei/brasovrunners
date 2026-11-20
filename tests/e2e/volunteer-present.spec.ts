@@ -163,11 +163,11 @@ test.describe("§983 «Prezent» on the «Voluntari» list and the raffle among 
       // The whole file beside it keeps everybody, Dan's «Prezent» said «Nu».
       const whole = await page.request.get((await page.getByTestId("volunteers-raffle-list").getAttribute("href")) as string);
       expect((await whole.text()).replace(/^﻿/, "").split("\r\n")).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `V001,${anaName},Voluntar,Da`, `V002,Dan Absent ${tag},Voluntar,Nu`, ""]);
-      // «Descarcă pentru random.org — doar prezenții» (§1023), from the same screen: the same two, numbers only.
+      // «Descarcă pentru random.org — doar prezenții» (§1023), from the same screen: the same two, each number with its name.
       const present = page.getByTestId("volunteers-raffle-random-org-present");
       expect((await present.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await present.getAttribute("href")).toBe(`/api/admin/events/${seeded.eventId}/raffle?format=random-org&present=1&lang=ro`);
-      expect(await (await page.request.get((await present.getAttribute("href")) as string)).text()).toBe("1\r\nV001\r\n");
+      expect(await (await page.request.get((await present.getAttribute("href")) as string)).text()).toBe(`1 ${seeded.runner}\r\nV001 ${anaName}\r\n`);
 
       expect(hydrationWarnings, "hydration warnings").toEqual([]);
     } finally {

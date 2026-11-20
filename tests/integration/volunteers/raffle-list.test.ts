@@ -36,7 +36,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * §1023 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»): a volunteer takes part with
  * their V number, written «V001»; the race numbers come first, then the V numbers; and `?format=random-org` is «Descarcă pentru
- * random.org» — the same people, one number per line, no header, no name, CRLF, `text/plain` — its download said in the trail by `format`.
+ * random.org» — the same people, one per line, the number and the name, no header, CRLF, `text/plain` — its download said in the trail by `format`.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
 
@@ -433,10 +433,10 @@ describe("§983 BR-REQ-071-01 «Prezent» for a volunteer, and «Lista pentru to
   });
 });
 
-describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
+describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one person per line, the number and the name, nothing else", () => {
   const lines = (body: string) => body.split("\r\n");
 
-  it("is the same people as the CSV of the same scope, one number per line as the raffle writes it — the race numbers, then the V numbers — CRLF, no header, no name, no BOM, no blank line, as text/plain", async () => {
+  it("is the same people as the CSV of the same scope, one per line — the number as the raffle writes it, a space, the name — the race numbers, then the V numbers — CRLF, no header, no BOM, no blank line, as text/plain", async () => {
     await everybody();
     const response = await file(eventId, "?format=random-org&lang=ro");
     expect(response.status).toBe(200);
@@ -446,11 +446,11 @@ describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per l
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex");
     const body = await response.text();
     expect(body.charCodeAt(0)).not.toBe(0xfeff);
-    expect(body).toBe("1\r\n2\r\n777\r\nV001\r\nV002\r\n");
-    // Every line a number, ended by CRLF; no bare LF, no blank line, no name, no address.
+    expect(body).toBe("1 Ana Pop\r\n2 Radu Munteanu\r\n777 Eliud K.\r\nV001 Ion Voluntar\r\nV002 Oana Voluntar\r\n");
+    // Every line a number and a name, ended by CRLF; no bare LF, no blank line, no header, no address.
     expect(body.replace(/\r\n/g, "")).not.toContain("\n");
-    expect(lines(body).slice(0, -1).every((line) => /^V?\d+$/.test(line))).toBe(true);
-    expect(body).not.toMatch(/Ana|Radu|Ion|Oana|Eliud|Număr|Number|@/);
+    expect(lines(body).slice(0, -1).every((line) => /^V?\d+ \S/.test(line))).toBe(true);
+    expect(body).not.toMatch(/Număr|Number|@/);
     // The CSV of the same scope holds the very same numbers, in the same order: the winner is looked up there by number.
     const csvNumbers = lines((await (await file(eventId, "?lang=ro")).text()).replace(/^﻿/, ""))
       .slice(1, -1)
@@ -458,14 +458,14 @@ describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per l
     expect(csvNumbers).toEqual(["1", "2", "777", "V001", "V002"]);
   });
 
-  it("of the present only at `present=1`, under its own name; in no language but numbers; anything else in `format` is the CSV", async () => {
+  it("of the present only at `present=1`, under its own name; the same in either language; anything else in `format` is the CSV", async () => {
     await everybody();
     await db.update(registrations).set({ checkedInAt: NOW }).where(eq(registrations.registeredName, "Radu Munteanu"));
     await db.update(eventVolunteers).set({ present: true }).where(eq(eventVolunteers.name, "Oana Voluntar"));
     const present = await file(eventId, "?format=random-org&present=1&lang=en");
     expect(present.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
     expect(present.headers.get("Content-Disposition")).toMatch(/^attachment; filename="tombola-prezenti-\d{4}-\d{2}-\d{2}-random-org\.txt"/);
-    expect(await present.text()).toBe("2\r\nV002\r\n");
+    expect(await present.text()).toBe("2 Radu Munteanu\r\nV002 Oana Voluntar\r\n");
     // English or Romanian, the same numbers.
     expect(await (await file(eventId, "?format=random-org&lang=en")).text()).toBe(await (await file(eventId, "?format=random-org&lang=ro")).text());
     for (const query of ["?format=csv", "?format=RANDOM-ORG", "?format=", "?format=txt"]) {
@@ -479,7 +479,7 @@ describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per l
     expect(await (await file(eventId, "?format=random-org")).text()).toBe("");
     await db.insert(eventEliteEntries).values({ eventId, name: "Ingrid Pop" });
     await runner("Ana Pop", 1);
-    expect(await (await file(eventId, "?format=random-org")).text()).toBe("1\r\n");
+    expect(await (await file(eventId, "?format=random-org")).text()).toBe("1 Ana Pop\r\n");
     // The CSV keeps the line, with an empty number cell, after the numbered ones.
     expect(lines((await (await file(eventId, "?lang=ro")).text()).replace(/^﻿/, "")).slice(1, -1)).toEqual(["1,Ana Pop,Alergător,Nu", ",Ingrid Pop,Elită,Nu"]);
     expect(buildRaffleRandomOrgText([])).toBe("");
@@ -488,7 +488,7 @@ describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per l
   it("writes a race number as the event writes it (§735: «001» under pad3), the V numbers as always, in the CSV and the text alike", async () => {
     await everybody();
     await db.update(events).set({ bibDesign: { numberFormat: "pad3" } }).where(eq(events.id, eventId));
-    expect(await (await file(eventId, "?format=random-org")).text()).toBe("001\r\n002\r\n777\r\nV001\r\nV002\r\n");
+    expect(await (await file(eventId, "?format=random-org")).text()).toBe("001 Ana Pop\r\n002 Radu Munteanu\r\n777 Eliud K.\r\nV001 Ion Voluntar\r\nV002 Oana Voluntar\r\n");
     expect(lines((await (await file(eventId, "?lang=ro")).text()).replace(/^﻿/, ""))[1]).toBe("001,Ana Pop,Alergător,Nu");
   });
 

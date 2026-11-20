@@ -11,7 +11,8 @@ import { CLUB_NAME } from "@/theme/brand";
  * address and whether they accepted, and how — the same row's data. Since §821 also «Vrea pe lista publică», the person's tick for the event page's list. Since §904
  * also «Are kit», the organizers' own mark — a column of the same row. Since §954 also «Decizie pentru ziua cursei», what the organizers
  * decided for the person on race day, in their words. Since §983 also «Prezent», the organizers' mark that the person came on the day —
- * said when ticked, as the kit is; unticked is absent and says nothing. A Server Component of its own so a test can draw the line without
+ * said when ticked, as the kit is; unticked is absent and says nothing. Since §1028 also «confirmat doar pentru tombolă», when the organizers
+ * confirmed the person for the raffle alone, with a minor's parent's way. A Server Component of its own so a test can draw the line without
  * the page's lookup.
  */
 export default async function VolunteerAnswers({
@@ -29,6 +30,12 @@ export default async function VolunteerAnswers({
     inRaffle?: boolean;
     /** «Prezent» (§983): the organizers' mark that the person came on the day, shown when the row holds it — absent in a caller that predates it. */
     present?: boolean;
+    /**
+     * «Confirmă pentru tombolă» (§1028): the organizers confirmed the person for the raffle alone, and for a minor how the parent agreed —
+     * shown when the row holds it, absent in a caller that predates it.
+     */
+    raffleConfirmedAt?: Date | null;
+    raffleGuardianWay?: "PHONE" | "IN_PERSON" | "WRITING" | null;
     /** «Planul voluntarilor» (§949): the point of the route the organizers put the person at, shown when the row holds one. */
     checkpointName?: string | null;
     /** «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, shown when the row holds one. */
@@ -49,6 +56,8 @@ export default async function VolunteerAnswers({
       {offer.hasKit ? ` · ${t("volunteers.chips.kit")}` : ""}
       {offer.inRaffle === false ? ` · ${t("volunteers.screen.raffleOut")}` : ""}
       {offer.present ? ` · ${t("volunteers.presence.chip")}` : ""}
+      {offer.raffleConfirmedAt ? ` · ${t("raffle.confirm.state")}` : ""}
+      {offer.raffleConfirmedAt && offer.raffleGuardianWay ? ` · ${t("raffle.confirm.guardianLine", { way: t(`raffle.confirm.ways.${offer.raffleGuardianWay}`) })}` : ""}
       {offer.checkpointName ? ` · ${t("volunteers.plan.pointValue", { name: offer.checkpointName })}` : ""}
       {offer.raceDayDecision ? ` · ${t("volunteers.decision.value", { decision: offer.raceDayDecision })}` : ""}
       {offer.shirtSize && offer.shirtSize !== "NONE" ? ` · ${t("volunteers.person.shirtValue", { size: offer.shirtSize })}` : ""}

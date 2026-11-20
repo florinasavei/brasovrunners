@@ -176,6 +176,17 @@ it is the authority, this is the summary):
     the privacy notice says of an account whose access is withdrawn — so after a former colleague breaks the
     confidentiality that outlasts the role, the proof is gone. Keeping it would be a change to that section and a time
     limit for it (three years, like the trail?), then a release; until the lawyer says so, it goes with the account.
+27. **Ask the lawyer about «Confirmă pentru tombolă»** (§1028, 2026-11-20). The organizers may now confirm a volunteer for
+    the raffle alone — a minor only once the parent or guardian agreed, recording how: «telefonic», «la fața locului» or «în
+    scris». The approved «Regulamentul tombolei» already says a minor takes part with that agreement, so no text was
+    changed; but the privacy notice's template names neither this confirmation nor the record of how a parent agreed (its
+    raffle paragraph names the sign-up, its volunteers' paragraph the volunteering agreement). Ask whether section 5 should
+    say it — one sentence, then the notice approved again (`SETUP.md` §47). Nothing in the platform waits on it.
+28. **Name random.org in the privacy notice** (§1023, 2026-11-20). «Descarcă pentru random.org» now writes each
+    participant's number **and name** — the owner's choice, asked the eve of the race — and the file is pasted into
+    random.org's List Randomizer, so random.org receives the names. The notice in force does not name it. Ask the lawyer for
+    one sentence in the raffle paragraph (random.org, the draw, names and numbers), then approve the notice again
+    (`SETUP.md` §47); until then, keep the random.org screen off the livestream.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

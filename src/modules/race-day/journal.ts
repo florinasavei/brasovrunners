@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
@@ -11,6 +11,7 @@ import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { CHECKED_IN_BY_SELF } from "@/modules/registrations/checked-in-by";
 import { formatRaceNumber, raceNumberOf, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { canReadRaceDayJournal } from "@/modules/staff-identity/domain/roles";
+import { isRaffleGuardianWay } from "@/modules/volunteers/domain/raffle";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
@@ -40,7 +41,9 @@ import {
   **Nothing new is stored but the scan** (`registration.code_scanned`, `admin-service.ts#recordCodeScan`): the desk's check-ins
   and undos were audited with their actor all along, and so was every «Prezent» on a volunteer (`volunteer.edited`, `fields:
   ["present"]`) and every raffle mark of a registration (`registration.raffle_excluded` / `raffle_included`, `raffle-mark.ts`,
-  their `door` the desk's or none — read here by the action alone, whichever door wrote it). The participant's own «Am ajuns» writes no audit row: it is read from the registration itself — checked in, no
+  their `door` the desk's or none — read here by the action alone, whichever door wrote it), and, since §1028, every volunteer the
+  organizers confirmed for the raffle alone (`volunteer.raffle_confirmed`, `volunteers/raffle-confirmation.ts`: whether a minor, and
+  how the parent agreed — read by the volunteers' own read, beside the «Prezent» ticks, so the count of queries stays six). The participant's own «Am ajuns» writes no audit row: it is read from the registration itself — checked in, no
   staff account, and no staff check-in row at that very moment (a staff check-in writes its row with the instant it sets,
   `checkInByStaff`), so an account deleted since is never mistaken for the person. A registration erased since is gone from the
   log with its row (the erase scrubs its audit rows of whom, `scrubRegistrationsFromAudit`), and so is a volunteer deleted since.
@@ -94,6 +97,10 @@ const presentTickRows = (eventId: string): SQL =>
     sql`jsonb_typeof(${auditLogs.metadataJson} -> 'present') = 'boolean'`,
   ) as SQL;
 
+/** The volunteers' confirmations for the raffle alone (§1028) of one event: its own rows on `audit_logs_entity_idx`, the one verb. */
+const raffleConfirmationRows = (eventId: string): SQL =>
+  and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), eq(auditLogs.action, "volunteer.raffle_confirmed")) as SQL;
+
 /** The audit row's volunteer is one of the event's volunteers still on its list: the join that names whom. */
 const ofTheEventsVolunteer = (eventId: string): SQL =>
   and(eq(eventVolunteers.eventId, eventId), sql`${eventVolunteers.id}::text = (${auditLogs.metadataJson} ->> 'volunteerId')`) as SQL;
@@ -137,13 +144,14 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
       .leftJoin(actorOf, eq(actorOf.id, auditLogs.actorStaffUserId))
       .where(eq(registrations.eventId, eventId))
       .groupBy(auditLogs.actorStaffUserId, actorOf.displayName, auditLogs.action, registrations.kind),
+    // The volunteers' rows: «Prezent» ticks and confirmations for the raffle (§1028), told apart by the action.
     db
-      .select({ actorId: auditLogs.actorStaffUserId, actorName: actorOf.displayName, n: count() })
+      .select({ actorId: auditLogs.actorStaffUserId, actorName: actorOf.displayName, action: auditLogs.action, n: count() })
       .from(auditLogs)
       .innerJoin(eventVolunteers, ofTheEventsVolunteer(eventId))
       .leftJoin(actorOf, eq(actorOf.id, auditLogs.actorStaffUserId))
-      .where(presentTickRows(eventId))
-      .groupBy(auditLogs.actorStaffUserId, actorOf.displayName),
+      .where(or(presentTickRows(eventId), raffleConfirmationRows(eventId)))
+      .groupBy(auditLogs.actorStaffUserId, actorOf.displayName, auditLogs.action),
     db
       .select({ kind: registrations.kind, n: count() })
       .from(registrations)
@@ -155,7 +163,13 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
       const kind = runnerKindOf(row.action);
       return kind ? [{ actorId: row.actorId, actorName: row.actorName, kind, count: row.n, test: row.kind === "TEST" }] : [];
     }),
-    ...volunteerTallies.map((row) => ({ actorId: row.actorId, actorName: row.actorName, kind: "volunteerTicks" as const, count: row.n, test: false })),
+    ...volunteerTallies.map((row) => ({
+      actorId: row.actorId,
+      actorName: row.actorName,
+      kind: row.action === "volunteer.raffle_confirmed" ? ("raffleConfirmed" as const) : ("volunteerTicks" as const),
+      count: row.n,
+      test: false,
+    })),
     ...selfTallies.map((row) => ({ actorId: null, actorName: null, kind: "selfCheckIn" as const, count: row.n, test: row.kind === "TEST" })),
   ];
   const { rows: summary, accounts } = journalSummary(tallies, input.locale);
@@ -187,17 +201,21 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
           .where(and(eq(registrations.eventId, eventId), byActor))
           .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
           .limit(JOURNAL_LINES_MAX),
-    reads.volunteerTicks.length === 0
+    reads.volunteerTicks.length === 0 && !reads.raffleConfirmations
       ? Promise.resolve([])
       : db
           .select({
             id: auditLogs.id,
             at: auditLogs.createdAt,
+            action: auditLogs.action,
             actorId: auditLogs.actorStaffUserId,
             actorName: actorOf.displayName,
             volunteerId: eventVolunteers.id,
             name: eventVolunteers.name,
             present: sql<boolean>`((${auditLogs.metadataJson} ->> 'present') = 'true')`.mapWith(Boolean),
+            // A confirmation for the raffle (§1028): whether a minor, and how the parent agreed — never a name, which the row holds none of.
+            minor: sql<boolean>`((${auditLogs.metadataJson} ->> 'minor') = 'true')`.mapWith(Boolean),
+            guardianWay: sql<string | null>`(${auditLogs.metadataJson} ->> 'guardianWay')`,
             total: sql<number>`count(*) over ()`.mapWith(Number),
           })
           .from(auditLogs)
@@ -205,9 +223,16 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
           .leftJoin(actorOf, eq(actorOf.id, auditLogs.actorStaffUserId))
           .where(
             and(
-              presentTickRows(eventId),
+              or(
+                reads.volunteerTicks.length === 0
+                  ? undefined
+                  : and(
+                      presentTickRows(eventId),
+                      reads.volunteerTicks.length === 1 ? sql`((${auditLogs.metadataJson} ->> 'present') = ${reads.volunteerTicks[0] ? "true" : "false"})` : undefined,
+                    ),
+                reads.raffleConfirmations ? raffleConfirmationRows(eventId) : undefined,
+              ),
               byActor,
-              reads.volunteerTicks.length === 1 ? sql`((${auditLogs.metadataJson} ->> 'present') = ${reads.volunteerTicks[0] ? "true" : "false"})` : undefined,
             ),
           )
           .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
@@ -254,13 +279,24 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
     },
     {
       total: totalOf(volunteerLines),
-      lines: volunteerLines.map((row): JournalLine => ({
-        id: row.id,
-        at: row.at,
-        kind: row.present ? "volunteerPresent" : "volunteerAbsent",
-        who: whoOf(row.actorId, row.actorName),
-        whom: { kind: "volunteer", id: row.volunteerId, name: row.name },
-      })),
+      lines: volunteerLines.map((row): JournalLine =>
+        row.action === "volunteer.raffle_confirmed"
+          ? {
+              id: row.id,
+              at: row.at,
+              kind: "raffleConfirmed",
+              who: whoOf(row.actorId, row.actorName),
+              whom: { kind: "volunteer", id: row.volunteerId, name: row.name },
+              raffle: { minor: row.minor, guardianWay: isRaffleGuardianWay(row.guardianWay) ? row.guardianWay : null },
+            }
+          : {
+              id: row.id,
+              at: row.at,
+              kind: row.present ? "volunteerPresent" : "volunteerAbsent",
+              who: whoOf(row.actorId, row.actorName),
+              whom: { kind: "volunteer", id: row.volunteerId, name: row.name },
+            },
+      ),
     },
     {
       total: totalOf(selfLines),

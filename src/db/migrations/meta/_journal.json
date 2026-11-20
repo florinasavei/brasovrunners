@@ -1520,6 +1520,13 @@
       "when": 1795168843322,
       "tag": "0226_staff_team_agreement_every_sign_in",
       "breakpoints": true
+    },
+    {
+      "idx": 217,
+      "version": "7",
+      "when": 1795197390192,
+      "tag": "0227_volunteer_raffle_confirmation",
+      "breakpoints": true
     }
   ]
 }

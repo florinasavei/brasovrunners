@@ -44,12 +44,43 @@ async function keepFocusing(stream: MediaStream): Promise<void> {
 }
 type DetectorCtor = new (options: { formats: string[] }) => Detector;
 
+/** The long side a frame is shrunk to before jsQR reads it: a code held at the camera stays readable, and a phone reads it in time. */
+const JSQR_FRAME_SIDE = 800;
+
 /**
- * Scan a runner's QR from inside the desk page (BR-REQ-037-08), with the browser's own
- * `BarcodeDetector` — no library, no bundle. It exists on Android Chrome, which is what a
- * volunteer's phone usually is; where it does not (iOS Safari, most desktops) the button is
- * not rendered and the page says to use the camera app, which opens the same link, because
- * the QR *is* a link. Either way the code ends up at `/admin/checkin/<code>`.
+ * The reader: the browser's own `BarcodeDetector` where it has one (Android Chrome); else jsQR, loaded only then, reading the
+ * video's frame from a canvas (the owner, 2026-11-20, the eve of the race: an iPhone at the desk drew no «Scanează» — Safari has
+ * no `BarcodeDetector`). A frame without a code reads as none, as the browser's own reader answers.
+ */
+async function makeDetector(): Promise<Detector> {
+  if ("BarcodeDetector" in window) {
+    const Ctor = (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
+    return new Ctor({ formats: ["qr_code"] });
+  }
+  const { default: jsQR } = await import("jsqr");
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  return {
+    async detect(video) {
+      if (!context || video.videoWidth === 0 || video.videoHeight === 0) return [];
+      const scale = Math.min(1, JSQR_FRAME_SIDE / Math.max(video.videoWidth, video.videoHeight));
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+      // A code on an email is dark on light: no inverted pass, which halves the work per frame.
+      const found = jsQR(frame.data, frame.width, frame.height, { inversionAttempts: "dontInvert" });
+      return found ? [{ rawValue: found.data }] : [];
+    },
+  };
+}
+
+/**
+ * Scan a runner's QR from inside the desk page (BR-REQ-037-08): the browser's own `BarcodeDetector`
+ * where it exists (Android Chrome), else jsQR loaded on the press (iPhone Safari, most desktops) —
+ * so the button is drawn wherever the browser can open a camera. Where it cannot, the button is
+ * not rendered and the page says to use the camera app, which opens the same link, because the QR
+ * *is* a link. Either way the code ends up at `/admin/checkin/<code>`.
  *
  * `hrefTemplate` is the localized path with `__CODE__` where the code goes; the server built
  * it with `getPathname`, so this island never assembles a route.
@@ -117,11 +148,11 @@ export default function QrScanButton({
   /** «Camera {n} din {total}»: which one is on, beside the button. */
   cameraLabel: string;
 }) {
-  // False on the server and during hydration, true afterwards where the API exists — read as
-  // an external store so the server and the first client render agree.
+  // False on the server and during hydration, true afterwards where a camera can be opened (the reader is the browser's own or
+  // jsQR, `makeDetector`) — read as an external store so the server and the first client render agree.
   const supported = useSyncExternalStore(
     () => () => undefined,
-    () => "BarcodeDetector" in window && "mediaDevices" in navigator,
+    () => typeof navigator.mediaDevices?.getUserMedia === "function",
     () => false,
   );
   const [open, setOpen] = useState(false);
@@ -142,11 +173,11 @@ export default function QrScanButton({
     let stream: MediaStream | undefined;
     let timer: number | undefined;
     let done = false;
-    const Ctor = (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
-    const detector = new Ctor({ formats: ["qr_code"] });
 
     (async () => {
       try {
+        const detector = await makeDetector();
+        if (done) return;
         // A sharper stream than the default, which on some phones is a low-resolution feed that never reads a code on a screen;
         // the chosen camera by its id when the phone remembers one, else any back camera.
         const size = { width: { ideal: 1280 }, height: { ideal: 720 } };

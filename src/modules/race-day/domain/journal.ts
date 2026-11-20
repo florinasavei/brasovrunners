@@ -1,3 +1,4 @@
+import type { VolunteerRaffleGuardianWay } from "@/db/schema/event-volunteers";
 import { isUuid } from "@/shared/ids";
 
 /**
@@ -7,13 +8,14 @@ import { isUuid } from "@/shared/ids";
  * `journal.ts` reads, the page says it. The organizers' alone (`canReadRaceDayJournal`): the desk's «Scanat înainte» is its own
  * (`registrations/domain/code-scans.ts`).
  *
- * Seven kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
+ * Eight kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
  * runner marked present at the desk or by their own «Am ajuns», a check-in taken back (`registration.checked_in`,
  * `registration.checkin_undone`), a runner taken off the event's raffle or put back on it (`registration.raffle_excluded`,
  * `registration.raffle_included` — at the desk, asked first, or by the organizers' tick; §1020: who decided that X does not take
- * part), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
+ * part), a volunteer confirmed for the raffle alone by the organizers (`volunteer.raffle_confirmed`, §1028: who decided, and for a
+ * minor how the parent agreed), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
  */
-export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"] as const;
+export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "raffleConfirmed", "volunteerPresent", "volunteerAbsent"] as const;
 export type JournalKind = (typeof JOURNAL_KINDS)[number];
 
 /** The runners' kinds, by the audit action each is read from. */
@@ -44,7 +46,18 @@ export type JournalWhom =
   | { kind: "registration"; id: string; name: string; number: string | null; test: boolean }
   | { kind: "volunteer"; id: string; name: string };
 
-export type JournalLine = { id: string; at: Date; kind: JournalKind; who: JournalWho; whom: JournalWhom };
+/**
+ * A line of the log. `raffle` is a confirmation for the raffle's own (§1028): whether the volunteer was a minor, and how the parent
+ * or guardian agreed (null for an adult) — what the line says after whom.
+ */
+export type JournalLine = {
+  id: string;
+  at: Date;
+  kind: JournalKind;
+  who: JournalWho;
+  whom: JournalWhom;
+  raffle?: { minor: boolean; guardianWay: VolunteerRaffleGuardianWay | null };
+};
 
 /** The account filter (`?account=`): everybody, one staff account by id, the participants' own «Am ajuns», or the deleted accounts. */
 export type JournalAccount = { kind: "all" } | { kind: "staff"; id: string } | { kind: "participant" } | { kind: "removed" };
@@ -73,23 +86,28 @@ export function journalWhoValue(who: JournalWho): string {
   return who.kind === "staff" ? who.id : who.kind === "participant" ? PARTICIPANT_ACCOUNT : REMOVED_ACCOUNT;
 }
 
-/** `?kind=` as the address carries it: one of the seven, or null for every kind. */
+/** `?kind=` as the address carries it: one of the eight, or null for every kind. */
 export function journalKindOf(value: unknown): JournalKind | null {
   return (JOURNAL_KINDS as readonly unknown[]).includes(value) ? (value as JournalKind) : null;
 }
 
 /**
  * What the three reads are asked for a filter: the runners' audit rows of these kinds, the volunteers' ticks of these values
- * (`true` ticked, `false` unticked), and the participants' own «Am ajuns» — each empty or `false` when the filter leaves it out,
- * so nothing is read for it. The participants' own check-ins have no staff account: one account's filter or the deleted
- * accounts' leaves them out, and only they answer «participanții».
+ * (`true` ticked, `false` unticked) and their confirmations for the raffle (§1028, read by the same second read), and the
+ * participants' own «Am ajuns» — each empty or `false` when the filter leaves it out, so nothing is read for it. The participants'
+ * own check-ins have no staff account: one account's filter or the deleted accounts' leaves them out, and only they answer
+ * «participanții».
  */
-export function journalReads(kind: JournalKind | null, account: JournalAccount): { runnerKinds: RunnerJournalKind[]; volunteerTicks: boolean[]; selfCheckIns: boolean } {
+export function journalReads(
+  kind: JournalKind | null,
+  account: JournalAccount,
+): { runnerKinds: RunnerJournalKind[]; volunteerTicks: boolean[]; raffleConfirmations: boolean; selfCheckIns: boolean } {
   const staffRows = account.kind !== "participant";
   const runnerKinds = staffRows ? (Object.keys(RUNNER_JOURNAL_ACTIONS) as RunnerJournalKind[]).filter((one) => kind === null || kind === one) : [];
   const volunteerTicks = staffRows ? [true, false].filter((ticked) => kind === null || kind === (ticked ? "volunteerPresent" : "volunteerAbsent")) : [];
+  const raffleConfirmations = staffRows && (kind === null || kind === "raffleConfirmed");
   const selfCheckIns = (account.kind === "all" || account.kind === "participant") && (kind === null || kind === "checkedIn");
-  return { runnerKinds, volunteerTicks, selfCheckIns };
+  return { runnerKinds, volunteerTicks, raffleConfirmations, selfCheckIns };
 }
 
 /**
@@ -104,17 +122,23 @@ export function mergeJournalLines(reads: readonly { lines: readonly JournalLine[
   return { lines, more: Math.max(0, total - lines.length) };
 }
 
-export type JournalCounts = { scanned: number; checkedIn: number; undone: number; raffleOut: number; raffleIn: number; volunteerTicks: number };
+export type JournalCounts = { scanned: number; checkedIn: number; undone: number; raffleOut: number; raffleIn: number; raffleConfirmed: number; volunteerTicks: number };
 export type JournalSummaryRow = { who: JournalWho; counts: JournalCounts };
 
 /** One grouped count of a read: who (a staff account's id and name, or none), what, and how many — a test registration's apart. */
-export type JournalTally = { actorId: string | null; actorName: string | null; kind: RunnerJournalKind | "volunteerTicks" | "selfCheckIn"; count: number; test: boolean };
+export type JournalTally = {
+  actorId: string | null;
+  actorName: string | null;
+  kind: RunnerJournalKind | "raffleConfirmed" | "volunteerTicks" | "selfCheckIn";
+  count: number;
+  test: boolean;
+};
 
-const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, volunteerTicks: 0 };
+const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, raffleConfirmed: 0, volunteerTicks: 0 };
 
 /**
  * One line per account that acted at the event (§996): how many scans, check-ins, undos, runners taken off the raffle and put
- * back (§1020) and volunteer ticks — the staff accounts
+ * back (§1020), volunteers confirmed for the raffle (§1028) and volunteer ticks — the staff accounts
  * by name, then the deleted accounts as one, then the participants' own «Am ajuns» (their check-ins alone). A test registration's
  * row is omitted from every count the club is given (§30, AGENTS.md §12.6), but its account is still one the filter offers
  * (`accounts`), so a rehearsal on test rows can be read by account too.

@@ -1424,10 +1424,10 @@
         "presentButton": "Raffle list — present only (CSV)",
         "presentButtonLabel": "Raffle list — present only (CSV): those taking part who were present — the runners checked in at the desk or with “I have arrived” from their own link, the volunteers and elites ticked “Present”",
         "randomOrgButton": "Download for random.org",
-        "randomOrgButtonLabel": "Download for random.org: a text file with one number per line, no names — the race numbers, then the volunteer numbers (V001…)",
+        "randomOrgButtonLabel": "Download for random.org: a text file with one line per person, number and name — the race numbers, then the volunteer numbers (V001…)",
         "randomOrgPresentButton": "Download for random.org — present only",
-        "randomOrgPresentButtonLabel": "Download for random.org — present only: one number per line, no names, only those taking part who were present",
-        "randomOrgHelp": "One number per line, no names: paste it into random.org → List Randomizer, then find the winner by number in the CSV list.",
+        "randomOrgPresentButtonLabel": "Download for random.org — present only: one line per person, number and name, only those taking part who were present",
+        "randomOrgHelp": "One line per person, the number and the name: paste it into random.org → List Randomizer and press Randomize. The first line is the winner.",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -2927,7 +2927,8 @@
       "LIST_WISH_ADDRESS_UNCONFIRMED": "The email address is not confirmed: confirm the registration here first («Confirm on paper»), then press the eye again.",
       "LIST_WISH_DESK_CLOSED": "The event is over or was cancelled: the desk is closed and records nothing.",
       "RESULT_TIME_NOT_RECORDED": "Nothing changed: that time is not among those recorded on «Timing» for this number since the last reset.",
-      "RESULT_DISQUALIFIED": "Nothing changed: the runner is disqualified. A disqualification is changed by hand, in «Status», then «Save all the results»."
+      "RESULT_DISQUALIFIED": "Nothing changed: the runner is disqualified. A disqualification is changed by hand, in «Status», then «Save all the results».",
+      "RAFFLE_GUARDIAN_MISSING": "For a minor, tick that the parent or guardian agreed and choose how: by phone, in person or in writing. Nothing was written."
     },
     "editor": {
       "draftPreview": {
@@ -8011,7 +8012,7 @@
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
         "Everyone at the table signs in with their own account, never someone else's: “Log” shows who scanned each code and who marked each runner present.",
         "They see no email address, cancel nobody and add nobody who is not on the list: for that, they call an organizer.",
-        "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
+        "Every confirmed participant got a QR code by email. At the desk: press “Scan” or open the phone's camera and point it at the code — the person's row opens.",
         "Under the row it says “Scanned before: …”? The code was opened at the desk before: check the person has not already picked up their number.",
         "Or search by name or by race number.",
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
@@ -9740,7 +9741,7 @@
               "title": "A participant with the QR code",
               "steps": [
                 "The participant shows you the QR code from the confirmation email.",
-                "Press «Scan» and hold the code in the frame (it works on Android). On an iPhone: open the Camera app, point it at the code and tap the link that appears.",
+                "Press «Scan» and hold the code in the frame. If the button is missing: open the Camera app, point it at the code and tap the link that appears.",
                 "The person's row opens: check the name with them.",
                 "Under the row it says «Scanned before: …»? The code was opened at the desk before: check the person has not already picked up their number; if they have, call an organizer.",
                 "Press «Mark present». It asks nothing; a message appears at the bottom.",
@@ -9843,7 +9844,7 @@
                 "When the race holds a raffle, every desk role opens «Race day» → «Raffle»: the Volunteer, the Redactor, the Organizer, the Tehnic role and the Administrators. Pick the race under «Event» and press «Show».",
                 "You see everybody by number: the name, the group, «Taking part» and «Present». The filters above the table choose whom you see: everybody, those taking part, those not, or only those present.",
                 "With a separate sign-up, a runner who has not signed up has «Accepted the rules» and «Sign up» on their row. Tick it only once the person has accepted the raffle rules, on paper or aloud, then press «Sign up».",
-                "The files for the draw, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them.",
+                "The files for the draw, deleting a sign-up, signing up a volunteer or a line of the elite list and «Confirm for the raffle» stay with the Organizer and the Administrators: call them.",
                 "You take a runner out of the raffle, or put them back, from their row on «Attendance»: «Take out of the raffle» asks first."
               ]
             },
@@ -10123,7 +10124,11 @@
               "steps": [
                 "«Race day» → «Raffle»: every runner, elite and volunteer of the event, each with «Taking part» and, when not, why. Who takes part and how is the Administrator's choice, in the event's editor.",
                 "Volunteers take part with their volunteer number, V001, V002…, which they get by themselves the moment you confirm them: you set nothing.",
-                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. Their row says why."
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. Their row says why.",
+                "A volunteer not confirmed (say, a minor without the parent's consent to volunteer) you confirm for the raffle alone with «Confirm for the raffle», on their row or their page.",
+                "For a minor first choose «How the parent agreed». In the question tick «The parent or guardian agreed that they take part in the raffle», then «Yes, confirm for the raffle».",
+                "They get a volunteer number, if they have none, and go into the draw. As a volunteer they stay unconfirmed. With a separate sign-up also tick «Accepted the rules»: it signs them up too.",
+                "«Log» keeps who decided, when and, for a minor, how the parent agreed."
               ]
             },
             {
@@ -10169,8 +10174,8 @@
                 "Volunteers get their numbers by themselves: V001, V002, V003… Each gets the next number the moment you confirm them; you set nothing. The number shows beside the name on «Volunteers», on the person's page, on the plan and in the Excel file.",
                 "A volunteer number is never given twice: whoever is cancelled or deleted keeps theirs, retired. V007 and race number 7 are two different people.",
                 "On race day tick «Present» for the volunteers who came, on «Volunteers»; the desk checks the runners in.",
-                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one number per line and no names.",
-                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first number in the list is the winner.",
+                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one line per person: number and name.",
+                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first line in the list is the winner.",
                 "Look the winning number up in «Raffle list (CSV)» or on «Raffle»: the name is there. Race numbers are the runners' and the elites', the ones with a V the volunteers'."
               ]
             },
@@ -10460,7 +10465,7 @@
                 "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
                 "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
                 "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it.",
-                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up.",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. One not confirmed you confirm with «Confirm for the raffle».",
                 "Press «Save». After the save «Raffle» stays open, with what you saved.",
                 "On race day, «Race day» → «Raffle» shows everybody, whether they take part and, when not, why."
               ]
@@ -13425,7 +13430,7 @@
       },
       "journal": {
         "title": "Race-day log",
-        "intro": "Who scanned the codes, who marked runners present, who ticked volunteers and who took somebody out of the raffle or put them back, newest first.",
+        "intro": "Who scanned the codes, who marked runners present, who ticked volunteers, who took somebody out of the raffle or put them back and who confirmed somebody for the raffle, newest first.",
         "ownAccount": "For the log to name the person, everyone works the desk under their own account.",
         "account": "Account",
         "accounts": {
@@ -13441,6 +13446,7 @@
           "undone": "Check-ins undone",
           "raffleOut": "Taken out of the raffle",
           "raffleIn": "Put back in the raffle",
+          "raffleConfirmed": "Confirmed for the raffle",
           "volunteerPresent": "Volunteers ticked present",
           "volunteerAbsent": "Volunteers unticked"
         },
@@ -13472,6 +13478,11 @@
             "few": "{count} put back in the raffle",
             "other": "{count} put back in the raffle"
           },
+          "raffleConfirmed": {
+            "one": "{count} confirmed for the raffle",
+            "few": "{count} confirmed for the raffle",
+            "other": "{count} confirmed for the raffle"
+          },
           "volunteerTicks": {
             "one": "{count} volunteer tick",
             "few": "{count} volunteer ticks",
@@ -13485,6 +13496,7 @@
           "undone": "undid the check-in of",
           "raffleOut": "took out of the raffle",
           "raffleIn": "put back in the raffle",
+          "raffleConfirmed": "confirmed for the raffle",
           "volunteerPresent": "ticked present",
           "volunteerAbsent": "unticked present"
         },
@@ -13497,6 +13509,7 @@
           "volunteer": "{name} (volunteer)"
         },
         "timeOnDay": "{time} ({day})",
+        "guardian": "· parent's consent: {way}",
         "more": {
           "one": "and {count} more line, older",
           "few": "and {count} more lines, older",
@@ -13532,7 +13545,7 @@
     },
     "raffle": {
       "title": "Raffle",
-      "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. One not confirmed as a volunteer can be confirmed for the raffle alone, on their row. You draw from the file.",
       "randomOrgMissing": {
         "one": "{count} participant without a number is not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
         "few": "{count} participants without a number are not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
@@ -13644,7 +13657,27 @@
       "deleteBody": "The person no longer takes part in the raffle until they sign up again. No email is sent to them.",
       "cancel": "Cancel",
       "print": "Print",
-      "empty": "Nobody to show here."
+      "empty": "Nobody to show here.",
+      "confirm": {
+        "button": "Confirm for the raffle",
+        "buttonFor": "Confirm for the raffle: {name}",
+        "title": "Confirm {name} for the raffle?",
+        "body": "They get a volunteer number, if they have none, and go into the draw. As a volunteer they stay unconfirmed. Who decided stays on record.",
+        "bodyMinor": "{name} is under 18: they take part only with the parent's or guardian's consent, given {way}. As a volunteer they stay unconfirmed, without the volunteering consent. Who decided stays on record.",
+        "guardianAgreed": "The parent or guardian agreed that they take part in the raffle",
+        "way": "How the parent agreed",
+        "wayChoose": "Choose how",
+        "ways": {
+          "PHONE": "by phone",
+          "IN_PERSON": "in person",
+          "WRITING": "in writing"
+        },
+        "confirm": "Yes, confirm for the raffle",
+        "cancel": "Cancel",
+        "state": "confirmed for the raffle only",
+        "guardianLine": "parent's consent: {way}",
+        "pageLine": "Confirmed for the raffle only, not as a volunteer"
+      }
     },
     "timing": {
       "title": "Timing",
@@ -16037,7 +16070,10 @@
       "rafflePutBack": "Put back in the raffle.",
       "rafflePresentOn": "Ticked: present.",
       "rafflePresentOff": "Cleared: absent.",
-      "raffleUnchanged": "It was already so; nothing to change."
+      "raffleUnchanged": "It was already so; nothing to change.",
+      "raffleConfirmed": "Confirmed for the raffle: the number goes into the draw.",
+      "raffleConfirmedSignedUp": "Confirmed and signed up for the raffle: the number goes into the draw.",
+      "raffleConfirmedAlready": "Already taking part in the raffle; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

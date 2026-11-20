@@ -339,10 +339,10 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         expect(file.lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.ana.name},Alergător,Nu`, `2,${seeded.bogdan.name},Alergător,Nu`, `3,${seeded.cristina.name},Alergător,Da`, ""]);
         const present = await csvLines(page, (await page.getByTestId("raffle-download-present").getAttribute("href")) as string);
         expect(present.lines).toEqual(["Număr,Nume,Categorie,Prezent", `3,${seeded.cristina.name},Alergător,Da`, ""]);
-        // «Descarcă pentru random.org» (§1023): the same three, numbers only.
+        // «Descarcă pentru random.org» (§1023): the same three, each number with its name.
         const randomOrg = page.getByTestId("raffle-download-random-org");
         await tall(randomOrg, "the random.org file's button");
-        expect(await (await page.request.get((await randomOrg.getAttribute("href")) as string)).text()).toBe("1\r\n2\r\n3\r\n");
+        expect(await (await page.request.get((await randomOrg.getAttribute("href")) as string)).text()).toBe(`1 ${seeded.ana.name}\r\n2 ${seeded.bogdan.name}\r\n3 ${seeded.cristina.name}\r\n`);
       });
 
       expect(hydrationWarnings, "hydration warnings").toEqual([]);

@@ -55,8 +55,9 @@ const WHOM_LINK_STYLE = { display: "inline-flex", alignItems: "center", minHeigh
  * «Jurnal» — «Ziua cursei»'s log (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»), its last tab (`raceDayTabs`): for the chosen event, newest first, every code scanned at the desk, every runner
  * marked present — at the desk, or by their own «Am ajuns» — and every check-in taken back, every runner taken off the raffle or put
- * back on it (§1020: «a scos de la tombolă», «a pus înapoi la tombolă» — who decided), and every volunteer ticked or unticked
- * «Prezent». Each line: the time to the second on the event's clock (the day beside it when it is not the race's), who — the staff
+ * back on it (§1020: «a scos de la tombolă», «a pus înapoi la tombolă» — who decided), every volunteer confirmed for the raffle alone
+ * (§1028: «a confirmat pentru tombolă», and for a minor «acordul părintelui: telefonic» after the name), and every volunteer ticked or
+ * unticked «Prezent». Each line: the time to the second on the event's clock (the day beside it when it is not the race's), who — the staff
  * account by its name, «participantul» for the person's own press, «cont șters» for an account gone since —, what, and whom: the
  * runner's name and number, a link to the registration, or the volunteer's name, a link to their page.
  *
@@ -118,6 +119,8 @@ export default async function RaceDayJournalPage({ params, searchParams }: Props
         // §1020: the runners this account took off the raffle, and put back.
         ["raffleOut", counts.raffleOut],
         ["raffleIn", counts.raffleIn],
+        // §1028: the volunteers this account confirmed for the raffle alone.
+        ["raffleConfirmed", counts.raffleConfirmed],
         ["volunteerTicks", counts.volunteerTicks],
       ] as const
     )
@@ -146,6 +149,15 @@ export default async function RaceDayJournalPage({ params, searchParams }: Props
           {whomWords(entry)}
         </Link>
       </Box>
+      {/* A volunteer confirmed for the raffle (§1028): a minor's line says how the parent or guardian agreed. */}
+      {entry.raffle?.minor && entry.raffle.guardianWay && (
+        <>
+          {" "}
+          <Box component="span" sx={{ color: "text.secondary", overflowWrap: "anywhere" }} data-testid="race-day-journal-guardian">
+            {t("raceDay.journal.guardian", { way: t(`raffle.confirm.ways.${entry.raffle.guardianWay}`) })}
+          </Box>
+        </>
+      )}
     </Box>
   );
 

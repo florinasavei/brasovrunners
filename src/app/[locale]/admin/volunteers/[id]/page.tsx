@@ -27,7 +27,7 @@ import SignedContractCard from "@/modules/volunteers/ui/SignedContractCard";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
 import { raffleVolunteerLine } from "@/modules/volunteers/ui/RaffleLines";
-import { raffleSignUpAction } from "../../checkin/tombola/actions";
+import { raffleConfirmVolunteerAction, raffleSignUpAction } from "../../checkin/tombola/actions";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
@@ -160,8 +160,18 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         </GlyphButton>
       </Stack>
 
-      {/* The raffle (§984): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open. */}
-      {raffle && (await raffleVolunteerLine({ line: raffle, locale, eventId: person.eventId, volunteerId: person.id, name: person.name, action: raffleSignUpAction }))}
+      {/* The raffle (§984): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open —
+          and, for a volunteer not confirmed, «Confirmă pentru tombolă» (§1028), asked first, a minor's parent's agreement in the question. */}
+      {raffle &&
+        (await raffleVolunteerLine({
+          line: raffle,
+          locale,
+          eventId: person.eventId,
+          volunteerId: person.id,
+          name: person.name,
+          action: raffleSignUpAction,
+          confirmAction: raffleConfirmVolunteerAction,
+        }))}
 
       {/* «Note interne» first, before the person's block: what the organizers left about the person is read before anything else. */}
       <NotesCard
