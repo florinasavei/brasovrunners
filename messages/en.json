@@ -9749,10 +9749,10 @@
               "steps": [
                 "Beside the name, the eye says how the person appears on the site and in the results: «By name» or «Anonymous».",
                 "They tell you they want to appear by name? Press «Anonymous», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
-                "The person gets an email at once, with a button to take it back. The registration's history keeps that you recorded it.",
-                "They ask to no longer appear by name? Press «By name» and confirm. No email leaves.",
-                "«Hidden by the club» under the name? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
-                "On a row whose address is not confirmed the eye is not a button: confirm on paper first. Never press it without the person's spoken agreement."
+                "The person gets an email at once with the button «I do not want to appear on the participants & results list». The registration's history keeps that you recorded it.",
+                "They ask to no longer appear by name? Press «By name», then «Yes — hide the name». No email leaves.",
+                "Under the name it says «Hidden by the club…»? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
+                "On a row whose address is not confirmed the eye is not a button: first «Confirm on paper». Never press it without the person's spoken agreement."
               ]
             },
             {

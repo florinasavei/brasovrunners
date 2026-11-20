@@ -9747,12 +9747,12 @@
             {
               "title": "Vrea să apară cu numele, sau nu mai vrea",
               "steps": [
-                "Lângă nume, ochiul spune cum apare persoana pe site și în clasament: „Cu nume” sau „Anonim”.",
-                "Îți spune că vrea să apară cu numele? Apasă „Anonim”, citește întrebarea și apasă „Da, a spus — afișează pe site”. Pentru un minor răspunde părintele sau tutorele.",
-                "Persoana primește pe loc un email cu un buton prin care retrage. În istoricul înscrierii rămâne că ai înregistrat-o tu.",
-                "Cere să nu mai apară cu numele? Apasă „Cu nume” și confirmă. Nu pleacă niciun email.",
-                "Sub nume scrie „Ascuns de club”? Un administrator i-a ascuns numele: apăsarea schimbă doar dorința persoanei, numele rămâne ascuns.",
-                "Pe un rând cu adresa neconfirmată ochiul nu se apasă: confirmă întâi pe hârtie. Fără acordul spus al persoanei nu apeși niciodată."
+                "Lângă nume, ochiul spune cum apare persoana pe site și în clasament: «Cu nume» sau «Anonim».",
+                "Îți spune că vrea să apară cu numele? Apasă «Anonim», citește întrebarea și apasă «Da, a spus — afișează pe site». Pentru un minor răspunde părintele sau tutorele.",
+                "Persoana primește pe loc un email cu butonul «Nu vreau să apar pe lista de participanți & rezultate». În istoricul înscrierii rămâne că ai notat-o tu.",
+                "Cere să nu mai apară cu numele? Apasă «Cu nume», apoi «Da — ascunde numele». Nu pleacă niciun email.",
+                "Sub nume scrie «Ascuns de club…»? Un administrator i-a ascuns numele: apăsarea schimbă doar dorința persoanei, numele rămâne ascuns.",
+                "Pe un rând cu adresa neconfirmată ochiul nu se apasă: întâi «Confirmă pe hârtie». Fără acordul spus al persoanei nu apeși niciodată."
               ]
             },
             {
