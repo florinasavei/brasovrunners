@@ -71,6 +71,8 @@ export default async function BackofficeShell({
     // «Magazin» (§687): the members' shop, its own section — a grant opens it to any backoffice role.
     shop: getPathname({ locale, href: "/admin/shop" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
+    // «PR Kit» (§1015): the logo files, the sticker sheets and the YouTube poster, for every role.
+    prKit: getPathname({ locale, href: "/admin/pr-kit" }),
   };
 
   /*

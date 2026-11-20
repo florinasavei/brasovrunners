@@ -79,6 +79,7 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import StraightenIcon from "@mui/icons-material/Straighten";
+import StyleIcon from "@mui/icons-material/Style";
 import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TextRotationNoneIcon from "@mui/icons-material/TextRotationNone";
@@ -294,7 +295,10 @@ export type ActionIconName =
   | "keepTime"
   // «Clasament»'s «Timp» and «Timp cip» (§999): the clock face on the button beside each box that opens the page's one clock
   // picker — a time picked, never the stopwatch of «Cronometrare», which keeps one.
-  | "pickTime";
+  | "pickTime"
+  // «PR Kit» (§1015): the tab's glyph — a brand's swatches and its brush, the club's look to take away; never the loudspeaker of
+  // «Trimite un mesaj participanților», which is a message, nor the palette of «Aspect», which is the site's own settings.
+  | "prKit";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -409,4 +413,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   raceStart: FlagIcon,
   keepTime: TimerIcon,
   pickTime: ScheduleIcon,
+  prKit: StyleIcon,
 };

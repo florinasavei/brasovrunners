@@ -109,7 +109,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
 describe("§516 the main bar, in the order the club opens things", () => {
   it("is events, registrations, volunteers, the desk, gallery, pages, newsletter, shop, settings, tasks, team, legal, guide", () => {
     // «Voluntari» (§839) stands beside «Înscrieri»: the two lists of the people who come to an event.
-    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "volunteers", "checkin", "gallery", "pages", "newsletter", "shop", "settings", "tasks", "staff", "legal", "guide"]);
+    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "volunteers", "checkin", "gallery", "pages", "newsletter", "shop", "settings", "tasks", "staff", "legal", "prKit", "guide"]);
     expect(ADMIN_SECTIONS).not.toContain("emails");
   });
 
@@ -118,7 +118,7 @@ describe("§516 the main bar, in the order the club opens things", () => {
       const offered = visibleAdminSections(role);
       expect(offered, role).toEqual(ADMIN_SECTIONS.filter((section) => offered.includes(section)));
     }
-    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
+    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "prKit", "guide"]);
   });
 
   it("names every section in both languages, «Setări» / «Settings» included", () => {
