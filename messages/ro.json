@@ -2260,6 +2260,7 @@
         "to": "acum „{to}”",
         "reason": "motiv: {reason}",
         "bib": "nr. {number}",
+        "atDesk": "la masă",
         "empty": "gol"
       },
       "bibsElite": {
@@ -2902,6 +2903,7 @@
       "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
       "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri».",
       "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă.",
+      "RAFFLE_NOT_HELD": "Evenimentul nu mai are tombolă: „Avem tombolă” nu e bifat. Nu s-a scris nimic.",
       "RAFFLE_SIGN_UP_CLOSED": "Înscrierile la tombolă sunt închise acum — sau regulamentul ori nota de confidențialitate nu sunt aprobate. Nu s-a scris nimic.",
       "RAFFLE_NOT_ELIGIBLE": "Persoana nu poate participa la tombolă: trebuie să fie confirmată, cu număr, dintr-o grupă bifată. Nu s-a scris nimic.",
       "RAFFLE_RULES_NOT_ACCEPTED": "Bifează întâi că persoana a acceptat Regulamentul tombolei. Nu s-a scris nimic.",
@@ -7999,6 +8001,7 @@
         "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii și în „Jurnal”, cu numele tău.",
+        "Cursa are tombolă? Sub rând scrie dacă persoana participă. „Scoate de la tombolă” și „Pune înapoi la tombolă” întreabă întâi; „Jurnal” arată cine a decis.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
         "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc."
@@ -8060,6 +8063,9 @@
         "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu eticheta în locul numărului.",
         "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
         "eliteLabelSaved": "Eticheta pe BIB a fost salvată.",
+        "raffleTakenOut": "Scos de la tombolă: numărul nu mai intră la tragere.",
+        "rafflePutBack": "Pus înapoi la tombolă: numărul intră din nou la tragere.",
+        "raffleUnchanged": "Era deja așa; nimic de schimbat.",
         "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
         "raffleAlready": "Persoana era deja înscrisă la tombolă."
       },
@@ -9722,6 +9728,17 @@
               ]
             },
             {
+              "title": "Scoate pe cineva de la tombolă, sau pune-l înapoi",
+              "steps": [
+                "Când cursa are tombolă, sub fiecare rând scrie «Tombolă: participă» sau «Tombolă: nu participă», și de ce.",
+                "Cineva nu participă la tombolă — de exemplu o elită care a cerut asta? Pe rândul lui apasă «Scoate de la tombolă».",
+                "Se deschide o întrebare cu numele și numărul persoanei. «Anulează» lasă totul cum era; «Da, scoate de la tombolă» o scoate.",
+                "Rândul spune apoi «Tombolă: nu participă» — „scos de la tombolă”. Numărul nu mai intră în fișierul pentru extragere.",
+                "Ai greșit sau persoana s-a răzgândit? Pe același rând apasă «Pune înapoi la tombolă», apoi «Da, pune înapoi la tombolă».",
+                "Persoana nu primește niciun email. Fiecare apăsare rămâne în «Jurnal» și în istoricul înscrierii, cu numele tău."
+              ]
+            },
+            {
               "title": "La linia de sosire: «Cronometrare»",
               "steps": [
                 "«Ziua cursei» → «Cronometrare» și alege cursa. Organizatorul apasă «Start» la pistol; tu vezi ceasul de la start.",
@@ -9735,7 +9752,7 @@
               "title": "Jurnalul: cine a scanat, cine a marcat prezent",
               "steps": [
                 "Îl deschid Organizatorul și Administratorii: «Ziua cursei» → «Jurnal», apoi alege cursa la «Eveniment» și apasă «Arată».",
-                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat și câți voluntari a bifat.",
+                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat, câți alergători a scos de la tombolă sau a pus înapoi și câți voluntari a bifat.",
                 "Dedesubt, cel mai nou primul: ora, cine, ce a făcut și pe cine. Numele duce la înscriere sau la pagina voluntarului.",
                 "„participantul” înseamnă că alergătorul a apăsat singur «Am ajuns — marchează-mă prezent» din linkul lui; „cont șters”, un cont scos de atunci din «Echipa».",
                 "«Cont» și «Ce s-a făcut» aleg ce vezi; apoi «Arată». Se văd cele mai noi 300 de rânduri, iar dedesubt câte mai sunt.",
@@ -13176,7 +13193,7 @@
       },
       "journal": {
         "title": "Jurnalul zilei cursei",
-        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii și cine a bifat voluntarii, cel mai nou primul.",
+        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii, cine a bifat voluntarii și cine a scos pe cineva de la tombolă sau l-a pus înapoi, cel mai nou primul.",
         "ownAccount": "Ca jurnalul să numească omul, fiecare lucrează la masă cu contul lui.",
         "account": "Cont",
         "accounts": {
@@ -13190,6 +13207,8 @@
           "scanned": "Coduri scanate",
           "checkedIn": "Marcați prezenți",
           "undone": "Prezențe anulate",
+          "raffleOut": "Scoși de la tombolă",
+          "raffleIn": "Puși înapoi la tombolă",
           "volunteerPresent": "Voluntari bifați prezenți",
           "volunteerAbsent": "Voluntari debifați"
         },
@@ -13211,6 +13230,16 @@
             "few": "{count} prezențe anulate",
             "other": "{count} de prezențe anulate"
           },
+          "raffleOut": {
+            "one": "{count} scos de la tombolă",
+            "few": "{count} scoși de la tombolă",
+            "other": "{count} de scoși de la tombolă"
+          },
+          "raffleIn": {
+            "one": "{count} pus înapoi la tombolă",
+            "few": "{count} puși înapoi la tombolă",
+            "other": "{count} de puși înapoi la tombolă"
+          },
           "volunteerTicks": {
             "one": "{count} bifă la voluntari",
             "few": "{count} bife la voluntari",
@@ -13222,6 +13251,8 @@
           "scanned": "a scanat",
           "checkedIn": "a marcat prezent",
           "undone": "a anulat prezența",
+          "raffleOut": "a scos de la tombolă",
+          "raffleIn": "a pus înapoi la tombolă",
           "volunteerPresent": "a bifat prezent",
           "volunteerAbsent": "a debifat prezent"
         },
@@ -13331,6 +13362,18 @@
       "putBack": "Pune înapoi",
       "takeOutFor": "Scoate de la tombolă: {name}",
       "putBackFor": "Pune înapoi la tombolă: {name}",
+      "desk": {
+        "takeOut": "Scoate de la tombolă",
+        "putBack": "Pune înapoi la tombolă",
+        "takenOut": "— scos de la tombolă",
+        "takeOutTitle": "Scoți pe {name} (nr. {number}) de la tombolă?",
+        "takeOutBody": "Numărul lui nu mai intră la tragere. Rămâne scris cine a decis.",
+        "takeOutConfirm": "Da, scoate de la tombolă",
+        "putBackTitle": "Pui înapoi pe {name} (nr. {number}) la tombolă?",
+        "putBackBody": "Numărul lui intră din nou la tragere. Rămâne scris cine a decis.",
+        "putBackConfirm": "Da, pune înapoi la tombolă",
+        "cancel": "Anulează"
+      },
       "present": "Prezent",
       "presentFor": "Prezent: {name}",
       "delete": "Șterge înscrierea",

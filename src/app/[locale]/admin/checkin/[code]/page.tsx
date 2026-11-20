@@ -19,11 +19,12 @@ import { listCodeScans } from "@/modules/registrations/code-scans";
 import { type CodeScan, EARLIER_SCANS_SHOWN, earlierScans, OPENED_FROM_REGISTRATION, OPENED_IN_THE_OTHER_LANGUAGE } from "@/modules/registrations/domain/code-scans";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
 import { familyOf } from "@/modules/registrations/family-marker";
+import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
 import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
+import { raffleDeskExclusionAction } from "../raffle-actions";
 import { raffleDeskSignUpAction } from "../tombola/actions";
 
 type Props = {
@@ -86,8 +87,10 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const spares = row ? await spareStates(db, [row.eventId]) : {};
   // Who came with this runner (§543), as on the desk's list: names only.
   const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
-  // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
+  // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up;
+  // since §NNN, «Scoate de la tombolă» / «Pune înapoi la tombolă», asked first with the person's number.
   const raffle = row ? await readRaffleLine(db, { table: "registration", id: row.id }, now) : null;
+  const raceNumber = row ? raceNumberOf(row) : null;
   // «Scanat înainte» (§996): the code's newest scans, one more than the line names, so this visit's own can be left out.
   const earlier = row ? earlierScans(await listCodeScans(db, row.id, EARLIER_SCANS_SHOWN + 1), { ownScanId, sameVisit, viewerId: actor.id }) : [];
   // Each on the event's clock: the hour alone on today's date, the day beside it otherwise (a code opened the day before).
@@ -117,7 +120,16 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
           <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
             <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role}>
               {raffle &&
-                (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) }))}
+                (await raffleDeskLine({
+                  line: raffle,
+                  locale,
+                  back: { to: "code", code },
+                  registrationId: row.id,
+                  name: row.registeredName,
+                  number: raceNumber === null ? null : formatRaceNumber(raceNumber, row.raceNumberFormat),
+                  action: raffleDeskSignUpAction,
+                  exclusionAction: raffleDeskExclusionAction,
+                }))}
             </DeskRow>
           </Stack>
           {/* A second pickup, seen at the table (§996): who opened this code before, and when — nothing when nobody did. */}

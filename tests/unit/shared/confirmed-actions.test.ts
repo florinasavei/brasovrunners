@@ -176,6 +176,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   removeRaceDayItemAction: [],
   // «Șterge înscrierea» on a row of «Ziua cursei» → «Tombolă» (§984): a person's raffle sign-up taken off — asked first, naming the person.
   raffleDeleteEntryAction: [],
+  // «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle line (§NNN, `checkin/raffle-actions.ts`): every desk role,
+  // asked first naming the person and the number; handed to the line as `exclusionAction`.
+  raffleDeskExclusionAction: ["props.exclusionAction"],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.

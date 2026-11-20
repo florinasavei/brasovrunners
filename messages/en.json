@@ -2260,6 +2260,7 @@
         "to": "now “{to}”",
         "reason": "reason: {reason}",
         "bib": "no. {number}",
+        "atDesk": "at the desk",
         "empty": "empty"
       },
       "bibsElite": {
@@ -2902,6 +2903,7 @@
       "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
       "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner».",
       "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add.",
+      "RAFFLE_NOT_HELD": "The event no longer holds a raffle: “We hold a raffle” is not ticked. Nothing was written.",
       "RAFFLE_SIGN_UP_CLOSED": "Raffle sign-ups are closed now — or the rules or the privacy notice are not approved. Nothing was written.",
       "RAFFLE_NOT_ELIGIBLE": "The person cannot take part in the raffle: they must be confirmed, with a number, in a ticked group. Nothing was written.",
       "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written.",
@@ -7999,6 +8001,7 @@
         "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history and in “Log”, with your name on it.",
+        "The race holds a raffle? Under the row it says whether the person takes part. “Take out of the raffle” and “Put back in the raffle” ask first; “Log” shows who decided.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in.",
         "If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -8060,6 +8063,9 @@
         "eliteMarked": "Marked as elite: their bib prints the label where the number goes.",
         "eliteUnmarked": "No longer elite: their bib prints the number again.",
         "eliteLabelSaved": "The bib label was saved.",
+        "raffleTakenOut": "Taken out of the raffle: the number no longer goes into the draw.",
+        "rafflePutBack": "Put back in the raffle: the number goes into the draw again.",
+        "raffleUnchanged": "It was already so; nothing to change.",
         "raffleSignedUp": "Done: the person is signed up for the raffle.",
         "raffleAlready": "The person was signed up for the raffle already."
       },
@@ -9722,6 +9728,17 @@
               ]
             },
             {
+              "title": "Take somebody out of the raffle, or put them back",
+              "steps": [
+                "When the race holds a raffle, under every row it says «Raffle: taking part» or «Raffle: not taking part», and why.",
+                "Somebody is not taking part in the raffle — an elite who asked, for instance? On their row press «Take out of the raffle».",
+                "A question opens with the person's name and number. «Cancel» leaves everything as it was; «Yes, take out of the raffle» takes them out.",
+                "The row then says «Raffle: not taking part» — “taken out of the raffle”. The number no longer goes into the file for the draw.",
+                "Pressed by mistake, or the person changed their mind? On the same row press «Put back in the raffle», then «Yes, put back in the raffle».",
+                "The person gets no email. Every press stays in «Log» and in the registration's history, with your name."
+              ]
+            },
+            {
               "title": "At the finish line: «Timing»",
               "steps": [
                 "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
@@ -9735,7 +9752,7 @@
               "title": "The log: who scanned, who marked present",
               "steps": [
                 "The Organizer and the Administrators open it: «Race day» → «Log», then pick the race under «Event» and press «Show».",
-                "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid and how many volunteers it ticked.",
+                "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid, how many runners it took out of the raffle or put back and how many volunteers it ticked.",
                 "Below, newest first: the time, who, what they did and to whom. The name leads to the registration or to the volunteer's page.",
                 "“the participant” means the runner pressed «I have arrived — mark me as here» from their own link themselves; “deleted account”, an account removed from «Staff» since.",
                 "«Account» and «What was done» choose what you see; then «Show». The newest 300 lines show, and under them how many more there are.",
@@ -13176,7 +13193,7 @@
       },
       "journal": {
         "title": "Race-day log",
-        "intro": "Who scanned the codes, who marked runners present and who ticked volunteers, newest first.",
+        "intro": "Who scanned the codes, who marked runners present, who ticked volunteers and who took somebody out of the raffle or put them back, newest first.",
         "ownAccount": "For the log to name the person, everyone works the desk under their own account.",
         "account": "Account",
         "accounts": {
@@ -13190,6 +13207,8 @@
           "scanned": "Codes scanned",
           "checkedIn": "Marked present",
           "undone": "Check-ins undone",
+          "raffleOut": "Taken out of the raffle",
+          "raffleIn": "Put back in the raffle",
           "volunteerPresent": "Volunteers ticked present",
           "volunteerAbsent": "Volunteers unticked"
         },
@@ -13211,6 +13230,16 @@
             "few": "{count} check-ins undone",
             "other": "{count} check-ins undone"
           },
+          "raffleOut": {
+            "one": "{count} taken out of the raffle",
+            "few": "{count} taken out of the raffle",
+            "other": "{count} taken out of the raffle"
+          },
+          "raffleIn": {
+            "one": "{count} put back in the raffle",
+            "few": "{count} put back in the raffle",
+            "other": "{count} put back in the raffle"
+          },
           "volunteerTicks": {
             "one": "{count} volunteer tick",
             "few": "{count} volunteer ticks",
@@ -13222,6 +13251,8 @@
           "scanned": "scanned",
           "checkedIn": "marked present",
           "undone": "undid the check-in of",
+          "raffleOut": "took out of the raffle",
+          "raffleIn": "put back in the raffle",
           "volunteerPresent": "ticked present",
           "volunteerAbsent": "unticked present"
         },
@@ -13331,6 +13362,18 @@
       "putBack": "Put back",
       "takeOutFor": "Take out of the raffle: {name}",
       "putBackFor": "Put back in the raffle: {name}",
+      "desk": {
+        "takeOut": "Take out of the raffle",
+        "putBack": "Put back in the raffle",
+        "takenOut": "— taken out of the raffle",
+        "takeOutTitle": "Take {name} (no. {number}) out of the raffle?",
+        "takeOutBody": "Their number no longer goes into the draw. Who decided stays on record.",
+        "takeOutConfirm": "Yes, take out of the raffle",
+        "putBackTitle": "Put {name} (no. {number}) back in the raffle?",
+        "putBackBody": "Their number goes into the draw again. Who decided stays on record.",
+        "putBackConfirm": "Yes, put back in the raffle",
+        "cancel": "Cancel"
+      },
       "present": "Present",
       "presentFor": "Present: {name}",
       "delete": "Delete the sign-up",

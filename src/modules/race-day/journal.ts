@@ -31,14 +31,16 @@ import {
 
 /*
   «Ziua cursei» → «Jurnal» (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
-  marcat prezent»), the reads: one event's scans, check-ins and undos of its registrations and «Prezent» ticks of its volunteers,
-  newest first, with how many each staff account did. The organizers' alone (`canReadRaceDayJournal`), and so never imported by a
+  marcat prezent»), the reads: one event's scans, check-ins and undos of its registrations, the raffle marks taken off or put back
+  on them (§NNN: who decided that a runner does not take part — at the desk, asked first, or by the organizers' tick), and «Prezent»
+  ticks of its volunteers, newest first, with how many each staff account did. The organizers' alone (`canReadRaceDayJournal`), and so never imported by a
   page of the desk: the scanned page's «Scanat înainte» reads the same scan rows through the desk's own module
   (`registrations/code-scans.ts`), which reads nothing else.
 
   **Nothing new is stored but the scan** (`registration.code_scanned`, `admin-service.ts#recordCodeScan`): the desk's check-ins
   and undos were audited with their actor all along, and so was every «Prezent» on a volunteer (`volunteer.edited`, `fields:
-  ["present"]`). The participant's own «Am ajuns» writes no audit row: it is read from the registration itself — checked in, no
+  ["present"]`) and every raffle mark of a registration (`registration.raffle_excluded` / `raffle_included`, `raffle-mark.ts`,
+  their `door` the desk's or none — read here by the action alone, whichever door wrote it). The participant's own «Am ajuns» writes no audit row: it is read from the registration itself — checked in, no
   staff account, and no staff check-in row at that very moment (a staff check-in writes its row with the instant it sets,
   `checkInByStaff`), so an account deleted since is never mistaken for the person. A registration erased since is gone from the
   log with its row (the erase scrubs its audit rows of whom, `scrubRegistrationsFromAudit`), and so is a volunteer deleted since.

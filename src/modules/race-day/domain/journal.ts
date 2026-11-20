@@ -7,11 +7,13 @@ import { isUuid } from "@/shared/ids";
  * `journal.ts` reads, the page says it. The organizers' alone (`canReadRaceDayJournal`): the desk's «Scanat înainte» is its own
  * (`registrations/domain/code-scans.ts`).
  *
- * Five kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
+ * Seven kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
  * runner marked present at the desk or by their own «Am ajuns», a check-in taken back (`registration.checked_in`,
- * `registration.checkin_undone`), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
+ * `registration.checkin_undone`), a runner taken off the event's raffle or put back on it (`registration.raffle_excluded`,
+ * `registration.raffle_included` — at the desk, asked first, or by the organizers' tick; §NNN: who decided that X does not take
+ * part), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
  */
-export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "volunteerPresent", "volunteerAbsent"] as const;
+export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"] as const;
 export type JournalKind = (typeof JOURNAL_KINDS)[number];
 
 /** The runners' kinds, by the audit action each is read from. */
@@ -19,6 +21,9 @@ export const RUNNER_JOURNAL_ACTIONS = {
   scanned: "registration.code_scanned",
   checkedIn: "registration.checked_in",
   undone: "registration.checkin_undone",
+  // §NNN: «a scos de la tombolă» / «a pus înapoi la tombolă», whichever door wrote the mark.
+  raffleOut: "registration.raffle_excluded",
+  raffleIn: "registration.raffle_included",
 } as const;
 export type RunnerJournalKind = keyof typeof RUNNER_JOURNAL_ACTIONS;
 
@@ -68,7 +73,7 @@ export function journalWhoValue(who: JournalWho): string {
   return who.kind === "staff" ? who.id : who.kind === "participant" ? PARTICIPANT_ACCOUNT : REMOVED_ACCOUNT;
 }
 
-/** `?kind=` as the address carries it: one of the five, or null for every kind. */
+/** `?kind=` as the address carries it: one of the seven, or null for every kind. */
 export function journalKindOf(value: unknown): JournalKind | null {
   return (JOURNAL_KINDS as readonly unknown[]).includes(value) ? (value as JournalKind) : null;
 }
@@ -99,16 +104,17 @@ export function mergeJournalLines(reads: readonly { lines: readonly JournalLine[
   return { lines, more: Math.max(0, total - lines.length) };
 }
 
-export type JournalCounts = { scanned: number; checkedIn: number; undone: number; volunteerTicks: number };
+export type JournalCounts = { scanned: number; checkedIn: number; undone: number; raffleOut: number; raffleIn: number; volunteerTicks: number };
 export type JournalSummaryRow = { who: JournalWho; counts: JournalCounts };
 
 /** One grouped count of a read: who (a staff account's id and name, or none), what, and how many — a test registration's apart. */
 export type JournalTally = { actorId: string | null; actorName: string | null; kind: RunnerJournalKind | "volunteerTicks" | "selfCheckIn"; count: number; test: boolean };
 
-const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, volunteerTicks: 0 };
+const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, raffleOut: 0, raffleIn: 0, volunteerTicks: 0 };
 
 /**
- * One line per account that acted at the event (§996): how many scans, check-ins, undos and volunteer ticks — the staff accounts
+ * One line per account that acted at the event (§996): how many scans, check-ins, undos, runners taken off the raffle and put
+ * back (§NNN) and volunteer ticks — the staff accounts
  * by name, then the deleted accounts as one, then the participants' own «Am ajuns» (their check-ins alone). A test registration's
  * row is omitted from every count the club is given (§30, AGENTS.md §12.6), but its account is still one the filter offers
  * (`accounts`), so a rehearsal on test rows can be read by account too.

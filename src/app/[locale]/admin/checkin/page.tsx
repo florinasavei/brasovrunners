@@ -35,13 +35,14 @@ import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-li
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { type RaffleLine, readRaffleDeskLines } from "@/modules/volunteers/raffle-roster";
 import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import type { PanelGlyphName } from "@/shared/ui/panel-glyphs";
+import { raffleDeskExclusionAction } from "./raffle-actions";
 import { raffleDeskSignUpAction } from "./tombola/actions";
 
 type Props = {
@@ -128,13 +129,24 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const family = await familyOf(db, rows);
   // The raffle (§984): every row says whether its person takes part — a search by name or number, or a typed code, lands here and
   // not on the scanned person's view — and, in the open sign-up mode, offers the desk's «Înscrie la tombolă». One read for every row.
+  // Since §NNN every desk role also takes a runner off the raffle or puts them back from the line, asked first with their number.
   const raffleLines = rows.length > 0 ? await readRaffleDeskLines(db, rows, now) : new Map<string, RaffleLine>();
   const raffleOf = new Map(
     await Promise.all(
       rows.map(async (row) => {
         const line = raffleLines.get(row.id);
+        const number = raceNumberOf(row);
         const drawn = line
-          ? await raffleDeskLine({ line, locale, back: { to: "desk", eventId, q }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) })
+          ? await raffleDeskLine({
+              line,
+              locale,
+              back: { to: "desk", eventId, q },
+              registrationId: row.id,
+              name: row.registeredName,
+              number: number === null ? null : formatRaceNumber(number, row.raceNumberFormat),
+              action: raffleDeskSignUpAction,
+              exclusionAction: raffleDeskExclusionAction,
+            })
           : null;
         return [row.id, drawn] as const;
       }),
