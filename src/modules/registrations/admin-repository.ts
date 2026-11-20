@@ -85,8 +85,9 @@ export type RegistrationListRow = {
    */
   partnerName: string | null;
   /**
-   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — the row's chip
-   * «A reconfirmat» and the export's «Reconfirmat». Read by no public page (`reconfirmation-never-leaves.test.ts`).
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — the export's
+   * «Reconfirmat», beside its «Reconfirmare» (§1019; the answer, and the row's chip, are `listReconfirmAnswers`'). Read by no
+   * public page (`reconfirmation-never-leaves.test.ts`).
    */
   reconfirmedAt: Date | null;
   /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
@@ -276,7 +277,7 @@ export type RegistrationListFilters = {
   reconfirm?: ReconfirmFilter;
 };
 
-/** The three answers of «Reconfirmare», as the list's URL carries them. */
+/** The three answers of «Reconfirmare», as the list's URL carries them — and the export's «Reconfirmare» column (§1019). */
 export const RECONFIRM_FILTERS = ["yes", "cancelled", "none"] as const;
 export type ReconfirmFilter = (typeof RECONFIRM_FILTERS)[number];
 
@@ -293,19 +294,78 @@ const STANDING_STATUSES = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `
 const ANSWERING_STATUSES = sql.raw(RECONFIRM_STATUSES.map((status) => `'${status}'`).join(", "));
 
 /**
- * One `EXISTS` per answer (the decision «Cere reconfirmarea»), on the registration's own asks — so the list, its count
- * and its summary narrow alike, each in its one query.
+ * Three facts about a registration's asks, as SQL — everything «Reconfirmare»'s answer is read from: whether any send asked
+ * it, whether any ask was answered «Vin», and whether one was asked at or before the registration's cancellation.
+ */
+type ReconfirmAsks = { asked: SQL; answered: SQL; askedBeforeCancel: SQL };
+
+/**
+ * «Reconfirmare»'s three answers (the decision «Cere reconfirmarea», amended by §1019) — the ONE definition the list's filter,
+ * its chip «A reconfirmat» and the export's «Reconfirmare» read, over the registration's own row and the facts of its asks:
+ *
+ * - «yes», «A reconfirmat»: still registered (`ACTIVE_REGISTRATION_STATUSES`) and «Vin» pressed on any ask;
+ * - «cancelled», «A anulat după cerere»: cancelled — by the person or an Administrator — at or after an ask;
+ * - «none», «N-a răspuns»: in a state that can answer (`RECONFIRM_STATUSES`), asked, and «Vin» on no ask.
+ *
+ * The three never overlap. A registration in none of them — never asked, expired, a waiting-list offer that did not answer —
+ * has no answer: no filter keeps it, and its cell is empty.
+ */
+function reconfirmAnswerIs(answer: ReconfirmFilter, asks: ReconfirmAsks): SQL {
+  if (answer === "cancelled") return sql`(${registrations.status} = 'CANCELLED' and ${asks.askedBeforeCancel})`;
+  if (answer === "yes") return sql`(${registrations.status} in (${STANDING_STATUSES}) and ${asks.answered})`;
+  return sql`(${registrations.status} in (${ANSWERING_STATUSES}) and ${asks.asked} and not ${asks.answered})`;
+}
+
+/** An `EXISTS` on the row's own asks. */
+const anAsk = (extra: SQL) =>
+  sql`exists (select 1 from ${registrationReconfirmations} where ${registrationReconfirmations.registrationId} = ${registrations.id} and ${extra})`;
+
+/** The facts of the row's own asks, one `EXISTS` each — what the filter reads, so the list, its count and its summary narrow alike. */
+const ASKS_OF_THE_ROW: ReconfirmAsks = {
+  asked: anAsk(sql`true`),
+  answered: anAsk(sql`${registrationReconfirmations.reconfirmedAt} is not null`),
+  askedBeforeCancel: anAsk(sql`${registrationReconfirmations.askedAt} <= ${registrations.cancelledAt}`),
+};
+
+/**
+ * The list's filter (the decision «Cere reconfirmarea»): the answer's definition on the registration's own asks, `EXISTS`
+ * by `EXISTS` — so the list, its count and its summary narrow alike, each in its one query.
  */
 function reconfirmCondition(filter: ReconfirmFilter): SQL {
-  const asked = (extra: SQL) =>
-    sql`exists (select 1 from ${registrationReconfirmations} where ${registrationReconfirmations.registrationId} = ${registrations.id} and ${extra})`;
-  if (filter === "cancelled") {
-    return sql`(${registrations.status} = 'CANCELLED' and ${asked(sql`${registrationReconfirmations.askedAt} <= ${registrations.cancelledAt}`)})`;
-  }
-  const standing = sql`${registrations.status} in (${STANDING_STATUSES})`;
-  if (filter === "yes") return sql`(${standing} and ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
-  const answering = sql`${registrations.status} in (${ANSWERING_STATUSES})`;
-  return sql`(${answering} and ${asked(sql`true`)} and not ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+  return reconfirmAnswerIs(filter, ASKS_OF_THE_ROW);
+}
+
+/**
+ * «Reconfirmare» of each of these registrations (§1019): one grouped read of their asks — never one per row — through
+ * `reconfirmAnswerIs`, the filter's own definition, so a row says exactly the answer whose filter keeps it. The list reads it
+ * for its page's rows (the chip «A reconfirmat» is «yes») and the export for every exported row. Only a registration with an
+ * answer is in the map: one never asked, or asked and in none of the three, is absent, and its cell is empty.
+ */
+export async function listReconfirmAnswers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, ReconfirmFilter>> {
+  if (registrationIds.length === 0) return new Map();
+  // The same three facts over the group of one registration's asks: every group was asked; `coalesce` for a row never cancelled.
+  const inTheGroup: ReconfirmAsks = {
+    asked: sql`true`,
+    answered: sql`bool_or(${registrationReconfirmations.reconfirmedAt} is not null)`,
+    askedBeforeCancel: sql`coalesce(bool_or(${registrationReconfirmations.askedAt} <= ${registrations.cancelledAt}), false)`,
+  };
+  const answer = sql<string | null>`(case ${sql.join(
+    RECONFIRM_FILTERS.map((each) => sql`when ${reconfirmAnswerIs(each, inTheGroup)} then ${each}::text`),
+    sql` `,
+  )} end)`;
+  const rows = await db
+    .select({ registrationId: registrations.id, answer })
+    .from(registrationReconfirmations)
+    .innerJoin(registrations, eq(registrations.id, registrationReconfirmations.registrationId))
+    .where(inArray(registrationReconfirmations.registrationId, [...registrationIds]))
+    // By the registration's key, so its state and its cancellation stand beside the aggregates of its asks.
+    .groupBy(registrations.id);
+  const answers = new Map<string, ReconfirmFilter>();
+  for (const row of rows) if (isReconfirmFilter(row.answer)) answers.set(row.registrationId, row.answer);
+  return answers;
 }
 
 /** When the person last said «Vin», or null: one correlated `max()` on the asks' index, as `latestDeclarationAcceptedAt`. */

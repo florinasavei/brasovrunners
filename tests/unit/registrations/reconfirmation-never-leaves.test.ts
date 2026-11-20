@@ -30,8 +30,11 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-/** The answer's own names: its table and columns, the bare property everywhere it travels, its module. */
-const NAMES_THE_ANSWER = /registration_reconfirmations|registrationReconfirmations|\breconfirmedAt\b|reconfirmed_at|[/.]reconfirmation["']/;
+/**
+ * The answer's own names: its table and columns, the bare property everywhere it travels, its module — and since §1019 the
+ * answer in words (`reconfirmAnswer` on an exported row, `reconfirmAnswers` and their reader `listReconfirmAnswers`).
+ */
+const NAMES_THE_ANSWER = /registration_reconfirmations|registrationReconfirmations|\breconfirmedAt\b|reconfirmed_at|[/.]reconfirmation["']|\breconfirmAnswers?\b|\blistReconfirmAnswers\b/;
 
 /** The files that read or write it, each a reviewed edit. */
 const READERS = new Set([
@@ -47,7 +50,7 @@ const READERS = new Set([
   "src/modules/registrations/admin-repository.ts",
   "src/app/[locale]/admin/registrations/(list)/page.tsx",
   "src/app/[locale]/admin/registrations/[id]/page.tsx",
-  // The registrations' Excel and CSV: the route and the two writers, «Reconfirmat» after «Partener».
+  // The registrations' Excel and CSV: the route and the two writers, «Reconfirmare» and «Reconfirmat» right after «Status» (§1019).
   "src/app/api/admin/registrations/export/route.ts",
   "src/modules/registrations/csv.ts",
   "src/modules/registrations/workbook.ts",
@@ -147,6 +150,21 @@ describe("«Cere reconfirmarea»'s answer reaches only the backoffice and the pe
     const route = readFileSync(path.join(ROOT, "src/app/api/admin/registrations/export/route.ts"), "utf8");
     expect(route.match(/reconfirmedAt: row\.reconfirmedAt/g)).toHaveLength(2);
     expect(route).toMatch(/reconfirmedHeader = \(await getTranslations\(\{ locale, namespace: "Admin" \}\)\)\("reconfirm\.column"\)/);
+    // «Reconfirmare» (§1019): read once for the exported rows, before the notes' rule, and written in both formats.
+    expect(route.match(/listReconfirmAnswers\(db, rows\.map\(\(row\) => row\.id\)\)/g)).toHaveLength(1);
+    expect(route.indexOf("listReconfirmAnswers(db,")).toBeLessThan(route.indexOf("if (withNotes)"));
+    expect(route.match(/reconfirmAnswer: reconfirmAnswers\.get\(row\.id\) \?\? null/g)).toHaveLength(2);
+    expect(route.match(/reconfirmWords/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("is read by the list's chip and the export through one reader, by the filter's own definition", () => {
+    const reader = readFileSync(path.join(ROOT, "src/modules/registrations/admin-repository.ts"), "utf8");
+    // The filter and the grouped reader both go through `reconfirmAnswerIs`: one definition, two sets of facts.
+    expect(functionText("src/modules/registrations/admin-repository.ts", "reconfirmCondition")).toMatch(/reconfirmAnswerIs\(filter, ASKS_OF_THE_ROW\)/);
+    expect(functionText("src/modules/registrations/admin-repository.ts", "listReconfirmAnswers")).toMatch(/reconfirmAnswerIs\(each, inTheGroup\)/);
+    expect(reader.match(/function reconfirmAnswerIs\b/g)).toHaveLength(1);
+    const list = readFileSync(path.join(ROOT, "src/app/[locale]/admin/registrations/(list)/page.tsx"), "utf8");
+    expect(list).toMatch(/reconfirmAnswers\.get\(row\.id\) === "yes" && <StatusChip glyph="reconfirmed"/);
   });
 
   it("reaches the email only as the row's flag and the link, never the answer", () => {

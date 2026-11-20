@@ -1,6 +1,7 @@
 import { gunzipSync, inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { REGISTRATION_SHEET_HEADERS, buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import { rawCells, readSheet } from "../../helpers/xlsx";
 
 /**
  * §172 — the start list as a real spreadsheet.
@@ -251,5 +252,43 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     const styles = parts.get("xl/styles.xml") ?? "";
     expect(styles).toContain("dd.mm.yyyy hh:mm");
     expect(styles).not.toMatch(/AM\/PM|A\/P/i);
+  });
+
+  /**
+   * §1019 — «Reconfirmare» and «Reconfirmat» right after «Status»: the list filter's answer in the words the caller hands
+   * over, as text — empty for a registration no send asked — then the moment the person said «Vin», a stamp on the club's
+   * clock like «Submitted» (§439).
+   */
+  it("puts the reconfirmation's answer and its moment right after «Status», the answer as text, the moment as a stamp", async () => {
+    const status = REGISTRATION_SHEET_HEADERS.indexOf("Status");
+    expect(REGISTRATION_SHEET_HEADERS.slice(status, status + 3)).toEqual(["Status", "Reconfirmation", "Reconfirmed"]);
+    const serialOf = (utcWall: number) => utcWall / (24 * 60 * 60 * 1000) + (70 * 365 + 19);
+    const said = new Date("2026-11-19T17:30:00.000Z");
+    const buffer = await buildRegistrationsWorkbook(
+      [
+        row({ reconfirmAnswer: "yes", reconfirmedAt: said, submittedAt: said }),
+        row({ id: "22222222-2222-4222-8222-222222222222", status: "CANCELLED", reconfirmAnswer: "cancelled", reconfirmedAt: said }),
+        row({ id: "33333333-3333-4333-8333-333333333333", reconfirmAnswer: "none" }),
+        row({ id: "44444444-4444-4444-8444-444444444444", reconfirmAnswer: null }),
+      ],
+      "Test",
+      { reconfirmAnswerHeader: "Reconfirmare", reconfirmedHeader: "Reconfirmat", reconfirmWords: { yes: "A reconfirmat", cancelled: "A anulat după cerere", none: "N-a răspuns" } },
+    );
+    const { rows } = readSheet(buffer);
+    expect(rows[0].slice(status, status + 3)).toEqual(["Status", "Reconfirmare", "Reconfirmat"]);
+    expect(rows.slice(1).map((line) => line[status + 1] ?? "")).toEqual(["A reconfirmat", "A anulat după cerere", "N-a răspuns", ""]);
+    const cells = rawCells(buffer);
+    const moment = (sheetRow: number) => cells.get(`${columnLetter(status + 2)}${sheetRow}`);
+    const submitted = cells.get(`${columnLetter(REGISTRATION_SHEET_HEADERS.indexOf("Submitted"))}2`);
+    // Winter time, +2: 17:30Z is 19:30 in Brașov — a number in the sheet's stamp format, the very cell «Submitted» writes.
+    expect(moment(2)?.type).toBeUndefined();
+    expect(moment(2)?.value).toBe(String(serialOf(Date.UTC(2026, 10, 19, 19, 30))));
+    expect([moment(2)?.value, moment(2)?.style]).toEqual([submitted?.value, submitted?.style]);
+    expect(moment(3)?.value).toBe(moment(2)?.value);
+    // Nobody pressed «Vin» on the last two: no moment is written.
+    expect(moment(4)?.value).toBeUndefined();
+    expect(moment(5)?.value).toBeUndefined();
+    // The answer is text: a word that began with `=` would never be a formula.
+    expect(unzip(buffer).get("xl/worksheets/sheet1.xml") ?? "").not.toContain("<f>");
   });
 });
