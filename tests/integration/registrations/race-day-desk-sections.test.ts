@@ -250,7 +250,7 @@ async function register(name: string, status: RegistrationStatus, over: Partial<
 /** `count` names that sort in their own order: «Zeno Ridică 001» … «Zeno Ridică 100». */
 const numbered = (name: string, count: number) => Array.from({ length: count }, (_, index) => `${name} ${String(index + 1).padStart(3, "0")}`);
 
-/** One of each state, named so the list's order (by name) interleaves them. */
+/** One of each state, named so a list by name would interleave them; the confirmed ones numbered 1, 2, 3 in that order. */
 async function saturday() {
   return {
     ana: await register("Ana Pop", "CONFIRMED", { bibNumber: 1 }),
@@ -325,7 +325,7 @@ function expectBackOnTheRow(to: URL, id: string, saved: string, q?: string) {
 }
 
 describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () => {
-  it("draws the sections in the table's working order, «<words> (N)», open or closed as decided, each section's rows by name", async () => {
+  it("draws the sections in the table's working order, «<words> (N)», open or closed as decided, each section's rows by race number, the rows without one by name", async () => {
     await saturday();
     expect(sectionsOf(await desk())).toEqual([
       { key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop"] },
@@ -380,12 +380,38 @@ describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () =
     await saturday();
     await register("Ana Test", "CONFIRMED", { bibNumber: 20, kind: "TEST" });
     const tree = await desk();
-    expect(sectionsOf(tree)[0]).toEqual({ key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Ana Test", "Bogdan Pop"] });
+    // By race number (§NNN): Ana 1, Bogdan 2, the test row 20.
+    expect(sectionsOf(tree)[0]).toEqual({ key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop", "Ana Test"] });
     // The counters stand above the list as they were: the event's real rows, whatever the list folds.
     const counts = await countDesk(db, eventId);
     expect(counts).toEqual({ confirmed: 3, checkedIn: 1, withoutBib: 0, pending: 5 });
     const labels = elements(tree).map((element) => element.props.label).filter((label): label is string => typeof label === "string");
     expect(labels).toEqual(expect.arrayContaining(["Confirmați: 3", "Prezenți: 1", "Neconfirmați: 5"]));
+  });
+
+  it("lists the elites first, then the partners' runners with their partner's name, then everybody else — each by race number, the rows without one by name (§NNN)", async () => {
+    // Numbers that a list by number alone would put in another order: the elite wears 50, the partner's runners 30 and 7.
+    await register("Zoe Elita", "CONFIRMED", { bibNumber: 50, elite: true });
+    await register("Radu Partener", "CONFIRMED", { bibNumber: 30, partnerName: "Onlypus" });
+    await register("Ilie Partener", "CONFIRMED", { bibNumber: 7, partnerName: "Regalina" });
+    await register("Ana Obisnuit", "CONFIRMED", { bibNumber: 3 });
+    await register("Bogdan Obisnuit", "CONFIRMED", { bibNumber: 12 });
+    const tree = await desk();
+    expect(sectionsOf(tree)[0]).toEqual({
+      key: "toPickUp",
+      title: "De ridicat numărul (5)",
+      open: true,
+      rows: ["Zoe Elita", "Ilie Partener", "Radu Partener", "Ana Obisnuit", "Bogdan Obisnuit"],
+    });
+    // The partner's name on the row, as the registrations list says it; nobody else's row has a partner chip.
+    const rows = deskRows(tree);
+    const chipOf = (name: string) => {
+      const row = rows.find((element) => (element.props.row as { registeredName: string }).registeredName === name);
+      return (row?.props.row as { partnerName: string | null }).partnerName;
+    };
+    expect(chipOf("Radu Partener")).toBe("Onlypus");
+    expect(chipOf("Ilie Partener")).toBe("Regalina");
+    expect(chipOf("Ana Obisnuit")).toBeNull();
   });
 
   it("draws every row of a race bigger than a screenful, none cut by name: «De ridicat numărul (N)» and «Prezenți (N)» add up to «Confirmați»", async () => {
@@ -439,7 +465,7 @@ describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () =
 });
 
 describe("§1002 BR-REQ-037-08 criterion 4 a search opens the sections it found somebody in; a code draws its runner alone", () => {
-  it("a name fragment: only the sections holding a match, each open, the rows by name", async () => {
+  it("a name fragment: only the sections holding a match, each open, the rows in the desk's order", async () => {
     await saturday();
     expect(sectionsOf(await desk({ q: "pop" }))).toEqual([
       { key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop"] },

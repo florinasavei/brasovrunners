@@ -249,6 +249,10 @@ export default async function DeskRow({
                 </Typography>
               </>
             )}
+            {/* «De la parteneri» (§NNN): the partner or sponsor the person came through, as the registrations list says it. */}
+            {row.partnerName && (
+              <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="desk-partner-chip" wrap />
+            )}
             {/* A minor: the kit goes to the parent named here (§108). */}
             {row.guardianName && (
               <StatusChip glyph="family" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
