@@ -1,5 +1,5 @@
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, durationShort, formatDay, formatTime, ZONE_WORDS } from "@/i18n/dates";
+import { capitalizeFirst, CLUB_TIME_ZONE, durationShort, formatDay, formatTime, ZONE_WORDS } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages, isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { fillIn } from "@/shared/forms/fill-in";
@@ -13,6 +13,7 @@ import { readRouteMaps } from "@/modules/events/domain/route-maps";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { keptOf } from "@/modules/registrations/domain/kept-places";
+import { RAFFLE_KINDS, type RaffleKind, type RaffleSettingsRow, raffleSettingsOf } from "@/modules/volunteers/domain/raffle";
 import { eventDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
@@ -89,6 +90,11 @@ export type SummaryWords = {
   /** «Lista de invitați speciali»'s closed line (§647), a fold of the public list's card: "Folosită" / "Nefolosită". */
   hiddenList: { on: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
+  /**
+   * «Tombolă»'s closed line (§NNN), a fold of the race numbers' card: `off` («nu avem») while «Avem tombolă» is unticked; else the
+   * groups ticked, by their short names, or `nobody`, then how — «Alergători, elite, voluntari · din oficiu».
+   */
+  raffle: { off: string; groups: Record<RaffleKind, string>; nobody: string; automatic: string; signUp: string };
   bibDesign: { parts: string; footer: string };
   /** The public list's closed line; `shownWithWaitlist` once «Lista de așteptare e publică» is on too (§628). */
   startList: { hidden: string; shown: string; shownWithWaitlist: string };
@@ -531,6 +537,18 @@ export function bibsSummary(
       ? `${fillIn(words.bibs.allocated, { count: counts.allocated })}${counts.unprinted > 0 ? `, ${fillIn(words.bibs.toPrint, { count: counts.unprinted })}` : ""}`
       : null,
   ]);
+}
+
+/**
+ * «Tombolă»'s closed line (§NNN), a fold of the race numbers' card: «nu avem» while «Avem tombolă» is unticked, else who may take part
+ * — the groups ticked in «Cine poate participa», in the editor's order, or «nicio grupă bifată» — and how: «Alergători, elite, voluntari
+ * · din oficiu», «Alergători · cu înscriere separată». From the saved event; the create form's defaults (no raffle) on create.
+ */
+export function raffleSummary(words: SummaryWords, event: RaffleSettingsRow | null, locale: string): string {
+  if (!event?.hasRaffle) return words.raffle.off;
+  const settings = raffleSettingsOf(event);
+  const groups = RAFFLE_KINDS.filter((kind) => settings.groups[kind]).map((kind) => words.raffle.groups[kind]);
+  return join(words, [capitalizeFirst(groups.length > 0 ? groups.join(", ") : words.raffle.nobody, locale), settings.signUp ? words.raffle.signUp : words.raffle.automatic]);
 }
 
 /**

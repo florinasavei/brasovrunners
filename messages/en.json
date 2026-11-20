@@ -3932,6 +3932,17 @@
             "toPrint": "to print: {count}",
             "spares": "spares {from}–{to}"
           },
+          "raffle": {
+            "off": "none",
+            "groups": {
+              "RUNNER": "runners",
+              "ELITE": "elites",
+              "VOLUNTEER": "volunteers"
+            },
+            "nobody": "no group ticked",
+            "automatic": "automatically",
+            "signUp": "with a separate sign-up"
+          },
           "bibDesign": {
             "parts": "{parts}",
             "footer": "footer: {parts}"
@@ -4151,6 +4162,7 @@
         }
       },
       "raffle": {
+        "title": "Raffle",
         "who": "Who may take part in the raffle",
         "runners": "The runners",
         "elites": "The elites",
@@ -10011,6 +10023,14 @@
               ]
             },
             {
+              "title": "The raffle on race day",
+              "steps": [
+                "«Race day» → «Raffle»: every runner, elite and volunteer of the event, each with «Taking part» and, when not, why. Who takes part and how is the Administrator's choice, in the event's editor.",
+                "Volunteers take part only with a number. If under «Volunteers: …» a line says how many confirmed volunteers have no number, press «Go to the volunteers' numbers», type under «Volunteers' numbers start at» a number above the runners' and press «Save the numbers»: every confirmed volunteer gets a number at once.",
+                "Back on «Raffle», the line is gone and the confirmed volunteers take part."
+              ]
+            },
+            {
               "title": "A change to the event",
               "steps": [
                 "«Events» → «Open»: see the event with all its cards, without «Save».",
@@ -10335,6 +10355,18 @@
                 "Somebody registered, even with their bib printed, gets a blank bib? «Registrations» → their registration → «Give a blank bib» → in «Blank bib» choose the number on the paper → «Give the bib». The old number is retired, and the bib printed with it is no longer good.",
                 "An invitation can carry a blank bib: under «Send new invitations» tick «Gets a blank bib when confirmed»; when confirmed, the person gets the lowest blank bib free then.",
                 "Who has each blank bib given shows under «Spare bibs for on-the-spot entries»: the number, then the name, with a link to the registration."
+              ]
+            },
+            {
+              "title": "The raffle: who takes part and how",
+              "steps": [
+                "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Raffle». Closed, its bar says who takes part and how, for example “Runners, elites, volunteers · automatically”.",
+                "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
+                "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
+                "Volunteers take part only with a number. In the event's «Volunteers» card, under «Volunteers' numbers start at» type a number above the runners' and press «Save the numbers»: every confirmed volunteer gets a number at once, and those confirmed later, when confirmed.",
+                "Until then, under «The volunteers» a line says how many confirmed volunteers have no number, and so are not in the raffle; «Go to the volunteers' numbers» takes you to their box.",
+                "Press «Save». After the save «Raffle» stays open, with what you saved.",
+                "On race day, «Race day» → «Raffle» shows everybody and whether they take part; the same line about the volunteers without a number stands under «Volunteers: …»."
               ]
             },
             {
@@ -13369,7 +13401,7 @@
       },
       "introDesk": "Every runner, elite and volunteer of the event: who takes part in the raffle and who is present. With a separate sign-up, sign a runner up here once they have accepted the rules.",
       "noEvent": "No event to show.",
-      "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
+      "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers” → “Raffle”.",
       "event": "Event",
       "show": "Show",
       "settings": {
@@ -13406,6 +13438,12 @@
         "VOLUNTEER": "Volunteers: {count}",
         "present": "Present among them: {count}"
       },
+      "volunteersWithoutNumber": {
+        "one": "{count} confirmed volunteer has no number, so is not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.",
+        "few": "{count} confirmed volunteers have no number, so are not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once.",
+        "other": "{count} confirmed volunteers have no number, so are not in the raffle. Set “Volunteers' numbers start at” in the “Volunteers” card: each one confirmed gets a number at once."
+      },
+      "volunteersWithoutNumberLink": "Go to the volunteers' numbers",
       "filters": {
         "label": "Filter",
         "all": "Everybody: {count}",

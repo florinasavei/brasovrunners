@@ -77,6 +77,7 @@ import { routeMapsToStore } from "@/modules/events/domain/route-maps";
 import { env } from "@/shared/config/env";
 import { releaseRouteGpx, routeGpxKeyOf } from "./route-gpx";
 import { DEFAULT_WEATHER_MODE, readWeatherMode, type WeatherMode } from "@/modules/weather/domain/mode";
+import { raffleSettingsMoved } from "@/modules/volunteers/domain/raffle";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -2907,7 +2908,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean; holdsMoved: WindowHoldsMoved; notice?: EventNoticeOutcome }> {
+): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean; holdsMoved: WindowHoldsMoved; raffleChanged: boolean; notice?: EventNoticeOutcome }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -3174,7 +3175,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       ? await announceSave(tx, { actor: input.actor, request, saved: savedEvent, dates: [thisDate, ...otherDates], now })
       : undefined;
     const holdsMoved = combineHoldMoves(holdMoves);
-    return notice ? { appliedTo, offered, placeAnnounced, holdsMoved, notice } : { appliedTo, offered, placeAnnounced, holdsMoved };
+    // Whether this date's raffle settings moved (§NNN): the editor opens its «Tombolă» fold right after such a save. One edition's own (§984).
+    const raffleChanged = raffleSettingsMoved(current, savedEvent);
+    return notice ? { appliedTo, offered, placeAnnounced, holdsMoved, raffleChanged, notice } : { appliedTo, offered, placeAnnounced, holdsMoved, raffleChanged };
   });
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §333).

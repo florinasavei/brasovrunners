@@ -353,12 +353,13 @@ export default async function RafflePage({ params, searchParams }: Props) {
                 {closedWhy}
               </Typography>
             )}
-            {/* The settings are the editor's, whose save is the Administrator's (§542): the way there for who may press it. */}
+            {/* The settings are the editor's, whose save is the Administrator's (§542): the way there for who may press it — to the
+                «Tombolă» fold itself (§NNN), which opens with every card around it on arrival (`OpenFoldFromHash`). */}
             {canEditEventFields(actor) && (
               <Box sx={NOT_ON_PAPER}>
                 <GlyphButton
                   icon="edit"
-                  href={`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-bibs`}
+                  href={`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-raffle`}
                   variant="text"
                   size="small"
                   sx={TAP_TARGET}
