@@ -298,16 +298,26 @@ export const eventVolunteers = pgTable(
      */
     present: boolean("present").notNull().default(false),
     /**
-     * The volunteer's number (migration `0203`, §948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de
-     * concurs"»): drawn from the event's volunteers' series (`events.volunteer_bib_start`) the moment the organizers
-     * confirm the person, under the event row's lock, and never drawn twice — a cancelled volunteer keeps theirs, as a
-     * cancelled runner does (§173). A runner turned into a volunteer («Transformă în voluntar») draws one here like
-     * anybody confirmed: the number they ran under stays retired with the cancelled registration, never carried over.
-     * One number is one person at the event: every runner's draw reads these as worn
-     * (`registrations/bibs.ts#wornNumbers`), and this table's own index refuses the same number on two volunteers.
-     * Null until confirmed, and on an event that gives its volunteers no number.
+     * The volunteer's number of the old series (migration `0203`, §948) — **kept, read by nothing new** since §NNN: the
+     * volunteers are numbered V001, V002, … in `volunteer_number` below, and this column only holds what the series
+     * «Numerele voluntarilor încep de la» (`events.volunteer_bib_start`, gone from the «Voluntari» card) drew before, untouched.
+     * Nothing draws into it any more. The runners' draw still reads it as worn (`registrations/bibs.ts#wornNumbers`), and a
+     * deleted row's is still written in its trail row (`deletedVolunteerNumbers`): harmless, so no runner is handed a number a
+     * volunteer once wore. Expand only: dropped by a later contract release once no serving code reads it.
      */
     bibNumber: integer("bib_number"),
+    /**
+     * «V001» (migration `0223`, §NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti
+     * voluntarii automat!»): the volunteer's number in the event's own volunteers' series — 1, 2, 3, … written «V001», «V002»,
+     * «V003» everywhere a volunteer's number shows (`domain/volunteer-number.ts#formatVolunteerNumber`). Drawn by itself the
+     * moment the organizers confirm the person, under the event row's lock: the next one the event never gave
+     * (`volunteer-numbers.ts#drawVolunteerNumber`) — so in order of confirmation, and never reissued: a cancelled volunteer keeps
+     * theirs, a deleted one's stays retired through the trail, as a runner's does (§173). A namespace of its own: no race number
+     * is compared with it, so V001 and race number 1 are two different people and neither blocks the other. Null until
+     * confirmed; the migration that added it numbered every volunteer already confirmed, and the maintenance job numbers one the
+     * code serving during that migration confirmed (`numberWaitingVolunteers`). The index below refuses one number twice per event.
+     */
+    volunteerNumber: integer("volunteer_number"),
     /**
      * «Planul voluntarilor» (migration `0204`, §949; the owner, 2026-11-16: «e foarte important sa avem planul de voluntari
      * si fiecare in ce punct ramane»): the point of the event's route this person stands at on the day — one of the event's
@@ -412,6 +422,11 @@ export const eventVolunteers = pgTable(
       .on(t.eventId, t.bibNumber)
       .where(sql`${t.bibNumber} IS NOT NULL`),
     check("event_volunteers_bib_number_positive", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} > 0`),
+    // One V number once among an event's volunteers (§NNN): the draw, under the event lock, gives the next one; this refuses a second.
+    uniqueIndex("event_volunteers_event_volunteer_number_unique")
+      .on(t.eventId, t.volunteerNumber)
+      .where(sql`${t.volunteerNumber} IS NOT NULL`),
+    check("event_volunteers_volunteer_number_positive", sql`${t.volunteerNumber} IS NULL OR ${t.volunteerNumber} > 0`),
     // An address is the one typed, its identity and the canonicalizer's version together, or none of the three (§865).
     check(
       "event_volunteers_address_whole",

@@ -27,7 +27,7 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/modules/public-cache/cache")>()), revalidatePublicContent: revalidate }));
 
 const { addEliteEntry, giveEliteLineNumber, giveEliteNumbers, listEliteEntries, setEliteEntryNumber } = await import("@/modules/registrations/elite-list");
-const { assignBibNumbers, bibNumberInUse, freeSpareBibNumbers, pickEliteLineNumber, pickVolunteerNumber, reserveSpareBibs, spareCardState, suggestFreeBibNumbers } = await import(
+const { assignBibNumbers, bibNumberInUse, freeSpareBibNumbers, pickEliteLineNumber, reserveSpareBibs, spareCardState, suggestFreeBibNumbers } = await import(
   "@/modules/registrations/bibs"
 );
 const { recordFinish } = await import("@/modules/results/results");
@@ -216,11 +216,11 @@ describe("§990 every later draw steps over a line's number", () => {
     expect((await addEliteEntry(db, admin, eventId, { name: "Ana Lungu", bibNumber: "" }, later(4))).bibNumber).toBe(9);
   });
 
-  it("a volunteer's draw, the desk's box and its suggestions treat a line's number as worn", async () => {
+  // A volunteer's draw is no longer here: since §NNN volunteers are numbered V001, V002, … in a series of their own, which reads no race number.
+  it("the desk's box and its suggestions treat a line's number as worn", async () => {
     const eventId = await race({ bibStartNumber: 1 });
     expect((await addEliteEntry(db, admin, eventId, { name: "Ingrid Pop", bibNumber: "" }, NOW)).bibNumber).toBe(1);
     await addEliteEntry(db, admin, eventId, { name: "Paul Stan", bibNumber: "500" }, NOW);
-    expect(await pickVolunteerNumber(db, eventId, 500)).toBe(501);
     expect(await bibNumberInUse(db, { eventId, number: 1 })).toBe(true);
     expect(await suggestFreeBibNumbers(db, eventId, 1, 3)).toEqual([2, 3, 4]);
   });

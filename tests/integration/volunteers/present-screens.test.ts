@@ -138,7 +138,7 @@ beforeAll(async () => {
 });
 afterAll(async () => close());
 
-async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; present?: boolean; bibNumber?: number; hasKit?: boolean }): Promise<string> {
+async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; present?: boolean; volunteerNumber?: number; hasKit?: boolean }): Promise<string> {
   const email = `${over.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
@@ -154,7 +154,7 @@ async function volunteer(over: { eventId: string; name: string; state?: "REGISTE
       roleId: over.given?.[0] ?? null,
       present: over.present ?? false,
       hasKit: over.hasKit ?? false,
-      bibNumber: over.bibNumber ?? null,
+      volunteerNumber: over.volunteerNumber ?? null,
       createdAt: NOW,
       updatedAt: NOW,
     })
@@ -194,7 +194,7 @@ beforeEach(async () => {
   const [guide] = await db.insert(eventVolunteerRoles).values({ eventId: raceId, nameRo: "Direcționare", nameEn: "Guidance", needed: 4, position: 0 }).returning({ id: eventVolunteerRoles.id });
   guideId = guide.id;
   // Ana came; Dan (offered) and Ion (confirmed, with a kit) did not; Eva was ticked and cancelled since — neither present nor missing.
-  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], present: true, bibNumber: 501 });
+  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], present: true, volunteerNumber: 1 });
   people.dan = await volunteer({ eventId: raceId, name: "Dan Ene", state: "REGISTERED" });
   people.eva = await volunteer({ eventId: raceId, name: "Eva Stan", state: "CANCELLED", present: true });
   people.ion = await volunteer({ eventId: raceId, name: "Ion Lupu", given: [guideId], hasKit: true });
@@ -250,6 +250,20 @@ async function press(fields: Record<string, string>): Promise<{ to: string; toas
   return { to: state.redirected[0], toast: decodeFlash(state.cookies.find(([name]) => name === FLASH_COOKIE)?.[1]) };
 }
 const presentOf = async (id: string) => (await db.select({ present: eventVolunteers.present }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].present;
+
+describe("§NNN the V number on the «Voluntari» list", () => {
+  it("is a chip «Nr. V001» beside the name of a person who has one, in both languages, and none for a person who has not", async () => {
+    state.actor = staff.MODERATOR;
+    // Ana holds V001; Dan (offered) and Ion (confirmed before any number was drawn) hold none — so every chip drawn is hers (the
+    // table draws a row twice, the wide table and the phone's card).
+    const page = await listPage({ eventId: raceId });
+    const chips = page.match(/data-testid="volunteer-list-number"/g) ?? [];
+    expect(chips.length).toBeGreaterThan(0);
+    expect(page.match(/>Nr\. V001</g)?.length).toBe(chips.length);
+    expect(page).not.toMatch(/Nr\. V00[2-9]/);
+    expect(await listPage({ eventId: raceId }, "en")).toContain(">No. V001<");
+  });
+});
 
 describe("§983 «Prezent» on the «Voluntari» list — the column", () => {
   it("stands right before «Are kit», under the catalogue's heading with its «?», on every row whatever the scope — for the Organizer and an Administrator — and neither sorts nor leaves at a width", async () => {
@@ -414,6 +428,21 @@ describe("§983 the raffle's two files on the «Voluntari» list's toolbar", () 
     }
     const english = await listTree({ eventId: raceId }, "en");
     expect(byTestId(english, "volunteers-raffle-present")[0].props).toMatchObject({ href: `/api/admin/events/${raceId}/raffle?present=1&lang=en`, children: "Raffle list — present only (CSV)" });
+  });
+
+  it("§NNN has «Descarcă pentru random.org» and its present-only twin beside them, with their «?»", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
+    state.actor = staff.MODERATOR;
+    const tree = await listTree({ eventId: raceId });
+    const [text] = byTestId(tree, "volunteers-raffle-random-org");
+    const [present] = byTestId(tree, "volunteers-raffle-random-org-present");
+    expect(text.props).toMatchObject({ href: `/api/admin/events/${raceId}/raffle?format=random-org&lang=ro`, children: "Descarcă pentru random.org" });
+    expect(present.props).toMatchObject({ href: `/api/admin/events/${raceId}/raffle?format=random-org&present=1&lang=ro`, children: "Descarcă pentru random.org — doar prezenții" });
+    for (const button of [text, present]) expect(String(button.props["aria-label"]).startsWith(`${button.props.children}:`)).toBe(true);
+    expect(elements(tree).find((element) => element.props.testId === "volunteers-raffle-random-org-help")?.props.text).toBe(ro.Admin.registrations.raffle.randomOrgHelp);
+    // None for an event that holds no raffle.
+    await db.update(events).set({ hasRaffle: false }).where(eq(events.id, raceId));
+    expect(byTestId(await listTree({ eventId: raceId }), "volunteers-raffle-random-org")).toEqual([]);
   });
 
   it("are drawn neither for an event that holds no raffle nor across every event", async () => {

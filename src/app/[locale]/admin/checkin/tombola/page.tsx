@@ -9,6 +9,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -19,7 +20,7 @@ import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
-import { canTakeRaffleList, readRaffleRoster } from "@/modules/volunteers/raffle-list";
+import { canTakeRaffleList, raffleWithoutNumber, readRaffleRoster } from "@/modules/volunteers/raffle-list";
 import type { RaffleRosterRow } from "@/modules/volunteers/raffle-roster";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import ChipLink from "@/shared/ui/ChipLink";
@@ -27,6 +28,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import PrintButton from "@/shared/ui/PrintButton";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
 import { raffleDeleteEntryAction, raffleElitePresentAction, raffleExclusionAction, raffleSignUpAction } from "./actions";
@@ -98,6 +100,8 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const keeps = (value: Filter) => (row: RaffleRosterRow) =>
     value === "in" ? row.reason === "in" : value === "out" ? row.reason !== "in" : value === "present" ? row.reason === "in" && row.present : true;
   const rows = everybody.filter(keeps(filter));
+  // Those taking part whom the file for random.org cannot hold — no number to write (§NNN).
+  const withoutNumber = raffleWithoutNumber(everybody.filter((row) => row.reason === "in"));
   // How many each view holds, said on its pill.
   const filterCounts = Object.fromEntries(FILTERS.map((value) => [value, everybody.filter(keeps(value)).length])) as Record<Filter, number>;
 
@@ -202,7 +206,8 @@ export default async function RafflePage({ params, searchParams }: Props) {
     );
 
   const columns: AdminColumn<RaffleRosterRow>[] = [
-    { key: "number", label: t("raffle.columns.number"), render: (row) => (row.number === null ? "—" : String(row.number)) },
+    // The number as the raffle writes it (§NNN): a race number as the event writes it, a volunteer's «V007»; «—» for none.
+    { key: "number", label: t("raffle.columns.number"), render: (row) => <span data-testid="raffle-row-number">{row.label ?? "—"}</span> },
     {
       key: "name",
       label: t("raffle.columns.name"),
@@ -391,8 +396,32 @@ export default async function RafflePage({ params, searchParams }: Props) {
             <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?present=1&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.presentButtonLabel")} data-testid="raffle-download-present">
               {t("registrations.raffle.presentButton")}
             </GlyphButton>
+            {/* «Descarcă pentru random.org» (§NNN): the same people, one number per line and no name, for random.org's List Randomizer. */}
+            <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?format=random-org&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.randomOrgButtonLabel")} data-testid="raffle-download-random-org">
+              {t("registrations.raffle.randomOrgButton")}
+            </GlyphButton>
+            <GlyphButton
+              icon="download"
+              href={`/api/admin/events/${eventId}/raffle?format=random-org&present=1&lang=${locale}`}
+              variant="outlined"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={t("registrations.raffle.randomOrgPresentButtonLabel")}
+              data-testid="raffle-download-random-org-present"
+            >
+              {t("registrations.raffle.randomOrgPresentButton")}
+            </GlyphButton>
+            <Box component="span" sx={{ display: "inline-flex", alignItems: "center" }}>
+              <QuietHelp text={t("registrations.raffle.randomOrgHelp")} testId="raffle-random-org-help" />
+            </Box>
             <PrintButton label={t("raffle.print")} />
           </Stack>
+          {/* A participant with no number (a line of the elite list nobody numbered) cannot be written in a file of numbers alone: said, with the way to fix it. */}
+          {withoutNumber > 0 && (
+            <Typography variant="body2" color="warning.main" sx={NOT_ON_PAPER} data-testid="raffle-random-org-missing">
+              {t(`raffle.randomOrgMissing.${countForm(withoutNumber, locale)}`, { count: String(withoutNumber) })}
+            </Typography>
+          )}
         </>
       )}
     </Stack>

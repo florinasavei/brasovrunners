@@ -71,9 +71,9 @@ const deskCode = () => Array.from({ length: 10 }, () => ALPHABET[randomInt(ALPHA
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number, volunteer_bib_start,
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number,
          accepts_volunteers, has_raffle, raffle_sign_up, raffle_sign_up_open)
-       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1, 500, true, true, true, true) RETURNING id`,
+       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1, true, true, true, true) RETURNING id`,
     );
     const eventId = rows[0].id;
     const slug = `tombola-${tag}`;
@@ -108,8 +108,8 @@ async function seed(tag: string): Promise<Seeded> {
     const volunteer = `Vlad Voluntar ${tag}`;
     const address = `vlad-tombola-${tag}@test.invalid`;
     const { rows: helpers } = await client.query<{ id: string }>(
-      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, bib_number)
-       VALUES ($1, $2, $3, $4, $4, 1, '+40712345678', 'CONFIRMED', 'STAFF', 500) RETURNING id`,
+      `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source, volunteer_number)
+       VALUES ($1, $2, $3, $4, $4, 1, '+40712345678', 'CONFIRMED', 'STAFF', 1) RETURNING id`,
       [eventId, roles[0].id, volunteer, address],
     );
     await client.query(`INSERT INTO event_volunteer_role_assignments (volunteer_id, role_id) VALUES ($1, $2)`, [helpers[0].id, roles[0].id]);
@@ -316,6 +316,8 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 3 · Alergători: 3 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 1");
         const names = page.locator('[data-testid="raffle-row-name"]:visible');
         await expect(names).toHaveText([seeded.ana.name, seeded.bogdan.name, seeded.cristina.name, seeded.volunteer]);
+        // The race numbers, then the volunteer by his V number (§NNN).
+        await expect(page.locator('[data-testid="raffle-row-number"]:visible')).toHaveText(["1", "2", "3", "V001"]);
         const answers = page.locator('[data-testid="raffle-row-in"]:visible');
         await expect(answers).toHaveText(["Da", "Da", "Da", "Nu · nu s-a înscris"]);
         await fitsTheScreen(page);
@@ -337,6 +339,10 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         expect(file.lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.ana.name},Alergător,Nu`, `2,${seeded.bogdan.name},Alergător,Nu`, `3,${seeded.cristina.name},Alergător,Da`, ""]);
         const present = await csvLines(page, (await page.getByTestId("raffle-download-present").getAttribute("href")) as string);
         expect(present.lines).toEqual(["Număr,Nume,Categorie,Prezent", `3,${seeded.cristina.name},Alergător,Da`, ""]);
+        // «Descarcă pentru random.org» (§NNN): the same three, numbers only.
+        const randomOrg = page.getByTestId("raffle-download-random-org");
+        await tall(randomOrg, "the random.org file's button");
+        expect(await (await page.request.get((await randomOrg.getAttribute("href")) as string)).text()).toBe("1\r\n2\r\n3\r\n");
       });
 
       expect(hydrationWarnings, "hydration warnings").toEqual([]);

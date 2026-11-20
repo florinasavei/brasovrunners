@@ -6,6 +6,7 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
 import { type ExportNote, exportNotesCell, type ExportNotesWords } from "@/shared/notes/note-text";
 import type { VolunteerCsvHeader, VolunteerCsvRow } from "./csv";
 import { countsAgainstRole, isVolunteerMinor, roleLabel, rolesWithCategoryWords, standingOf } from "./domain/volunteer";
+import { volunteerNumberText } from "./domain/volunteer-number";
 import type { exportVolunteers } from "./volunteers";
 import type { VolunteerSheetWords } from "./workbook";
 
@@ -148,8 +149,8 @@ export function volunteerExport(
     guardianConsent: isVolunteerMinor(person.age) ? yesNo(person.guardianAcceptedAt !== null) : "",
     // «Are kit» (§904): the organizers' own mark, for whoever packs the kits from the file.
     hasKit: yesNo(person.hasKit),
-    // The volunteer's number (§948): for the raffle and for whoever hands out the badges.
-    bibNumber: person.bibNumber,
+    // The volunteer's V number (§NNN, amending §948), written «V007» as everywhere: for the raffle and for whoever hands out the badges.
+    volunteerNumber: volunteerNumberText(person.volunteerNumber),
   }));
 
   // «Alte roluri» names the roles outside every category, but only beside roles that have one (`groupsNeedHeadings`).

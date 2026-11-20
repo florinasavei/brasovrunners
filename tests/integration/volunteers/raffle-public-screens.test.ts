@@ -219,10 +219,12 @@ describe("§984 BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(page).not.toBeNull();
     const markup = page as string;
     expect(words(markup.slice(markup.indexOf('data-testid="raffle-title"'), markup.indexOf("</h1>")))).toContain(ro.Event.raffle.title);
-    // The race number: digits only, on a phone's number pad; the name as at registration, at most the column's length.
+    // The race number: digits, on a phone's number pad — or a volunteer's V number as it is written, «V007» (§NNN), so an optional V
+    // first and one character more; the name as at registration, at most the column's length.
     const number = tagOf(markup, 'name="number"') ?? "";
     expect(number).toMatch(/inputmode="numeric"/i);
-    expect(number).toMatch(/pattern="\[0-9\]\*"/);
+    expect(number).toMatch(/pattern="\[Vv\]\?\[0-9\]\*"/);
+    expect(number).toMatch(/maxlength="6"/i);
     expect(number).toMatch(/required/);
     const name = tagOf(markup, 'name="name"') ?? "";
     expect(name).toMatch(/maxlength="120"/i);

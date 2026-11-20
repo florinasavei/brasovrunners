@@ -109,7 +109,6 @@ async function race(over: Partial<typeof events.$inferInsert> = {}) {
       publishedAt: new Date("2026-11-01T08:00:00.000Z"),
       locationName: "Parcul Noua",
       bibStartNumber: 1,
-      volunteerBibStart: 500,
       hasRaffle: true,
       raffleSignUp: true,
       raffleSignUpOpen: true,
@@ -167,12 +166,13 @@ async function runner(
   return { id: row.id, participantId, email };
 }
 
-async function volunteer(name: string, bibNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
+/** A confirmed volunteer holding the V number given (§NNN: «V001» is 1), or none. */
+async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
-    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, bibNumber, ...more })
+    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: "CONFIRMED", source: "STAFF", roleId, volunteerNumber, ...more })
     .returning({ id: eventVolunteers.id });
   await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: row.id, roleId: more.roleId ?? roleId });
   return row.id;
@@ -268,7 +268,7 @@ describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name",
     await runner("Elena Waiting", 8, { status: "WAITLISTED" });
     await runner("Mara Cancelled", 9, { status: "CANCELLED" });
     await runner("Test Runner", 10, { kind: "TEST" });
-    await volunteer("Ion Voluntar", 500);
+    await volunteer("Ion Voluntar", 1);
     const other = await race();
     await runner("Dan Altul", 11, { at: other.eventId });
     const cases: Array<[string, string, boolean]> = [
@@ -280,7 +280,7 @@ describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name",
       ["9", "Mara Cancelled", false], // cancelled
       ["10", "Test Runner", false], // a test registration
       ["11", "Dan Altul", false], // another event's runner
-      ["500", "Ion Voluntar", false], // a volunteer's number, «Sunt voluntar» unticked
+      ["1", "Ion Voluntar", false], // a volunteer's number (V001), «Sunt voluntar» unticked: no runner wears 1
       ["7", "Ana Popescu", true], // a runner's number with «Sunt voluntar»
       ["99", "Nimeni Nicăieri", false], // nobody at all
     ];
@@ -292,9 +292,11 @@ describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name",
   });
 
   it("matches a confirmed volunteer by the volunteer's own number with «Sunt voluntar», and a registration marked «Elită» by its race number", async () => {
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     const eliud = await runner("Eliud Kipchoge", 3, { elite: true });
-    expect(await signUpForRaffleByForm(db, eventId, form("500", "ion voluntar", { volunteer: true }), NOW, TRACE)).toBe("done");
+    // The V number as it is written (§NNN); «v1», «001» and «1» name the same volunteer, who is in already and reads the same thank-you.
+    expect(await signUpForRaffleByForm(db, eventId, form("V001", "ion voluntar", { volunteer: true }), NOW, TRACE)).toBe("done");
+    for (const typed of ["v1", "001", "1"]) expect(await signUpForRaffleByForm(db, eventId, form(typed, "Ion Voluntar", { volunteer: true }), NOW, TRACE), typed).toBe("done");
     expect(await signUpForRaffleByForm(db, eventId, form("3", "Kipchoge Eliud"), NOW, TRACE)).toBe("done");
     const rows = await entries();
     expect(rows.map((row) => row.volunteerId ?? row.registrationId).sort()).toEqual([ion, eliud.id].sort());
@@ -304,10 +306,10 @@ describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name",
   it("takes only the ticked groups: an unticked group's people get the neutral refusal, the others sign up", async () => {
     await runner("Ana Popescu", 7);
     await runner("Eliud Kipchoge", 3, { elite: true });
-    await volunteer("Ion Voluntar", 500);
+    await volunteer("Ion Voluntar", 1);
     await setGroups({ RUNNER: false, VOLUNTEER: false });
     expect(await signUpForRaffleByForm(db, eventId, form("7", "Ana Popescu"), NOW, TRACE)).toBe("noMatch");
-    expect(await signUpForRaffleByForm(db, eventId, form("500", "Ion Voluntar", { volunteer: true }), NOW, TRACE)).toBe("noMatch");
+    expect(await signUpForRaffleByForm(db, eventId, form("V001", "Ion Voluntar", { volunteer: true }), NOW, TRACE)).toBe("noMatch");
     expect(await signUpForRaffleByForm(db, eventId, form("3", "Eliud Kipchoge"), NOW, TRACE)).toBe("done");
     await setGroups({ RUNNER: true, ELITE: false });
     expect(await signUpForRaffleByForm(db, eventId, form("7", "Ana Popescu"), NOW, TRACE)).toBe("done");
@@ -437,7 +439,7 @@ describe("§984 BR-REQ-037-08 the desk (DESK): every desk role, the person havin
   it("offers «Înscrie la tombolă» to nobody the organizers took out — at the desk and on a volunteer's page —, the «Tombolă» tab keeping its own (§984)", async () => {
     const ana = await runner("Ana Popescu", 7, { inRaffle: false });
     const radu = await runner("Radu Ionescu", 8);
-    const ion = await volunteer("Ion Voluntar", 500, { inRaffle: false });
+    const ion = await volunteer("Ion Voluntar", 1, { inRaffle: false });
     // The scanned person's view and the desk's list: «nu participă», and no «Înscrie» that would answer «e înscrisă» while the row stays out.
     expect(await readRaffleLine(db, { table: "registration", id: ana.id }, NOW)).toEqual({ reason: "takenOut", signUpMode: true, signedUp: false, maySignUp: false });
     const desk = await readRaffleDeskLines(db, [{ id: ana.id, eventId }, { id: radu.id, eventId }], NOW);
@@ -454,7 +456,7 @@ describe("§984 BR-REQ-037-08 the desk (DESK): every desk role, the person havin
 
 describe("§984 BR-REQ-060-01 the organizers (STAFF): a volunteer, a line of the elite list, anybody of the event", () => {
   it("lets the Organizer and the Administrators sign a volunteer and an elite line up; every other role is refused, nothing written", async () => {
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     const line = await eliteLine("Eliud K.");
     for (const role of STAFF_ROLES.filter((candidate) => !canTakeRaffleList(candidate))) {
       expect((await failureOf(signUpForRaffleByStaff(db, await staff(role), { person: { table: "volunteer", id: ion }, accepted: true, eventId }, NOW))).code, role).toBe("FORBIDDEN");
@@ -470,7 +472,7 @@ describe("§984 BR-REQ-060-01 the organizers (STAFF): a volunteer, a line of the
   });
 
   it("finds no person of another event, and asks the acceptance", async () => {
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     const other = await race();
     const organizer = await staff("MODERATOR");
     expect((await failureOf(signUpForRaffleByStaff(db, organizer, { person: { table: "volunteer", id: ion }, accepted: true, eventId: other.eventId }, NOW))).code).toBe("NOT_FOUND");
@@ -513,7 +515,7 @@ describe("§984 BR-REQ-050-02 the one gate: each condition alone shuts every doo
 
   it.each(conditions.map((condition) => [condition.label, condition] as const))("%s", async (_label, condition) => {
     const ana = await runner("Ana Popescu", 7);
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     if (condition.event) await db.update(events).set(condition.event).where(eq(events.id, eventId));
     if (condition.texts) await condition.texts();
     const at = condition.at ?? NOW;
@@ -544,7 +546,7 @@ describe("§984 BR-REQ-050-02 the one gate: each condition alone shuts every doo
 
   it("shuts the door of a group unticked for its people alone", async () => {
     const ana = await runner("Ana Popescu", 7);
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     await setGroups({ VOLUNTEER: false });
     const organizer = await staff("MODERATOR");
     expect((await failureOf(signUpForRaffleByStaff(db, organizer, { person: { table: "volunteer", id: ion }, accepted: true, eventId }, NOW))).code).toBe("RAFFLE_SIGN_UP_CLOSED");
@@ -559,8 +561,8 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     const radu = await runner("Radu Munteanu", 2);
     const eliud = await runner("Eliud Kipchoge", 3, { elite: true });
     const elena = await runner("Elena Waiting", null, { status: "WAITLISTED" });
-    const ion = await volunteer("Ion Voluntar", 500, { present: true });
-    const oana = await volunteer("Oana Voluntar", 501);
+    const ion = await volunteer("Ion Voluntar", 1, { present: true });
+    const oana = await volunteer("Oana Voluntar", 2);
     const vlad = await volunteer("Vlad Offered", null, { state: "REGISTERED" });
     const zoe = await eliteLine("Zoe Elita");
     const mo = await eliteLine("Mo Farah", 900);
@@ -581,13 +583,14 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     // The file is the same answer, by the number, the numberless lines last by name — «Elită» for a marked registration and a line alike.
     const admin = await staff("ADMIN");
     const list = await exportRaffleList(db, admin, eventId, NOW);
-    expect(list.rows.map((row) => `${row.number ?? "—"} ${row.name} ${row.kind}`)).toEqual([
+    // The race numbers first, then the volunteers by their V number (§NNN), then the numberless line.
+    expect(list.rows.map((row) => `${row.label ?? "—"} ${row.name} ${row.kind}`)).toEqual([
       "2 Radu Munteanu RUNNER",
       "3 Eliud Kipchoge ELITE",
       "7 Ana Popescu RUNNER",
-      "500 Ion Voluntar VOLUNTEER",
-      "501 Oana Voluntar VOLUNTEER",
       "900 Mo Farah ELITE",
+      "V001 Ion Voluntar VOLUNTEER",
+      "V002 Oana Voluntar VOLUNTEER",
       "— Zoe Elita ELITE",
     ]);
     expect(list).toMatchObject({ runners: 2, elites: 3, volunteers: 2 });
@@ -674,7 +677,7 @@ describe("§984 BR-REQ-071-01 a line of the elite list: its two ticks, the organ
     expect(await setEliteLineRaffleTick(db, organizer, { entryId: line, eventId, tick: "inRaffle", on: false }, NOW)).toEqual({ changed: false });
     expect(await setEliteLineRaffleTick(db, organizer, { entryId: line, eventId, tick: "inRaffle", on: true }, NOW)).toEqual({ changed: true });
     expect(await setEliteLineRaffleTick(db, organizer, { entryId: line, eventId, tick: "present", on: true }, NOW)).toEqual({ changed: true });
-    expect((await exportRaffleList(db, organizer, eventId, NOW, { onlyPresent: true })).rows).toEqual([{ number: 777, name: "Eliud K.", kind: "ELITE", present: true }]);
+    expect((await exportRaffleList(db, organizer, eventId, NOW, { onlyPresent: true })).rows).toEqual([{ number: 777, label: "777", name: "Eliud K.", kind: "ELITE", present: true }]);
     expect(await setEliteLineRaffleTick(db, organizer, { entryId: line, eventId, tick: "present", on: false }, NOW)).toEqual({ changed: true });
     const rows = (await trail()).filter((row) => row.action.startsWith("event_elite."));
     expect(rows.map((row) => row.action)).toEqual(["event_elite.out_of_raffle", "event_elite.in_raffle", "event_elite.present", "event_elite.absent"]);
@@ -724,7 +727,7 @@ describe("§984 BR-REQ-070-01 the sign-up's life: «Toate datele unei persoane»
 
   it("goes with its registration, its volunteer, its line and its event", async () => {
     const ana = await runner("Ana Popescu", 7);
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     const line = await eliteLine("Eliud K.");
     const organizer = await staff("MODERATOR");
     await signUpForRaffleByForm(db, eventId, form("7", "Ana Popescu"), NOW, TRACE);
@@ -779,7 +782,7 @@ describe("§984 the sign-up is nobody's message", () => {
   it("queues no email at any door, at a withdrawal or at a deletion", async () => {
     const ana = await runner("Ana Popescu", 7);
     const radu = await runner("Radu Munteanu", 2);
-    const ion = await volunteer("Ion Voluntar", 500);
+    const ion = await volunteer("Ion Voluntar", 1);
     const secret = (await issueActionToken(db, { participantId: ana.participantId, registrationId: ana.id, purpose: "MANAGE_REGISTRATION", expiresAt: START, now: NOW })).secret;
     await signUpForRaffleByLink(db, { secret, accepted: true, locale: "ro" }, NOW);
     await signUpForRaffleByForm(db, eventId, form("2", "Radu Munteanu"), NOW, TRACE);
