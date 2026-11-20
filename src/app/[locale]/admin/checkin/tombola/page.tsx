@@ -67,7 +67,7 @@ const ALERT_CODES = ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RAFFLE_SIGN_
  * beside it), «Scoate» / «Pune înapoi» (the exclusion, for the three kinds), «Șterge înscrierea» (asked first) and, on a line of the
  * elite list, «Prezent». Printed, it is the table without a control.
  *
- * **Every desk role's since §NNN** (`canReadRaffle`; the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii
+ * **Every desk role's since §1014** (`canReadRaffle`; the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii
  * și organizatorii văd acest tab»), amending §984's gate, which was §949's «doar adminul și organizatorul pot bifa și vedea asta»; a
  * member meets the 404 an unknown page gets. A desk role that is not an organizer (`canTakeRaffleList`: the Organizer and the
  * Administrators) reads the same table, counts, settings line and filters — a name, a number, a group, whether the person takes part
@@ -145,7 +145,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const reasonWords = (row: RaffleRosterRow) =>
     row.reason === "in" ? t("raffle.yes") : !organizer && row.reason === "takenOut" ? t("raffle.no") : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`;
 
-  // The desk's «Înscrie la tombolă» (DESK, §NNN) on a row, for a desk role that is not an organizer: the person accepted the rules on
+  // The desk's «Înscrie la tombolă» (DESK, §1014) on a row, for a desk role that is not an organizer: the person accepted the rules on
   // paper or aloud, which the tick records; back to the tab at the row, the filter kept. A registration alone: the desk's door takes no other.
   const deskSignUp = (row: RaffleRosterRow): ReactNode => (
     <Box component="form" action={raffleDeskSignUpAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, ...NOT_ON_PAPER }} data-testid="raffle-desk-sign-up-form">
@@ -212,7 +212,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
     </Stack>
   );
 
-  // A row's presses: the organizers' (§984), or the desk's «Înscrie la tombolă» where it may be offered (§NNN) — nothing else.
+  // A row's presses: the organizers' (§984), or the desk's «Înscrie la tombolă» where it may be offered (§1014) — nothing else.
   const actions = (row: RaffleRosterRow): ReactNode => (organizer ? organizerActions(row) : row.deskMaySignUp ? deskSignUp(row) : null);
   // The column of presses: always the organizers'; for another desk role only while some row of the event offers the desk's sign-up.
   const pressesShown = organizer || everybody.some((row) => row.deskMaySignUp);
@@ -264,7 +264,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
       ),
     },
     // How and when each signed up: the sign-up's own details, which the privacy notice says the organizers and the administrators
-    // see — every other desk role reads the answer alone, «Da» or «Nu · nu s-a înscris», as the desk says it (§984, §NNN).
+    // see — every other desk role reads the answer alone, «Da» or «Nu · nu s-a înscris», as the desk says it (§984, §1014).
     ...(signUpMode && organizer
       ? [
           {
@@ -298,7 +298,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
         )}
       </Box>
 
-      {/* The organizers' words name the file the draw is made from; every other desk role's, what they can do here (§NNN). */}
+      {/* The organizers' words name the file the draw is made from; every other desk role's, what they can do here (§1014). */}
       <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="raffle-intro">
         {organizer ? t("raffle.intro") : t("raffle.introDesk")}
       </Typography>
@@ -426,7 +426,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
           </Box>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ flexWrap: "wrap", gap: 1, ...NOT_ON_PAPER }}>
-            {/* The two files are the organizers' (`canTakeRaffleList`, which the route asks again): their names leave the site (§NNN). */}
+            {/* The two files are the organizers' (`canTakeRaffleList`, which the route asks again): their names leave the site (§1014). */}
             {organizer && (
               <>
                 <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.buttonLabel")} data-testid="raffle-download">

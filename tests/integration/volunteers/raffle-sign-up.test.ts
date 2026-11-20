@@ -654,7 +654,7 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     }
   });
 
-  it("is read by every desk role — the «Tombolă» tab's since §NNN — and by no member (BR-REQ-060-01)", async () => {
+  it("is read by every desk role — the «Tombolă» tab's since §1014 — and by no member (BR-REQ-060-01)", async () => {
     for (const role of STAFF_ROLES) {
       const actor = await staff(role);
       if (canReadRaffle(role)) expect(await readRaffleRoster(db, actor, eventId, NOW), role).not.toBeNull();
@@ -663,7 +663,7 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     expect(STAFF_ROLES.filter((role) => !canReadRaffle(role))).toEqual(["MEMBER"]);
   });
 
-  it("offers the desk's «Înscrie» on the tab only to a registration that may sign up and was not taken out (§NNN)", async () => {
+  it("offers the desk's «Înscrie» on the tab only to a registration that may sign up and was not taken out (§1014)", async () => {
     const people = await saturday();
     await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.radu.id));
     const roster = await readRaffleRoster(db, await staff("CONTRIBUTOR"), eventId, NOW);

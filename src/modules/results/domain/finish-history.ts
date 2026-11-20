@@ -13,7 +13,7 @@
  *   `storedStatus` the decision; a row without one is a «Sosit»'s); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
  *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); «Start» set or taken off; «Resetează
  *   clasamentul» (§997, `event.results_reset`: how many results went and whether a gun went with them), the line that says why
- *   every press and save older than it has no row any more; and «Folosește» (§NNN, `chosenFromHistory: true` on
+ *   every press and save older than it has no row any more; and «Folosește» (§1012, `chosenFromHistory: true` on
  *   `event_result.updated` / `.created`): a time recorded at the line made a runner's, said as the choice it was.
  * - **Where.** «Cronometrare» for a press at the line and for «Start» — the old «Sosire» wrote `finishLine` too —, «Clasament» for
  *   the rest.
@@ -49,7 +49,7 @@ export type FinishHistoryWhat =
   | { kind: "undo"; bibNumber: number | null; gunTimeMs: number | null }
   | { kind: "created"; bibNumber: number | null; status: string | null; gunTimeMs: number | null }
   | { kind: "updated"; bibNumber: number | null; status: string | null; gunTimeMs: number | null; boxes: HistoryBox[] }
-  /** «Folosește» (§NNN): one of the times recorded at the line made the runner's — «Sosit» at that time. */
+  /** «Folosește» (§1012): one of the times recorded at the line made the runner's — «Sosit» at that time. */
   | { kind: "chosen"; bibNumber: number | null; gunTimeMs: number | null }
   | { kind: "deleted"; bibNumber: number | null; status: string | null }
   | { kind: "gunSet"; at: Date | null; previous: Date | null }
@@ -83,7 +83,7 @@ export function finishHistoryLine(row: FinishHistoryRow): FinishHistoryLine | nu
   const bibNumber = whole(metadata.bibNumber);
   const gunTimeMs = whole(metadata.gunTimeMs);
   const base = { id: row.id, at: row.at, who: row.actorName };
-  // «Folosește» (§NNN): a «Clasament» row that made a recorded time the runner's — a change, or a result made again.
+  // «Folosește» (§1012): a «Clasament» row that made a recorded time the runner's — a change, or a result made again.
   const chosen = !finishLine && metadata.chosenFromHistory === true;
   switch (row.action) {
     case "event_result.created":

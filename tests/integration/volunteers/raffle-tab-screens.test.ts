@@ -29,7 +29,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - «Ziua cursei» → «Tombolă»: drawn among the tabs only for an event that holds a raffle; the settings in one line, the counts, the
  *   four filters, everybody of the three groups with «Participă» and its reason, how and when they signed up in the sign-up mode,
  *   whether they were there; «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and a line's «Prezent»; the two files; both
- *   languages. Since §NNN every desk role's, a 404 to a member: a «Voluntar» reads the same table, counts and filters with words of
+ *   languages. Since §1014 every desk role's, a 404 to a member: a «Voluntar» reads the same table, counts and filters with words of
  *   its own and the desk's «Înscrie la tombolă» on a registration — never the organizers' presses, files, how and when, the reason
  *   «scos de organizatori» or anybody's address, email or telephone — and the file's route still refuses them;
  * - its presses, each asking its capability and coming back with the toast or the refusal's code;
@@ -346,7 +346,7 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     expect(await names("nope")).toHaveLength(5);
   });
 
-  it("is a page for every desk role and a 404 to a member, and stands among «Ziua cursei»'s tabs only for an event that holds a raffle (§NNN)", async () => {
+  it("is a page for every desk role and a 404 to a member, and stands among «Ziua cursei»'s tabs only for an event that holds a raffle (§1014)", async () => {
     for (const role of STAFF_ROLES) {
       state.actor = staff[role];
       if (canReadRaffle(role)) await expect(tabTree(), role).resolves.toBeTruthy();
@@ -375,7 +375,7 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
   });
 });
 
-describe("§NNN BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and every other desk role: the table, the chips, the desk's sign-up — never the organizers' presses, files or anybody's address", () => {
+describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and every other desk role: the table, the chips, the desk's sign-up — never the organizers' presses, files or anybody's address", () => {
   /** The desk roles that are not organizers: the Voluntar, the Redactor and Tehnic. */
   const DESK_ONLY = ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const;
   const testIdsOf = (markup: string) => new Set([...markup.matchAll(/data-testid="([^"]+)"/g)].map((match) => match[1]));

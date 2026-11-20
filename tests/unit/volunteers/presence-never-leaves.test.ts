@@ -23,7 +23,7 @@ import { importsModule } from "../../helpers/module-imports";
  * by any spelling: the `@/` alias or a relative path, resolved from the importing file (`tests/helpers/module-imports.ts`).
  *
  * Since §984 the raffle's roster and «Ziua cursei» → «Tombolă» read it too, and show who was there beside whether they take part:
- * the organizers' tab, and since §NNN every desk role's (`canReadRaffle`) — which amends «never the desk» for that one tab, where the
+ * the organizers' tab, and since §1014 every desk role's (`canReadRaffle`) — which amends «never the desk» for that one tab, where the
  * mark is said in words («Da» / «Nu»), the tick and its press staying the «Voluntari» list's. Since §996 «Ziua cursei» → «Jurnal» and the «Voluntari»
  * list's «Org1, 08:20» read the trail of who ticked it: that tab is the organizers' too (`canReadRaceDayJournal`), never the desk's.
  * The desk's own pages stay held to reading none — and to importing none of the log's two modules, which the sweep exempts: the
@@ -79,7 +79,7 @@ const READERS = new Set(
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
     // §984: the raffle's roster reads it beside each volunteer, for the files and «Ziua cursei» → «Tombolă» — every desk role's tab
-    // since §NNN (`canReadRaffle`), whose «Doar prezenții» and «Prezent» column say it in words; the present-only download stays the
+    // since §1014 (`canReadRaffle`), whose «Doar prezenții» and «Prezent» column say it in words; the present-only download stays the
     // organizers' (`canTakeRaffleList`).
     "src/modules/volunteers/raffle-roster.ts",
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
@@ -106,7 +106,7 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 
 /** The surfaces that read volunteers or a race's people, where no `present` of any kind is read: a leak there would be the field itself. */
 function readsVolunteers(at: string): boolean {
-  // «Ziua cursei» → «Tombolă» (§984) is the raffle's tab, every desk role's since §NNN: who was there is what its «Doar prezenții»
+  // «Ziua cursei» → «Tombolă» (§984) is the raffle's tab, every desk role's since §1014: who was there is what its «Doar prezenții»
   // filters by, said in words — the tick and its press stay on the «Voluntari» list, which only the organizers open.
   if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
   // «Ziua cursei» → «Jurnal» (§996) is the organizers' log, not the desk: a volunteer's «Prezent» ticked and unticked is its lines.

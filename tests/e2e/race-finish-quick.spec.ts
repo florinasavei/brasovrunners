@@ -8,7 +8,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * §986 — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01, BR-REQ-037-08), walked at
  * 320 pixels and on a desk against a production build: an Organizer, whose row holds the five tabs of a race with a raffle — wider
  * than the phone, so the row scrolls inside itself, «Cronometrare» in view and every tab one swipe away —, taps «Start» twice — one
- * «Start» —; the desk Volunteer — the lowest role, four tabs that fit, «Tombolă» among them since §NNN — types a number and presses an elite's button, sees each
+ * «Start» —; the desk Volunteer — the lowest role, four tabs that fit, «Tombolă» among them since §1014 — types a number and presses an elite's button, sees each
  * saved at once with «introdus de» and its own name, types the same number again and reads the duplicate's line — its own line now
  * saying «Clasament» corrects it, no «Anulează» —, undoes the elite's press — the phone's line of it then saying «anulat» —, and is
  * told of a press of theirs waiting under another race on the phone. And an Organizer's page drawn before another organizer's «Start»
@@ -175,7 +175,7 @@ test.describe("§986 «Cronometrare»", () => {
     await page.goto(timingUrl);
     await hydrated(page);
     // «Ziua cursei»'s tabs, «Cronometrare» current; the volunteer has no «Clasament» and no «Start» — and, the race holding a raffle,
-    // «Tombolă» since §NNN: four that fit.
+    // «Tombolă» since §1014: four that fit.
     const tabs = page.getByTestId("race-day-tabs").getByRole("link");
     await expect(tabs).toHaveText([/Prezența/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/], { useInnerText: true });
     await expect(page.getByTestId("race-day-tabs").locator('[aria-current="page"]')).toContainText(/Cronometrare|Sosiri/);

@@ -252,7 +252,7 @@ export type RaffleRosterRow = {
   /** Whether «Înscrie» may be offered: the gate open for the group, the person eligible and not signed up. */
   maySignUp: boolean;
   /**
-   * Whether the desk's «Înscrie la tombolă» (DESK) may be offered on the tab, to a desk role that is not an organizer (§NNN): a
+   * Whether the desk's «Înscrie la tombolă» (DESK) may be offered on the tab, to a desk role that is not an organizer (§1014): a
    * registration — the desk's door takes no other —, `maySignUp`, and not taken out by the organizers, as `raffleLineOf` asks at the
    * desk: a sign-up would leave the person «nu participă» while the press said they were in.
    */

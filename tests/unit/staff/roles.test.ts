@@ -364,13 +364,13 @@ describe("BR-REQ-060-01 what each role may reach", () => {
 });
 
 /**
- * BR-REQ-060-01, §NNN (amending §984's gate) — «Ziua cursei» → «Tombolă» for every role that works the desk. The owner,
+ * BR-REQ-060-01, §1014 (amending §984's gate) — «Ziua cursei» → «Tombolă» for every role that works the desk. The owner,
  * 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii văd acest tab». The tab's predicate is
  * the desk's by construction, so the two lines move together; a member, who is no staff (§524), never reads it; and what stays the
  * organizers' there — the files, the exclusion, the deletion, an elite line's ticks — keeps its own, narrower predicate.
  */
-describe("BR-REQ-060-01 «Tombolă» is every desk role's (§NNN)", () => {
-  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s read the raffle exactly when it works the desk, by role or as an actor (§NNN)", (role) => {
+describe("BR-REQ-060-01 «Tombolă» is every desk role's (§1014)", () => {
+  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s read the raffle exactly when it works the desk, by role or as an actor (§1014)", (role) => {
     expect(canReadRaffle(role)).toBe(canWorkTheDesk(role));
     // A grant neither gives the tab nor takes it away: the desk's line is a rung.
     expect(canReadRaffle({ role, permissions: new Set(["shop.manage"] as const) })).toBe(canWorkTheDesk(role));
@@ -391,7 +391,7 @@ describe("BR-REQ-060-01 «Tombolă» is every desk role's (§NNN)", () => {
     expect(STAFF_ROLES.filter((role) => canReadRaffle(role) && !canTakeRaffleList(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "DEV"]);
   });
 
-  it("is what the tab's entry, its page, the roster's read and the desk's sign-up — action and service — ask (§NNN)", () => {
+  it("is what the tab's entry, its page, the roster's read and the desk's sign-up — action and service — ask (§1014)", () => {
     const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
     expect(read("src/modules/race-day/ui/RaceDayTabs.tsx")).toMatch(/eventId && canReadRaffle\(actor\) && \(await raffleTabShown\(/);
     expect(read("src/app/[locale]/admin/checkin/tombola/page.tsx")).toContain("if (!canReadRaffle(actor)) notFound();");
@@ -631,7 +631,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canRecordFinishes: /*     */ [false, true, true, true, true, true, true],
     // §996: «Ziua cursei» → «Jurnal», who scanned and who marked present — the readers of the list; the desk's other roles are named in it, never shown it.
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],
-    // §NNN: «Ziua cursei» → «Tombolă» — every role that works the desk, the desk Volunteer included; never a member.
+    // §1014: «Ziua cursei» → «Tombolă» — every role that works the desk, the desk Volunteer included; never a member.
     canReadRaffle: /*         */ [false, true, true, true, true, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],

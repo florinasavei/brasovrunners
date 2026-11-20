@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-060-01, BR-REQ-037-08, BR-REQ-041-01 — «Ziua cursei» → «Tombolă» for every desk role (the owner, 2026-11-20:
+ * §1014, BR-REQ-060-01, BR-REQ-037-08, BR-REQ-041-01 — «Ziua cursei» → «Tombolă» for every desk role (the owner, 2026-11-20:
  * «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii văd acest tab»), walked by the desk Volunteer — the
  * lowest role — at 320 pixels and on a desktop against the production build, with the approved sample texts the database holds
  * (the seed's «Regulamentul tombolei» and a privacy notice naming `{{raffle}}`, both in force in both languages):
@@ -143,7 +143,7 @@ async function tall(locator: Locator, what: string): Promise<void> {
   expect((await locator.boundingBox())?.height ?? 0, `${what} is a thumb's 44 pixels`).toBeGreaterThanOrEqual(44);
 }
 
-test.describe("§NNN «Tombolă» for the desk's volunteer: the roster, the filters and the desk's sign-up — never the organizers' presses or files", () => {
+test.describe("§1014 «Tombolă» for the desk's volunteer: the roster, the filters and the desk's sign-up — never the organizers' presses or files", () => {
   test.describe.configure({ timeout: 300_000 });
 
   test("the desk Volunteer opens «Ziua cursei» → «Tombolă», reads the roster and signs a runner up who accepted the rules", async ({ page }) => {

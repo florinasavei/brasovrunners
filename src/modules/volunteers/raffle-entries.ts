@@ -46,7 +46,7 @@ import { entryColumnOf, findRaffleEntry, raffleEligible, type RafflePersonFacts,
   race number and a name, matched to a confirmed real registration of a ticked group (or, with «Sunt voluntar», a confirmed
   volunteer), every typed word among the registered name's; honeypot, timing, Turnstile at the action, two throttles; a refusal is
   one neutral answer that reveals neither half. DESK — every desk role (`canReadRaffle`, the desk's roles), for a registration whose
-  person accepted the rules on paper or aloud: on the desk's list, a scanned person's view and, since §NNN, the «Tombolă» tab. STAFF —
+  person accepted the rules on paper or aloud: on the desk's list, a scanned person's view and, since §1014, the «Tombolă» tab. STAFF —
   the organizers (`canTakeRaffleList`), for any of the three kinds of person, a line of the elite list included.
 */
 
@@ -293,7 +293,7 @@ async function matchRafflePerson<T extends Record<string, unknown>>(db: Database
 // ---------------------------------------------------------------------------------------------
 
 /**
- * «Înscrie la tombolă» at the race-day desk (DESK), for every desk role (`canReadRaffle`, which is `canWorkTheDesk`, §NNN): a
+ * «Înscrie la tombolă» at the race-day desk (DESK), for every desk role (`canReadRaffle`, which is `canWorkTheDesk`, §1014): a
  * registration whose person accepted the rules on paper or aloud — the press's own tick says so (`accepted`) —, pressed on the desk's
  * list, a scanned person's view or the «Tombolă» tab. The rules' version is the one in force in the registration's language; the desk
  * member is the recorder.

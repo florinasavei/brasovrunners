@@ -135,7 +135,7 @@ const COMPACT_GLYPH_SX = { ...GLYPH_SX, display: { xs: "none", sm: "inline-flex"
  * `compact` (§986) leaves the glyphs off below `sm`: «Ziua cursei»'s row — «Prezența», «Clasament»,
  * «Cronometrare», «Tombolă», «Lucruri de adus», as the role and the event draw them — says its short
  * words alone on a phone, so a desk role's row of three — four with «Tombolă», every desk role's
- * since §NNN — holds 288 pixels whole and the organizers' five scroll by little; a glyph before each
+ * since §1014 — holds 288 pixels whole and the organizers' five scroll by little; a glyph before each
  * would push more past the edge. From `sm` up every entry wears its glyph as before.
  */
 export default function SubNav({ items, label, fits = false, compact = false }: { items: readonly SubNavItem[]; label: string; fits?: boolean; compact?: boolean }) {

@@ -8,7 +8,7 @@ import { isUuid } from "@/shared/ids";
 import { RECORDED_TIME_ACTIONS, type RecordedTime, type RecordedTimeRow, recordedFinishTimes } from "./domain/recorded-times";
 
 /**
- * The race's trail as «Timpi la sosire» reads it (§NNN): its presses at the line — the rows marked `finishLine` — and its resets,
+ * The race's trail as «Timpi la sosire» reads it (§1012): its presses at the line — the rows marked `finishLine` — and its resets,
  * oldest first, each with the staff member's display name (a left join, as «Istoricul sosirilor» reads it: an account removed since
  * leaves none). **One query for the whole race**, never one per line: both conditions name the indexed key (`audit_logs_entity_idx`:
  * the entity type, the id, the time), so it touches this race's rows only; a «Clasament» save's rows, which carry no `finishLine`,
@@ -33,7 +33,7 @@ export async function loadRecordedTimesTrail<T extends Record<string, unknown>>(
 }
 
 /**
- * «Clasament»'s «Timpi la sosire» (§NNN): every number's times recorded at «Cronometrare» since the last reset
+ * «Clasament»'s «Timpi la sosire» (§1012): every number's times recorded at «Cronometrare» since the last reset
  * (`domain/recorded-times.ts#recordedFinishTimes`), for whoever enters results (`canEnterResults`, FORBIDDEN otherwise) — the
  * page draws them under each line's «Timp» when there is a choice. An id that is no event reads nothing.
  */

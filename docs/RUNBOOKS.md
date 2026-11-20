@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.83-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.84-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1036,7 +1036,7 @@ started and any disqualification with the reason for the note box either way.
    colleague saved is refused rather than written over theirs: reload and save again.
 6. A number pressed more than once at «Cronometrare» — or whose «Timp» is not the one recorded — shows **«Timpi la sosire:»**
    under its «Timp», each time with who pressed it and when: **«Folosește»** beside one makes it the line's «Sosit» time after a
-   question, the places follow, and «Istoricul sosirilor» names who chose it (§NNN). The page need not be reloaded while
+   question, the places follow, and «Istoricul sosirilor» names who chose it (§1012). The page need not be reloaded while
    «Cronometrare» goes on recording: only a change to that runner's own line refuses the press. A «Descalificat» runner shows
    no times to choose: a disqualification is changed by hand in «Stare», then «Salvează tot clasamentul».
 7. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.

@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §979, §984, §986, §996 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs
  * on the desk, «Lucruri de adus», «Cronometrare», «Clasament» and «Jurnal» — the current one marked, the event carried, «Clasament»
  * not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone,
- * «Tombolă» fourth of the organizers' six for an event that holds a raffle — and, since §NNN, third of every other desk role's four —
+ * «Tombolă» fourth of the organizers' six for an event that holds a raffle — and, since §1014, third of every other desk role's four —
  * and their «Jurnal» last, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
  * page by role; the desk's line of free spares (§444) as ranges, and its two other states; and the walk-in's «Numărul dat acum» as a
  * select of the free spares, the lowest chosen.
@@ -295,7 +295,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(raw).toMatch(/<span hidden=""><\/span>/);
     expect(raw).toMatch(/overflow-x:auto/);
     expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(6);
-    // The desk's other roles see «Tombolă» too since §NNN — four entries, «Tombolă» before «Lucruri de adus», at the same address.
+    // The desk's other roles see «Tombolă» too since §1014 — four entries, «Tombolă» before «Lucruri de adus», at the same address.
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
       expect(tabs(await desk(id)), role).toEqual([

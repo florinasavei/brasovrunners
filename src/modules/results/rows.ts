@@ -30,7 +30,7 @@ export function resultBox(key: string, box: ResultRowBox): string {
 export const EXTRA_ROWS = "extraRows";
 
 /**
- * «Folosește» under a line's «Timpi la sosire» (§NNN): the page's one hidden form its buttons name with `form=`, as «Șterge»'s do, and
+ * «Folosește» under a line's «Timpi la sosire» (§1012): the page's one hidden form its buttons name with `form=`, as «Șterge»'s do, and
  * the box each button posts — `choice`, `<number>:<milliseconds>:<the line's fingerprint>` (`chosenTimeValue`, read back by
  * `readChosenTime`). Here, in a module with no React, so the page that draws the question, the island that draws the button and the
  * action that reads it spell it one way.

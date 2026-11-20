@@ -51,7 +51,7 @@ export type RaffleListOptions = { onlyPresent?: boolean };
 
 /**
  * Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. A role or an account, so an
- * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984). Since §NNN it is no longer who reads the «Tombolă»
+ * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984). Since §1014 it is no longer who reads the «Tombolă»
  * tab — every desk role does (`canReadRaffle`) — but what stays the organizers' there: the two files, whose names leave the site, the
  * exclusion, «Șterge înscrierea», an elite line's ticks, the organizers' «Înscrie» of anybody, how and when each person signed up, and
  * the reason «scos de organizatori».
@@ -61,7 +61,7 @@ export function canTakeRaffleList(subject: StaffSubject): boolean {
 }
 
 /**
- * Everybody of the event's three groups with the answer — the «Tombolă» tab's read — for every desk role (`canReadRaffle`, §NNN): a
+ * Everybody of the event's three groups with the answer — the «Tombolă» tab's read — for every desk role (`canReadRaffle`, §1014): a
  * name, a number, a group, a state and whether the person was there, never an address, an email or a telephone (BR-REQ-060-01).
  */
 export async function readRaffleRoster<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string, now: Date): Promise<RaffleRoster | null> {

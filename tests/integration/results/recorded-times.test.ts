@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Timpi la sosire» and «Folosește» on «Clasament» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 criterion 6), amending §986 and
+ * §1012 — «Timpi la sosire» and «Folosește» on «Clasament» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 criterion 6), amending §986 and
  * §808: under a line's «Timp» the times «Cronometrare» recorded for its number — read with the page's data from the race's trail —, drawn
  * only when there is a choice and never on a «Descalificat» line, each with who pressed it and when, «în clasament» on the line's own and
  * a 44-pixel «Folosește» beside the others, posting the page's one hidden form with the line's own fingerprint, asked first; on
@@ -176,7 +176,7 @@ function chooseForm(tree: ReactNode) {
   };
 }
 
-describe("§NNN «Timpi la sosire» under a line's «Timp»", () => {
+describe("§1012 «Timpi la sosire» under a line's «Timp»", () => {
   it("lists both times of a number pressed twice — who pressed each and when —, «în clasament» on the line's own and «Folosește» beside the other", async () => {
     await pressedTwice();
     const { html } = await draw();
@@ -309,7 +309,7 @@ describe("§NNN «Timpi la sosire» under a line's «Timp»", () => {
   });
 });
 
-describe("§NNN «Folosește»: chooseRecordedFinishTime", () => {
+describe("§1012 «Folosește»: chooseRecordedFinishTime", () => {
   it("makes the time chosen the line's — «Sosit», the chip time and the note untouched —, ranks every place again, audits it without a name and tells the public cache", async () => {
     await pressedTwice();
     await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [line(101, { time: "45:15" }), line(102, { time: "45:12", chip: "45:10", note: "a trecut linia" })] }, at(58));
@@ -497,7 +497,7 @@ describe("§NNN «Folosește»: chooseRecordedFinishTime", () => {
   });
 });
 
-describe("§NNN «Folosește»: the action and the page's alert", () => {
+describe("§1012 «Folosește»: the action and the page's alert", () => {
   function form(fields: Record<string, string>): FormData {
     const data = new FormData();
     data.set("uiLocale", "ro");

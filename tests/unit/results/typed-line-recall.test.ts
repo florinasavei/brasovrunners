@@ -36,7 +36,7 @@ const words: ResultWords = {
   noPlace: "fără loc încă",
   noPlaceSettled: "fără loc",
   outOfRanking: "în afara clasamentului",
-  // «Timpi la sosire» (§NNN): drawn only for a line the page gives recorded times, which no line here has.
+  // «Timpi la sosire» (§1012): drawn only for a line the page gives recorded times, which no line here has.
   recordedTitle: "Timpi la sosire:",
   recordedCurrent: "în clasament",
   recordedUse: "Folosește",

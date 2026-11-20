@@ -13,7 +13,7 @@ import {
 import { chosenTimeValue, readChosenTime } from "@/modules/results/rows";
 
 /**
- * §NNN — «Timpi la sosire» read from the race's trail (BR-REQ-050-02): for each number, the times «Cronometrare» recorded since the last
+ * §1012 — «Timpi la sosire» read from the race's trail (BR-REQ-050-02): for each number, the times «Cronometrare» recorded since the last
  * «Resetează clasamentul» — the first press and every later press (`finish_duplicate`), a press undone at the line left out, each time
  * once with who pressed it first and when, in the order pressed; another number's presses, a «Clasament» save's rows and «Folosește»'s
  * own rows are no time recorded at the line. And when a line of «Clasament» draws the block: a choice — more than one time, or one that
@@ -38,7 +38,7 @@ const undo = (bib: number, gunTimeMs: number, seconds: number) => row("event_res
 const reset = (seconds: number) => row("event.results_reset", seconds, { results: 3, gunCleared: true }, "Ana Admin");
 const T = (minutes: number, seconds: number) => minutes * 60_000 + seconds * 1000;
 
-describe("§NNN «Timpi la sosire»: the times recorded at the line, by number", () => {
+describe("§1012 «Timpi la sosire»: the times recorded at the line, by number", () => {
   it("reads a first press: its time, who pressed it and when", () => {
     expect(recordedTimesOf([press(102, T(45, 12), 15)], 102)).toEqual([{ gunTimeMs: T(45, 12), by: "Vlad Voluntar", at: new Date(AT + 15_000) }]);
   });
@@ -124,7 +124,7 @@ describe("§NNN «Timpi la sosire»: the times recorded at the line, by number",
   });
 });
 
-describe("§NNN when a line of «Clasament» draws «Timpi la sosire»", () => {
+describe("§1012 when a line of «Clasament» draws «Timpi la sosire»", () => {
   const one = recordedTimesOf([press(102, T(45, 12), 15)], 102);
   const two = recordedTimesOf([press(102, T(45, 12), 15), again(102, T(45, 17), T(45, 12), 20)], 102);
   /** A line's stored result, as the rule reads it: «Sosit» at a time, or a state with none. */
@@ -169,7 +169,7 @@ describe("§NNN when a line of «Clasament» draws «Timpi la sosire»", () => {
   });
 });
 
-describe("§NNN what «Folosește» posts: the number, the time and the line's own fingerprint", () => {
+describe("§1012 what «Folosește» posts: the number, the time and the line's own fingerprint", () => {
   const stored = (over: Partial<FingerprintedResult> = {}): FingerprintedResult => ({
     bibNumber: 102,
     registrationId: "registration-102",

@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Timpi la sosire» and «Folosește» on «Clasament» (BR-REQ-050-02, BR-REQ-041-01), walked at 320 pixels and on a desk against a
+ * §1012 — «Timpi la sosire» and «Folosește» on «Clasament» (BR-REQ-050-02, BR-REQ-041-01), walked at 320 pixels and on a desk against a
  * production build: on «Cronometrare» an Administrator types 101, then 102, then 101 again — the second 101 a duplicate, the first time
  * kept on the row —; on «Clasament» the line of 101 lists both times under its «Timp», who pressed each and when, «în clasament» on the
  * first and a 44-pixel «Folosește» beside the second; while that page is open, 103 arrives at «Cronometrare» in another tab — race day
@@ -87,7 +87,7 @@ async function pressNumber(page: Page, bib: number, state: "saved" | "duplicate"
   await expect(page.locator(`[data-testid="finish-entry"][data-bib="${bib}"][data-state="${state}"]`).first()).toBeVisible({ timeout: 15_000 });
 }
 
-test.describe("§NNN «Timpi la sosire» and «Folosește»", () => {
+test.describe("§1012 «Timpi la sosire» and «Folosește»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("a number pressed twice at «Cronometrare» lists both times on «Clasament»; «Folosește» on the second makes it the line's, the places follow, the history says it", async ({ page }) => {

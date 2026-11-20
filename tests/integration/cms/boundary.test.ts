@@ -188,7 +188,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/checkin/jurnal",
       // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
       "/admin/checkin/lucruri",
-      // «Tombolă», «Ziua cursei»'s tab for every desk role since §NNN (§984), by hand.
+      // «Tombolă», «Ziua cursei»'s tab for every desk role since §1014 (§984), by hand.
       "/admin/checkin/tombola",
       // The design system page (§692), by hand.
       "/admin/design",

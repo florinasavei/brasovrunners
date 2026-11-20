@@ -32,7 +32,7 @@ export function resultsFingerprint(rows: readonly FingerprintedResult[]): string
 }
 
 /**
- * What ONE line of «Clasament» stored when the page was drawn (§NNN): `resultsFingerprint` of its one row, or of none for a line with
+ * What ONE line of «Clasament» stored when the page was drawn (§1012): `resultsFingerprint` of its one row, or of none for a line with
  * no result. «Folosește» posts it and is refused with CONFLICT only when THAT line changed since — a press at «Cronometrare» of
  * another number, or a save of another line, between the page and the press refuses nothing, so race day needs no reload per choice —,
  * while «Salvează tot clasamentul», which writes the whole list, keeps the whole list's. Columns alone, as above: the positions every

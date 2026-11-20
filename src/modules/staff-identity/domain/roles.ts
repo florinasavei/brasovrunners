@@ -818,7 +818,7 @@ export function canRecordFinishes(subject: StaffSubject): boolean {
 }
 
 /**
- * **«Ziua cursei» → «Tombolă» (§NNN, amending §984's gate)** — an event's raffle tab: everybody of its three groups by the
+ * **«Ziua cursei» → «Tombolă» (§1014, amending §984's gate)** — an event's raffle tab: everybody of its three groups by the
  * number, whether each takes part and whether they were there, the four filters, and the desk's «Înscrie la tombolă» for a
  * runner who accepted the rules. The owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii
  * văd acest tab». So **every staff role that works the desk** (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer,

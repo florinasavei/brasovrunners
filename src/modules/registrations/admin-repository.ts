@@ -1484,7 +1484,7 @@ export type DeskRegistration = {
   elite: boolean;
   /**
    * «De la parteneri»: the partner's or sponsor's name, or null — the desk's chip «Partener: {name}» and its order, the partners'
-   * runners right after the elites (§NNN; the owner, 2026-11-20: «pune elitele primii, apoi pune-i pe cei de la parteneri și cu
+   * runners right after the elites (§1013; the owner, 2026-11-20: «pune elitele primii, apoi pune-i pe cei de la parteneri și cu
    * numele partenerului»). A name of the club's sponsor, never the person's own data; read by no public surface.
    */
   partnerName: string | null;
@@ -1555,7 +1555,7 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
-  // «De la parteneri»: the partner's or sponsor's name, for the row's chip «Partener: {name}» and the desk's order (§NNN).
+  // «De la parteneri»: the partner's or sponsor's name, for the row's chip «Partener: {name}» and the desk's order (§1013).
   partnerName: registrations.partnerName,
   // «Cu nume» / «Anonim» (§1004): the public list's own condition, so the desk's eye and the list never disagree.
   namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),

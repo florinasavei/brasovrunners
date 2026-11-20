@@ -91,7 +91,7 @@ describe("§986 «Istoricul sosirilor»", () => {
     expect(historyBibOf({ kind: "reset", results: 4, gunCleared: true })).toBeNull();
   });
 
-  /** §NNN — «Folosește»: a time recorded at the line made a runner's, said as the choice it was — a change, or a result made again. */
+  /** §1012 — «Folosește»: a time recorded at the line made a runner's, said as the choice it was — a change, or a result made again. */
   it("reads «Folosește» as «Clasament»'s choice of a recorded time, whether it changed a result or made one again", () => {
     const changed = finishHistoryLine(row("18", "event_result.updated", 9, { bibNumber: 102, status: "FINISHED", gunTimeMs: 2_717_000, chipTimeMs: null, changed: ["time"], chosenFromHistory: true }, "Ana Admin"));
     expect(changed).toMatchObject({ where: "results", who: "Ana Admin", what: { kind: "chosen", bibNumber: 102, gunTimeMs: 2_717_000 } });

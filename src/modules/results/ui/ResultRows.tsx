@@ -31,7 +31,7 @@ import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "
  * (`TIME_STYLES`), so a line grows by a button and its glyph, nothing more; without scripts the host hides the button and the box
  * is the box it was.
  *
- * **«Timpi la sosire»** (§NNN): under a line's «Timp», when «Cronometrare» recorded more than one time for its number — or one that is
+ * **«Timpi la sosire»** (§1012): under a line's «Timp», when «Cronometrare» recorded more than one time for its number — or one that is
  * not the line's —, each time with who pressed it and when, «în clasament» on the one the line shows, and beside each other one a
  * 44-pixel «Folosește» that posts the page's one hidden form (`CHOOSE_TIME_FORM_ID`, as «Șterge» posts its own), asked first. The
  * page decides which lines draw it — never a «Descalificat» one — and words every time; this only lays them out.
@@ -81,14 +81,14 @@ export type ResultWords = {
   noPlaceSettled: string;
   /** «în afara clasamentului» in place of a position: an elite the Administrator left out of the ranking (§910). */
   outOfRanking: string;
-  /** «Timpi la sosire:» over a line's recorded times (§NNN), «în clasament» on the one the line shows, and the button «Folosește». */
+  /** «Timpi la sosire:» over a line's recorded times (§1012), «în clasament» on the one the line shows, and the button «Folosește». */
   recordedTitle: string;
   recordedCurrent: string;
   recordedUse: string;
 };
 
 /**
- * One time «Cronometrare» recorded for a line's number (§NNN), as the page worded it: the time, who pressed it and when, whether the
+ * One time «Cronometrare» recorded for a line's number (§1012), as the page worded it: the time, who pressed it and when, whether the
  * line shows it now («în clasament»), and — for the others — what «Folosește» posts and the button's accessible name.
  */
 export type RecordedTimeView = {
@@ -127,7 +127,7 @@ export type RegisteredLine = {
   marks?: readonly ResultMark[];
   /** Who last wrote the stored result (§986): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
   writtenBy?: string;
-  /** «Timpi la sosire» under «Timp» (§NNN): the times recorded for the number, only when there is a choice; absent otherwise. */
+  /** «Timpi la sosire» under «Timp» (§1012): the times recorded for the number, only when there is a choice; absent otherwise. */
   recorded?: readonly RecordedTimeView[];
 };
 
@@ -148,14 +148,14 @@ export type TypedLine = {
   outOfRanking?: boolean;
   /** Who last wrote the stored result (§986), as a registered line says it. */
   writtenBy?: string;
-  /** «Timpi la sosire» under «Timp» (§NNN), as a registered line draws it: the stored line's number's recorded times, when there is a choice. */
+  /** «Timpi la sosire» under «Timp» (§1012), as a registered line draws it: the stored line's number's recorded times, when there is a choice. */
   recorded?: readonly RecordedTimeView[];
 };
 
 /** The one delete form of the page (`ActionForm`, `id` below): a line's «Șterge» names it with `form=` and posts the number as its own value. */
 export const DELETE_RESULT_FORM_ID = "delete-result";
 
-/** A line the page comes back to after «Folosește» (§NNN): its anchor, clear of the top of the window. */
+/** A line the page comes back to after «Folosește» (§1012): its anchor, clear of the top of the window. */
 const LINE_ANCHOR_SX = { scrollMarginTop: 16 } as const;
 
 const BOX_SX = {
@@ -346,7 +346,7 @@ function LineBox({
   span?: boolean;
   /** A time box (§999): the clock button's accessible name beside it, and the box read as a time when it is left. */
   pickLabel?: string;
-  /** What the cell draws under the box: «Timp»'s «Timpi la sosire» (§NNN). */
+  /** What the cell draws under the box: «Timp»'s «Timpi la sosire» (§1012). */
   below?: ReactNode;
 }) {
   const recall = useRecall();
@@ -403,7 +403,7 @@ function LineBox({
 }
 
 /**
- * «Timpi la sosire:» under a line's «Timp» (§NNN): each time «Cronometrare» recorded for the line's number, with who pressed it and
+ * «Timpi la sosire:» under a line's «Timp» (§1012): each time «Cronometrare» recorded for the line's number, with who pressed it and
  * when; «în clasament» on the one the line shows; beside each other one, «Folosește» — a submit of the page's one hidden form
  * (`CHOOSE_TIME_FORM_ID`) posting `choice=<number>:<milliseconds>:<the line's fingerprint>`, which asks first, as «Șterge» does. In
  * the «Timp» cell, so it reads as that box's own, at every width; the words wrap inside the cell rather than widen the line.
@@ -625,7 +625,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
           const box = (name: ResultRowBox) => resultBox(key, name);
           const initial = line?.values ?? { bib: "", name: "", sex: "", birthDate: "", time: "", status: "", chip: "", note: "" };
           const runner = `${words.typedRow} ${index + 1}`;
-          // A stored line is where «Folosește» comes back to (§NNN): its anchor is its stored number's, whatever its box says since.
+          // A stored line is where «Folosește» comes back to (§1012): its anchor is its stored number's, whatever its box says since.
           const anchor = line && Number(initial.bib) > 0 ? resultLineAnchor(Number(initial.bib)) : undefined;
           return (
             <Box component="li" key={index} id={anchor} sx={{ ...LINE_SX, ...LINE_ANCHOR_SX }} data-testid="typed-line" aria-label={runner}>

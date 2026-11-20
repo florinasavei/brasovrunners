@@ -111,7 +111,7 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   planPointsSentSomeWithout: { count: "queued", values: { noAddress: "noAddress" } },
   // «Încarcă contractele semnate» with scripts off (§998): how many files were attached, and how many were not — counts, never a name.
   volunteerContractsAttachedSome: { count: "count", values: { left: "left" } },
-  // «Folosește» under a line's «Timpi la sosire» (§NNN): the race number whose time it was, never a name; counts nothing.
+  // «Folosește» under a line's «Timpi la sosire» (§1012): the race number whose time it was, never a name; counts nothing.
   resultTimeChosen: { values: { bib: "bib" } },
   resultTimeUnchanged: { values: { bib: "bib" } },
 };
@@ -188,7 +188,7 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "resultsPublicUnchanged",
   // «Resetează clasamentul» on a race with no result and no start given, from a page that drew it so (§997).
   "resultsResetNothing",
-  // «Folosește» on a time that was the line's «Sosit» time already (§NNN).
+  // «Folosește» on a time that was the line's «Sosit» time already (§1012).
   "resultTimeUnchanged",
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",

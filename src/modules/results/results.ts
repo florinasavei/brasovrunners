@@ -479,7 +479,7 @@ export type ResultRunner = {
     writtenBy: { name: string | null; changed: boolean };
   } | null;
   /**
-   * What this line stored when it was read (§NNN, `resultLineFingerprint`): its one row's own columns, or none for a line with no
+   * What this line stored when it was read (§1012, `resultLineFingerprint`): its one row's own columns, or none for a line with no
    * result. «Folosește» posts it back and is refused with CONFLICT only when THIS line changed since — never for another line's write.
    */
   lineFingerprint: string;
@@ -869,7 +869,7 @@ export async function deleteEventResult<T extends Record<string, unknown>>(db: D
   revalidatePublicContent("events", "places");
 }
 
-/** What «Folosește» posts (§NNN): the event, the number of the line, the time chosen among the recorded ones, and that line's own fingerprint. */
+/** What «Folosește» posts (§1012): the event, the number of the line, the time chosen among the recorded ones, and that line's own fingerprint. */
 export type ChooseRecordedTimeRequest = {
   eventId: string;
   bibNumber: number;
@@ -885,7 +885,7 @@ export type ChooseRecordedTimeRequest = {
 export type ChooseRecordedTimeOutcome = { changed: boolean; bibNumber: number };
 
 /**
- * «Folosește» under a line's «Timpi la sosire» (§NNN, amending §986's «Choosing a duplicate's time with one press on «Clasament»» left
+ * «Folosește» under a line's «Timpi la sosire» (§1012, amending §986's «Choosing a duplicate's time with one press on «Clasament»» left
  * undone; the owner, 2026-11-20: «For regular runners, if we submit a big [bib] multiple times we track history and in the end we can choose
  * what time to display»): one of the times «Cronometrare» recorded for a number becomes that line's time.
  *

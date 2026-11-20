@@ -21,7 +21,7 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
 /*
   The organizers' presses of «Ziua cursei» → «Tombolă» (§984), and the desk's «Înscrie la tombolă». Each asks its capability at the
   door, by name — the organizers' presses the Organizer's and the Administrators' (`canTakeRaffleList`), the desk's every desk role
-  (`canReadRaffle`, the roles that work the desk and, since §NNN, read the tab) — and the service asks it again (BR-REQ-060-01). The
+  (`canReadRaffle`, the roles that work the desk and, since §1014, read the tab) — and the service asks it again (BR-REQ-060-01). The
   desk's press is pressed at the desk and, by a desk role that is not an organizer, on the tab itself. A press that went through
   comes back with its toast; a refused one comes back to the page's alert with its code in the address. None of them emails anybody,
   and no public cache is expired: no public page reads a sign-up, an exclusion or a presence.
@@ -148,7 +148,7 @@ export async function raffleDeleteEntryAction(form: FormData): Promise<void> {
 /**
  * Where the desk's press comes back to, rebuilt from fields and never taken from the form as a path: the desk's list with its event
  * and its search (`back=desk`, as the desk's other verbs come back to it), the «Tombolă» tab with its event and its filter
- * (`back=raffle`, §NNN), or else the scanned person's view.
+ * (`back=raffle`, §1014), or else the scanned person's view.
  *
  * On the desk's list (§1002) the row comes back too, as the desk's other verbs bring it (`row=`, the registration's id alone): the
  * section that holds it is drawn open, and a sign-up that went through lands on the row — its toast saying so — a refusal on
@@ -194,7 +194,7 @@ async function toastAtDeskRow(form: FormData, saved: string): Promise<void> {
 
 /**
  * «Înscrie la tombolă» at the desk (DESK), under a row of the desk's list, on a scanned person's view or — for a desk role that is not
- * an organizer — on a row of the «Tombolă» tab (§NNN): every desk role (`canReadRaffle`), the person having accepted the rules on paper
+ * an organizer — on a row of the «Tombolă» tab (§1014): every desk role (`canReadRaffle`), the person having accepted the rules on paper
  * or aloud (`accepted=on`). Back where it was pressed, with the desk's own sentence (`saved=`) or the toast, or its refusal (`error=`).
  */
 export async function raffleDeskSignUpAction(form: FormData): Promise<void> {

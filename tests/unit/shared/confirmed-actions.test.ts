@@ -293,7 +293,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setResultsPublishedAction: [],
   // «Resetează clasamentul» (§997): every result of the race and the gun given, wiped before the start — nothing to undo it with.
   resetEventResultsAction: [],
-  // «Folosește» under a line's «Timpi la sosire» (§NNN): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
+  // «Folosește» under a line's «Timpi la sosire» (§1012): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
   chooseRecordedTimeAction: [],
 };
 
@@ -437,7 +437,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Înscrie la tombolă» on «Ziua cursei» → «Tombolă» and on a volunteer's page (§984): the organizers record a person's sign-up.
   raffleSignUpAction:
     "records one person's raffle sign-up, the acceptance of the rules ticked by its own box, undone by «Șterge înscrierea», which asks; it emails nobody, is on no public page and changes no state, place, number or count but the raffle's",
-  // The same at the race-day desk, on the desk's view of a person (§984) — and, for a desk role that is not an organizer, on «Tombolă» (§NNN).
+  // The same at the race-day desk, on the desk's view of a person (§984) — and, for a desk role that is not an organizer, on «Tombolă» (§1014).
   raffleDeskSignUpAction:
     "records one person's raffle sign-up at the desk, the acceptance of the rules ticked by its own box, undone on «Tombolă» by «Șterge înscrierea», which asks; it emails nobody and changes no state, place, number or count but the raffle's",
   // «Scoate» / «Pune înapoi» on a row of «Tombolă» (§984): the organizers' exclusion, through each kind's own tick.

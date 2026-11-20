@@ -31,7 +31,7 @@ const TAB_GLYPH = {
  * day, §986: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare», and §984: «un tab de tombolă unde să văd toți
  * participanții la tombolă»): «Prezența» — the desk as it was —, «Clasament» — the chosen event's results (§808) —,
  * «Cronometrare» — the finish line, a number or an elite pressed as the runner crosses —, «Tombolă» — the raffle, everybody of the
- * three groups, every desk role's since §NNN (the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și
+ * three groups, every desk role's since §1014 (the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și
  * organizatorii văd acest tab») — and «Lucruri de adus», the event's checklist; and, after it, §996 (the owner, 2026-11-19: «vreau
  * si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
  * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`).
@@ -41,14 +41,14 @@ const TAB_GLYPH = {
  * chosen the desk, the finish line and the list pick their default as the desk does, and «Clasament», which has no page without
  * an event, and «Tombolă», which asks the chosen event whether it holds a raffle, are not drawn. A tab whose page the viewer's
  * role cannot open is not drawn either — «Clasament» is `canEnterResults`', «Cronometrare» `canRecordFinishes`', «Tombolă»
- * `canReadRaffle`' (every desk role, §NNN) and only for an event that holds a raffle (one read of the event's own switch), «Jurnal»
+ * `canReadRaffle`' (every desk role, §1014) and only for an event that holds a raffle (one read of the event's own switch), «Jurnal»
  * `canReadRaceDayJournal`' — and every page still asserts its own gate on the server (BR-REQ-060-01).
  *
  * **Five or six entries are wider than a phone** (about 360 pixels on their short words alone, in a 288-pixel row), so the row is
  * not `fits`: it carries `SubNavCurrent` (§731), which scrolls the current entry into view — «Jurnal», the last, included —,
  * every entry is one sideways swipe away, the entry cut at the edge says there is more, and the row scrolls inside itself, never
  * the page. `compact`: below `sm` the row draws no glyphs and the short words «Sosiri» and «Lucruri», so a desk role's row of three —
- * the desk's volunteers: «Prezența», «Sosiri», «Lucruri» — or of four, «Tombolă» among them for an event that holds a raffle (§NNN),
+ * the desk's volunteers: «Prezența», «Sosiri», «Lucruri» — or of four, «Tombolă» among them for an event that holds a raffle (§1014),
  * fits a 320-pixel phone whole and the organizers' five or six scroll by little; «Jurnal» and «Tombolă» are one short word already.
  * A row that fits is left alone by the scroller.
  *
@@ -83,7 +83,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       glyph: glyph("timing"),
     });
   }
-  // «Tombolă» (§984, §NNN): every desk role's tab (`canReadRaffle`), for an event that holds a raffle; the page asserts the role again.
+  // «Tombolă» (§984, §1014): every desk role's tab (`canReadRaffle`), for an event that holds a raffle; the page asserts the role again.
   if (eventId && canReadRaffle(actor) && (await raffleTabShown(getDb(), eventId))) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/tombola" })), label: t("raceDay.tabs.raffle"), active: active === "raffle", glyph: glyph("raffle") });
   }

@@ -1,5 +1,5 @@
 /**
- * «Timpi la sosire» (§NNN, amending §986 and §808; the owner, 2026-11-20: «For regular runners, if we submit a big [bib] multiple times we
+ * «Timpi la sosire» (§1012, amending §986 and §808; the owner, 2026-11-20: «For regular runners, if we submit a big [bib] multiple times we
  * track history and in the end we can choose what time to display»): the times «Cronometrare» recorded for each race number, read
  * back from the audit trail — never from a table of its own — for «Clasament» to draw under a line's «Timp» and for «Folosește» to
  * check the time it is asked to make the line's.
@@ -105,7 +105,7 @@ export function shownFinishTime(stored: StoredLineResult): number | null {
 }
 
 /**
- * Whether «Folosește» may make a recorded time a line's (§NNN): never over «Descalificat» — a decision of «Clasament», which the line
+ * Whether «Folosește» may make a recorded time a line's (§1012): never over «Descalificat» — a decision of «Clasament», which the line
  * itself never undoes either (`finish-line.ts#pressMeets`), changed only by hand in «Stare» —; a line «Abandon» or «Neprezentat», or
  * one with no result, may: a runner written off by mistake who was pressed at the line. The page asks it before drawing the block,
  * the service before writing (`RESULT_DISQUALIFIED`).
