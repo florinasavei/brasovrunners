@@ -1148,7 +1148,9 @@ ten minutes; «Start», «Clasament» and its corrections stay the Organizer's a
 So is the raffle's tab since §1014: for an event that holds a raffle, a Voluntar reads **Ziua cursei →
 Tombolă** — everybody by number, whether each takes part and was there — and signs a runner up there
 with «Înscrie» once the person has accepted the rules; the two files, «Scoate» / «Pune înapoi» and
-«Șterge înscrierea» stay the Organizer's and the Administrators'.
+«Șterge înscrierea» stay the Organizer's and the Administrators'. At the desk itself, since §NNN, a Voluntar
+takes a runner off the raffle or puts them back from the runner's row — «Scoate de la tombolă» / «Pune
+înapoi la tombolă», asked first —, and «Jurnal» and the registration's history keep who pressed.
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
@@ -2772,7 +2774,9 @@ An agent never approves either text.
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
    tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
    each person the search finds (and on a scanned person's view) and signs them up with «Înscrie la tombolă», having heard the person
-   accept the rules (or read them a paper copy) — never a person the organizers took out: putting them back is the organizers' own tick. A runner turned volunteer, or back, keeps their sign-up. A line
+   accept the rules (or read them a paper copy) — never a person taken out of the raffle, whom «Pune înapoi la tombolă» on the same row
+   puts back first. Since §NNN every desk role also takes a runner out there, «Scoate de la tombolă», asked first and kept with who
+   pressed. A runner turned volunteer, or back, keeps their sign-up. A line
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the

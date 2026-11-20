@@ -3319,7 +3319,8 @@ BR-REQ-037-05):
      person's wish, recorded as theirs: no staff member decides it, and nothing else of the registration moves.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
      a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
-     desk included (§984, the person having accepted its rules), and the finish line «Cronometrare»
+     desk included (§984, the person having accepted its rules), and taking a runner off the raffle or
+     putting them back there, asked first and audited with who (§NNN), and the finish line «Cronometrare»
      beside it (`canRecordFinishes`, §10.11). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§948) stay
@@ -3508,6 +3509,8 @@ readers' set, written as `canReadRegistrations` so the two move together, and na
 authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.ts#setRegistrationInRaffle`; the owner:
 «doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
+At the race-day desk the same mark has a door of its own since §NNN, every desk role's, asked first and audited with the
+desk's door beside the new value (DESK, below).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. Beside it the
 raffle's own rows, not the registration's: the sign-ups the Organizer records, «Șterge înscrierea» and an elite line's
@@ -3558,10 +3561,19 @@ volunteer) whose registered name holds every word typed — both folded: case, d
 words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
 wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — inside every row of the
 desk's list (where a search by name or number, or a typed code, lands; one read for the rows shown) and on the view of a
-scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — but the organizers' own
-exclusion, «scos de organizatori», only to the Organizer and the Administrators (`canTakeRaffleList`), every other desk role
-reading «nu participă» alone there — and «Înscrie la tombolă» in
-the open sign-up mode for a person the organizers did not take out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
+scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — a person taken out reading
+«nu participă — scos de la tombolă» to every desk role since §NNN, the desk taking people out too — and «Înscrie la tombolă» in
+the open sign-up mode for a person not taken out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed.
+Under the same line, since §NNN (amending §949 and §953 for the desk), every desk role (`roles.ts#canSetRaffleMarkAtDesk`, written
+as `canWorkTheDesk`; never a member) takes a registration that takes part off the raffle — «Scoate de la tombolă» — or puts one
+taken out back — «Pune înapoi la tombolă» —, asked first (the question names the person and the race number, «Anulează» focused,
+nobody emailed), through `raffle-mark.ts#setRegistrationInRaffleAtDesk`: the same mark in one statement, only for a real
+registration of an event that holds a raffle (else `RAFFLE_NOT_ELIGIBLE` / `RAFFLE_NOT_HELD`, nothing written), a second press
+writing nothing, otherwise one audit row with the staff member and `door: "desk"` — read back by «Ziua cursei» → «Jurnal» («a
+scos de la tombolă» / «a pus înapoi la tombolă», filtered and counted per account) and by the registration's timeline («· la
+masă»). A registration marked «Elită» is a desk row like any other; a line of the elite list and a volunteer are not at the desk
+and keep the organizers' ticks; «Cine poate participa» still takes a whole group out; a row the desk draws read-only (§82) offers
+no press. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
@@ -3575,7 +3587,7 @@ participă», «Doar prezenții», everybody of the three groups in one table �
 how and when they signed up, «Prezent» —, the organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked
 first) and a line's «Prezent», both files, and prints without its controls. A desk role that is not an organizer reads the
 same table, counts and filters with words of its own above them, but not how and when anybody signed up, nor the reason
-«scos de organizatori» (a plain «Nu», as at the desk), and gets one press: the desk's «Înscrie la tombolă» on a registration
+«scos de organizatori» (a plain «Nu»; the desk's own line says «scos de la tombolă» since §NNN, with its press), and gets one press: the desk's «Înscrie la tombolă» on a registration
 that may still sign up and was not taken out, the person having accepted the rules on paper or aloud (DESK, its recorder);
 the organizers' presses, the way to the editor and both files stay `canTakeRaffleList`', and the file's route refuses
 anybody else. Never an address, an email or a telephone: the roster carries none. The draw itself is the club's, outside the

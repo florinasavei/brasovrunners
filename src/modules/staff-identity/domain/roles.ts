@@ -40,7 +40,9 @@
  * defending in the same way the old one was: each of those verbs asserts itself in its own
  * service, never in the interface that hides its button. One mark crossed it since, on the owner's
  * word: the raffle tick (§949), which the Organizer presses too and which moves nothing a
- * registration owns — a predicate of its own, `canSetRaffleMark`, never the reading one.
+ * registration owns — a predicate of its own, `canSetRaffleMark`, never the reading one — and, at
+ * the race-day desk, every desk role presses the same mark, asked first and audited with who
+ * (§NNN, `canSetRaffleMarkAtDesk`).
  */
 
 /**
@@ -719,9 +721,37 @@ export function canKeepRegistrationNotes(subject: StaffSubject): boolean {
  * as `canKeepRegistrationNotes` keeps the notes apart. Written as `canReadRegistrations` rather than as a list
  * of roles, so moving who reads the list moves who ticks with it, and nobody ever ticks a registration they may
  * not read. The volunteers' own tick is `canManageVolunteers`: the same people, by the same function.
+ *
+ * **The tick on the registrations' list and page, not the desk's press (§NNN).** At the race-day desk the same mark
+ * has a door of its own for every desk role, asked first and audited with who — `canSetRaffleMarkAtDesk` below. This
+ * predicate still answers the organizers' tick alone (`setRegistrationRaffleAction`, `raffle-mark.ts#setRegistrationInRaffle`),
+ * and the desk's press never asks it.
  */
 export function canSetRaffleMark(subject: StaffSubject): boolean {
   return canReadRegistrations(subject);
+}
+
+/**
+ * **«Scoate de la tombolă» / «Pune înapoi la tombolă» at the race-day desk (§NNN, amending §949 and §953 for the desk).**
+ *
+ * The owner, 2026-11-20: «La fel cum pot marca pe cineva să apară public ar trebui să pot să-l scot de la tombolă ca și
+ * voluntar dar să fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă,
+ * spre exemplu e posibil că unele elite să nu participe la tombolă». So **every staff role that works the desk**
+ * (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer, Tehnic and the Administrators) takes a registration off
+ * the event's raffle, or puts it back, on the desk's raffle line — under a row of the desk's list and on the scanned
+ * person's view — written as that function so the two lines move together; never a member, who is no staff (§524).
+ *
+ * The same mark as the organizers' tick («Participă la tombolă»), so it moves nothing else either: no state, place,
+ * number, count, email or public page, and the person is not told. What the desk adds is the question and the record:
+ * the line asks first, naming the person and the number, and the one audit row carries the staff member and
+ * `door: "desk"`, which «Ziua cursei» → «Jurnal» and the registration's own timeline read back. A predicate of its own —
+ * never `canSetRaffleMark`, which stays the organizers' tick on the lists, nor `canWorkTheDesk` asked by name — so «may
+ * work the desk» and «may take a runner off the raffle there» are two questions a page, an action and a service ask apart
+ * (BR-REQ-060-01). Asserted by `checkin/raffle-actions.ts#raffleDeskExclusionAction` and again by
+ * `raffle-mark.ts#setRegistrationInRaffleAtDesk`; a hidden button is not a permission.
+ */
+export function canSetRaffleMarkAtDesk(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
 }
 
 /**
@@ -904,7 +934,8 @@ export function canTranslateTexts(subject: StaffSubject): boolean {
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`. The one
- * change to a registration that is not here is the raffle tick (§949, `canSetRaffleMark`).
+ * change to a registration that is not here is the raffle tick (§949, `canSetRaffleMark`), and its
+ * door at the desk (§NNN, `canSetRaffleMarkAtDesk`).
  *
  * Split out from `canManageStaff`, which every one of these screens used to call. They are two
  * different powers, and they are kept apart although both are the Administrator's since §450:
@@ -926,7 +957,8 @@ export function canManageRegistrations(subject: StaffSubject): boolean {
  * is everything that gets that one runner their number when the normal path failed — no
  * email arrived, no QR to show, never registered at all: enter them, confirm them on a paper
  * declaration, give them a number by hand, check them in. Each of those is audited under the
- * volunteer's own id.
+ * volunteer's own id. So is taking a runner off the event's raffle or putting them back, asked
+ * first (§NNN) — a predicate of its own, `canSetRaffleMarkAtDesk`, written as this one.
  */
 export function canWorkTheDesk(subject: StaffSubject): boolean {
   const role = roleOf(subject);
