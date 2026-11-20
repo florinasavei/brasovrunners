@@ -35,7 +35,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - its presses, each asking its capability and coming back with the toast or the refusal's code;
  * - the desk — inside each row of its list, where a search by name or number lands, and on a scanned person's view: «Tombolă:
  *   participă / nu participă» for every desk role, and «Înscrie la tombolă» in the open sign-up mode, coming back where it was
- *   pressed; a volunteer's page and a registration's page, the same line.
+ *   pressed; since §1020 «Scoate de la tombolă» / «Pune înapoi la tombolă» under it for every desk role, and «— scos de la tombolă»
+ *   said to all (the press itself: `tests/integration/registrations/raffle-desk-press.test.ts`); a volunteer's page and a
+ *   registration's page, the same line.
  *
  * The events start in 2099, so the pages' own clock keeps the gate open; the made-up people are nobody.
  */
@@ -127,7 +129,11 @@ async function html(node: ReactNode): Promise<string> {
   const intl = { locale: state.locale, timeZone: "Europe/Bucharest", messages: state.locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>;
   const stream = await renderToReadableStream(createElement(NextIntlClientProvider, intl, node), { onError: () => {} });
   await stream.allReady;
-  return (await new Response(stream).text()).replace(/<style[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
+  return (await new Response(stream).text())
+    .replace(/<style[\s\S]*?<\/style>/g, "")
+    // The inline script React writes beside a form posting to a Server Action — the desk's «Scoate de la tombolă» (§1020) is one.
+    .replace(/<script[\s\S]*?<\/script>/g, "")
+    .replace(/<!-- -->/g, "");
 }
 const words = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/\s+/g, " ").trim();
 
@@ -617,7 +623,8 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
       state.actor = staff[role];
       const line = byTestId(await deskView(people.ana), "desk-raffle");
       expect(line, role).toHaveLength(1);
-      expect(words(await html(line[0])), role).toBe("Tombolă: participă");
+      // In, and — since §1020, for every desk role — the press that takes the person out, asked first.
+      expect(words(await html(line[0])), role).toBe("Tombolă: participă Scoate de la tombolă");
     }
     await signUpMode();
     state.actor = staff.CONTRIBUTOR;
@@ -637,25 +644,22 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(byTestId(await deskView(people.ana), "desk-raffle")).toEqual([]);
   });
 
-  it("says «scos de organizatori» to the organizers alone — every other desk role reads «nu participă» alone — and every other reason to all (§984)", async () => {
+  it("says «— scos de la tombolă» to every desk role, with «Pune înapoi la tombolă», and every other reason to all (§1020, amending §984)", async () => {
     const people = await saturday();
     await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.ana));
-    for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
+    // The desk takes people out too since §1020: the reason is no longer the organizers' alone, so the desk sees it and can put it back.
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV", "MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       state.actor = staff[role];
-      expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă De ce: scos de organizatori");
-    }
-    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
-      state.actor = staff[role];
-      expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă");
+      expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă — scos de la tombolă Pune înapoi la tombolă");
       // Any other reason is said to every desk role: «nu s-a înscris» is what lets the desk offer the sign-up.
       expect(words(await html(byTestId(await deskView(people.elena), "desk-raffle")[0])), role).toBe("Tombolă: nu participă De ce: neconfirmat");
     }
-    // The desk's list, the same: the organizers' exclusion said only to them.
+    // The desk's list, the same, whoever reads it.
     const deskList = async () => DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, q: "Ana Popescu" }) });
-    state.actor = staff.CONTRIBUTOR;
-    expect(words(await html(byTestId(await deskList(), "desk-raffle")[0]))).toBe("Tombolă: nu participă");
-    state.actor = staff.MODERATOR;
-    expect(words(await html(byTestId(await deskList(), "desk-raffle")[0]))).toBe("Tombolă: nu participă De ce: scos de organizatori");
+    for (const role of ["CONTRIBUTOR", "MODERATOR"] as const) {
+      state.actor = staff[role];
+      expect(words(await html(byTestId(await deskList(), "desk-raffle")[0])), role).toBe("Tombolă: nu participă — scos de la tombolă Pune înapoi la tombolă");
+    }
   });
 
   it("draws no raffle line for a test registration — on the desk, its view and its page — and no note on the registrations list (§984)", async () => {
@@ -684,13 +688,13 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
             return [(element.props.row as { id: string }).id, lines.length === 1 ? words(await html(lines[0])) : `${lines.length} lines`];
           }),
       );
-    // «Din oficiu»: one line inside the one row a search by name, or by the number, finds.
-    expect(await rowsOf("Ana Popescu")).toEqual([[people.ana, "Tombolă: participă"]]);
-    expect(await rowsOf("7")).toEqual([[people.ana, "Tombolă: participă"]]);
+    // «Din oficiu»: one line inside the one row a search by name, or by the number, finds — and its «Scoate de la tombolă» (§1020).
+    expect(await rowsOf("Ana Popescu")).toEqual([[people.ana, "Tombolă: participă Scoate de la tombolă"]]);
+    expect(await rowsOf("7")).toEqual([[people.ana, "Tombolă: participă Scoate de la tombolă"]]);
     // A search that finds several: a line inside each, each its own person's answer.
     expect(await rowsOf("e")).toEqual(
       expect.arrayContaining([
-        [people.eliud, "Tombolă: participă"],
+        [people.eliud, "Tombolă: participă Scoate de la tombolă"],
         [people.elena, "Tombolă: nu participă De ce: neconfirmat"],
       ]),
     );
@@ -713,7 +717,7 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
       toast: { kind: "success", key: "raffleSignedUp" },
     });
     expect((await entries()).map((entry) => [entry.registrationId, entry.method])).toEqual([[people.ana, "DESK"]]);
-    expect(words(await html(byTestId(await deskList("Ana Popescu"), "desk-raffle")[0]))).toBe("Tombolă: participă");
+    expect(words(await html(byTestId(await deskList("Ana Popescu"), "desk-raffle")[0]))).toBe("Tombolă: participă Scoate de la tombolă");
     // No raffle on the event: no line under any row.
     await db.update(events).set({ hasRaffle: false }).where(eq(events.id, eventId));
     expect(byTestId(await deskList("Ana Popescu"), "desk-raffle")).toEqual([]);
