@@ -48,6 +48,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   setResultAgeBandsAction: async () => null,
   setResultAwardsAction: async () => null,
   resetEventResultsAction: resetAction,
+  chooseRecordedTimeAction: async () => null,
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},

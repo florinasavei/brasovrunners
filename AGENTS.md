@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.83-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.86-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.83-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.86-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1119,7 +1119,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) — and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) —, «Ziua cursei» → «Tombolă» read, a runner signed up there by the desk's door (`canReadRaffle` = `canWorkTheDesk`, §1014) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
 MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
@@ -1707,6 +1707,15 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
   number and never a runner's name, and the line adds the name the number belongs to today, read live. Each line of
   «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
+- **A recorded time chosen (§1012).** Under a line's «Timp», «Timpi la sosire» lists the times the line recorded for its
+  number since the last reset — the presses' `finishLine` rows, an undone press left out (`domain/recorded-times.ts`), one
+  query of the trail —, and «Folosește» (`canEnterResults`, asked first) makes one the line's «Sosit» time
+  (`results.ts#chooseRecordedFinishTime`): only a time the trail holds for that number, read in the transaction
+  (`RESULT_TIME_NOT_RECORDED` otherwise); never on a «Descalificat» line — no block drawn, `RESULT_DISQUALIFIED` on the
+  server (`mayChooseRecordedTime`), «Abandon» and «Neprezentat» keep it —; guarded by the chosen line's own fingerprint
+  (`resultLineFingerprint`, posted in the button's value): CONFLICT only when that line changed since the page was drawn,
+  never for another number's arrival or another line's save — the big save keeps the whole list's —; the chip time and the
+  note untouched, every place ranked again from the live rows, one audit row with `chosenFromHistory: true`.
 
 MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
 (the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
@@ -3532,12 +3541,18 @@ a volunteer's page and on the tab, a line of the elite list's only door. Nobody 
 
 *Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
 raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a
-volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, the Organizer's and the
-Administrators', drawn among the tabs only for an event that holds a raffle) has the settings in one line, the counts by
-group and how many of them were there, the filters «Toți», «Participă», «Nu participă», «Doar prezenții», everybody of the
-three groups in one table — number, name, group, «Participă» with the reason, how and when they signed up, «Prezent» —, the
-organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked first) and a line's «Prezent», both files, and
-prints without its controls. The draw itself is the club's, outside the site.
+volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, every desk role's since
+§1014 — `canReadRaffle` = `canWorkTheDesk`, a 404 to a member —, drawn among the tabs only for an event that holds a raffle)
+has the settings in one line, the counts by group and how many of them were there, the filters «Toți», «Participă», «Nu
+participă», «Doar prezenții», everybody of the three groups in one table — number, name, group, «Participă» with the reason,
+how and when they signed up, «Prezent» —, the organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked
+first) and a line's «Prezent», both files, and prints without its controls. A desk role that is not an organizer reads the
+same table, counts and filters with words of its own above them, but not how and when anybody signed up, nor the reason
+«scos de organizatori» (a plain «Nu», as at the desk), and gets one press: the desk's «Înscrie la tombolă» on a registration
+that may still sign up and was not taken out, the person having accepted the rules on paper or aloud (DESK, its recorder);
+the organizers' presses, the way to the editor and both files stay `canTakeRaffleList`', and the file's route refuses
+anybody else. Never an address, an email or a telephone: the roster carries none. The draw itself is the club's, outside the
+site.
 
 Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
 §983; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
@@ -3551,8 +3566,9 @@ the event's and the search's «Înscris» and «Confirmat» (a cancelled person 
 that filters the list to those people (`present=yes|no`), combined with the list's other filters as «Cu kit» is: with
 «Doar membrii» or a state chosen it lists the ones that filter keeps too, fewer than the figure. The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
 them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
-(below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
-never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
+(below), «Toate datele unei persoane» and «Ziua cursei» → «Tombolă», which says it in words beside whether the person takes
+part — every desk role's tab since §1014, the tick and its press staying the list's; never by a public page, an email, a badge,
+the desk — which checks runners in, never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
 card or the volunteers' Excel and CSV until a change of their own (`tests/unit/volunteers/presence-never-leaves.test.ts`).
 No state, role, point, number, tick or email moves, no public cache is expired, and the person is not told.
 

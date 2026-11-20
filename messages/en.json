@@ -1155,7 +1155,8 @@
       "registeredOutside": "special guests: {count}",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter",
-      "shop": "Shop"
+      "shop": "Shop",
+      "prKit": "PR Kit"
     },
     "outbox": {
       "status": {
@@ -2909,7 +2910,9 @@
       "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
       "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
       "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is.",
-      "RESULTS_RESET_AFTER_START": "The results can only be reset before the start."
+      "RESULTS_RESET_AFTER_START": "The results can only be reset before the start.",
+      "RESULT_TIME_NOT_RECORDED": "Nothing changed: that time is not among those recorded on «Timing» for this number since the last reset.",
+      "RESULT_DISQUALIFIED": "Nothing changed: the runner is disqualified. A disqualification is changed by hand, in «Status», then «Save all the results»."
     },
     "editor": {
       "draftPreview": {
@@ -4210,9 +4213,9 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
-      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day only: the desk and «Timing».",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day (the desk and «Timing») and «PR Kit».",
       "roles": {
-        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number, signs up for the raffle; under «Timing», records finishes and undoes their own press. That is all.",
+        "CONTRIBUTOR": "the desk: scans, checks people in, confirms on paper, gives a free place, types a number, signs up for the raffle; «Timing»: records finishes, undoes their own press; downloads «PR Kit». That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
@@ -9593,7 +9596,19 @@
                 "«Settings» → «Appearance» → «Design system»: the site's colours, type, buttons and pills as they are in the code, and the redesign plan — for whoever reads the club's content.",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
+                "«PR Kit»: the club's logo, the stickers and the YouTube poster, to download at any time — for the whole team.",
                 "«Staff» and «Guide» (this page)."
+              ]
+            },
+            {
+              "title": "PR Kit: logo, stickers and poster",
+              "steps": [
+                "Open «PR Kit» from the top bar — the whole team has it, volunteers included.",
+                "«Logo»: the full logo and the mountains alone, each in the club's colour, white and black. Give a print shop the SVG or the PDF: they scale to any size without blurring.",
+                "The PNG is for Word, Canva, PowerPoint or social media. White is for dark backgrounds or photos (on white it does not show, which is normal), black for one-colour printing.",
+                "«Stickers»: A4 sheets ready to cut — with a QR code to the site or with the logo alone. Print the PDF at 100% (“Actual size”), not “Fit to page”, so the cuts land where they should.",
+                "«YouTube poster»: an A4 poster with the code to the club's channel. If it says the channel's address is not set, tell an Administrator.",
+                "«Colours»: the club's colour code. On paper it comes out a little darker than on screen: ask the print shop to match it to the logo."
               ]
             },
             {
@@ -9608,7 +9623,7 @@
             {
               "title": "What each role can do",
               "steps": [
-                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
+                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in — and the «Raffle» tab, when the race holds a raffle. Sees a name, a state and a number, never an email address.",
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
                 "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk; leaves internal notes on a registration. Does not change an event, cancel or erase a registration.",
                 "The Tehnic role: the site's configuration page, for troubleshooting. Does not change events and does not see the registrations.",
@@ -9729,6 +9744,15 @@
                 "Several at once: press «Finish» once for each, then type the numbers in order.",
                 "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
                 "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
+              ]
+            },
+            {
+              "title": "At the raffle: who takes part, and signing somebody up",
+              "steps": [
+                "When the race holds a raffle, every desk role opens «Race day» → «Raffle»: the Volunteer, the Redactor, the Organizer, the Tehnic role and the Administrators. Pick the race under «Event» and press «Show».",
+                "You see everybody by number: the name, the group, «Taking part» and «Present». The filters above the table choose whom you see: everybody, those taking part, those not, or only those present.",
+                "With a separate sign-up, a runner who has not signed up has «Accepted the rules» and «Sign up» on their row. Tick it only once the person has accepted the raffle rules, on paper or aloud, then press «Sign up».",
+                "The files for the draw, taking somebody out of the raffle, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them."
               ]
             },
             {
@@ -10012,7 +10036,7 @@
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
-                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
+                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time. A number entered more than once on «Timing» shows every time caught under «Time», with who entered it and when: «Use» puts another time in the results, after a question — not for a disqualified runner, whose «Status» you change by hand.",
                 "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's. A trial run before the race? The Administrator wipes it with «Reset the results»."
               ]
             },
@@ -10726,6 +10750,77 @@
       "familyPending": "Not switched on on this environment yet: the database keeps one registration per address per event. Until then, sending the form for another person only re-sends the first registration's email.",
       "network": "A save fails on an office laptop?",
       "networkLink": "Check the network"
+    },
+    "prKit": {
+      "title": "PR Kit",
+      "intro": "The club's logo, the stickers and the YouTube poster, to download at any time and take to a print shop.",
+      "logo": {
+        "title": "Logo",
+        "intro": "SVG or PDF for a print shop, PNG for Word, Canva or social media.",
+        "introMore": "White is for dark backgrounds or photos, black for one-colour printing. The PNG is 4000 px wide on a transparent background.",
+        "shape": {
+          "lockup": "Full logo",
+          "mountains": "Mountains only"
+        },
+        "ink": {
+          "primary": "in the club's colour",
+          "white": "white",
+          "black": "black"
+        },
+        "tile": "{shape} · {ink}",
+        "format": {
+          "svg": "SVG",
+          "png": "PNG",
+          "pdf": "PDF"
+        },
+        "download": "Download {name} ({format})"
+      },
+      "stickers": {
+        "title": "Stickers",
+        "intro": "A4 sheets ready to cut. Print the PDF at 100%, not “Fit to page”.",
+        "introMore": "The grey dashed lines are the cuts. Around the QR code stays the white margin a phone needs to read it.",
+        "withCode": "With a QR code to the site",
+        "codeTo": "The code leads to {address}.",
+        "logoOnly": "The logo alone",
+        "sheet": {
+          "qr12": "12 per sheet",
+          "qr24": "24 per sheet",
+          "logo12": "12 per sheet",
+          "logo24": "24 per sheet",
+          "logo40": "40 per sheet",
+          "logo12Primary": "12 per sheet, on the club's colour"
+        },
+        "what": {
+          "qr12": "Large: the logo, the code and the address, one under the other.",
+          "qr24": "Small: the logo and the address on the left, the code on the right.",
+          "logo12": "The logo, large.",
+          "logo24": "The logo, medium.",
+          "logo40": "The logo, small.",
+          "logo12Primary": "The logo in white, on the club's colour."
+        },
+        "download": "Download PDF",
+        "downloadLabel": "Download PDF: {name}"
+      },
+      "poster": {
+        "title": "YouTube poster",
+        "intro": "An A4 poster with a QR code to the club's YouTube channel.",
+        "codeTo": "The code leads to {address}.",
+        "unset": "The club's YouTube address is not set: it goes in CLUB_YOUTUBE_URL, in the Vercel project's variables, then redeploy.",
+        "download": "Download the poster (PDF)",
+        "kicker": "We're on",
+        "brand": "YouTube",
+        "lead": "The races, the training runs and the people of the club — follow us and subscribe!",
+        "tab": "SCAN ME",
+        "scan": "Open your phone's camera and point it at the code"
+      },
+      "colours": {
+        "title": "Colours",
+        "intro": "The club's colour, for a print shop.",
+        "primary": "The club's colour",
+        "hex": "HEX {hex}",
+        "rgb": "RGB {r}, {g}, {b}",
+        "paper": "On paper it comes out a little darker than on screen: ask the print shop to match it to the logo."
+      }
     },
     "eventJson": {
       "title": "Import an event (JSON)",
@@ -12699,7 +12794,7 @@
       "delete": "Delete",
       "deleteFor": "Delete the result: {runner}",
       "deleteTitle": "Delete the result?",
-      "deleteBody": "The result of the runner with number {bibNumber} leaves the results. The others' places are worked out again.",
+      "deleteBody": "The result of the runner with number {bibNumber} leaves the results. The others' places are worked out again. Anything not saved on the page is lost: save it first.",
       "publish": {
         "title": "On the event's page",
         "label": "The results are public on the event's page",
@@ -12832,6 +12927,7 @@
           "created": "added {runner}: {status}",
           "updated": "changed {runner}: {status}",
           "updatedBoxes": "changed {runner}: {status} ({boxes})",
+          "chosen": "chose {time} for {runner} from the recorded times",
           "deleted": "deleted the result of {runner} ({status})",
           "gunSet": "started the race at {time}",
           "gunMoved": "moved the start to {time} (was {previous})",
@@ -12855,6 +12951,17 @@
           "registration": "registration",
           "nameAgreed": "name consent"
         }
+      },
+      "recorded": {
+        "title": "Times at the finish:",
+        "by": "{name}, at {at}",
+        "current": "in the results",
+        "use": "Use",
+        "useFor": "Use {time} for {runner}",
+        "confirmTitle": "Use this time?",
+        "confirmBody": "Make {time} the time of {runner}? The result becomes «Finished», keeping its chip time and note, and the places are worked out again. Anything not saved on the page is lost: save it first.",
+        "confirmBodyAny": "Make the chosen time the runner's? The result becomes «Finished», keeping its chip time and note, and the places are worked out again. Anything not saved on the page is lost: save it first.",
+        "changed": "The time was not changed: someone changed this runner's line in the meantime. Look at the line again and choose again."
       },
       "reset": {
         "title": "Reset the results",
@@ -13246,6 +13353,7 @@
     "raffle": {
       "title": "Raffle",
       "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "introDesk": "Every runner, elite and volunteer of the event: who takes part in the raffle and who is present. With a separate sign-up, sign a runner up here once they have accepted the rules.",
       "noEvent": "No event to show.",
       "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
       "event": "Event",
@@ -14141,9 +14249,19 @@
       "changed": "Your choice has been saved.",
       "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
       "failed": "Could not save your choice. Try again or write to us.",
-      "shortListed": "You are on the public participant list.",
-      "shortNotListed": "You are not on the public participant list.",
-      "eventPage": "The event's page"
+      "eventPage": "The event's page",
+      "choice": {
+        "title": "Public list and results",
+        "listedWithResults": "Your name appears on the public list of participants and in the results.",
+        "listed": "Your name appears on the public list of participants.",
+        "notListedCountedWithResults": "Your name is not on the public list of participants or in the results: on the list you appear as “{anonymous}”.",
+        "notListedCounted": "Your name is not on the public list of participants: on the list you appear as “{anonymous}”.",
+        "notListedWithResults": "Your name is not on the public list of participants or in the results.",
+        "notListed": "Your name is not on the public list of participants.",
+        "saving": "Saving your choice…",
+        "help": "You can change it at any time, here or from “My registrations”.",
+        "helpMine": "You can change it at any time, here or from the registration's own page."
+      }
     },
     "withdraw": {
       "title": "What you gave us with your consent",
@@ -15634,6 +15752,8 @@
         "other": "Read {count} rows from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet."
       },
       "resultDeleted": "Result deleted. The others' places were worked out again.",
+      "resultTimeChosen": "#{bib}: the chosen time is now in the results, and the places were worked out again.",
+      "resultTimeUnchanged": "#{bib} already had this time; nothing to change.",
       "resultsPublished": "The results are now public on the event's page.",
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
