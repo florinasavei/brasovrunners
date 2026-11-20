@@ -741,7 +741,7 @@ export function canSetRaffleMark(subject: StaffSubject): boolean {
  * the event's raffle, or puts it back, on the desk's raffle line — under a row of the desk's list and on the scanned
  * person's view — written as that function so the two lines move together; never a member, who is no staff (§524).
  *
- * The same mark as the organizers' tick (`registrations.in_raffle`), so it moves nothing else either: no state, place,
+ * The same mark as the organizers' tick («Participă la tombolă»), so it moves nothing else either: no state, place,
  * number, count, email or public page, and the person is not told. What the desk adds is the question and the record:
  * the line asks first, naming the person and the number, and the one audit row carries the staff member and
  * `door: "desk"`, which «Ziua cursei» → «Jurnal» and the registration's own timeline read back. A predicate of its own —

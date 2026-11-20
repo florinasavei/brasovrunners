@@ -8,6 +8,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { checkInByStaff, recordCodeScan } from "@/modules/registrations/admin-service";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
+import { setRegistrationInRaffle, setRegistrationInRaffleAtDesk } from "@/modules/registrations/raffle-mark";
 import { checkIn } from "@/modules/registrations/service";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -219,6 +220,18 @@ describe("§996 the registration's own page", () => {
     expect(await line(ana.id)).toMatch(/· QR2$/);
     expect(await line(ion.id)).toMatch(/· prin „Am ajuns”$/);
     expect(await line(eva.id)).toMatch(/· cont șters$/);
+  });
+
+  it("names who took the runner off the raffle and who put them back — «· la masă» for the desk's press, nothing more for the organizers' tick (§NNN)", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
+    const ana = await runner("Ana Pop");
+    await setRegistrationInRaffleAtDesk(db, qr2, ana.id, false, at("08:30"));
+    await setRegistrationInRaffle(db, admin, ana.id, true, at("08:35"));
+    const lines = trailLines(await detail(ana.id));
+    expect(lines.some((line) => /08:30 · Scos de pe lista pentru tombolă · QR2 · la masă$/.test(line)), lines.join("\n")).toBe(true);
+    expect(lines.some((line) => /08:35 · Pus înapoi pe lista pentru tombolă · Coleg ADMIN$/.test(line)), lines.join("\n")).toBe(true);
+    state.locale = "en";
+    expect(trailLines(await detail(ana.id)).some((line) => /08:30 · Taken off the raffle's list · QR2 · at the desk$/.test(line))).toBe(true);
   });
 
   it("links the scanned page once, never prefetched and from this page, so a view of the registration records no scan", async () => {

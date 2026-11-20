@@ -8003,7 +8003,7 @@
         "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii și în „Jurnal”, cu numele tău.",
-        "Cursa are tombolă? Sub rând scrie dacă persoana participă. „Scoate de la tombolă” și „Pune înapoi la tombolă” întreabă întâi; „Jurnal” arată cine a decis.",
+        "Cursa are tombolă? Sub rând scrie dacă persoana participă. „Scoate de la tombolă” și „Pune înapoi la tombolă” întreabă întâi, iar apăsarea rămâne scrisă cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
         "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc."
@@ -9756,14 +9756,16 @@
                 "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
                 "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
                 "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
-                "Fișierele pentru extragere, scoaterea cuiva de la tombolă, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i."
+                "Fișierele pentru extragere, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i.",
+                "Un alergător îl scoți de la tombolă, sau îl pui înapoi, de pe rândul lui din «Prezența»: «Scoate de la tombolă» întreabă întâi."
               ]
             },
             {
               "title": "Jurnalul: cine a scanat, cine a marcat prezent",
               "steps": [
                 "Îl deschid Organizatorul și Administratorii: «Ziua cursei» → «Jurnal», apoi alege cursa la «Eveniment» și apasă «Arată».",
-                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat, câți alergători a scos de la tombolă sau a pus înapoi și câți voluntari a bifat.",
+                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat și câți voluntari a bifat.",
+                "Tot acolo, câți alergători a scos de la tombolă și câți a pus înapoi; în listă, «a scos de la tombolă» spune cine a decis.",
                 "Dedesubt, cel mai nou primul: ora, cine, ce a făcut și pe cine. Numele duce la înscriere sau la pagina voluntarului.",
                 "„participantul” înseamnă că alergătorul a apăsat singur «Am ajuns — marchează-mă prezent» din linkul lui; „cont șters”, un cont scos de atunci din «Echipa».",
                 "«Cont» și «Ce s-a făcut» aleg ce vezi; apoi «Arată». Se văd cele mai noi 300 de rânduri, iar dedesubt câte mai sunt.",

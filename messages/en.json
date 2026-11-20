@@ -8003,7 +8003,7 @@
         "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history and in “Log”, with your name on it.",
-        "The race holds a raffle? Under the row it says whether the person takes part. “Take out of the raffle” and “Put back in the raffle” ask first; “Log” shows who decided.",
+        "The race holds a raffle? Under the row it says whether the person takes part. “Take out of the raffle” and “Put back in the raffle” ask first, and the press is kept with your name.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in.",
         "If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -9756,14 +9756,16 @@
                 "When the race holds a raffle, every desk role opens «Race day» → «Raffle»: the Volunteer, the Redactor, the Organizer, the Tehnic role and the Administrators. Pick the race under «Event» and press «Show».",
                 "You see everybody by number: the name, the group, «Taking part» and «Present». The filters above the table choose whom you see: everybody, those taking part, those not, or only those present.",
                 "With a separate sign-up, a runner who has not signed up has «Accepted the rules» and «Sign up» on their row. Tick it only once the person has accepted the raffle rules, on paper or aloud, then press «Sign up».",
-                "The files for the draw, taking somebody out of the raffle, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them."
+                "The files for the draw, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them.",
+                "You take a runner out of the raffle, or put them back, from their row on «Attendance»: «Take out of the raffle» asks first."
               ]
             },
             {
               "title": "The log: who scanned, who marked present",
               "steps": [
                 "The Organizer and the Administrators open it: «Race day» → «Log», then pick the race under «Event» and press «Show».",
-                "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid, how many runners it took out of the raffle or put back and how many volunteers it ticked.",
+                "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid and how many volunteers it ticked.",
+                "There too, how many runners it took out of the raffle and how many it put back; in the list, «took out of the raffle» says who decided.",
                 "Below, newest first: the time, who, what they did and to whom. The name leads to the registration or to the volunteer's page.",
                 "“the participant” means the runner pressed «I have arrived — mark me as here» from their own link themselves; “deleted account”, an account removed from «Staff» since.",
                 "«Account» and «What was done» choose what you see; then «Show». The newest 300 lines show, and under them how many more there are.",

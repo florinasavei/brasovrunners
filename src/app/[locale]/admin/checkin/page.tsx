@@ -146,6 +146,8 @@ export default async function DeskPage({ params, searchParams }: Props) {
               number: number === null ? null : formatRaceNumber(number, row.raceNumberFormat),
               action: raffleDeskSignUpAction,
               exclusionAction: raffleDeskExclusionAction,
+              // The race is over (§82): the row reads, and the line offers no press either.
+              readOnly: closed,
             })
           : null;
         return [row.id, drawn] as const;

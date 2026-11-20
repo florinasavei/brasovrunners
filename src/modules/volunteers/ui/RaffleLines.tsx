@@ -120,7 +120,8 @@ async function exclusionForm(props: { exclusionAction: ActionFormAction; hidden:
  *
  * - «Scoate de la tombolă» for a registration that takes part, and «Pune înapoi la tombolă» for one taken out (§NNN; the owner,
  *   2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare») — every desk role, asked
- *   first (`exclusionForm`), the number named in the question; an elite registration (§897) like any other;
+ *   first (`exclusionForm`), the number named in the question; an elite registration (§897) like any other; never on a row the
+ *   desk draws read-only (a completed event, §82), which reads and offers no button;
  * - in the sign-up mode with its gate open for a person who may still sign up, «Înscrie la tombolă» — the person having accepted the
  *   rules on paper or aloud, which the desk member ticks.
  */
@@ -135,6 +136,8 @@ export async function raffleDeskLine(props: {
   action: ServerAction;
   /** The desk's «Scoate» / «Pune înapoi» (`checkin/raffle-actions.ts#raffleDeskExclusionAction`), asked first. */
   exclusionAction: ActionFormAction;
+  /** The desk's row is read-only (§82: the race is over): the line reads, and «Scoate» / «Pune înapoi» is not drawn. */
+  readOnly?: boolean;
 }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
   const { back, line, number } = props;
@@ -154,6 +157,7 @@ export async function raffleDeskLine(props: {
     <Stack spacing={1} data-testid="desk-raffle">
       {standingChip(t, line.reason, "desk-raffle-line", takenOut ? t("raffle.desk.takenOut") : true)}
       {number !== null &&
+        !props.readOnly &&
         (line.reason === "in" || takenOut) &&
         (await exclusionForm({ exclusionAction: props.exclusionAction, hidden, takeOut: line.reason === "in", name: props.name, number }))}
       {line.maySignUp &&
