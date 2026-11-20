@@ -96,6 +96,23 @@ function resultTime(ms: number): string {
 }
 
 /**
+ * Whether the box holds the focus as each tap on the question ends (§NNN): read at the window, after the page's own handler and the
+ * render it commits, before any frame — iOS Safari raises the keyboard only for a focus a tap's own handler gives, never for one given
+ * a frame later. Each read returns what was seen since the last one, a tap at a time.
+ */
+async function focusAtTapEnd(page: Page): Promise<() => Promise<boolean[]>> {
+  await page.evaluate(() => {
+    const seen: boolean[] = [];
+    (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd = seen;
+    window.addEventListener("click", (event) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-testid="confirm-dialog"]')) return;
+      seen.push(document.activeElement === document.querySelector('[data-testid="finish-bib"]'));
+    });
+  });
+  return () => page.evaluate(() => (window as unknown as { boxAtTapEnd: boolean[] }).boxAtTapEnd.splice(0));
+}
+
+/**
  * «Ziua cursei»'s row (§984, §986): the current entry wholly inside the row as the scroller left it, the row scrolling inside itself, and
  * every entry reachable by a sideways swipe — scrolled to, each lies wholly inside the row — while the page never scrolls sideways.
  */
@@ -309,11 +326,14 @@ test.describe("§986 «Cronometrare»", () => {
    * §NNN — the owner, 2026-11-20: «after an elite arrives and is marked as a finisher, if somebody types that again than we need a
    * confirmation message, this is just for elites sincer their timing is more sensitive». The desk Volunteer presses Andrei's button as
    * he crosses; his number typed after it asks first — the question fits 320 pixels, its two answers 44 pixels and more —; a second
-   * Enter and Esc cancel, nothing recorded and the «Finish» moment caught before it kept; typed again and answered «Trece-l din nou» a
-   * few seconds later, the press takes that moment and the first time stays; answered so with no moment caught, it carries the moment
-   * «Sosit» was pressed, never the answer's. An elite who has not crossed yet, and a runner typed twice, are never asked.
+   * Enter and Esc cancel, nothing recorded and the «Finish» moment caught before it kept; Ioana's number, a woman's, asks in the same
+   * words — of the number, never «îl» —, and a tap on «Anulează» cancels too; typed again and answered «Trece numărul din nou» a few
+   * seconds later, the press takes that moment and the first time stays; answered so with no moment caught, it carries the moment
+   * «Sosit» was pressed, never the answer's. After every answer the box holds the focus as the tap ends — given inside the tap, so a
+   * phone's keyboard comes back —, a second tap on the fading question too. An elite who has not crossed yet, and a runner typed twice,
+   * are never asked.
    */
-  test("a finished elite's number typed again is asked first: «Anulează» records nothing and keeps the caught moment, «Trece-l din nou» records the tap's moment beside the first time; nobody else is asked", async ({
+  test("a finished elite's number typed again is asked first: «Anulează» records nothing and keeps the caught moment, «Trece numărul din nou» records the tap's moment beside the first time, the box focused inside each answer's tap; nobody else is asked", async ({
     page,
   }) => {
     const tag = `${test.info().project.name}-again-${Date.now().toString(36)}`;
@@ -333,6 +353,7 @@ test.describe("§986 «Cronometrare»", () => {
     const dialog = page.getByRole("dialog");
     const kept = page.getByTestId("finish-kept");
     const presses7 = page.locator('[data-testid="finish-entry"][data-bib="7"]');
+    const boxAtTapEnd = await focusAtTapEnd(page);
 
     // Ioana, an elite who has not crossed yet, typed: recorded at once, nothing asked.
     await box.fill("8");
@@ -358,12 +379,12 @@ test.describe("§986 «Cronometrare»", () => {
     await box.press("Enter");
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText("A sosit deja");
-    await expect(dialog).toContainText(`Andrei (Andrei ${tag}) a sosit deja la ${resultTime(first.gun)} — introdus de Dev Contributor. Îl treci din nou?`);
+    await expect(dialog).toContainText(`Andrei (Andrei ${tag}) a sosit deja la ${resultTime(first.gun)} — introdus de Dev Contributor. Treci numărul din nou?`);
     await expect(dialog).toContainText("Al doilea timp nu-l schimbă pe primul: apare doar în «Istoricul sosirilor», la «Clasament».");
     const cancel = dialog.getByTestId("confirm-dialog-cancel");
     const confirm = dialog.getByTestId("confirm-dialog-confirm");
     await expect(cancel).toHaveText("Anulează");
-    await expect(confirm).toHaveText("Trece-l din nou");
+    await expect(confirm).toHaveText("Trece numărul din nou");
     await expect(cancel).toBeFocused();
     await expect(box).toHaveValue("");
     // The question fits the screen — 320 pixels on the phone —, nothing wider inside it, and both answers are a thumb's 44 pixels.
@@ -382,10 +403,12 @@ test.describe("§986 «Cronometrare»", () => {
     }
     await noHorizontalScroll(page);
 
-    // A second Enter reaches the focused «Anulează»: nothing recorded, the caught moment kept for the next number, the box focused.
+    // A second Enter reaches the focused «Anulează»: nothing recorded, the caught moment kept for the next number, the box focused —
+    // already as the button's press ends.
     await page.keyboard.press("Enter");
     await expect(dialog).toBeHidden();
     await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
     await expect(box).toHaveValue("");
     await expect(kept).toHaveCount(1);
     await expect(presses7).toHaveCount(1);
@@ -400,8 +423,23 @@ test.describe("§986 «Cronometrare»", () => {
     await expect(presses7).toHaveCount(1);
     expect(await pressedAgain()).toEqual([]);
 
-    // Typed again, «Sosit» pressed, and answered «Trece-l din nou» seconds later: the press takes the moment caught — read at «Sosit» —
-    // and the first time stays, this one going to «Istoricul sosirilor».
+    // Ioana's number typed again — a woman's: the question asks of the number, in the same words — and «Anulează» tapped: nothing
+    // recorded, the caught moment kept, and the box focused inside the tap itself, so a phone's keyboard comes back with it.
+    const [ioana] = await query<{ gun: number }>(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 8`, [eventId]);
+    await box.fill("8");
+    await box.press("Enter");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(`Ioana (Ioana ${tag}) a sosit deja la ${resultTime(ioana.gun)} — introdus de Dev Contributor. Treci numărul din nou?`);
+    await expect(confirm).toHaveText("Trece numărul din nou");
+    await cancel.click();
+    await expect(dialog).toBeHidden();
+    await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
+    await expect(page.locator('[data-testid="finish-entry"][data-bib="8"]')).toHaveCount(1);
+    await expect(kept).toHaveCount(1);
+
+    // Typed again, «Sosit» pressed, and answered «Trece numărul din nou» seconds later: the press takes the moment caught — read at
+    // «Sosit» — and the first time stays, this one going to «Istoricul sosirilor»; the box focused as the tap ends.
     await box.fill("7");
     await page.getByTestId("finish-record").click();
     await expect(dialog).toBeVisible();
@@ -409,21 +447,25 @@ test.describe("§986 «Cronometrare»", () => {
     await confirm.click();
     await expect(dialog).toBeHidden();
     await expect(box).toBeFocused();
+    expect(await boxAtTapEnd()).toEqual([true]);
     const again = page.locator('[data-testid="finish-entry"][data-bib="7"][data-state="duplicate"]');
     await expect(again).toContainText(`Andrei (#7) era deja trecut de Dev Contributor la ${resultTime(first.gun)} — rămâne așa; apăsarea ta (${caught})`, { timeout: 15_000 });
     await expect(kept).toHaveCount(0);
     expect(await query(`SELECT gun_time_ms AS gun FROM event_results WHERE event_id = $1 AND bib_number = 7`, [eventId])).toEqual([{ gun: first.gun }]);
 
     // No moment caught: answered three seconds after «Sosit» — by a double tap, which answers once —, the press carries the moment
-    // «Sosit» was pressed — the server heard it three seconds after the moment it stands for —, never the answer's.
+    // «Sosit» was pressed — the server heard it three seconds after the moment it stands for —, never the answer's. The second tap,
+    // on the question as it fades, gives the button the focus in most browsers: its own handler gives it back to the box at once.
     await box.fill("7");
     await box.press("Enter");
     await expect(dialog).toBeVisible();
     await page.waitForTimeout(3_000);
     await confirm.dblclick();
     await expect(dialog).toBeHidden();
+    expect(await boxAtTapEnd()).toEqual([true, true]);
+    await expect(box).toBeFocused();
     await expect(again).toHaveCount(2, { timeout: 15_000 });
-    // One press for the double tap: the first «Sosit», two answered «Trece-l din nou» — a line each, written at the press.
+    // One press for the double tap: the first «Sosit», two answered «Trece numărul din nou» — a line each, written at the press.
     await expect(presses7).toHaveCount(3);
     await expect(kept).toHaveCount(0);
     const trail = await pressedAgain();

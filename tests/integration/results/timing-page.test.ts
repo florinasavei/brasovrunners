@@ -443,8 +443,9 @@ describe("§997 «Cronometrare»: the words of a press older than the reset", ()
 /**
  * §NNN — a finished elite's number typed again is asked first: the question the island builds from the page's own state and words
  * (`asksBeforeAgain`, `eliteAgainQuestion`), in Romanian and in English — the elite by label and name, the time stored and who entered
- * it, what a second press does — and its two answers as the house's dialog draws them, «Anulează» first, «Trece-l din nou» in the
- * error colour, so Enter never answers it. Any other number, «Sosit» or not, asks nothing.
+ * it, what a second press does — and its two answers as the house's dialog draws them, «Anulează» first, «Trece numărul din nou» in
+ * the error colour, so Enter never answers it. The words ask of the number, never of the person, since the elites are men and women:
+ * no «Îl treci», no «Trece-l». Any other number, «Sosit» or not, asks nothing.
  */
 describe("§NNN «Cronometrare»: the question a finished elite's number typed again asks", () => {
   it("is worded from the page's state and words, in Romanian and in English, its two answers drawn by the house's dialog", async () => {
@@ -459,16 +460,16 @@ describe("§NNN «Cronometrare»: the question a finished elite's number typed a
       [
         "ro",
         "A sosit deja",
-        "Andrei (Andrei Munteanu) a sosit deja la 0:31:05 — introdus de Vlad Voluntar. Îl treci din nou?",
+        "Andrei (Andrei Munteanu) a sosit deja la 0:31:05 — introdus de Vlad Voluntar. Treci numărul din nou?",
         "Al doilea timp nu-l schimbă pe primul: apare doar în «Istoricul sosirilor», la «Clasament».",
-        ["Anulează", "Trece-l din nou"],
+        ["Anulează", "Trece numărul din nou"],
       ],
       [
         "en",
         "Already finished",
-        "Andrei (Andrei Munteanu) already finished at 0:31:05 — entered by Vlad Voluntar. Enter them again?",
+        "Andrei (Andrei Munteanu) already finished at 0:31:05 — entered by Vlad Voluntar. Enter the number again?",
         "A second time does not change the first: it only shows in «Finish history», under «Results».",
-        ["Cancel", "Enter again"],
+        ["Cancel", "Enter the number again"],
       ],
     ] as const) {
       language = locale;
@@ -503,6 +504,6 @@ describe("§NNN «Cronometrare»: the question a finished elite's number typed a
     const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "eliteAgain" in (element.props.words as object));
     const initial = island?.props.initial as FinishLineState;
     const again = asksBeforeAgain(7, { ...initial, recent: [] }, [], staff.MODERATOR!.id, initial.gunAtMs);
-    expect(eliteAgainQuestion(island?.props.words as FinishLineWords, again!).body).toBe("Andrei (Andrei Munteanu) a sosit deja la 0:31:05. Îl treci din nou?");
+    expect(eliteAgainQuestion(island?.props.words as FinishLineWords, again!).body).toBe("Andrei (Andrei Munteanu) a sosit deja la 0:31:05. Treci numărul din nou?");
   });
 });

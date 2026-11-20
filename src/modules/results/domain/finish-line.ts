@@ -38,8 +38,9 @@ import { isUuid } from "@/shared/ids";
  *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`). The
  *   moment a press stands for is read at the tap (`tapMoment`) and handed to the press, which then lets go of the kept one it took
  *   (`keptAfterPress`) — so a question asked between the two never moves it (§NNN).
- * - **A finished elite typed again** (§NNN): a number the box is given that is an elite's who is already «Sosit» — or whose press
- *   waits or was saved on this phone — is asked about first (`asksBeforeAgain`); any other number goes at once, as before.
+ * - **A finished elite typed again** (§NNN): a number the box is given that is an elite's who is already «Sosit» as this page last
+ *   heard — at its load or in the answer to any press since — or whose press waits or was saved on this phone, is asked about first
+ *   (`asksBeforeAgain`); any other number goes at once, as before.
  * - **The queue.** Every entry is one staff account's press (`staffId`) with an id of its own, which the server keeps in the
  *   trail and recognises a retry by; kept, in the order pressed, until the server answered it. The oldest one of the viewer's
  *   own waiting is sent first (`nextToSend`) — another account's, left on the same phone, is shown and never sent from this one.
@@ -696,6 +697,10 @@ export type EliteAgain = { elite: EliteButtonView; gunTimeMs: number; stored: Re
  * A press of this phone made before that gun — the trial before «Resetează clasamentul» (§997), a press refused as not started — is no
  * finish of this race, and another account's press left on the phone is not the viewer's: neither asks. The elites' own buttons never
  * ask — a finished elite's is drawn disabled —, and the server keeps the first time whatever is pressed (`pressMeets`).
+ *
+ * What the page knows is what it last heard — at its load, or in the answer to any press of its own since: nothing is asked of the
+ * server at a number typed, which would put a round trip between the box and the next runner on the line. So an elite pressed on
+ * another phone since is asked about only once this page has heard of it, and the server keeps the first time all the same.
  */
 export function asksBeforeAgain(
   bibNumber: number,

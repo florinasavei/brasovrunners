@@ -999,13 +999,15 @@ gun and a clock since it.
    the race): reload the page, the presses wait.
 3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
    the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. An elite already «Sosit»
-   whose number is typed again is asked first: «Anulează» (focused, so Enter or Esc) records nothing and uses no caught
-   moment; «Trece-l din nou» records it at the moment «Sosit» was pressed, the first time staying. A number no confirmed
-   registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»
-   later under «Alergători neînscriși»). Before the start, or more than a day after it: refused — and a press arriving
-   more than a day and three hours after the start is refused whatever moment it carries. A runner saved as «Abandon»
-   or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved «Descalificat», or written off after
-   the moment a press carries, stays as decided — the press goes to «Istoricul sosirilor».
+   whose number is typed again is asked first — on this phone, once the page knows the elite crossed: after any press of
+   yours, or a reload (a second press never changes the first time anyway). «Anulează» (focused, so Enter or Esc) records
+   nothing and uses no caught moment; «Trece numărul din nou» records it at the moment «Sosit» was pressed, the first time
+   staying. A number no confirmed registration and no elite line holds: refused, with the time to write on paper (the
+   runner is typed on «Clasament» later under «Alergători neînscriși»). Before the start, or more than a day after it:
+   refused — and a press arriving more than a day and three hours after the start is refused whatever moment it carries.
+   A runner saved as «Abandon» or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved
+   «Descalificat», or written off after the moment a press carries, stays as decided — the press goes to «Istoricul
+   sosirilor».
 4. **A mistake.** «Anulează» on your own line, for ten minutes, while nobody changed it and nobody pressed the number
    again after you (a second press of it is somebody else's, maybe the right one: the line then says «Clasament»
    corrects it). After that — or for anybody else's line, or a line typed on «Clasament» — correct it on «Clasament»,

@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { unstable_isUnrecognizedActionError } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
@@ -66,11 +67,14 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
- *   **A finished elite's number typed again is asked first** (§NNN): an elite already «Sosit» — or whose press waits or was saved on
- *   this phone (`asksBeforeAgain`) — gets the house's one dialog (`ConfirmDialog`), «Anulează» focused, so a second Enter or Esc
- *   cancels: nothing is recorded and no kept moment is used. «Trece-l din nou» records the press at the moment of the tap — read as
- *   «Sosit» was pressed (`tapMoment`), never at the answer — and the server keeps the first time as for any number pressed twice. The
- *   box is empty and focused either way. Any other number, and an elite who has not crossed yet, go at once as before.
+ *   **A finished elite's number typed again is asked first** (§NNN): an elite already «Sosit» as this page last heard — at its load or
+ *   in the answer to any press since — or whose press waits or was saved on this phone (`asksBeforeAgain`) gets the house's one dialog
+ *   (`ConfirmDialog`), «Anulează» focused, so a second Enter or Esc cancels: nothing is recorded and no kept moment is used.
+ *   «Trece numărul din nou» records the press at the moment of the tap — read as «Sosit» was pressed (`tapMoment`), never at the
+ *   answer — and the server keeps the first time as for any number pressed twice. The box is empty and focused either way, inside the
+ *   answer's own tap, so a phone's keyboard comes back with it. Any other number, an elite who has not crossed yet, and one whose
+ *   crossing this page has not heard of — pressed on another phone since its last answer — go at once as before; the server keeps the
+ *   first time all the same.
  * - **«⏱ Finish»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
  *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
  *   the line is read or pressed, and a line says its time, for paper (`staleKept`).
@@ -122,8 +126,9 @@ export type FinishLineWords = {
   eliteGiveNumberAria: string;
   /**
    * A finished elite's number typed again, asked first (§NNN): the question's title; its body — «{label} ({name}) a sosit deja la
-   * {time}. Îl treci din nou?», and with who entered the time, `bodyBy`'s «… la {time} — {by}. …», `{by}` being `enteredBy` or
-   * `changedBy` filled —; what a second press does; and its two answers.
+   * {time}. Treci numărul din nou?», and with who entered the time, `bodyBy`'s «… la {time} — {by}. …», `{by}` being `enteredBy` or
+   * `changedBy` filled —; what a second press does; and its two answers. Words of the number, never of the person: the elites are men
+   * and women.
    */
   eliteAgain: { title: string; body: string; bodyBy: string; second: string; cancel: string; confirm: string };
   boxLabel: string;
@@ -220,10 +225,10 @@ function fill(template: string, values: Record<string, string>): string {
 
 /**
  * The question a finished elite's number typed again asks first (§NNN), in the page's words: «{label} ({name}) a sosit deja la {time}
- * — introdus de {by}. Îl treci din nou?» — who entered it said as «Ultimii sosiți» says it, «modificat de» once «Clasament» changed it,
- * and left out while the elite is not among them —, what a second press does, and its two answers. `destructive`, so Enter never
- * answers «Trece-l din nou»: it reaches the focused «Anulează», as Esc does, and only that button's own press records. Apart from the
- * island so a Node render reads it in both languages.
+ * — introdus de {by}. Treci numărul din nou?» — who entered it said as «Ultimii sosiți» says it, «modificat de» once «Clasament» changed
+ * it, and left out while the elite is not among them —, what a second press does, and its two answers. `destructive`, so Enter never
+ * answers «Trece numărul din nou»: it reaches the focused «Anulează», as Esc does, and only that button's own press records. Apart from
+ * the island so a Node render reads it in both languages.
  */
 export function eliteAgainQuestion(words: FinishLineWords, again: EliteAgain): ConfirmSpec {
   const stored = again.stored;
@@ -531,16 +536,21 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   };
 
   /**
-   * The question answered (§NNN): «Trece-l din nou» records the number at the moment its tap read; «Anulează», Esc and the backdrop
-   * record nothing and use no kept moment. Only the open question's first answer counts — a second tap on it as it fades answers
-   * nothing — and the box has the focus again for the next number: MUI gives it back as the question closes, and a tap on the
-   * closing question would take it away.
+   * The question answered (§NNN): «Trece numărul din nou» records the number at the moment its tap read; «Anulează», Esc and the
+   * backdrop record nothing and use no kept moment. Only the open question's first answer counts — a second tap on it as it fades
+   * answers nothing.
+   *
+   * The box has the focus again for the next number, given inside the answer's own handler: iOS Safari raises the keyboard only for a
+   * focus a tap's handler gives, never for one a later frame gives, and the volunteer would have to tap the box again on the line. The
+   * question is closed at once for it (`flushSync`): while it is open, the dialog's focus trap pulls any focus outside it back in. The
+   * frame after gives it again, in case the dialog's own return of the focus, or a second tap on it as it fades, moved it since.
    */
   const answerAgain = (confirmed: boolean) => {
     if (askOpen && asked) {
-      setAskOpen(false);
+      flushSync(() => setAskOpen(false));
       if (confirmed) press(asked.bibNumber, null, asked.tap);
     }
+    box.current?.focus();
     requestAnimationFrame(() => box.current?.focus());
   };
 

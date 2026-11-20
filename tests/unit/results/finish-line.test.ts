@@ -442,7 +442,7 @@ describe("§NNN the moment of the tap: read as «Sosit» is pressed, taken from 
     const kept = [at(29, 50), at(29, 55)];
     const tap = tapMoment(kept, at(30));
     expect(tap).toEqual({ atMs: at(29, 50), kept: at(29, 50) });
-    // «Trece-l din nou» eight seconds later: the press still stands for 0:29:50, and 0:29:55 is left for the next number.
+    // «Trece numărul din nou» eight seconds later: the press still stands for 0:29:50, and 0:29:55 is left for the next number.
     expect(keptAfterPress(kept, tap.kept, at(30, 8))).toEqual({ rest: [at(29, 55)], stale: [] });
     // With no kept moment, the moment is the instant «Sosit» was pressed — never the answer's.
     expect(tapMoment([], at(30)).atMs).toBe(at(30));
@@ -707,6 +707,16 @@ describe("§NNN a finished elite's number typed again: asked first, only for an 
     // A press of another number, a press of theirs refused or answered a duplicate of nobody's «Sosit»: not crossed, as far as the phone knows.
     expect(asksBeforeAgain(8, line, [press("b", 9, at(33))], "vlad", GUN)).toBeNull();
     expect(asksBeforeAgain(8, line, settleEntry([press("c", 8, at(33))], "c", { kind: "refused", code: "RESULT_FINISH_CLOSED", bibNumber: 8, gunTimeMs: null }), "vlad", GUN)).toBeNull();
+  });
+
+  it("asks about an elite pressed on another phone only once this page has heard of it — at a reload, or in the answer to any press of its own", () => {
+    // Ioana pressed on another phone: this page's state still draws her not crossed, so her number goes at once — the server keeps the
+    // first time and writes this press to «Istoricul sosirilor»; nothing is asked of the server at a number typed.
+    expect(asksBeforeAgain(8, line, [], "vlad", GUN)).toBeNull();
+    // The answer to this page's next press, or a reload, brings her «Sosit»: asked from then on, with who entered it.
+    const heardIoana = { ...ioana, finishedGunTimeMs: 33 * 60_000 };
+    const heard = { elites: line.elites.map((one) => (one === ioana ? heardIoana : one)), recent: [recentRow(8, 33 * 60_000, "Radu Redactor", "Ioana"), ...line.recent] };
+    expect(asksBeforeAgain(8, heard, [], "vlad", GUN)).toEqual({ elite: heardIoana, gunTimeMs: 33 * 60_000, stored: heard.recent[0] });
   });
 
   it("asks nothing for a press undone since, another account's press left on the phone, or a press before the gun — the trial before «Resetează clasamentul»", () => {
