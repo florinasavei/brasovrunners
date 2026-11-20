@@ -13,6 +13,7 @@ import { asksBeforeAgain, type FinishLineState } from "@/modules/results/domain/
 import type { FinishLineWords } from "@/modules/results/ui/FinishLine";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { ConfirmDialogActions } from "@/shared/feedback/ConfirmDialog";
+import { TOAST_MAX_CHARACTERS } from "@/shared/feedback/mail-line";
 import { withClientWords } from "../../helpers/client-words";
 import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -82,7 +83,7 @@ const { default: TimingPage } = await import("@/app/[locale]/admin/checkin/crono
 const { default: FinishPage } = await import("@/app/[locale]/admin/events/[id]/results/sosire/page");
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
 const { recordFinish, saveEventResults, setRaceGun } = await import("@/modules/results/results");
-const { eliteAgainQuestion } = await import("@/modules/results/ui/FinishLine");
+const { eliteAgainQuestion, finishToastSentence } = await import("@/modules/results/ui/FinishLine");
 const { giveEliteLineNumber } = await import("@/modules/registrations/elite-list");
 
 let db: TestDatabase;
@@ -507,5 +508,61 @@ describe("§1010 «Cronometrare»: the question a finished elite's number typed 
     const initial = island?.props.initial as FinishLineState;
     const again = asksBeforeAgain(7, { ...initial, recent: [] }, [], staff.MODERATOR!.id, initial.gunAtMs);
     expect(eliteAgainQuestion(island?.props.words as FinishLineWords, again!).body).toBe("Andrei (Andrei Munteanu) a sosit deja la 0:31:05. Treci numărul din nou?");
+  });
+});
+
+/**
+ * §1027 — «Finish» with a number typed records it, and a short toast says every press that did something (the owner, 2026-11-20: the
+ * box emptied after «Finish», and a small toast): the line under the box and the toast's words the page hands its island, in Romanian
+ * and in English — an elite's of the number, never of the person (§1010), every sentence a toast's, under 200 characters —; and with
+ * scripts off nothing new: the box's form posts the number as before, and neither «Finish» nor the line that names it is drawn.
+ */
+describe("§1027 «Cronometrare»: «Finish» with a number, the line under the box and the toast", () => {
+  it("hands the island the line under the box and the toast's words, in Romanian and in English, each sentence under 200 characters", async () => {
+    for (const [locale, help, recorded, elite, kept] of [
+      [
+        "ro",
+        "Cu un număr scris, «Finish» sau «Sosit» îl trece; fără număr, «Finish» prinde doar timpul, pentru un grup.",
+        "Nr. 205 — sosit la 0:23:41",
+        "Nr. 7 (Andrei) — sosit la 0:31:05",
+        "Timp prins la 0:23:41 — scrie numărul",
+      ],
+      [
+        "en",
+        "With a number typed, «Finish» or «Finished» enters it; with no number, «Finish» catches the time alone, for a bunch.",
+        "No. 205 — finished at 0:23:41",
+        "No. 7 (Andrei) — finished at 0:31:05",
+        "Time caught at 0:23:41 — type the number",
+      ],
+    ] as const) {
+      language = locale;
+      const tree = await atTheClock(at(32), () => TimingPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ eventId: raceId }) }));
+      const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "toast" in (element.props.words as object));
+      const words = island?.props.words as FinishLineWords;
+      expect(words.boxHelp, locale).toBe(help);
+      expect(finishToastSentence(words, { kind: "recorded", bibNumber: 205, label: null, gunTimeMs: 23 * 60_000 + 41_000 }), locale).toBe(recorded);
+      expect(finishToastSentence(words, { kind: "recorded", bibNumber: 7, label: "Andrei", gunTimeMs: 31 * 60_000 + 5_000 }), locale).toBe(elite);
+      expect(finishToastSentence(words, { kind: "kept", time: "0:23:41" }), locale).toBe(kept);
+      // The longest a toast gets: six digits, a day's time and a label longer than the elite list keeps — the label cut, under 200.
+      const longest = finishToastSentence(words, { kind: "recorded", bibNumber: 999_999, label: "Ș".repeat(150), gunTimeMs: 23 * 3_600_000 + 59 * 60_000 + 59_000 });
+      expect(longest.length, locale).toBeLessThanOrEqual(TOAST_MAX_CHARACTERS);
+      expect(longest, locale).toContain(`${"Ș".repeat(79)}…`);
+      for (const sentence of [words.boxHelp, words.toast.recorded, words.toast.recordedElite, words.toast.kept]) expect(sentence.length, locale).toBeLessThanOrEqual(TOAST_MAX_CHARACTERS);
+    }
+    language = "ro";
+  });
+
+  it("draws nothing new with scripts off: the box's form posts the number as before, and neither «Finish» nor the line naming it", async () => {
+    state.actor = staff.CONTRIBUTOR;
+    for (const locale of ["ro", "en"] as const) {
+      const html = await timing({ eventId: raceId }, at(50), locale);
+      expect(html, locale).toContain('data-testid="finish-form"');
+      expect(html, locale).toMatch(/<input[^>]*name="bib"/);
+      expect(html, locale).toContain('data-testid="finish-record"');
+      expect(html, locale).not.toContain('data-testid="finish-keep-button"');
+      expect(html, locale).not.toContain('data-testid="finish-box-help"');
+      expect(text(html), locale).not.toContain(locale === "ro" ? "Cu un număr scris" : "With a number typed");
+    }
+    language = "ro";
   });
 });

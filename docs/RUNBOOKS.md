@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.94-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -993,8 +993,11 @@ gun and a clock since it.
    nothing either, and the page then says who gave the start and when. The public page, the emails and the checkpoints keep
    the planned times.
 2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
-   type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Finish» once per
-   runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
+   type the bib's number and press **«Sosit»**, **«Finish»** or Enter — the same press: the box empties at once and keeps
+   the focus, and a toast of two or three seconds at the top says «Nr. 205 — sosit la 0:23:41» once the site has it (an
+   elite's says its label too; a press refused, a number already in and a press still waiting say it on their own line under
+   the box, with no toast). A bunch: with the box empty, «Finish» once per runner — each toast says the time caught —, then
+   the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
    the server's clock (the phone's wall clock and an offset measured by a round trip, so a locked screen or a wrong clock
    changes nothing), saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the
    phone and go by themselves; a reload sends what is left — only by the account that pressed them. A press the site
@@ -1005,8 +1008,8 @@ gun and a clock since it.
    the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. An elite already «Sosit»
    whose number is typed again is asked first — on this phone, once the page knows the elite crossed: after any press of
    yours, or a reload (a second press never changes the first time anyway). «Anulează» (focused, so Enter or Esc) records
-   nothing and uses no caught moment; «Trece numărul din nou» records it at the moment «Sosit» was pressed, the first time
-   staying. A number no confirmed registration and no elite line holds: refused, with the time to write on paper (the
+   nothing and uses no caught moment; «Trece numărul din nou» records it at the moment «Sosit» (or «Finish») was pressed,
+   the first time staying. A number no confirmed registration and no elite line holds: refused, with the time to write on paper (the
    runner is typed on «Clasament» later under «Alergători neînscriși»). Before the start, or more than a day after it:
    refused — and a press arriving more than a day and three hours after the start is refused whatever moment it carries.
    A runner saved as «Abandon» or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved

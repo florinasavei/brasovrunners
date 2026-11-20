@@ -376,12 +376,21 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     let passed = false;
     try {
       const event = await publishWithPicture(page, created);
-      /** The card, afresh on the listing — each press leaves for the event's page. */
+      /**
+       * The card, afresh on the listing — each press leaves for the event's page — and at rest. A card rises eight pixels
+       * into place as it arrives (`riseIn`: 400 ms, after 50 ms for each card before it, up to five), and the spots below
+       * are read in one round trip and pressed in the next ones: on a card still rising, the room under the door, two
+       * pixels inside the card's foot, was below the card by the time it was pressed. CI, 2026-11-20, the third test of a
+       * shard on a freshly seeded database, both tries: «the room under the door: under the title's cover», `null`.
+       */
       const card = async () => {
         await page.goto("/ro/evenimente");
         const found = await cardOnListing(page, event.ro);
         await expect(found).toHaveCount(1);
         await expect(found).not.toHaveAttribute("data-series", "true");
+        await found.evaluate(async (li) => {
+          await Promise.all(li.getAnimations().map((animation) => animation.finished));
+        });
         return found;
       };
       const first = await card();

@@ -90,7 +90,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
       {children}
       {/* The live region, always here and empty between toasts; the toast is drawn inside it. */}
       <ToastRegion
-        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current), autoHideMs: autoHideOf(current) } : null}
+        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current), autoHideMs: autoHideOf(current), passThrough: current.passThrough } : null}
         closeLabel={t("close")}
         onDismiss={dismiss}
       />

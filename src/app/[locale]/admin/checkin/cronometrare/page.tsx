@@ -289,7 +289,14 @@ export default async function TimingPage({ params, searchParams }: Props) {
     },
     boxLabel: t("timing.boxLabel"),
     bibHint: t("timing.bibHint"),
+    // The line under the box, and the toast after a press (§1027): templates the island fills with the number, the label and the time.
+    boxHelp: t("timing.boxHelp"),
     record: t("timing.record"),
+    toast: {
+      recorded: t.raw("timing.toast.recorded") as string,
+      recordedElite: t.raw("timing.toast.recordedElite") as string,
+      kept: t.raw("timing.toast.kept") as string,
+    },
     keep: t("timing.keep.button"),
     keepHelp: t("timing.keep.help"),
     keptTitle: t("timing.keep.kept"),
