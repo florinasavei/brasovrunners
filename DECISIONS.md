@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.90-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.91-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.90-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.91-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31705,3 +31705,11 @@ No dependency, no migration. Both languages; every backoffice line within 200 ch
 **Held by** `tests/integration/auth/invitation-gap.test.ts` (through the three presses with `after()` captured, the provider stubbed and the drain's clock injected: one wait for exactly what is left of the gap, then the invitation sent once at its turn, under the scheduled pass and under «imediat»; the ordinary drain and «Trimite acum»'s taking nothing early; a members' press waiting once, for the last; the job's pass and «Trimite acum»'s worker taking nothing a moment before the turn; a stopped wait leaving the row PENDING and due for the job; a turn past the bound not waited for; no wait for a refusal, `ready` or no key; the toast's «Pleacă …» at the turn), `tests/integration/auth/invitation-hold.test.ts` (§1000's, updated: the hold as the ceiling plus the gap, the release's due moment and mark, the turn each press hands its drain), `tests/unit/staff/invitation-gap.test.ts` (`lastTurnOf`, the departure of a row at its turn, the bounds, the staff page's `maxDuration`), and the updated `invitation-steps`, `invite-lines`, `staff-page-roles`, `email-history`, `email-outcome-words` and `outbox-queue-panel` tests.
 
 Baseline `BR-V4.90-2026-11-20`.
+
+## 1022. The desk's eye says its action: the state as a chip, «Afișează numele în clasament» / «Ascunde numele din clasament» as the button (amending §1017's words)
+
+**The owner, 2026-11-20, the day before the race, with a picture of a desk row whose eye read «ANONIM» as a button (an elite the club hid, whose own wish is by name):** «aici nu e clară acțiunea: trebuie să fie „ascunde-l din clasament”: și „afișează-l în clasament”». §1017 made the eye a press whose words were the state it showed — «Cu nume» / «Anonim» —, so the button said what is, not what a press does.
+
+**Decision.** The state and the press are two things on the row (`registrations/ui/DeskRow.tsx`). The chip says how the person appears on the site and in the results, «Cu nume» / «Anonim» with the open or the crossed eye, for every desk role, as it did for the roles that could not press. Beside it, where the press is offered (§1017's conditions, unchanged), the button says what it does: «Afișează numele în clasament» while the person's own wish is not to appear, «Ascunde numele din clasament» while it is to appear — the eye of the state it leads to —, with the same question first, the same 44 pixels and the same wish posted. «Numele», not the owner's «-l»: the words never guess whether the runner is a man or a woman, and the number and the time are on the results either way — only the name is shown or hidden. A name the club hid keeps its line under the row; the button then says what it does to the person's own wish. The guide's task «Vrea să apară cu numele, sau nu mai vrea» and the desk's how-to line name the two buttons (both languages).
+
+Baseline `BR-V4.91-2026-11-20`.
