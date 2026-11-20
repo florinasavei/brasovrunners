@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.93-2026-11-20
+
+- **«Adaugă pe cineva» is the organizers', and the desk's spares explain themselves** — at «Prezența» only the Organizer and the Administrators add somebody who is not on the list (the page and the press refuse anybody else); a volunteer reads «Cheamă un organizator» in the button's place. Beside «Numere de rezervă libere», an «i» says how a spare is given, in each role's own words. §1025.
 ## BR-V4.92-2026-11-20
 
 - **Volunteers numbered V001, V002, … by themselves, and the raffle's file for random.org** — every volunteer gets the event's next volunteer number the moment they are confirmed (the ones already confirmed were numbered at once), shown «Nr. V001» on «Voluntari», the person's page, the plan and the volunteers' Excel and CSV; «Numerele voluntarilor încep de la» is gone; the raffle writes the race numbers, then the V numbers, and «Descarcă pentru random.org» hands out one number per line, no names, to paste into random.org's List Randomizer. §1023.

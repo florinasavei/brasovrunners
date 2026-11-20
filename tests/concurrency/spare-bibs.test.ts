@@ -33,7 +33,7 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connections", () => {
+describe("§444 BR-REQ-037-07 two organizers at the desk handing one spare, on two connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-09-26T08:00:00.000Z");
@@ -47,7 +47,8 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
     noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"], NOW)));
     const [staff] = await db
       .insert(staffUsers)
-      .values({ email: `spare.race.${Date.now()}@example.ro`, displayName: "Desk", role: "CONTRIBUTOR" })
+      // The Organizer at the desk: a walk-in is the organizers' to enter since §1025.
+      .values({ email: `spare.race.${Date.now()}@example.ro`, displayName: "Desk", role: "MODERATOR" })
       .returning();
     staffId = staff.id;
     const [admin] = await db
@@ -118,7 +119,7 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
     const walkIn = (name: string) =>
       createRegistrationByStaff(
         db,
-        { id: staffId as string, role: "CONTRIBUTOR" },
+        { id: staffId as string, role: "MODERATOR" },
         {
           eventId: event.id,
           firstName: name,
@@ -172,7 +173,7 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
     const online = (name: string) =>
       createRegistrationByStaff(
         db,
-        { id: staffId as string, role: "CONTRIBUTOR" },
+        { id: staffId as string, role: "MODERATOR" },
         {
           eventId: event.id,
           firstName: name,

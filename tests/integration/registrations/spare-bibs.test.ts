@@ -48,6 +48,8 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
+/** Who enters a walk-in since §1025: the Organizer; the volunteer keeps the paper confirmation and the number by hand. */
+let organizer: StaffUser;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -78,6 +80,10 @@ beforeEach(async () => {
   [volunteer] = await db
     .insert(staffUsers)
     .values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+    .returning();
+  [organizer] = await db
+    .insert(staffUsers)
+    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" })
     .returning();
 });
 
@@ -118,7 +124,7 @@ async function enter(
 ) {
   await createRegistrationByStaff(
     db,
-    volunteer,
+    organizer,
     {
       eventId: event.id,
       firstName: "Desk",
@@ -354,7 +360,7 @@ describe("§444 BR-REQ-037-07 the desk hands a spare", () => {
 
     const taken = createRegistrationByStaff(
       db,
-      volunteer,
+      organizer,
       { eventId: event.id, firstName: "Second", lastName: "Walk", email: "second@example.org", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true, bibNumber: 900 },
       later(1),
     );
@@ -364,11 +370,11 @@ describe("§444 BR-REQ-037-07 the desk hands a spare", () => {
 
     const unticked = createRegistrationByStaff(
       db,
-      volunteer,
+      organizer,
       { eventId: event.id, firstName: "Phone", lastName: "Call", email: "phone@example.org", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: false, bibNumber: 901 },
       later(2),
     );
-    // The box is prefilled at the desk; unticking the fast track must not trap the volunteer.
+    // The box is prefilled at the desk; unticking the fast track must not trap whoever is typing.
     expect(await refusalOf(unticked)).toBe("no error");
     const phone = await rowOf("phone@example.org");
     expect(phone.bibNumber).toBeNull();
