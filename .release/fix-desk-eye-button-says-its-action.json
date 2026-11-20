@@ -1,0 +1,14 @@
+{
+  "branch": "fix/desk-eye-button-says-its-action",
+  "decisionsTitle": "The desk's eye says its action: the state as a chip, «Afișează numele în clasament» / «Ascunde numele din clasament» as the button (amending §1017's words)",
+  "decisionsSection": "**The owner, 2026-11-20, the day before the race, with a picture of a desk row whose eye read «ANONIM» as a button (an elite the club hid, whose own wish is by name):** «aici nu e clară acțiunea: trebuie să fie „ascunde-l din clasament”: și „afișează-l în clasament”». §1017 made the eye a press whose words were the state it showed — «Cu nume» / «Anonim» —, so the button said what is, not what a press does.\n\n**Decision.** The state and the press are two things on the row (`registrations/ui/DeskRow.tsx`). The chip says how the person appears on the site and in the results, «Cu nume» / «Anonim» with the open or the crossed eye, for every desk role, as it did for the roles that could not press. Beside it, where the press is offered (§1017's conditions, unchanged), the button says what it does: «Afișează numele în clasament» while the person's own wish is not to appear, «Ascunde numele din clasament» while it is to appear — the eye of the state it leads to —, with the same question first, the same 44 pixels and the same wish posted. «Numele», not the owner's «-l»: the words never guess whether the runner is a man or a woman, and the number and the time are on the results either way — only the name is shown or hidden. A name the club hid keeps its line under the row; the button then says what it does to the person's own wish. The guide's task «Vrea să apară cu numele, sau nu mai vrea» and the desk's how-to line name the two buttons (both languages).",
+  "changelogLine": "- **The desk's eye says what it does** — beside «Cu nume» / «Anonim», the button reads «Afișează numele în clasament» or «Ascunde numele din clasament», asked first as before. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-037-08",
+      "text": "Given a desk row that is not over, when it is drawn for any desk role, then a chip says how the person appears on the site and in the results — «Cu nume» with the open eye or «Anonim» with the crossed one — and, where the desk may record the person's spoken wish (§1017), a 44-pixel button beside it says its action: «Afișează numele în clasament» / “Show the name in the results” while the person's own wish is not to appear, «Ascunde numele din clasament» / “Hide the name from the results” while it is, posting the wish it names after the same question (2026-11-20, `DECISIONS.md` §NNN). Verification: integration `registrations/desk-list-wish.test.ts`, `registrations/one-bib-download.test.ts`; e2e `desk-list-wish.spec.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "The desk's eye: the state as a chip, the action as the button"
+}

@@ -107,14 +107,16 @@ test.describe("§1017 BR-REQ-039-01 the desk records the runner's spoken wish to
         await signIn(page, "Dev Contributor");
         await page.goto(`/ro/admin/checkin?eventId=${seeded.eventId}`);
         await hydrated(page);
-        const eye = rowOf(page, seeded).getByTestId("desk-site-name");
-        await expect(eye).toHaveText("Anonim");
-        expect((await eye.boundingBox())?.height ?? 0, "the eye is a thumb's target").toBeGreaterThanOrEqual(44);
+        await expect(rowOf(page, seeded).getByTestId("desk-site-name")).toHaveText("Anonim");
+        // The button says its action, beside the state (2026-11-20).
+        const press = rowOf(page, seeded).getByTestId("desk-site-name-press");
+        await expect(press).toHaveText("Afișează numele în clasament");
+        expect((await press.boundingBox())?.height ?? 0, "the press is a thumb's target").toBeGreaterThanOrEqual(44);
         await fitsTheScreen(page);
       });
 
       await test.step("pressed, it asks first — the person by name, the email — with «Anulează» focused", async () => {
-        await rowOf(page, seeded).getByTestId("desk-site-name").click();
+        await rowOf(page, seeded).getByTestId("desk-site-name-press").click();
         const dialog = page.getByRole("dialog");
         await expect(dialog).toBeVisible();
         await expect(dialog).toContainText(`${seeded.name} ți-a spus acum că vrea să apară cu numele pe lista participanților și în clasament?`);
