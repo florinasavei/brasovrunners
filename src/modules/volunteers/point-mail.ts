@@ -53,7 +53,7 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   - their newest row still waits to leave (PENDING, PROCESSING), names the point they stand at and goes to the address the
     row holds now → told: it is on its way, and it says what is true when it leaves;
   - else the newest of their rows that left (SENT — or COMPLAINED, which reached the inbox) names that point at that
-    address, and left after the point's note last changed (§NNN) → told;
+    address, and left at or after the moment the point's note last changed (§NNN) → told;
   - anything else → not told: no row at all; a row **withdrawn** at the send, which the outbox deletes; a row that **failed**
     for good or was **refused** by the receiving server (FAILED, BOUNCED), which never reached anybody; a message that named
     another point (the person was moved since) or went to an address corrected since; a message that left before the point's
@@ -248,7 +248,9 @@ function assertMayManage(actor: Pick<StaffUser, "role">): void {
  * how many people it would write to now, how many were already told the point they stand at, how many stand at a point with
  * no address and how many stand at no point yet, counted exactly as the press counts them — and, per point, how many of the
  * people it would write to were told that point before its «Notă pentru voluntari» last changed (§NNN): the line under the
- * point's note. For whoever works the volunteers; anybody else is refused.
+ * point's note. For whoever works the volunteers; anybody else is refused, before the event is so much as looked for. The
+ * page's one reader of these numbers: it replaced `previewVolunteerPoints`, the four numbers alone, when the page came to need
+ * the second answer (§NNN).
  */
 export async function readVolunteerPointMail<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointMail> {
   assertMayManage(actor);
@@ -257,11 +259,6 @@ export async function readVolunteerPointMail<T extends Record<string, unknown>>(
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
   const { counts, toldBeforeTheNote } = await standingsOf(db, event.id);
   return { counts, toldBeforeTheNote };
-}
-
-/** The question's four numbers alone (`readVolunteerPointMail`): whom the press would write to, who knows, who has no address, who stands nowhere. */
-export async function previewVolunteerPoints<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointCounts> {
-  return (await readVolunteerPointMail(db, actor, eventId)).counts;
 }
 
 /**

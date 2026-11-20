@@ -12,7 +12,7 @@ import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { addVolunteerPlanPicture, readVolunteerPlan } from "@/modules/volunteers/plan";
 import { changePlanPoint } from "@/modules/volunteers/plan-points";
-import { previewVolunteerPoints, readVolunteerPointMail, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
+import { readVolunteerPointMail, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -77,7 +77,8 @@ function point(request: ({ kind: "add" } & PointBoxes) | ({ kind: "edit"; id: st
 }
 const place = (id: string, checkpointId: string) => changeVolunteer(db, staff.ADMIN!, { kind: "setCheckpoint", eventId: race.raceId, id, checkpointId }, NOW);
 const press = (options: { again?: boolean; now?: Date } = {}) => sendVolunteerPoints(db, staff.MODERATOR!, { eventId: race.raceId, again: options.again }, options.now ?? NOW);
-const preview = () => previewVolunteerPoints(db, staff.MODERATOR!, race.raceId);
+/** The question's four numbers, as the page reads them (`readVolunteerPointMail`). */
+const preview = async () => (await readVolunteerPointMail(db, staff.MODERATOR!, race.raceId)).counts;
 
 type Payload = { volunteerId: string; checkpointId: string; round: number };
 const payloadOf = (row: OutboxRow) => row.payloadJson as Payload;

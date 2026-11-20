@@ -3810,24 +3810,42 @@ language of their own row. A point is any point of the plan (§961, `volunteers/
 one of the event's «Puncte pe traseu», one the organizers typed by hand, or one at the start–finish — counted,
 told and «already told» alike. A person at the start–finish is told the place with no number and no kilometre
 («Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
-HTML and in the text; who «already knows their point» does not change when a point's name, kilometre or
-coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent. Never by placing, moving or
-taking a person off; never by a job; never to another event's people. The payload holds ids and the telling
-(`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for the person's first message, one more for each later
-one) and the key is exactly that, `volunteer-point:<volunteer>:<point>:<round>`.
+HTML and in the text; who «already knows their point» does not change when a point's name, kilometre, kind or
+coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent — its «Notă pentru voluntari» is
+the one thing of a point that does (below, §NNN). Never by placing, moving or taking a person off; never by a
+job; never to another event's people. The payload holds ids and the telling (`eventId`, `volunteerId`,
+`checkpointId`, `round`: 1 for the person's first message, one more for each later one) and the key is exactly
+that, `volunteer-point:<volunteer>:<point>:<round>`.
 
 **The outbox's own rows are the memory of who was told** — no column, no table. A person «already knows the
 point they stand at» when the newest of their rows still waits to leave (PENDING, PROCESSING) and names that
 point at the address their row holds now, or else when the newest of their rows that reached them (SENT,
-COMPLAINED) does. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox deletes; a
-row that **failed** or **bounced**; a message that named another point or went to an address corrected since. A
-press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an address,
-each with their next round. An older round still waiting when a newer one is queued — or a failed one put back
-in the queue — is withdrawn at the send, so pressing again while a message waits makes one message, not two.
-The send reads the person's rows without a lock, so this holds for a row that has not started to render: one
-the outbox was already sending when «din nou tuturor» committed the newer round is not called back, and both
+COMPLAINED) does and left (`sent_at`, else `created_at`) at or after the moment the point's «Notă pentru
+voluntari» last changed. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox
+deletes; a row that **failed** or **bounced**; a message that named another point or went to an address
+corrected since; a message that reached them before the point's note last changed, which carried the note as it
+was. A press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an
+address, each with their next round. An older round still waiting when a newer one is queued — or a failed one
+put back in the queue — is withdrawn at the send, so pressing again while a message waits makes one message, not
+two. The send reads the person's rows without a lock, so this holds for a row that has not started to render:
+one the outbox was already sending when «din nou tuturor» committed the newer round is not called back, and both
 leave — a known edge, left as it is, since each was asked for by a press. The limit of this memory is the
 outbox's retention (ninety days): a point told earlier than that is told again by the next press.
+
+**A changed note is told again** (§NNN, amending §1009, and §961's rule above for this one field of a point). The
+moment is the point's own, `event_checkpoints.volunteer_note_changed_at`, stamped by
+`volunteers/plan-points.ts#changePlanPoint` in the save's own transaction when — and only when — the note's words
+change after the service's trimming: written, changed in either language, or taken off. A save that leaves them as
+they were stamps nothing, and a name, a kilometre, the kind or coordinates changed never un-tell anybody; a note
+written before the column has no moment and un-tells nobody. A message still waiting (PENDING, PROCESSING) still
+tells, whenever the note changed: it is drawn as it leaves and says the note as it is then. So the next ordinary
+press writes to the people of that point told before the change, each with their next round, and to nobody else
+for it — another point's people stay told, and «Trimite din nou tuturor» is not needed. The rule is one pure
+function, `point-mail.ts#tellingOf` (`alreadyTold` is its «told»); `readVolunteerPointMail`, the plan page's one
+reader of the question's numbers, counts per point the people to be told again, which «Pe puncte» says under the
+point's note (§17). The note's edge, known and left as it is like the one above: a message drawn a moment before
+the save and taken by the provider a moment after it says the old note and counts as told — `sent_at` is the one
+moment the outbox keeps of a send, and a column for the moment a message is drawn would close it.
 
 Everything the message says is read at the send: the event and its day, the point's number in the route's
 order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
@@ -4199,10 +4217,16 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
     (`volunteer_plan.point_added`, `point_changed`, `point_removed`: the point before and after and a count, never a
     person), a press that changes nothing writing nothing. None of it emails anybody or expires a public cache tag.
   - **The page** groups the points under «Start–finish» and «Pe traseu», on the screen and on the paper, adds them in
-    «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed), and
-    folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first; a refused edit or delete
-    lands at the page's alert with its code. A point with coordinates says them, with «Deschide pe hartă» — Google
-    Maps' own address, a link only (`mapUrlOf`; the host is listed in `scripts/docs-check.mjs`).
+    «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed) — each with
+    its «Notă pentru voluntari» in both languages when it has one, which «Modifică punctul» also gives later
+    (§1009, §NNN) —, and folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first.
+    «Modifică punctul» is a kept form too (§NNN, amending §953 for it), one a point (`ActionForm`, its boxes' ids
+    prefixed `plan-point-edit-<id>`): a refused edit comes back as that form's own state — its sentence first,
+    naming its box; every box as typed, the note's two included; the point's fold open, without scripts as well
+    (`shared/ui/disclosure.ts#REFUSAL_UNFOLDED_SX`, §336) — and a save that goes through comes back to the point,
+    open, in its view, with its toast. Only a refused «Șterge punctul» lands at the page's alert with its code. A
+    point with coordinates says them, with «Deschide pe hartă» — Google Maps' own address, a link only (`mapUrlOf`;
+    the host is listed in `scripts/docs-check.mjs`).
   - **The email** tells a person at the start–finish their place with no number and no kilometre, and adds the numbers
     and the map's link for a point that has coordinates; for a route point without them not a word changed (§16.3).
 
@@ -4257,12 +4281,14 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
   «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
   they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows
   remember who was told, what is withdrawn at the send — is §16.3 (`modules/volunteers/point-mail.ts`). The page states
-  the four numbers the service counts (`previewVolunteerPoints`: who is written to, who already knows their point, who
-  stands at a point with no address, who stands at none) beside the button and again in the question the button asks,
-  with the email line the one builder words. «Trimite din nou tuturor» is a box in that question while somebody
-  already knows their point (`ConfirmSpec.option`: the dialog's one optional box — unticked whenever a question opens,
-  never waited for, written `on` into the form's hidden field only when ticked and confirmed) and the button itself
-  once everybody does; with nobody to write to there is no button, and the service refuses with the reason
+  the four numbers the service counts (`readVolunteerPointMail`, its one reader of them since §NNN: who is written to,
+  who already knows their point, who stands at a point with no address, who stands at none) beside the button and
+  again in the question the button asks, with the email line the one builder words; and from the same read, under a
+  point's note on «Pe puncte», never on paper, how many of its people were told it before the note last changed and
+  are written to again by the next ordinary press (§16.3). «Trimite din nou tuturor» is a box in that question while
+  somebody already knows their point (`ConfirmSpec.option`: the dialog's one optional box — unticked whenever a
+  question opens, never waited for, written `on` into the form's hidden field only when ticked and confirmed) and the
+  button itself once everybody does; with nobody to write to there is no button, and the service refuses with the reason
   (`VOLUNTEER_POINTS_NOBODY`, `VOLUNTEER_POINTS_ALL_TOLD`). `sendVolunteerPointsAction` is an email press
   (`volunteers.sendPoints`, §12.11) that asks the capability at its door; the service asks again before anything is
   read and audits one row a press, `event.volunteer_points_sent` — the counts and whether «din nou tuturor», never a
