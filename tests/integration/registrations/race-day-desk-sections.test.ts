@@ -380,7 +380,7 @@ describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () =
     await saturday();
     await register("Ana Test", "CONFIRMED", { bibNumber: 20, kind: "TEST" });
     const tree = await desk();
-    // By race number (§NNN): Ana 1, Bogdan 2, the test row 20.
+    // By race number (§1013): Ana 1, Bogdan 2, the test row 20.
     expect(sectionsOf(tree)[0]).toEqual({ key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop", "Ana Test"] });
     // The counters stand above the list as they were: the event's real rows, whatever the list folds.
     const counts = await countDesk(db, eventId);
@@ -389,7 +389,7 @@ describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () =
     expect(labels).toEqual(expect.arrayContaining(["Confirmați: 3", "Prezenți: 1", "Neconfirmați: 5"]));
   });
 
-  it("lists the elites first, then the partners' runners with their partner's name, then everybody else — each by race number, the rows without one by name (§NNN)", async () => {
+  it("lists the elites first, then the partners' runners with their partner's name, then everybody else — each by race number, the rows without one by name (§1013)", async () => {
     // Numbers that a list by number alone would put in another order: the elite wears 50, the partner's runners 30 and 7.
     await register("Zoe Elita", "CONFIRMED", { bibNumber: 50, elite: true });
     await register("Radu Partener", "CONFIRMED", { bibNumber: 30, partnerName: "Onlypus" });

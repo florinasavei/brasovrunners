@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  * only. It is read by the registrations list (its column «Partener», its sort, its filter, the row's editor and its summary's one count,
  * «Dintre cei {n} confirmați: … de la parteneri», §982), the registration's page, the internal list, the
  * invitations, the registrations' Excel and CSV, «Toate datele unei persoane» and — since 2026-11-20, the owner: «pune-i pe cei de la
- * parteneri și cu numele partenerului» — the race-day desk's row («Partener: {name}») and the desk's order (§NNN), and by nothing
+ * parteneri și cu numele partenerului» — the race-day desk's row («Partener: {name}») and the desk's order (§1013), and by nothing
  * else: never a public page (the participants' list, the results, «Cine vine»), never an email, never the file given to
  * sponsors («Descarcă lista pentru sponsori» — close words, another thing: that file holds people who agreed to offers), and
  * never the allocator or the capacity formula.
@@ -70,7 +70,7 @@ const READERS = new Set([
   // «Toate datele unei persoane» (art. 15): the lines' and the invitations' names; the registrations carry every column.
   "src/modules/registrations/person-data.ts",
   "src/app/[locale]/admin/registrations/person/page.tsx",
-  // The race-day desk's row: the chip «Partener: {name}» for every desk role (§NNN; the owner, 2026-11-20). Its query reads the
+  // The race-day desk's row: the chip «Partener: {name}» for every desk role (§1013; the owner, 2026-11-20). Its query reads the
   // column in `admin-repository.ts` (`DESK_COLUMNS`, the order of `listDeskRegistrations`), already on this list.
   "src/modules/registrations/ui/DeskRow.tsx",
 ]);
@@ -102,7 +102,7 @@ function isSurface(file: string): boolean {
     // Every email: the outbox, its templates, its render, the providers.
     file.startsWith("src/modules/notifications/") ||
     file.startsWith("src/infrastructure/email/") ||
-    // The race-day desk's pages: its row (`DeskRow.tsx`) draws the partner's chip since §NNN, the pages themselves name none of it.
+    // The race-day desk's pages: its row (`DeskRow.tsx`) draws the partner's chip since §1013, the pages themselves name none of it.
     file.startsWith("src/app/[locale]/admin/checkin/") ||
     // The file given to sponsors and its register: «Descarcă lista pentru sponsori».
     file === "src/modules/registrations/sponsor-list.ts" ||
@@ -150,7 +150,7 @@ describe("«De la parteneri» reaches only the backoffice's own screens and file
     }
   });
 
-  it("is read by the desk's list for its order and its chip (§NNN), and by none of the desk's counters", () => {
+  it("is read by the desk's list for its order and its chip (§1013), and by none of the desk's counters", () => {
     // The order: the elites, then the partners' runners, then everybody (the owner, 2026-11-20).
     expect(functionText("src/modules/registrations/admin-repository.ts", "listDeskRegistrations")).toMatch(NAMES_THE_LABEL);
     // The counters above the list and the scanned person's lookup choose nothing by it.

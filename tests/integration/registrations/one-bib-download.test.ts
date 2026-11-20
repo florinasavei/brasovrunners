@@ -584,7 +584,7 @@ describe("§1004 the desk row's eye: by name or anonymous", () => {
     expect(ro.Admin.desk.siteAnonymous).toBe("Anonim");
   });
 
-  it("draws the partner's chip «Partener: {name}» on a partner's runner, for every desk role, and none on anybody else's row (§NNN)", async () => {
+  it("draws the partner's chip «Partener: {name}» on a partner's runner, for every desk role, and none on anybody else's row (§1013)", async () => {
     const fromPartner = await runner("Radu Sima", { bibNumber: 17, partnerName: "Onlypus" });
     const plain = await runner("Ilie Pana", { bibNumber: 18 });
     const chipOf = async (id: string, role: StaffRole) => {
