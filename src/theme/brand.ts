@@ -411,6 +411,24 @@ export const SHEET_FRAME = {
 } as const;
 
 /**
+ * The «PR Kit»'s print colours (§1015): the logo's three inks — the club's primary, white for a dark ground or a photograph,
+ * black for a print in one ink — which `scripts/brand-assets.mjs` writes the kit's files in too; the paper and the codes'
+ * black on it; the sticker sheets' light-grey cut line on paper and white on the primary; and YouTube's own red under the
+ * poster's play button, with its white triangle — a provider's mark keeps its colours, as `PROVIDER_LOGO`'s do. The
+ * poster's words wear the club's palette by role (`PALETTE.kit.deep`, `primaryInk`, `accent`), so another club's poster
+ * wears its own.
+ */
+export const PR_KIT_COLOURS = {
+  ink: { primary: PALETTE.primary, white: WHITE, black: BLACK },
+  paper: WHITE,
+  code: BLACK,
+  cutLine: "#b8b8b8",
+  cutLineOnPrimary: WHITE,
+  youtubeRed: "#ff0000",
+  youtubePlay: WHITE,
+} as const;
+
+/**
  * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
  * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
  * what `events.bib_colour` checks for and what the sheet paints. The members' header offers the

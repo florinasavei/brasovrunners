@@ -17,8 +17,10 @@ import {
   canManagePlatform,
   canManageRegistrations,
   canManageStaff,
+  canReadRaffle,
   canReadRegistrations,
   canSetRaffleMark,
+  canWorkTheDesk,
   canWriteLegalTexts,
   canTransition,
   EDITORIAL_STATUSES,
@@ -27,6 +29,7 @@ import {
   TRANSITIONS,
   visibleAdminSections,
 } from "@/modules/staff-identity/domain/roles";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 
 /**
  * BR-REQ-051-01 — editorial workflow and permissions.
@@ -361,6 +364,53 @@ describe("BR-REQ-060-01 what each role may reach", () => {
 });
 
 /**
+ * BR-REQ-060-01, §1014 (amending §984's gate) — «Ziua cursei» → «Tombolă» for every role that works the desk. The owner,
+ * 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii văd acest tab». The tab's predicate is
+ * the desk's by construction, so the two lines move together; a member, who is no staff (§524), never reads it; and what stays the
+ * organizers' there — the files, the exclusion, the deletion, an elite line's ticks — keeps its own, narrower predicate.
+ */
+describe("BR-REQ-060-01 «Tombolă» is every desk role's (§1014)", () => {
+  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s read the raffle exactly when it works the desk, by role or as an actor (§1014)", (role) => {
+    expect(canReadRaffle(role)).toBe(canWorkTheDesk(role));
+    // A grant neither gives the tab nor takes it away: the desk's line is a rung.
+    expect(canReadRaffle({ role, permissions: new Set(["shop.manage"] as const) })).toBe(canWorkTheDesk(role));
+    expect(canReadRaffle({ role })).toBe(canWorkTheDesk(role));
+  });
+
+  it("is the Voluntar's, the Redactor's, the Organizer's, Tehnic's and the Administrators' — never a member's", () => {
+    expect(STAFF_ROLES.filter((role) => canReadRaffle(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
+    expect(canReadRaffle("MEMBER")).toBe(false);
+    expect(canReadRaffle({ role: "MEMBER", permissions: new Set(["shop.manage"] as const) })).toBe(false);
+  });
+
+  it("leaves the raffle's files and the organizers' presses where they were: whoever takes them reads the tab, never the reverse", () => {
+    for (const role of STAFF_ROLES) {
+      if (canTakeRaffleList(role)) expect(canReadRaffle(role), role).toBe(true);
+    }
+    expect(STAFF_ROLES.filter((role) => canTakeRaffleList(role))).toEqual(["MODERATOR", "ADMIN", "SUPERADMIN"]);
+    expect(STAFF_ROLES.filter((role) => canReadRaffle(role) && !canTakeRaffleList(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "DEV"]);
+  });
+
+  it("is what the tab's entry, its page, the roster's read and the desk's sign-up — action and service — ask (§1014)", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+    expect(read("src/modules/race-day/ui/RaceDayTabs.tsx")).toMatch(/eventId && canReadRaffle\(actor\) && \(await raffleTabShown\(/);
+    expect(read("src/app/[locale]/admin/checkin/tombola/page.tsx")).toContain("if (!canReadRaffle(actor)) notFound();");
+    expect(read("src/modules/volunteers/raffle-list.ts")).toContain('if (!canReadRaffle(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the raffle`);');
+    const actions = read("src/app/[locale]/admin/checkin/tombola/actions.ts");
+    const desk = actions.slice(actions.indexOf("export async function raffleDeskSignUpAction"));
+    expect(desk).toContain("requireStaffCapability(canReadRaffle)");
+    // Every other press of the tab stays the organizers'.
+    for (const name of ["raffleSignUpAction", "raffleExclusionAction", "raffleElitePresentAction", "raffleDeleteEntryAction"]) {
+      const body = actions.slice(actions.indexOf(`export async function ${name}`));
+      expect(body.slice(0, body.indexOf("\nexport ", 1)), name).toContain("requireStaffCapability(canTakeRaffleList)");
+    }
+    expect(read("src/modules/volunteers/raffle-entries.ts")).toContain('if (!canReadRaffle(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} does not work the desk`);');
+    // The file's route keeps the organizers' predicate.
+    expect(read("src/app/api/admin/events/[id]/raffle/route.ts")).toContain('if (!canTakeRaffleList(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });');
+  });
+});
+
+/**
  * BR-REQ-060-01 — the backoffice offers a role exactly the sections it may open.
  *
  * These exist because the layout did not consult any of the capabilities above. It tested
@@ -376,8 +426,9 @@ describe("BR-REQ-060-01 what each role may reach", () => {
 describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives each role the sections it may open and nothing it may not", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
-    // volunteer's whole backoffice: a person handing out numbers is not offered the events.
-    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
+    // volunteer's whole backoffice: a person handing out numbers is not offered the events. «PR Kit»
+    // (§1015) is every role's too — the owner: «even the volunteers can do that».
+    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "prKit", "guide"]);
     // A club member (§524) has no backoffice at all: not one section, not even the guide — the
     // session answers "no staff" for them before any section is asked (`session.ts`).
     expect(visibleAdminSections("MEMBER")).toEqual([]);
@@ -401,6 +452,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "settings",
       "tasks",
       "legal",
+      "prKit",
       "guide",
     ]);
     // The Organizer gained the registrations in §289 — the owner: "ca si organizator ar trebui
@@ -421,6 +473,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "settings",
       "tasks",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -460,6 +513,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "tasks",
       "staff",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -478,6 +532,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "tasks",
       "staff",
       "legal",
+      "prKit",
       "guide",
     ]);
   });
@@ -581,6 +636,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canRecordFinishes: /*     */ [false, true, true, true, true, true, true],
     // §996: «Ziua cursei» → «Jurnal», who scanned and who marked present — the readers of the list; the desk's other roles are named in it, never shown it.
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],
+    // §1014: «Ziua cursei» → «Tombolă» — every role that works the desk, the desk Volunteer included; never a member.
+    canReadRaffle: /*         */ [false, true, true, true, true, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
     // §NNN: «Ziua cursei» → «Declarații», every signed declaration of the race — the readers of the list; never the desk's other roles.
@@ -804,8 +861,8 @@ describe("BR-REQ-060-01 «Gestionează magazinul» — a grant on top of the rol
   });
 
   it("a volunteer holding it is offered «Magazin» and nothing else new, in the bar's order", () => {
-    expect(visibleAdminSections(holder("CONTRIBUTOR"))).toEqual(["checkin", "shop", "guide"]);
-    expect(visibleAdminSections(without("CONTRIBUTOR"))).toEqual(["checkin", "guide"]);
+    expect(visibleAdminSections(holder("CONTRIBUTOR"))).toEqual(["checkin", "shop", "prKit", "guide"]);
+    expect(visibleAdminSections(without("CONTRIBUTOR"))).toEqual(["checkin", "prKit", "guide"]);
     for (const role of ORDER) {
       const added = visibleAdminSections(holder(role)).filter((section) => !visibleAdminSections(role).includes(section));
       expect(added, role).toEqual(roles.canHoldPermission(role, "shop.manage") && !roles.canReadShop(role) ? ["shop"] : []);

@@ -1155,7 +1155,8 @@
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter",
-      "shop": "Magazin"
+      "shop": "Magazin",
+      "prKit": "PR Kit"
     },
     "outbox": {
       "status": {
@@ -2909,7 +2910,9 @@
       "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
       "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
-      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start."
+      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start.",
+      "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
+      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
     },
     "editor": {
       "draftPreview": {
@@ -4210,9 +4213,9 @@
       "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
       "revokeTitle": "Retragi accesul?",
       "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
-      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar ziua cursei: masa de ridicare și «Cronometrare».",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd ziua cursei (masa de ridicare și «Cronometrare») și «PR Kit».",
       "roles": {
-        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr, înscrie la tombolă; la «Cronometrare» trece sosirile și își anulează apăsarea. Atât.",
+        "CONTRIBUTOR": "masa de ridicare: scanează, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie numărul, înscrie la tombolă; «Cronometrare»: trece sosirile, își anulează apăsarea; descarcă «PR Kit». Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
         "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
@@ -9593,7 +9596,19 @@
                 "«Setări» → «Aspect» → «Sistemul de design»: culorile, literele, butoanele și pastilele site-ului, așa cum sunt în cod, și planul redesign-ului — pentru oricine citește conținutul clubului.",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
+                "«PR Kit»: logo-ul clubului, autocolantele și afișul de YouTube, de descărcat oricând — pentru toată echipa.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
+              ]
+            },
+            {
+              "title": "PR Kit: logo, autocolante și afiș",
+              "steps": [
+                "Deschide «PR Kit» din bara de sus — îl are toată echipa, voluntarii inclusiv.",
+                "«Logo»: logo-ul complet și doar munții, fiecare în culoarea clubului, alb și negru. Tipografiei îi dai SVG-ul sau PDF-ul: se măresc oricât fără să se strice.",
+                "PNG-ul e pentru Word, Canva, PowerPoint sau rețele. Albul e pentru fundaluri închise sau fotografii (pe alb nu se vede, e normal), negrul pentru tipar într-o singură culoare.",
+                "«Autocolante»: foi A4 gata de tăiat — cu cod QR spre site sau doar cu logo-ul. Tipărește PDF-ul la 100% („Dimensiune reală”), nu „Potrivește în pagină”, ca tăieturile să cadă la locul lor.",
+                "«Afiș YouTube»: un afiș A4 cu codul spre canalul clubului. Dacă scrie că adresa canalului nu e setată, spune-i unui Administrator.",
+                "«Culori»: codul culorii clubului. Pe hârtie iese puțin mai închisă decât pe ecran: cere-i tipografiei s-o potrivească după logo."
               ]
             },
             {
@@ -9608,7 +9623,7 @@
             {
               "title": "Ce poate fiecare rol",
               "steps": [
-                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența — și tabul «Tombolă», când cursa are tombolă. Vede nume, stare și număr, niciodată o adresă de email.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
                 "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă; lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
                 "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
@@ -9729,6 +9744,15 @@
                 "Vin mai mulți deodată: apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
+              "title": "La tombolă: cine participă, și înscrie pe cineva",
+              "steps": [
+                "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
+                "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
+                "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
+                "Fișierele pentru extragere, scoaterea cuiva de la tombolă, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i."
               ]
             },
             {
@@ -10023,7 +10047,7 @@
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
-                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
+                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând. Un număr trecut de mai multe ori la «Cronometrare» își arată sub «Timp» toți timpii prinși, cu cine l-a trecut și când: «Folosește» pune alt timp în clasament, după o întrebare — nu și la un descalificat, a cărui «Stare» o schimbi de mână.",
                 "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul. Ați făcut o probă înainte de cursă? Administratorul o șterge cu «Resetează clasamentul»."
               ]
             },
@@ -10737,6 +10761,77 @@
       "familyPending": "Încă nu e pornit pe acest mediu: baza de date păstrează o singură înscriere pe adresă la un eveniment. Până atunci, a doua trimitere cu altă persoană retrimite doar emailul primei înscrieri.",
       "network": "Salvarea nu merge de pe laptopul de la birou?",
       "networkLink": "Verifică rețeaua"
+    },
+    "prKit": {
+      "title": "PR Kit",
+      "intro": "Logo-ul clubului, autocolantele și afișul de YouTube, de descărcat oricând și de dus la tipografie.",
+      "logo": {
+        "title": "Logo",
+        "intro": "SVG sau PDF pentru tipografie, PNG pentru Word, Canva sau rețele.",
+        "introMore": "Albul e pentru fundaluri închise sau fotografii, negrul pentru tipar într-o singură culoare. PNG-ul are 4000 px lățime și fundal transparent.",
+        "shape": {
+          "lockup": "Logo complet",
+          "mountains": "Doar munții"
+        },
+        "ink": {
+          "primary": "în culoarea clubului",
+          "white": "alb",
+          "black": "negru"
+        },
+        "tile": "{shape} · {ink}",
+        "format": {
+          "svg": "SVG",
+          "png": "PNG",
+          "pdf": "PDF"
+        },
+        "download": "Descarcă {name} ({format})"
+      },
+      "stickers": {
+        "title": "Autocolante",
+        "intro": "Foi A4 gata de tăiat. Tipărește PDF-ul la 100%, nu „Potrivește în pagină”.",
+        "introMore": "Liniile gri punctate sunt tăieturile. În jurul codului QR rămâne marginea albă de care telefonul are nevoie ca să-l citească.",
+        "withCode": "Cu cod QR spre site",
+        "codeTo": "Codul duce la {address}.",
+        "logoOnly": "Doar logo-ul",
+        "sheet": {
+          "qr12": "12 pe foaie",
+          "qr24": "24 pe foaie",
+          "logo12": "12 pe foaie",
+          "logo24": "24 pe foaie",
+          "logo40": "40 pe foaie",
+          "logo12Primary": "12 pe foaie, pe culoarea clubului"
+        },
+        "what": {
+          "qr12": "Mari: logo-ul, codul și adresa, unul sub altul.",
+          "qr24": "Mici: logo-ul și adresa în stânga, codul în dreapta.",
+          "logo12": "Logo-ul mare.",
+          "logo24": "Logo-ul mediu.",
+          "logo40": "Logo-ul mic.",
+          "logo12Primary": "Logo-ul alb, pe fundal în culoarea clubului."
+        },
+        "download": "Descarcă PDF",
+        "downloadLabel": "Descarcă PDF: {name}"
+      },
+      "poster": {
+        "title": "Afiș YouTube",
+        "intro": "Un afiș A4 cu codul QR spre canalul de YouTube al clubului.",
+        "codeTo": "Codul duce la {address}.",
+        "unset": "Adresa canalului de YouTube al clubului nu e setată: se pune în CLUB_YOUTUBE_URL, în variabilele proiectului Vercel, apoi refă deploy-ul.",
+        "download": "Descarcă afișul (PDF)",
+        "kicker": "Suntem pe",
+        "brand": "YouTube",
+        "lead": "Cursele, antrenamentele și oamenii din club — urmărește-ne și abonează-te!",
+        "tab": "SCANEAZĂ-MĂ",
+        "scan": "Deschide camera telefonului și îndreapt-o spre cod"
+      },
+      "colours": {
+        "title": "Culori",
+        "intro": "Culoarea clubului, pentru tipografie.",
+        "primary": "Culoarea clubului",
+        "hex": "HEX {hex}",
+        "rgb": "RGB {r}, {g}, {b}",
+        "paper": "Pe hârtie iese puțin mai închisă decât pe ecran: cere-i tipografiei s-o potrivească după logo."
+      }
     },
     "eventJson": {
       "title": "Importă un eveniment (JSON)",
@@ -12710,7 +12805,7 @@
       "delete": "Șterge",
       "deleteFor": "Șterge rezultatul: {runner}",
       "deleteTitle": "Ștergi rezultatul?",
-      "deleteBody": "Rezultatul alergătorului cu numărul {bibNumber} dispare din clasament. Locurile celorlalți se recalculează.",
+      "deleteBody": "Rezultatul alergătorului cu numărul {bibNumber} dispare din clasament. Locurile celorlalți se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
       "publish": {
         "title": "Pe pagina evenimentului",
         "label": "Clasamentul e public pe pagina evenimentului",
@@ -12843,6 +12938,7 @@
           "created": "a adăugat {runner}: {status}",
           "updated": "a modificat {runner}: {status}",
           "updatedBoxes": "a modificat {runner}: {status} ({boxes})",
+          "chosen": "a ales pentru {runner} timpul {time} dintre cele înregistrate",
           "deleted": "a șters rezultatul {runner} ({status})",
           "gunSet": "a dat startul la {time}",
           "gunMoved": "a mutat startul la {time} (era {previous})",
@@ -12866,6 +12962,17 @@
           "registration": "înscriere",
           "nameAgreed": "acordul pentru nume"
         }
+      },
+      "recorded": {
+        "title": "Timpi la sosire:",
+        "by": "{name}, la {at}",
+        "current": "în clasament",
+        "use": "Folosește",
+        "useFor": "Folosește {time} pentru {runner}",
+        "confirmTitle": "Folosești acest timp?",
+        "confirmBody": "Pui {time} ca timp pentru {runner}? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
+        "confirmBodyAny": "Pui timpul ales ca timp al alergătorului? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
+        "changed": "Timpul nu s-a schimbat: între timp altcineva a modificat rândul acestui alergător. Uită-te din nou la rând și alege din nou."
       },
       "reset": {
         "title": "Resetează clasamentul",
@@ -13279,6 +13386,7 @@
     "raffle": {
       "title": "Tombolă",
       "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "introDesk": "Toți alergătorii, elitele și voluntarii evenimentului: cine participă la tombolă și cine e prezent. Cu înscriere separată, înscrie aici un alergător după ce a acceptat regulamentul.",
       "noEvent": "Niciun eveniment de arătat.",
       "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
       "event": "Evenimentul",
@@ -15667,6 +15775,8 @@
         "other": "Am citit {count} de rânduri din CSV. Numerele fără înscriere ({new}) sunt rânduri noi: scrie-le numele. Nimic nu s-a salvat încă."
       },
       "resultDeleted": "Rezultat șters. Locurile celorlalți s-au recalculat.",
+      "resultTimeChosen": "#{bib}: timpul ales e acum în clasament, iar locurile s-au recalculat.",
+      "resultTimeUnchanged": "#{bib} avea deja acest timp; nimic de schimbat.",
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",

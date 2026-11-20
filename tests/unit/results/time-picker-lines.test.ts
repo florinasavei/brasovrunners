@@ -46,6 +46,9 @@ const words = (catalogue: typeof ro): ResultWords => {
     noPlace: results.noPlace,
     noPlaceSettled: results.noPlaceSettled,
     outOfRanking: results.outOfRanking,
+    recordedTitle: results.recorded.title,
+    recordedCurrent: results.recorded.current,
+    recordedUse: results.recorded.use,
   };
 };
 const pickerWords = (catalogue: typeof ro) => ({ help: catalogue.Admin.results.picker.help, ok: catalogue.Admin.results.picker.ok, cancel: catalogue.Admin.results.picker.cancel });
