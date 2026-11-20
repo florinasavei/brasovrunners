@@ -299,11 +299,41 @@ describe("§NNN through the action: asserted on the server, back to the row", ()
     expect(await trail(ana.id)).toHaveLength(2);
   });
 
+  it("takes every desk role's press both ways, back to the row each time, the email press stamped with who pressed", async () => {
+    for (const role of DESK_ROLES) {
+      const ana = await anonymousRunner(`Ana Rol ${role}`);
+      const actor = await colleague(role);
+      state.actor = actor;
+      expect(await pressed(form(ana.id, true)), role).toMatch(new RegExp(`[?&]row=${ana.id}&saved=listWishNamed#reg-${ana.id}$`));
+      expect((await rowOf(ana.id)).listOptOut, role).toBe(false);
+      const [mail, ...more] = await mails(ana.id);
+      expect(more, role).toEqual([]);
+      expect(mail, role).toMatchObject({ requestedByStaffUserId: actor.id, cause: "registrations.deskListWish" });
+
+      expect(await pressed(form(ana.id, false)), role).toMatch(new RegExp(`[?&]row=${ana.id}&saved=listWishAnonymous#reg-${ana.id}$`));
+      expect((await rowOf(ana.id)).listOptOut, role).toBe(true);
+      // Hiding queued nothing more; both rows name the colleague, never the person.
+      expect(await mails(ana.id), role).toHaveLength(1);
+      const rows = await trail(ana.id);
+      expect(rows.map((row) => [row.actor, (row.metadata as { via?: unknown }).via]), role).toEqual([
+        [actor.id, "DESK"],
+        [actor.id, "DESK"],
+      ]);
+      expect(JSON.stringify(rows), role).not.toContain(`Ana Rol ${role}`);
+    }
+  });
+
   it("says a refusal in its own words, on the alert", async () => {
     state.actor = await colleague("CONTRIBUTOR");
     const unconfirmed = await anonymousRunner("Dan Adresă", { status: "PENDING_EMAIL_CONFIRMATION" });
     expect(await pressed(form(unconfirmed.id, true))).toMatch(/error=LIST_WISH_ADDRESS_UNCONFIRMED#admin-alert$/);
     expect(ro.Admin.errors.LIST_WISH_ADDRESS_UNCONFIRMED).toContain("Confirmă pe hârtie");
+    // A row that is over, pressed from a page drawn before it was cancelled: refused, nothing written.
+    const cancelled = await anonymousRunner("Ion Anulat Între Timp", { status: "CANCELLED" });
+    expect(await pressed(form(cancelled.id, true))).toMatch(/error=LIST_WISH_OVER#admin-alert$/);
+    expect((await rowOf(cancelled.id)).listOptOut).toBe(true);
+    expect(await trail(cancelled.id)).toEqual([]);
+    expect(await mails(cancelled.id)).toEqual([]);
   });
 });
 
@@ -389,6 +419,23 @@ describe("§NNN the person is told at once, with the way back", () => {
     const ion = await anonymousRunner("Ion Fără Email", { ticked: true });
     await recordListWishAtDesk(db, actor, ion.id, false, NOW);
     expect(await mails(ion.id)).toEqual([]);
+  });
+
+  it("speaks the person's language first, both halves as every email of the house", async () => {
+    const actor = await colleague("CONTRIBUTOR");
+    const emma = await anonymousRunner("Emma English");
+    await db.update(registrations).set({ locale: "en" }).where(eq(registrations.id, emma.id));
+    await recordListWishAtDesk(db, actor, emma.id, true, NOW);
+    const [mail] = await mails(emma.id);
+    expect(mail.locale).toBe("en");
+    const sent = await renderOutboxMessage(mail, db, LATER);
+    expect(sent.subject.indexOf("By name on the participant list")).toBe(0);
+    expect(sent.subject).toContain(" / Cu nume pe lista participanților");
+    expect(sent.text).toContain("At the race-number pick-up desk");
+    expect(sent.text).toContain("If that is not so, press the button below");
+    expect(sent.text).toContain("La masa de ridicare a numerelor");
+    expect(sent.text.indexOf("At the race-number pick-up desk")).toBeLessThan(sent.text.indexOf("La masa de ridicare a numerelor"));
+    expect(sent.html).toMatch(/\/en\/registrations\/list\/[A-Za-z0-9_-]+/);
   });
 
   it("is withdrawn at the send when the name is off the list again by then", async () => {

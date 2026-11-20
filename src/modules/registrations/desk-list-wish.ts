@@ -50,7 +50,7 @@ import { readResultsNameConsentLine } from "./results-consent";
  * **Refused, nothing written:** a role below the desk (`canRecordListWishAtDesk`, asserted here as the action does — BR-REQ-060-01);
  * an unknown or malformed id; a registration that is over (`LIST_WISH_OVER`); one whose address was never confirmed
  * (`LIST_WISH_ADDRESS_UNCONFIRMED` — the email would be the one message this platform sends to an address nobody vouched for besides
- * the confirmation itself; «Confirmă aici» vouches for it first); an event completed or cancelled, whose desk is closed
+ * the confirmation itself; «Confirmă pe hârtie» vouches for it first); an event completed or cancelled, whose desk is closed
  * (`LIST_WISH_DESK_CLOSED`, as a check-in is refused there).
  */
 

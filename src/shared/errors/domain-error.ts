@@ -151,7 +151,7 @@ export type DomainErrorCode =
   | "RAFFLE_RULES_NOT_ACCEPTED"
   // The desk's eye pressed (§NNN, `desk-list-wish.ts`): on a registration that is over (cancelled or expired); on one whose address
   // was never confirmed — the email that tells the person would go where nobody vouched for it, so confirm it first («Confirmă
-  // aici»); at an event completed or cancelled, whose desk is closed. Each writes nothing.
+  // pe hârtie»); at an event completed or cancelled, whose desk is closed. Each writes nothing.
   | "LIST_WISH_OVER"
   | "LIST_WISH_ADDRESS_UNCONFIRMED"
   | "LIST_WISH_DESK_CLOSED";

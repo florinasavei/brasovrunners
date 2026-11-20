@@ -260,7 +260,7 @@ export default async function DeskRow({
               the other way — «Anonim» → «Cu nume» when they say they want their name shown, «Cu nume» → «Anonim» when they ask to be
               taken off. It asks first, naming the person (and, for a minor, the parent who says it) and what follows; «Anulează» has
               the focus. Not on a closed desk, and not while the address was never confirmed — the email that tells the person would go
-              where nobody vouched for it: «Confirmă aici» first. Anywhere else the chip as it was.
+              where nobody vouched for it: «Confirmă pe hârtie» first. Anywhere else the chip as it was.
             */}
             {!terminal &&
               (mayRecordWish ? (
