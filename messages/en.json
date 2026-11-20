@@ -7980,7 +7980,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Tabs at the top: “Attendance” (this desk), “Timing” and “Things to bring”; organizers also get “Results”, “Raffle” and “Log” (who scanned, who marked present).",
+        "Tabs at the top: “Attendance” (this desk), “Timing” and “Things to bring”; organizers also get “Results”, “Raffle”, “Log” (who scanned, who marked present) and “Declarations”.",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
@@ -9740,6 +9740,17 @@
                 "“the participant” means the runner pressed «I have arrived — mark me as here» from their own link themselves; “deleted account”, an account removed from «Staff» since.",
                 "«Account» and «What was done» choose what you see; then «Show». The newest 300 lines show, and under them how many more there are.",
                 "For the log to name the person, everyone at the desk has their own Volunteer account: do not use one account on several phones."
+              ]
+            },
+            {
+              "title": "The signed declarations: «Declarations»",
+              "steps": [
+                "The Organizer and the Administrators open it: «Race day» → «Declarations», then pick the race under «Event» and press «Search».",
+                "At the top: how many declarations are signed. Below, in sections by state: «Confirmed», open, then «Not confirmed» and «Cancelled or expired», closed; beside each title, how many it holds.",
+                "On each row: the number, the name, when they signed, the signature (for a minor, theirs and the parent's), the version and the fingerprint. “on paper, recorded by …” says who recorded a paper declaration at the desk.",
+                "Looking for someone? Under «Name or number» type part of the name or the race number and press «Search».",
+                "«Declaration (PDF)» opens the signed declaration; every download stays in the registration's history, with your name. «Registration page» leads to the registration.",
+                "The identity document is not on the page, so nobody standing in front of the table sees it: it is only in the PDF and on the registration's page."
               ]
             },
             {
@@ -13133,7 +13144,8 @@
         "raffle": "Raffle",
         "timing": "Timing",
         "timingShort": "Timing",
-        "journal": "Log"
+        "journal": "Log",
+        "declarations": "Declarations"
       },
       "items": {
         "title": "Things to bring",
@@ -13241,6 +13253,27 @@
         },
         "empty": "Nothing yet at this event: no code scanned, nobody marked present, no volunteer ticked.",
         "emptyFiltered": "Nothing for this choice. Pick “Every account” and “Everything”."
+      },
+      "declarations": {
+        "title": "Signed declarations",
+        "intro": "Every signed declaration of the chosen event: who, when, how, the version and the fingerprint. The identity document is only in the PDF.",
+        "count": {
+          "one": "{count} signed declaration",
+          "few": "{count} signed declarations",
+          "other": "{count} signed declarations"
+        },
+        "search": "Name or number",
+        "searchHelp": "Type part of a name or the race number. Leave it empty for every declaration of the event.",
+        "sections": {
+          "confirmed": "Confirmed ({n})",
+          "unconfirmed": "Not confirmed ({n})",
+          "voided": "Cancelled or expired ({n})"
+        },
+        "signedAt": "Signed {when}",
+        "version": "version {version}",
+        "pdf": "Declaration (PDF)",
+        "registration": "Registration page",
+        "empty": "No signed declaration at this event yet."
       }
     },
     "raffle": {

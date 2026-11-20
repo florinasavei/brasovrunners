@@ -6,16 +6,17 @@ import { getPathname } from "@/i18n/navigation";
 import { canEnterResults, canReadRaceDayJournal, canRecordFinishes, canWorkTheDesk, type StaffSubject } from "@/modules/staff-identity/domain/roles";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { raffleTabShown } from "@/modules/volunteers/raffle-roster";
+import { canReadRaceDayDeclarations } from "@/modules/staff-identity/domain/roles";
 import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 
-/** The six parts of «Ziua cursei». */
-export type RaceDayTab = "desk" | "results" | "timing" | "raffle" | "items" | "journal";
+/** The seven parts of «Ziua cursei». */
+export type RaceDayTab = "desk" | "results" | "timing" | "raffle" | "items" | "journal" | "declarations";
 
 /**
  * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, the stopwatch, a
- * wrapped prize, a checklist, and the trail's clock with its arrow (the registration's «Ce a făcut echipa», §996). Looked up here,
- * on the server; only the drawn `<svg>` reaches the browser.
+ * wrapped prize, a checklist, the trail's clock with its arrow (the registration's «Ce a făcut echipa», §996), and the pen that
+ * signs, as the desk's «Fără declarație semnată» wears it (§NNN). Looked up here, on the server; only the drawn `<svg>` reaches the browser.
  */
 const TAB_GLYPH = {
   desk: { glyph: "raceDay" },
@@ -24,17 +25,22 @@ const TAB_GLYPH = {
   raffle: { glyph: "raffle" },
   items: { glyph: "todo" },
   journal: { glyph: "auditTrail" },
+  declarations: { glyph: "declaration" },
 } as const satisfies Record<RaceDayTab, { glyph: PanelGlyphName }>;
 
 /**
- * «Ziua cursei»'s tabs, six for the organizers (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
+ * «Ziua cursei»'s tabs, seven for the organizers (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
  * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»; and, the same
  * day, §986: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare», and §984: «un tab de tombolă unde să văd toți
  * participanții la tombolă»): «Prezența» — the desk as it was —, «Clasament» — the chosen event's results (§808) —,
  * «Cronometrare» — the finish line, a number or an elite pressed as the runner crosses —, «Tombolă» — the organizers' raffle,
  * everybody of the three groups — and «Lucruri de adus», the event's checklist; and, after it, §996 (the owner, 2026-11-19: «vreau
  * si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
- * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`).
+ * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`); and, last, §NNN: «Declarații», every signed declaration
+ * of the chosen event by state, its PDF and its registration one tap away — for the organizers alone too
+ * (`canReadRaceDayDeclarations`, written as `canReadRegistrations`): a declaration names a person beside how and when they signed,
+ * and whoever does not read the participant list reads none of it; the desk keeps its one runner at a time (§67). One word, so a
+ * phone draws it whole, like «Jurnal».
  *
  * The house's row of sub-tabs (`SubNav`, §360): plain links drawn on the server, the current one marked (`aria-current`), never
  * on paper. Each carries the event chosen on the page (the desk's select; on a results page, the page's own event); with none
@@ -44,8 +50,8 @@ const TAB_GLYPH = {
  * `canTakeRaffleList`' and only for an event that holds a raffle (one read of the event's own switch), «Jurnal»
  * `canReadRaceDayJournal`' — and every page still asserts its own gate on the server (BR-REQ-060-01).
  *
- * **Five or six entries are wider than a phone** (about 360 pixels on their short words alone, in a 288-pixel row), so the row is
- * not `fits`: it carries `SubNavCurrent` (§731), which scrolls the current entry into view — «Jurnal», the last, included —,
+ * **Five to seven entries are wider than a phone** (about 360 pixels on their short words alone, in a 288-pixel row), so the row is
+ * not `fits`: it carries `SubNavCurrent` (§731), which scrolls the current entry into view — «Declarații», the last, included —,
  * every entry is one sideways swipe away, the entry cut at the edge says there is more, and the row scrolls inside itself, never
  * the page. `compact`: below `sm` the row draws no glyphs and the short words «Sosiri» and «Lucruri», so a role's row of three —
  * the desk's volunteers: «Prezența», «Sosiri», «Lucruri» — fits a 320-pixel phone whole and the organizers' five or six scroll by
@@ -99,9 +105,18 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
   if (canReadRaceDayJournal(actor)) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/jurnal" })), label: t("raceDay.tabs.journal"), active: active === "journal", glyph: glyph("journal") });
   }
+  // «Declarații» (§NNN): the organizers' tab (`canReadRaceDayDeclarations`), last; one word, so a phone draws it whole. The page asserts it again.
+  if (canReadRaceDayDeclarations(actor)) {
+    items.push({
+      href: withEvent(getPathname({ locale, href: "/admin/checkin/declaratii" })),
+      label: t("raceDay.tabs.declarations"),
+      active: active === "declarations",
+      glyph: glyph("declarations"),
+    });
+  }
   return (
     <Box sx={{ "@media print": { display: "none" } }} data-testid="race-day-tabs">
-      {/* Not `fits` (§984): the organizers' five or six entries are wider than a phone, so the current one is scrolled into view. */}
+      {/* Not `fits` (§984): the organizers' five to seven entries are wider than a phone, so the current one is scrolled into view. */}
       <SubNav compact label={t("raceDay.tabs.label")} items={items} />
     </Box>
   );

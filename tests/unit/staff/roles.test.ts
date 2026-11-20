@@ -583,6 +583,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
+    // §NNN: «Ziua cursei» → «Declarații», every signed declaration of the race — the readers of the list; never the desk's other roles.
+    canReadRaceDayDeclarations: [false, false, false, true, false, true, true],
     // §949: «Participă la tombolă» on a registration — the Organizer and the Administrators, the readers of the list; never Tehnic, the volunteer or a member.
     canSetRaffleMark: /*      */ [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
