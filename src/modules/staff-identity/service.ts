@@ -4,8 +4,8 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
-import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
+import { drainOutboxRowsAfterResponse, drainOutboxRowsAtTurnAfterResponse } from "@/modules/notifications/drain";
+import { type DeliveryChoice, markedForNow, SENT_AT_TURN_FLAG } from "@/modules/notifications/domain/send-at-once";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { assertRoomToSendNow, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -59,7 +59,8 @@ import {
  * the person at the sign-in page. Since §1000 the email says which, as numbered steps
  * (`signInSteps` in its payload), and when the action will ask Zitadel the row is held until
  * Zitadel answered (`INVITATION_HOLD_MS`, `releaseInvitationHold`): the club's email never leaves
- * before Zitadel was asked.
+ * before Zitadel was asked — and since §1021, when Zitadel's own email is on its way, not before a
+ * minute and a half after it (`INVITATION_GAP_MS`), sent then by the press itself.
  *
  * Every function takes the acting staff user explicitly rather than reading a session. The
  * server asserts authorization here, once, and the pages and actions above pass in whoever
@@ -254,8 +255,9 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  * «Retrimite invitația» later sends both — making the account first when it is missing.
  *
  * `zitadelInvite` (§1000): the action will ask Zitadel for the account once this commits. The invitation then says
- * Zitadel's steps and waits (`INVITATION_HOLD_MS`) until the action lets it go (`releaseInvitationHold`); without it
- * the steps are the person's own and the row is due at once, as every invitation was.
+ * Zitadel's steps and waits (`INVITATION_HOLD_MS`) until the action lets it go (`releaseInvitationHold`) — a minute and a
+ * half after Zitadel's answer when Zitadel's email is on its way (§1021); without it the steps are the person's own and the
+ * row is due at once, as every invitation was.
  */
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -346,7 +348,8 @@ async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Da
  * action asks nothing of Zitadel and writes `emailSkipped` on its `staff.members_invited` row.
  *
  * `zitadelInvite` (§1000): as `inviteStaffUser`'s — each invitation says Zitadel's steps and waits until the action, member
- * by member, lets it go once Zitadel answered for that member.
+ * by member, lets it go once Zitadel answered for that member; the press then sends those it let go with the gap at the last
+ * of their turns (§1021).
  */
 export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -409,7 +412,10 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
    * does; «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery: DeliveryChoice = "queue",
-  /** `zitadelInvite` (§1000): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers. */
+  /**
+   * `zitadelInvite` (§1000): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers; with
+   * Zitadel's email on its way the press sends this one at the gap after it, «Trimite acum» or not (§1021).
+   */
   options: { zitadelInvite?: boolean } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
@@ -434,7 +440,8 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
     }
     return queued.key;
   });
-  // The invitation, after this response, whatever «Când pleacă emailurile» says (§540).
+  // The invitation, after this response, whatever «Când pleacă emailurile» says (§540) — when the action let it go at once. One
+  // the action gave the gap after Zitadel's answer is not due then, and the press's own drain at its turn sends it (§1021).
   if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, key));
   return member;
 }
@@ -445,14 +452,30 @@ function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_
 }
 
 /**
- * How long the club's invitation waits for Zitadel (§1000; the owner, 2026-11-19: «cumva trebuie un delay intre mailurile de
- * logare»). A press that will ask Zitadel for the account queues it with `next_attempt_at` this far ahead — the column the
- * claim already waits on, and the one a first attempt is held by too (`EnqueueEmailParams.notBefore`) — and the action lets
- * it go the moment Zitadel answers (`releaseInvitationHold`), before the press's response. So the press's own drain, which
- * runs after that response, sends it after Zitadel was asked, and no other drain or pinger takes it in between. The minute is
- * the bound for an action that never got to the release: the row is then due at its end, for the next pass.
+ * The gap between Zitadel's email and the club's (§1021, amending §1000, whose ask was «cumva trebuie un delay intre mailurile
+ * de logare» — and the two still arrived together): when Zitadel answered a press with its own email on the way, the club's
+ * invitation is due this long after that answer (`releaseInvitationHold`), and the press's own drain sends it then
+ * (`sendInvitationsAtTheirTurn`) — so the person opens Zitadel's first, chooses the password, and finds the steps after it.
  */
-export const INVITATION_HOLD_MS = 60_000;
+export const INVITATION_GAP_MS = 90_000;
+
+/**
+ * The staff page's function ceiling, in seconds — its `export const maxDuration`, which a Server Action posted from that page
+ * runs under, the press's wait for the gap included. A literal there (Next reads the segment's config statically); a test
+ * keeps the two equal.
+ */
+export const STAFF_PRESS_MAX_DURATION_S = 300;
+
+/**
+ * How long the club's invitation waits for Zitadel (§1000, amended by §1021). A press that will ask Zitadel for the account
+ * queues it with `next_attempt_at` this far ahead — the column the claim already waits on, and the one a first attempt is held
+ * by too (`EnqueueEmailParams.notBefore`) — and the action moves it once Zitadel answered (`releaseInvitationHold`), before the
+ * press's response: to the gap after that answer, or to now when no email of Zitadel's is coming. No drain or pinger takes it
+ * before. The hold is the bound for an action that never got to the release, and it is never earlier than the gap could be:
+ * a release happens inside the press's function, which lives at most `STAFF_PRESS_MAX_DURATION_S`, so the latest turn a release
+ * could set is that ceiling plus the gap after the enqueue — the hold.
+ */
+export const INVITATION_HOLD_MS = STAFF_PRESS_MAX_DURATION_S * 1_000 + INVITATION_GAP_MS;
 
 /** Every invitation of one person is keyed under this (`enqueueStaffInvitation`): the add's, each resend's. */
 function invitationKeyPrefix(staffUserId: string): string {
@@ -492,25 +515,39 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
 }
 
 /**
- * The club's invitation let go once Zitadel answered (§1000): due at once, so the drain that follows the press's response
- * sends it — after Zitadel was asked, never before. Only what the hold still holds: this person's invitations, waiting and
- * never tried, queued with Zitadel's steps. `steps` is what Zitadel's answer makes true (`signInStepsAfter`): `self` — it
- * refused, or there was no key after all — rewrites the email's steps to the person's own, since no email from Zitadel is
- * coming. Called by the action, outside the row's transaction, which had to commit before Zitadel was asked. Returns how
- * many rows it let go; a row let go is not held any more, so a second call finds nothing.
+ * What one release let go (§1021): the rows, and the turn they wait for — null when they are due at once.
+ */
+export type ReleasedInvitation = { ids: string[]; dueAt: Date | null };
+
+/**
+ * The club's invitation let go once Zitadel answered (§1000, amended by §1021). Only what the hold still holds: this person's
+ * invitations, waiting and never tried, queued with Zitadel's steps. `steps` is what Zitadel's answer makes true
+ * (`signInStepsAfter`):
+ *
+ * - `zitadel` — an account made, or found without a password: Zitadel's email is on its way, so the club's is due
+ *   `INVITATION_GAP_MS` after `answeredAt`, marked for its press to send at that turn (`SENT_AT_TURN_FLAG`); the action hands
+ *   the result to `sendInvitationsAtTheirTurn`. No drain or pinger takes it before (the claim honours `next_attempt_at`).
+ * - `self` — Zitadel refused, or there was no key after all — and `ready` — the account already signs in: no email of
+ *   Zitadel's is coming, so the row is due at once, as every invitation was, and its steps are rewritten to the person's own.
+ *
+ * Called by the action, outside the row's transaction, which had to commit before Zitadel was asked. A row let go is not held
+ * any more, so a second call finds nothing.
  */
 export async function releaseInvitationHold<T extends Record<string, unknown>>(
   db: Database<T>,
   staffUserId: string,
   steps: SignInSteps,
-): Promise<number> {
+  answeredAt: Date = new Date(),
+): Promise<ReleasedInvitation> {
   const prefix = invitationKeyPrefix(staffUserId);
+  const gap = steps === "zitadel" ? new Date(answeredAt.getTime() + INVITATION_GAP_MS) : null;
   const released = await db
     .update(emailOutbox)
-    .set({
-      nextAttemptAt: null,
-      ...(steps !== "zitadel" ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ signInSteps: steps })}::jsonb` } : {}),
-    })
+    .set(
+      gap
+        ? { nextAttemptAt: gap, payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [SENT_AT_TURN_FLAG]: true })}::jsonb` }
+        : { nextAttemptAt: null, payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ signInSteps: steps })}::jsonb` },
+    )
     .where(
       and(
         eq(emailOutbox.status, "PENDING"),
@@ -522,10 +559,35 @@ export async function releaseInvitationHold<T extends Record<string, unknown>>(
         inArray(emailOutbox.messageType, ["STAFF_INVITATION", "MEMBER_INVITATION"]),
         sql`left(${emailOutbox.idempotencyKey}, ${prefix.length}) = ${prefix}`,
         sql`(${emailOutbox.payloadJson} ->> 'signInSteps') = 'zitadel'`,
+        // Never let go twice: a row already given its turn is the turn's (a retried press asks Zitadel again).
+        sql`not coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
       ),
     )
     .returning({ id: emailOutbox.id });
-  return released.length;
+  const ids = released.map((row) => row.id);
+  return { ids, dueAt: gap && ids.length > 0 ? gap : null };
+}
+
+/**
+ * The invitations a press let go with the gap, sent by that press itself at their turn (§1021): one bounded wait inside the
+ * `after()` of its response, for the last of their turns — a members' press waits once, for the member Zitadel answered last —
+ * then exactly those rows, whatever «Când pleacă emailurile» says (`drain.ts#drainOutboxRowsAtTurnAfterResponse`). Rows due at
+ * once (`self`, `ready`) are not among them: they leave as every invitation did, with the drain the enqueue scheduled or
+ * «Trimite acum»'s. A function stopped before the turn leaves the rows PENDING and due, for the outbox job's next pass.
+ */
+export function sendInvitationsAtTheirTurn(released: readonly ReleasedInvitation[]): void {
+  const turn = lastTurnOf(released);
+  if (turn) drainOutboxRowsAtTurnAfterResponse(turn.ids, turn.dueAt);
+}
+
+/** The rows a press let go with the gap, and the last of their turns; null when none waits for one. */
+export function lastTurnOf(released: readonly ReleasedInvitation[]): { ids: string[]; dueAt: Date } | null {
+  const waiting = released.filter((release): release is { ids: string[]; dueAt: Date } => release.dueAt !== null && release.ids.length > 0);
+  if (waiting.length === 0) return null;
+  return {
+    ids: waiting.flatMap((release) => release.ids),
+    dueAt: new Date(Math.max(...waiting.map((release) => release.dueAt.getTime()))),
+  };
 }
 
 export async function changeStaffRole<T extends Record<string, unknown>>(

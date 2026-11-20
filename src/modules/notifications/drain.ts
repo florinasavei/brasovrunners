@@ -128,6 +128,43 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
 }
 
 /**
+ * A press's own rows sent at their turn, after its response (§1021, amending §1000: the two sign-in emails still arrived
+ * together, and the owner had asked for a delay between them): the club's invitation, which the press let go a minute and a
+ * half after Zitadel answered with its own email on the way (`staff-identity/service.ts#releaseInvitationHold`). The same one-shot
+ * `after()` as «Trimite acum»'s above, limited to these ids and sent whatever «Când pleacă emailurile» says — but it waits
+ * first, once, until `dueAt`, the last of their turns, as the relay's drain below waits for its retries (§778); a turn further
+ * than `TURN_WAIT_MAX_MS` is not waited for (`send-rows-now.ts#sendOutboxRowsAtTurn`). The staff page's `maxDuration` is
+ * what keeps the function alive for it.
+ *
+ * Nothing else takes the rows early: every claim — the drain after a response, the job, «Trimite acum» — honours their
+ * `next_attempt_at`. A function stopped before the turn leaves them PENDING and due at it: the outbox job sends them at its
+ * next pass, told of the turn here before the wait begins.
+ */
+export function drainOutboxRowsAtTurnAfterResponse(ids: readonly string[], dueAt: Date): void {
+  if (ids.length === 0) return;
+  // The job's cached quiet forgotten for the turn, so a wait that never ends still leaves the rows to the next pass (§334).
+  wakeJobs("email-outbox", dueAt);
+  if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
+  try {
+    after(() => asTheOutboxJob(async () => {
+      try {
+        const [{ sendOutboxRowsAtTurn }, { nextOutboxWork }] = await Promise.all([import("./send-rows-now"), import("@/modules/jobs/next-work")]);
+        const db = getDb();
+        await sendOutboxRowsAtTurn(db, ids, dueAt);
+        const left = await nextOutboxWork(db);
+        if (left) wakeJobs("email-outbox", left);
+      } catch (error) {
+        console.error("[email-outbox] the press's drain at its rows' turn failed", error);
+        wakeJobs("email-outbox");
+      }
+    }));
+  } catch {
+    // Outside a request scope: the rows stay PENDING, due at their turn, for the outbox job.
+    wakeJobs("email-outbox", dueAt);
+  }
+}
+
+/**
  * A visitor’s message, sent the moment its response is out (§778, amending §149, §676 and §68): «Scrie-ne» and
  * «Spune-ne ceva» queue a row (`relay.ts`) and call this with its id, **whatever «Când pleacă emailurile» says** — a person
  * who wrote to the club does not wait for the pinger. The same one-shot `after()`, limited to these ids.

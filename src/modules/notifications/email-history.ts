@@ -14,7 +14,7 @@ import { isClubSide } from "./domain/email-audience";
 import { isWaitingStatus } from "./domain/email-outcome";
 import { isPressCause, type PressCause } from "./domain/press-causes";
 import { isRejectionCause, type RejectionCause } from "./domain/rejection-cause";
-import { SENT_NOW_FLAG } from "./domain/send-at-once";
+import { SENT_AT_TURN_FLAG, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { copiedKey, type JournalClubLine, VOLUNTEER_OF_ROW } from "./journal";
 import { onGmailRoadOf } from "./outbox";
 import { readOutboxDelivery } from "./outbox-delivery";
@@ -128,6 +128,7 @@ export type EmailHistoryRowRead = {
   clubCopy: boolean;
   familyHeld: boolean;
   sentNow: boolean;
+  sentAtTurn: boolean;
   road: string | null;
   idempotencyKey: string;
 };
@@ -238,10 +239,11 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
       pressId: emailOutbox.pressId,
       by: staffUsers.displayName,
       manualResend: emailOutbox.isManualResend,
-      // The payload's flags only — a club copy (§320), a family's hold (§519), a press's «now» (§540) — never its words.
+      // The payload's flags only — a club copy (§320), a family's hold (§519), a press's «now» (§540) or its turn (§1021) — never its words.
       clubCopy: sql<boolean>`${clubCopySql}`,
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
+      sentAtTurn: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
       road: emailOutbox.road,
       idempotencyKey: emailOutbox.idempotencyKey,
       // Every row of the person, and their own (not the club's), past the cap included: one query, no second count.
@@ -290,6 +292,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
     clubCopy: Boolean(row.clubCopy),
     familyHeld: Boolean(row.familyHeld),
     sentNow: Boolean(row.sentNow),
+    sentAtTurn: Boolean(row.sentAtTurn),
     road: row.road,
     idempotencyKey: row.idempotencyKey,
   }));
@@ -318,6 +321,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
             lastError: row.lastError,
             familyHeld: row.familyHeld,
             sentNow: row.sentNow,
+            sentAtTurn: row.sentAtTurn,
             onMailgunRoad: roads ? !onGmailRoadOf(row, roads) : true,
             isManualResend: row.manualResend,
           },

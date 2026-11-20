@@ -96,6 +96,7 @@ describe("§960 the fold and the column say one thing of every row", () => {
           clubCopy: false,
           familyHeld: false,
           sentNow: false,
+          sentAtTurn: false,
           road: null,
           idempotencyKey: "k:one",
         };
