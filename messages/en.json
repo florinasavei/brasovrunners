@@ -10424,7 +10424,8 @@
                 "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Raffle». Closed, its bar says who takes part and how, for example “Runners, elites, volunteers · automatically”.",
                 "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
                 "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
-                "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it. A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up.",
+                "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it.",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up.",
                 "Press «Save». After the save «Raffle» stays open, with what you saved.",
                 "On race day, «Race day» → «Raffle» shows everybody, whether they take part and, when not, why."
               ]

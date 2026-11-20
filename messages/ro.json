@@ -10088,7 +10088,7 @@
               "steps": [
                 "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
                 "Voluntarii participă cu numărul lor de voluntar, V001, V002…, pe care îl primesc singuri în clipa în care îi confirmi: nu setezi nimic.",
-                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ați scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
               ]
             },
             {
@@ -10424,7 +10424,8 @@
                 "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Tombolă». Închisă, bara ei spune cine participă și cum, de pildă „Alergători, elite, voluntari · din oficiu”.",
                 "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
                 "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
-                "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el. Un voluntar nu participă cât timp nu e confirmat, dacă l-ați scos de la tombolă sau, cu înscriere separată, până se înscrie.",
+                "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie.",
                 "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
                 "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți, dacă participă și, când nu participă, de ce."
               ]
