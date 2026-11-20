@@ -7983,7 +7983,7 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Sus sunt taburile: „Prezența” (această masă), „Cronometrare” și „Lucruri de adus”; organizatorii au și „Clasament”, „Tombolă”, „Jurnal” (cine a scanat, cine a marcat prezent) și „Declarații”.",
+        "Sus sunt taburile: „Prezența” (această masă), „Cronometrare”, „Tombolă” și „Lucruri de adus”; organizatorii au și „Clasament”, „Jurnal” (cine a scanat, cine a marcat prezent) și „Declarații”.",
         "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
@@ -9773,7 +9773,7 @@
                 "Sus scrie câte declarații sunt semnate. Dedesubt, pe secțiuni după stare, ca la «Prezența»: «Confirmați», deschisă; apoi, închise, «De semnat din nou», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare» și «Anulate sau expirate». Lângă fiecare titlu, câți sunt; o secțiune fără nimeni nu apare.",
                 "Pe un rând fără număr de concurs scrie „—”: numărul apare doar după confirmare. Numărul unei înscrieri anulate sau expirate e tăiat.",
                 "Pe fiecare rând: numărul, numele, când a semnat, semnătura (la un minor, a lui și a părintelui), versiunea și amprenta. „pe hârtie, înregistrată de …” spune cine a înregistrat la masă o declarație pe hârtie.",
-                "Cauți pe cineva? La «Nume sau număr» scrie o parte din nume sau numărul de concurs și apasă «Caută».",
+                "Cauți pe cineva? La «Nume sau număr» scrie o parte din nume (merge și numele părintelui care a semnat pentru un minor) sau numărul de concurs și apasă «Caută».",
                 "«Declarația (PDF)» deschide declarația semnată; fiecare descărcare rămâne în istoricul înscrierii, cu numele tău. «Pagina înscrierii» duce la înscriere.",
                 "Actul de identitate nu e pe pagină, ca să nu-l vadă cine stă în fața mesei: e doar în PDF și pe pagina înscrierii."
               ]

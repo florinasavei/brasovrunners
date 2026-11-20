@@ -197,6 +197,22 @@ describe("§NNN the search", () => {
     expect(found("")).toEqual(["Ștefan Tănase", "Ion Pop", "Eva Stan"]);
     expect(found("nimeni")).toEqual([]);
   });
+
+  it("finds a row by every name it draws: the registration's, the typed signature — a minor's parent's — and the minor's own", () => {
+    const minor = row({ registeredName: "Ionuț Pop", guardianName: "Maria Pop", typedName: "Maria Vlădescu", minorTypedName: "Ionuț-Andrei Pop" });
+    // A minor's acceptance from before two signatures were asked: the parent's alone, drawn and found.
+    const before = row({ registeredName: "Ana Dinu", guardianName: "Radu Dinu", typedName: "Radu Stoica", minorTypedName: null });
+    // No parent on the registration any more: the row draws one signature, so the minor's from the acceptance is neither drawn nor found.
+    const adult = row({ registeredName: "Eva Stan", guardianName: null, typedName: "Eva Stan", minorTypedName: "Evelina Stan" });
+    const found = (q: string) => [minor, before, adult].filter((entry) => matchesDeclarationSearch(entry, declarationSearchOf(q))).map((entry) => entry.registeredName);
+    expect(found("vladescu")).toEqual(["Ionuț Pop"]);
+    expect(found("MARIA VLĂDESCU")).toEqual(["Ionuț Pop"]);
+    expect(found("andrei")).toEqual(["Ionuț Pop"]);
+    expect(found("stoica")).toEqual(["Ana Dinu"]);
+    expect(found("evelina")).toEqual([]);
+    expect(found("pop")).toEqual(["Ionuț Pop"]);
+    expect(found("stan")).toEqual(["Eva Stan"]);
+  });
 });
 
 describe("§NNN who signed", () => {

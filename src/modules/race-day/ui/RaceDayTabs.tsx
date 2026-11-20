@@ -113,7 +113,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       glyph: glyph("items"),
     });
   }
-  // «Jurnal» (§996): the organizers' tab (`canReadRaceDayJournal`), last; one word already, so a phone draws it whole. The page asserts it again.
+  // «Jurnal» (§996): the organizers' tab (`canReadRaceDayJournal`), before «Declarații»; one word already, so a phone draws it whole. The page asserts it again.
   if (canReadRaceDayJournal(actor)) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/jurnal" })), label: t("raceDay.tabs.journal"), active: active === "journal", glyph: glyph("journal") });
   }

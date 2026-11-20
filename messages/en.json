@@ -7983,7 +7983,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Tabs at the top: “Attendance” (this desk), “Timing” and “Things to bring”; organizers also get “Results”, “Raffle”, “Log” (who scanned, who marked present) and “Declarations”.",
+        "Tabs at the top: “Attendance” (this desk), “Timing”, “Raffle” and “Things to bring”; organizers also get “Results”, “Log” (who scanned, who marked present) and “Declarations”.",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
@@ -9773,7 +9773,7 @@
                 "At the top: how many declarations are signed. Below, in sections by state, as on «Attendance»: «Confirmed», open; then, closed, «To sign again», «Address not confirmed», «Place offered», «On the waiting list» and «Cancelled or expired». Beside each title, how many it holds; a section with nobody in it is not shown.",
                 "A row with no race number shows “—”: the number comes only with the confirmation. A cancelled or expired registration's number is struck through.",
                 "On each row: the number, the name, when they signed, the signature (for a minor, theirs and the parent's), the version and the fingerprint. “on paper, recorded by …” says who recorded a paper declaration at the desk.",
-                "Looking for someone? Under «Name or number» type part of the name or the race number and press «Search».",
+                "Looking for someone? Under «Name or number» type part of the name (the parent who signed for a minor works too) or the race number and press «Search».",
                 "«Declaration (PDF)» opens the signed declaration; every download stays in the registration's history, with your name. «Registration page» leads to the registration.",
                 "The identity document is not on the page, so nobody standing in front of the table sees it: it is only in the PDF and on the registration's page."
               ]

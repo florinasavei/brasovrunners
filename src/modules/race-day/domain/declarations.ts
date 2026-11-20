@@ -99,8 +99,9 @@ export function compareDeclarationRows(a: RaceDayDeclarationRow, b: RaceDayDecla
 /**
  * The search box (`?q=`), read as the desk reads its own (`listDeskRegistrations`): one to five digits are a race number, matched
  * against the number the row shows — a confirmed row's, and the retired one of a row that is over (§311); anything else is a part
- * of the name, matched blind to case and diacritics (`foldTerm`, the fold the lists use), in every fold; nothing is everybody. A
- * desk code names nobody here: the page lists declarations, and the desk is where a code is scanned.
+ * of a name the row draws — the registration's, or a signature's: the typed name, and a minor's own beside the parent's (§330), so
+ * the parent who signed finds the minor's row —, matched blind to case and diacritics (`foldTerm`, the fold the lists use), in every
+ * fold; nothing is everybody. A desk code names nobody here: the page lists declarations, and the desk is where a code is scanned.
  */
 export type DeclarationSearch = { kind: "none" } | { kind: "number"; number: number } | { kind: "name"; term: string };
 
@@ -114,7 +115,8 @@ export function declarationSearchOf(value: unknown): DeclarationSearch {
 export function matchesDeclarationSearch(row: RaceDayDeclarationRow, search: DeclarationSearch): boolean {
   if (search.kind === "none") return true;
   if (search.kind === "number") return declarationNumberOf(row) === search.number;
-  return foldTerm(row.registeredName).includes(search.term);
+  // Every name the row draws: the registration's, the typed signature, and the minor's own where the row names two signers.
+  return [row.registeredName, row.typedName, signedByTwo(row) ? row.minorTypedName : null].some((name) => name !== null && foldTerm(name).includes(search.term));
 }
 
 /** How many of these rows are real registrations: the page's «N declarații semnate» and a fold's number (§30, `AGENTS.md` §12.6). */

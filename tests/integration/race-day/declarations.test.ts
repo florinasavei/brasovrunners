@@ -426,6 +426,8 @@ describe("§NNN «Declarații» — the search", () => {
     expect(await names("TĂNASE")).toEqual(["Ștefan Tănase"]);
     expect(await names("pop")).toEqual(["Ana Pop", "Test Pop"]);
     expect(await names("stan")).toEqual(["Eva Stan"]);
+    // The parent who signed for a minor finds the minor's row: every name the row draws is searched.
+    expect(await names("maria")).toEqual(["Radu Dinu"]);
     expect(await names("12")).toEqual(["Ștefan Tănase"]);
     // «012» as a padded bib prints it is the number 12.
     expect(await names("012")).toEqual(["Ștefan Tănase"]);
