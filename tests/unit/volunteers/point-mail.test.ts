@@ -10,7 +10,7 @@ import { isJobCause, mainTypesOf, PRESS_CAUSE_NAMES } from "@/modules/notificati
 import { isRelayMessage } from "@/modules/notifications/domain/relay";
 import { emailCopyPrefill, emailSampleFor, placeholdersFilledBy, placeholdersUsedBy } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
-import { alreadyTold, type PointMailRow, volunteerPointKey } from "@/modules/volunteers/point-mail";
+import { alreadyTold, type PointMailRow, tellingOf, volunteerPointKey } from "@/modules/volunteers/point-mail";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -30,7 +30,14 @@ const A = "aaaaaaaa-0000-4000-8000-00000000000a";
 const B = "bbbbbbbb-0000-4000-8000-00000000000b";
 const ADDRESS = "ana.pop@example.test";
 const person = { checkpointId: A, canonicalEmail: ADDRESS };
-const row = (over: Partial<PointMailRow> = {}): PointMailRow => ({ checkpointId: A, round: 1, status: "SENT", recipientEmail: ADDRESS, ...over });
+/** The press's instant, and a minute either side of it: when a row was queued, when it left, when a note changed. */
+const QUEUED = new Date("2026-11-20T09:00:00.000Z");
+const minutes = (count: number) => new Date(QUEUED.getTime() + count * 60_000);
+/** A row as `pointRows` reads it: queued at the press, and — when it left — a minute later, by the provider's clock. */
+const row = (over: Partial<PointMailRow> = {}): PointMailRow => {
+  const status = over.status ?? "SENT";
+  return { checkpointId: A, round: 1, status, recipientEmail: ADDRESS, createdAt: QUEUED, sentAt: status === "SENT" || status === "COMPLAINED" ? minutes(1) : null, ...over };
+};
 
 describe("§956 whether a volunteer was already told the point they stand at", () => {
   it("is not told with no message at all — never queued, or the one queued was withdrawn at the send and deleted", () => {
@@ -98,6 +105,73 @@ describe("§956 whether a volunteer was already told the point they stand at", (
     expect(alreadyTold(person, [row({ recipientEmail: " Ana.Pop@Example.TEST " })])).toBe(true);
     // An address that is none is nobody's.
     expect(alreadyTold(person, [row({ recipientEmail: "not an address" })])).toBe(false);
+  });
+});
+
+/*
+  §1011 (amending §1009 and §956's rule), BR-REQ-080-02 — a changed «Notă pentru voluntari» is told again: a person told the point by a
+  message that left before the point's note last changed is not told any more (`toldBeforeTheNote`), and the next ordinary press
+  writes to them. A message still waiting is told whatever the note did — it says the note as it is when it leaves —, and a point
+  whose note never changed (no moment) is §956's rule exactly.
+*/
+describe("§1011 a changed note un-tells whoever was told the point before it", () => {
+  it("tells by a message that left after the note last changed, and not by one that left before it", () => {
+    // Left a minute after the press; the note changed four minutes later: the message carried the note as it was.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [row()])).toBe("toldBeforeTheNote");
+    expect(alreadyTold({ ...person, noteChangedAt: minutes(5) }, [row()])).toBe(false);
+    // The note changed before the message left — even before it was queued: it said the new note.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(-10) }, [row()])).toBe("told");
+    expect(tellingOf({ ...person, noteChangedAt: minutes(0.5) }, [row()])).toBe("told");
+    // Taken by the provider at the very instant of the save: not before it.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(1) }, [row()])).toBe("told");
+    // A complaint is a message that reached the inbox: the same rule.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [row({ status: "COMPLAINED" })])).toBe("toldBeforeTheNote");
+  });
+
+  it("is §956's rule exactly for a point whose note never changed", () => {
+    for (const noteChangedAt of [null, undefined]) {
+      expect(tellingOf({ ...person, noteChangedAt }, [row()])).toBe("told");
+      expect(tellingOf({ ...person, noteChangedAt }, [row({ status: "FAILED" })])).toBe("notTold");
+      expect(alreadyTold({ ...person, noteChangedAt }, [row({ status: "PENDING" })])).toBe(true);
+    }
+    expect(tellingOf(person, [])).toBe("notTold");
+  });
+
+  it("keeps a message still waiting as told whatever the note did: it says the note as it is when it leaves", () => {
+    for (const status of ["PENDING", "PROCESSING"] as const) {
+      expect(tellingOf({ ...person, noteChangedAt: minutes(30) }, [row({ status })]), status).toBe("told");
+      // …even beside an older message that left before the note changed: the waiting one is what they will read.
+      expect(tellingOf({ ...person, noteChangedAt: minutes(30) }, [row({ round: 1 }), row({ round: 2, status, createdAt: minutes(10) })]), status).toBe("told");
+    }
+  });
+
+  it("reads a message that left with no time of its own by when it was queued", () => {
+    // A complaint whose message the outbox never stamped: its queueing is the moment.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [row({ status: "COMPLAINED", sentAt: null })])).toBe("toldBeforeTheNote");
+    expect(tellingOf({ ...person, noteChangedAt: minutes(-5) }, [row({ status: "COMPLAINED", sentAt: null })])).toBe("told");
+  });
+
+  it("is told again by the next telling: a newer message that left after the change tells, one that failed does not", () => {
+    const first = row({ round: 1 });
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [first, row({ round: 2, createdAt: minutes(6), sentAt: minutes(7) })])).toBe("told");
+    // The newer telling failed for good: what reached them last is the first, from before the note.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [first, row({ round: 2, status: "FAILED", createdAt: minutes(6) })])).toBe("toldBeforeTheNote");
+    // The rows in whatever order the database returns them.
+    expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [row({ round: 2, createdAt: minutes(6), sentAt: minutes(7) }), first])).toBe("told");
+  });
+
+  it("says «before the note» only of a person who was otherwise told: another point, another address or nothing that left is simply not told", () => {
+    const later = { ...person, noteChangedAt: minutes(5) };
+    expect(tellingOf(later, [row({ checkpointId: B })])).toBe("notTold");
+    expect(tellingOf(later, [row({ recipientEmail: "ana.veche@example.test" })])).toBe("notTold");
+    expect(tellingOf(later, [row({ status: "BOUNCED" })])).toBe("notTold");
+    expect(tellingOf(later, [])).toBe("notTold");
+  });
+
+  it("holds every status the outbox has to the same three answers once the note changed after the send", () => {
+    const later = { ...person, noteChangedAt: minutes(5) };
+    const answers = Object.fromEntries(emailOutboxStatus.enumValues.map((status) => [status, tellingOf(later, [row({ status })])]));
+    expect(answers).toEqual({ PENDING: "told", PROCESSING: "told", SENT: "toldBeforeTheNote", FAILED: "notTold", BOUNCED: "notTold", COMPLAINED: "toldBeforeTheNote" });
   });
 });
 

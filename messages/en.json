@@ -6804,6 +6804,16 @@
           "volunteerNoteEn": "Note for the volunteers (English)",
           "volunteerNoteHelper": "What everybody at this point needs to know: it is on the plan and in each one's email.",
           "volunteerNoteHelperBoth": "In both languages or in neither, at most {max} characters each.",
+          "noteChanged": {
+            "one": "The note changed after the last email: {count} volunteer will get the new note with the next “Send each their point”.",
+            "few": "The note changed after the last email: {count} volunteers will get the new note with the next “Send each their point”.",
+            "other": "The note changed after the last email: {count} volunteers will get the new note with the next “Send each their point”."
+          },
+          "noteRemoved": {
+            "one": "The note was taken off after the last email: {count} volunteer will get the point without it with the next “Send each their point”.",
+            "few": "The note was taken off after the last email: {count} volunteers will get the point without it with the next “Send each their point”.",
+            "other": "The note was taken off after the last email: {count} volunteers will get the point without it with the next “Send each their point”."
+          },
           "add": "Add the point",
           "openMap": "Open on the map",
           "openMapFor": "Open on the map: {name}",
@@ -6873,7 +6883,7 @@
           "help": "One email to each volunteer placed at a point who has an email address: their point, what they do there and the plan's picture. It leaves only when you press here.",
           "send": "Send each their point",
           "again": "Send to everybody again",
-          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, coordinates or note, the order of the points, a role.",
+          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name or coordinates, the order of the points, a role.",
           "nobody": "Nobody to tell: no volunteer with an email address stands at a point yet.",
           "toTell": {
             "one": "{count} volunteer to tell",
@@ -9969,10 +9979,11 @@
               "steps": [
                 "«Volunteers» in the top bar: choose the event, press «Filter», then «The volunteers' plan».",
                 "«Table» shows every point in one table; «By point», each point with its people. There, at a point, choose a volunteer and press «Put here»; «Take off» takes them off the point.",
-                "Each point's volunteers are numbered. In «Table», their names are in bold, with a thin line between two — on the screen and on paper.",
-                "What everybody at a point has to know: on «By point» open the point, press the pencil («Change the point»), write «Note for the volunteers (Romanian)» and «Note for the volunteers (English)» — in both languages or in neither — and press «Save the point». The note shows under the point's name, in the table and on paper.",
+                "Each point's volunteers are numbered, their names in bold with a thin line between two — in both views, on the screen and on paper.",
+                "What everybody at a point has to know: write «Note for the volunteers (Romanian)» and «Note for the volunteers (English)» — in both languages or in neither — right in «Add a point», or later: on «By point» open the point, press the pencil («Change the point») and press «Save the point». If something is wrong, the message shows at the form and what you typed stays. The note shows under the point's name, in the table and on paper.",
                 "«Print the plan» prints what you see: the table, or every point, open.",
-                "Once the plan is ready: «Send each their point». Each volunteer placed at a point gets an email with their point, the point's note for the volunteers, what they do there and the plan's pictures. Nobody is told before."
+                "Once the plan is ready: «Send each their point». Each volunteer placed at a point gets an email with their point, the point's note for the volunteers, what they do there and the plan's pictures. Nobody is told before.",
+                "Changed a point's note after sending? Under the note it says how many got the old one; the next «Send each their point» writes again to them alone (and to whoever was not told yet)."
               ]
             },
             {
@@ -9995,7 +10006,7 @@
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
                 "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
-                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». If you type again the number of an elite who already finished, the page asks first — on this phone, once the page knows the elite finished, after any press of yours or a reload: «Cancel» enters nothing, «Enter the number again» enters it at the moment you pressed «Finished». Either way, a second press never changes the first time. A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -13377,6 +13388,14 @@
         "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper.",
         "giveNumber": "Give a number",
         "giveNumberAria": "Give a number: {label} — {name}"
+      },
+      "eliteAgain": {
+        "title": "Already finished",
+        "body": "{label} ({name}) already finished at {time}. Enter the number again?",
+        "bodyBy": "{label} ({name}) already finished at {time} — {by}. Enter the number again?",
+        "second": "A second time does not change the first: it only shows in «Finish history», under «Results».",
+        "cancel": "Cancel",
+        "confirm": "Enter the number again"
       },
       "keep": {
         "button": "Finish",

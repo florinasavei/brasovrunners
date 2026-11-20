@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.83-2026-11-20
+
+- **«Planul voluntarilor»: the note given with a new point, «Modifică punctul» keeping what was typed, «Pe puncte» like «Tabel», a changed note told again** — «Adaugă un punct» takes «Notă pentru voluntari» in Romanian and English; a refused «Modifică punctul» comes back with every box as typed and its sentence at the form, the point still open; on «Pe puncte» each point's volunteers are numbered, their names in bold capitals with a thin line between two, on paper too; and when a point's note changes after its volunteers were emailed, the point says how many will get the new one, and the next «Trimite fiecăruia punctul lui» writes to them — and only them. §1011.
+## BR-V4.82-2026-11-20
+
+- **«Cronometrare» asks before an elite is entered twice** — on a phone whose page knows an elite is already «Sosit», the elite's number typed in the box opens a question first: «Anulează» (focused, so Enter or Esc) records nothing and keeps a caught «Finish» moment for the next number, «Trece numărul din nou» records the moment «Sosit» was pressed and the first time stays, and the box has the focus — the phone its keypad — back at once; any other number goes at once as before. §1010.
 ## BR-V4.81-2026-11-20
 
 - **«Notă pentru voluntari» on each point of «Planul voluntarilor»** — written in the point's «Modifică punctul» in Romanian and English, shown under the point's name on «Pe puncte» and in «Punctele, pe scurt», printed with the plan and said in the «Punctul tău de voluntar» email of everybody at that point; and a point's volunteers are numbered, their names in bold, with a thin line between two. §1009.

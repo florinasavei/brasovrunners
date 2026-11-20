@@ -713,7 +713,7 @@ export type AuditAction =
   // confirmed volunteers the press gave a number; never a person. Written by nothing since §NNN (the box left the card); kept for its rows.
   | "event.volunteer_numbers_start_set"
   // The volunteers' V numbers (§NNN) given by the maintenance job to confirmed volunteers who had none — a volunteer the code serving
-  // during migration `0223` confirmed (`volunteers/volunteer-numbers.ts#numberWaitingVolunteers`), no actor: how many, the first and
+  // during migration `0224` confirmed (`volunteers/volunteer-numbers.ts#numberWaitingVolunteers`), no actor: how many, the first and
   // the last number given; never a person.
   | "event.volunteer_numbers_given"
   // «Cel mult câte roluri poate bifa o persoană» (§951): the public form's limit on the roles ticked set, moved or taken off —

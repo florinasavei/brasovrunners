@@ -307,7 +307,7 @@ export const eventVolunteers = pgTable(
      */
     bibNumber: integer("bib_number"),
     /**
-     * «V001» (migration `0223`, §NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti
+     * «V001» (migration `0224`, §NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti
      * voluntarii automat!»): the volunteer's number in the event's own volunteers' series — 1, 2, 3, … written «V001», «V002»,
      * «V003» everywhere a volunteer's number shows (`domain/volunteer-number.ts#formatVolunteerNumber`). Drawn by itself the
      * moment the organizers confirm the person, under the event row's lock: the next one the event never gave

@@ -69,7 +69,7 @@ const FIRST_CONFIRMED_AT = sql<Date | null>`(
  * own transaction under the event row's lock, in the order they were first confirmed, then added, then by id (the migration's
  * own order), after the highest the event ever gave. Idempotent: a run that finds nobody writes nothing — one read of a small
  * table — and a person numbered meanwhile by a confirmation is not found again. Who it finds: a volunteer the code serving while
- * migration `0223` ran confirmed (it knew no such column). One audit row per event numbered — how many, the first and the last
+ * migration `0224` ran confirmed (it knew no such column). One audit row per event numbered — how many, the first and the last
  * number — never a person. Nobody is told: the number shows where the organizers read the person.
  */
 export async function numberWaitingVolunteers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<{ events: number; given: number }> {

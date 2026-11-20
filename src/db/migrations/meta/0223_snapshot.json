@@ -1,5 +1,5 @@
 {
-  "id": "b302ae1c-f33c-463c-ad4e-9649d68836a9",
+  "id": "5e4e2b99-16a5-4564-98ce-0ee7a3754a4f",
   "prevId": "4a519881-b614-411e-ae0e-53cd5f96f9fe",
   "version": "7",
   "dialect": "postgresql",
@@ -1188,6 +1188,12 @@
         "volunteer_note_en": {
           "name": "volunteer_note_en",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volunteer_note_changed_at": {
+          "name": "volunteer_note_changed_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -4406,12 +4412,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "volunteer_number": {
-          "name": "volunteer_number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "checkpoint_id": {
           "name": "checkpoint_id",
           "type": "uuid",
@@ -4641,28 +4641,6 @@
           "method": "btree",
           "with": {}
         },
-        "event_volunteers_event_volunteer_number_unique": {
-          "name": "event_volunteers_event_volunteer_number_unique",
-          "columns": [
-            {
-              "expression": "event_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "volunteer_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"event_volunteers\".\"volunteer_number\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "event_volunteers_role_idx": {
           "name": "event_volunteers_role_idx",
           "columns": [
@@ -4878,10 +4856,6 @@
         "event_volunteers_bib_number_positive": {
           "name": "event_volunteers_bib_number_positive",
           "value": "\"event_volunteers\".\"bib_number\" IS NULL OR \"event_volunteers\".\"bib_number\" > 0"
-        },
-        "event_volunteers_volunteer_number_positive": {
-          "name": "event_volunteers_volunteer_number_positive",
-          "value": "\"event_volunteers\".\"volunteer_number\" IS NULL OR \"event_volunteers\".\"volunteer_number\" > 0"
         },
         "event_volunteers_address_whole": {
           "name": "event_volunteers_address_whole",

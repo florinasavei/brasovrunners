@@ -142,6 +142,8 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.83` | the note given with a new point, «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», and a changed note told again (§1011) |
+| `BR-V4.82` | «Cronometrare» asks before a finished elite's number typed again is recorded (§1010) |
 | `BR-V4.81` | «Notă pentru voluntari» on each point of the plan, its volunteers numbered in bold with a line between two (§1009) |
 | `BR-V4.80` | the team's undertaking at sign-in — a ninth legal text the club approves on its own, accepted on /admin/acord once per version by every colleague below the Administrator (§1006) · «Cronometrare» counts only who can finish (§1007) · «Prinde timpul» is now «Finish» (§1008) |
 | `BR-V4.79` | «Clasament» lists the elites first (§1005) |
