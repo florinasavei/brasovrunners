@@ -49,6 +49,8 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
+/** Who enters the walk-ins this file sets up since §1025: the Organizer, never the desk's volunteer. */
+let organizer: StaffUser;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -77,6 +79,7 @@ beforeEach(async () => {
   }
   admin = await staff("ADMIN");
   volunteer = await staff("CONTRIBUTOR");
+  organizer = await staff("MODERATOR");
 });
 
 let serial = 0;
@@ -108,7 +111,7 @@ async function enter(eventId: string, name: string, options: { confirmed?: boole
   const email = `${name.toLowerCase().replace(/\s+/g, ".")}@example.org`;
   await createRegistrationByStaff(
     db,
-    volunteer,
+    organizer,
     {
       eventId,
       firstName: name.split(" ")[0],

@@ -7,12 +7,13 @@ import { openFold } from "./support/fold";
 /**
  * BR-REQ-037-07, BR-REQ-037-08 — race morning, end to end, as a volunteer would live it.
  *
- * A Contributor — the lowest role, which is what a volunteer at the pickup table is given —
- * opens the desk, enters a walk-in who never registered, sees them confirmed on the spot,
- * types their number, marks them here, and then opens the page their QR would have opened and
- * takes the check-in back. The QR image itself is fetched as the email would fetch it. Then the
- * organizer reads «Ziua cursei» → «Jurnal» (§996): the scan, the check-in and the undo, each named
- * with the volunteer's account, on a phone and on a desktop.
+ * The Organizer enters a walk-in who never registered at the desk — «Adaugă pe cineva» is the
+ * organizers' since §1025 — and a Contributor — the lowest role, which is what a volunteer at the
+ * pickup table is given — opens the desk, finds no «Adaugă pe cineva» but the line that says who
+ * adds a walk-in, finds the walk-in confirmed on the spot, marks them here, and then opens the page
+ * their QR would have opened and takes the check-in back. The QR image itself is fetched as the
+ * email would fetch it. Then the organizer reads «Ziua cursei» → «Jurnal» (§996): the scan, the
+ * check-in and the undo, each named with the volunteer's account, on a phone and on a desktop.
  *
  * Runs against the seeded database; both Playwright projects share it, so every name, address
  * and race number carries the project's name.
@@ -22,7 +23,9 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
   // suite's load a round trip can take longer than the five seconds an expectation waits by default.
   test.describe.configure({ timeout: 90_000 });
 
-  test("a volunteer enters a walk-in, gives a number, checks them in, and opens their QR page", async ({ page }) => {
+  test("an organizer enters a walk-in; a volunteer finds them, checks them in, and opens their QR page", async ({ page }) => {
+    // Three sign-ins in one story since §1025: the Administrator, the Organizer, the volunteer.
+    test.setTimeout(150_000);
     // An organizer opens registration on the featured event (the seed configures none).
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -32,14 +35,9 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // organizer's own session instead of the buttons.
     await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
 
-    // The volunteer.
-    await signIn(page, "Dev Contributor");
-    await page.getByRole("tab", { name: "Ziua cursei" }).click();
-    await expect(page).toHaveURL(/\/ro\/admin\/checkin/);
-    await expect(page.getByRole("heading", { name: "Masa de ridicare a numerelor" })).toBeVisible();
-    // The steps are on the page, for whoever was handed the phone.
-    await expect(page.getByText("Cum merge ziua cursei, pas cu pas")).toBeVisible();
-
+    // The Organizer at the desk: the walk-in is theirs to enter (§1025).
+    await signIn(page, "Dev Moderator");
+    await page.goto("/ro/admin/checkin");
     // The desk works the featured event. A native select, so this needs no hydration.
     const option = page.locator('select[name="eventId"] option', { hasText: FEATURED.title });
     const eventId = (await option.getAttribute("value")) as string;
@@ -59,9 +57,24 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
     await confirmDialog(page);
 
-    // Back at the desk, confirmed on the spot, with a code.
+    // Back at the desk, confirmed on the spot.
     await expect(page).toHaveURL(/\/ro\/admin\/checkin\?.*eventId=/);
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
+    await page.getByRole("button", { name: "Ieși din cont" }).click();
+    await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
+
+    // The volunteer.
+    await signIn(page, "Dev Contributor");
+    await page.getByRole("tab", { name: "Ziua cursei" }).click();
+    await expect(page).toHaveURL(/\/ro\/admin\/checkin/);
+    await expect(page.getByRole("heading", { name: "Masa de ridicare a numerelor" })).toBeVisible();
+    // The steps are on the page, for whoever was handed the phone.
+    await expect(page.getByText("Cum merge ziua cursei, pas cu pas")).toBeVisible();
+    await page.selectOption('select[name="eventId"]', eventId);
+    await page.getByRole("button", { name: "Caută" }).click();
+    // Somebody not on the list is the organizers' to add (§1025): no press, the line in its place.
+    await expect(page.getByRole("link", { name: "Adaugă pe cineva" })).toHaveCount(0);
+    await expect(page.getByTestId("desk-walk-in-call")).toBeVisible();
     await hydrated(page);
     await page.getByRole("textbox", { name: "Nume, număr sau cod" }).fill(suffix);
     await page.getByRole("button", { name: "Caută" }).click();

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.92-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.93-2026-11-20 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.93-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -415,11 +415,12 @@ them *here*. The process leaves room for everything that goes wrong at a table: 
 arrived, the QR is on a dead phone, the person never registered. A volunteer can confirm a
 pending registration on the spot — the address vouched for by the volunteer, the declaration
 signed by the participant on a printed copy of the approved text and recorded under the
-volunteer's name — enter a walk-in, give a number by hand, undo a mistake. What a volunteer
-cannot do is see an address, cancel, erase or export: those stay with the administrator. And
-nothing at the desk places anybody past the event's capacity: a walk-in at a full event joins
-the waiting list, and a place is given only when one is free. Participants can also say "I am
-here" from their own link from the day before the start.
+volunteer's name — give a number by hand, undo a mistake; somebody who never registered is
+entered by an organizer or an administrator, whom the volunteer calls (`DECISIONS.md` §1025).
+What a volunteer cannot do is see an address, cancel, erase or export: those stay with the
+administrator. And nothing at the desk places anybody past the event's capacity: a walk-in at a
+full event joins the waiting list, and a place is given only when one is free. Participants can
+also say "I am here" from their own link from the day before the start.
 
 The backoffice shows, for each registration:
 
@@ -712,9 +713,9 @@ list of roles, so adding a role later cannot silently take one away.
 
 | Staff role | Adds, on top of the role below |
 | --- | --- |
-| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number, takes a runner off the raffle or puts them back — asked first, kept with who pressed (`DECISIONS.md` §1020); the finish line, «Cronometrare»: records a finisher by the bib's number or an elite's button, and undoes their own press for ten minutes (`DECISIONS.md` §986); and the raffle's tab, «Tombolă», for an event that holds a raffle: reads who takes part and who was there — names and numbers, never an address — and signs a runner up who accepted the rules (`DECISIONS.md` §1014), the raffle's files staying the organizers'. Nothing else (`DECISIONS.md` §103) |
+| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number, takes a runner off the raffle or puts them back — asked first, kept with who pressed (`DECISIONS.md` §1020); somebody who is not on the list is an organizer's to add, so the volunteer calls one (`DECISIONS.md` §1025); the finish line, «Cronometrare»: records a finisher by the bib's number or an elite's button, and undoes their own press for ten minutes (`DECISIONS.md` §986); and the raffle's tab, «Tombolă», for an event that holds a raffle: reads who takes part and who was there — names and numbers, never an address — and signs a runner up who accepted the rules (`DECISIONS.md` §1014), the raffle's files staying the organizers'. Nothing else (`DECISIONS.md` §103) |
 | Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
-| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §986) |
+| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; at the race-day desk, adds somebody who is not on the list («Adaugă pe cineva», with the Administrators, `DECISIONS.md` §1025); messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §986) |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Every event — creating, configuring, publishing, cancelling, a series (§542); changing registrations, participants, waiting lists, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |
