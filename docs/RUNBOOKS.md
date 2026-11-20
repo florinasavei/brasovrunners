@@ -1030,7 +1030,10 @@ started and any disqualification with the reason for the note box either way.
    sentence names the runner and the box. The places overall, by sex and by category are computed on every save;
    ties share a place and the next is skipped. An emptied line is a deleted result. A page opened before a
    colleague saved is refused rather than written over theirs: reload and save again.
-6. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.
+6. A number pressed more than once at «Cronometrare» — or whose «Timp» is not the one recorded — shows **«Timpi la sosire:»**
+   under its «Timp», each time with who pressed it and when: **«Folosește»** beside one makes it the line's «Sosit» time after a
+   question, the places follow, and «Istoricul sosirilor» names who chose it (§NNN).
+7. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.
 
 ### The awards
 

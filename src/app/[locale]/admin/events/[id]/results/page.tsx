@@ -24,10 +24,14 @@ import { anonymousResultLabel } from "@/modules/results/domain/public-name";
 import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/finish-history";
+import { recordedTimesOffered } from "@/modules/results/domain/recorded-times";
+import { readRecordedFinishTimes } from "@/modules/results/recorded-times";
 import { plannedGunOf, readEventResults, type ResultRunner } from "@/modules/results/results";
+import { CHOICE_BOX, CHOOSE_TIME_FORM_ID, chosenTimeValue, RESULTS_ALERT_ANCHOR } from "@/modules/results/rows";
 import {
   DELETE_RESULT_FORM_ID,
   type PlaceView,
+  type RecordedTimeView,
   type RegisteredLine,
   RegisteredResultLines,
   type ResultMark,
@@ -41,6 +45,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import ClockPickerHost from "@/shared/forms/pickers/ClockPickerHost";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
@@ -53,11 +58,11 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
+import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resultsError?: string }>;
+  searchParams: Promise<{ resultsError?: string; timeError?: string }>;
 };
 
 /** Reads the stored rows and is returned to right after a save. */
@@ -73,6 +78,12 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "CONFLICT", "RESULTS_RESET_AFTER_START"] as const;
 
 /**
+ * The codes a refused «Folosește» comes back with (§NNN), in `?timeError=` — its own parameter, so its CONFLICT («the results changed
+ * since your page») is never said in the reset's words. Each is `errors.<code>`, but CONFLICT, `results.recorded.changed`.
+ */
+const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "RESULT_TIME_NOT_RECORDED"] as const;
+
+/**
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
  * a page of their own under the event like its bibs and its messages — the event editor is long enough, and its «Înscrieri» card links here.
  *
@@ -86,12 +97,17 @@ const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NO
  * «Cronometrare», the question counting what goes; after the start it is drawn disabled with the sentence why, for anybody else not
  * at all.
  *
+ * Under a line's «Timp», «Timpi la sosire» (§NNN): the times «Cronometrare» recorded for its number since the last reset — read with
+ * the page's data, one query of the race's trail (`recorded-times.ts`) — drawn only when there is a choice, each with who pressed it and
+ * when, «în clasament» on the one the line shows, and «Folosește» beside each other one: the page's one hidden form, as «Șterge»'s, its
+ * question naming the time and the runner, the page's fingerprint posted with it.
+ *
  * Whoever enters results — the Organizer, the Administrator, the Superadministrator (`canEnterResults`); anybody else meets the 404 an
  * unknown page gets (BR-REQ-060-01), and every action asserts again. A group run has no results: the page says so and offers nothing.
  */
 export default async function EventResultsPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
-  const { resultsError } = await searchParams;
+  const { resultsError, timeError } = await searchParams;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const actor = await requireStaff();
@@ -100,9 +116,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   if (!isUuid(id)) notFound();
 
   const db = getDb();
-  let view;
+  let view: Awaited<ReturnType<typeof readEventResults>>;
+  let recorded: Awaited<ReturnType<typeof readRecordedFinishTimes>>;
   try {
-    view = await readEventResults(db, actor, id);
+    // The race's results and, read with them, the times «Cronometrare» recorded for every number (§NNN): one query of the race's trail.
+    [view, recorded] = await Promise.all([readEventResults(db, actor, id), readRecordedFinishTimes(db, actor, id)]);
   } catch (error) {
     if (isDomainError(error) && error.code === "NOT_FOUND") notFound();
     throw error;
@@ -110,8 +128,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const { event } = view;
   const title = (await findEventTitle(db, id, locale)) ?? "";
   const t = await getTranslations("Admin");
-  
+
   const now = new Date();
+  const zone = event.timezone || CLUB_TIME_ZONE;
   const takes = eventTakesResults(event.type);
   const mayPublish = canPublishResults(actor.role);
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
@@ -126,6 +145,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   // has no start then, so nothing shows until it is announced, and the card says that instead of the hour stored.
   const startWords = startHeldBack(event) ? null : formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short", position: "inline", withTime: true });
   const errorCode = BANNER_ERRORS.find((code) => code === resultsError);
+  const timeErrorCode = TIME_ERRORS.find((code) => code === timeError);
 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
   const head = (
@@ -185,6 +205,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     noPlace: t("results.noPlace"),
     noPlaceSettled: t("results.noPlaceSettled"),
     outOfRanking: t("results.outOfRanking"),
+    recordedTitle: t("results.recorded.title"),
+    recordedCurrent: t("results.recorded.current"),
+    recordedUse: t("results.recorded.use"),
   };
   // The category in the Excel footer's own words (§787), under the race's own bands (§850): the template «{sex}, {band}» read raw, filled by the label.
   const statisticsWord = (statisticsKey: string) => t.raw(`registrations.statistics.${statisticsKey}`) as string;
@@ -232,6 +255,36 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   // Who last wrote a stored result (§986): «introdus de …» while it is as first written, «modificat de …» once changed; «cont șters» for an account gone.
   const writtenByOf = (runner: ResultRunner) =>
     runner.result ? t(runner.result.writtenBy.changed ? "timing.changedBy" : "timing.enteredBy", { name: runner.result.writtenBy.name ?? t("timing.accountGone") }) : undefined;
+  // «Timpi la sosire» (§NNN): a line's recorded times, worded, only when there is a choice (`recordedTimesOffered`) — more than one, or one
+  // that is not the line's «Timp». Each «Folosește» gets its own question in the page's one hidden form, the time and the runner named.
+  const confirm = await confirmWords();
+  const chooseQuestions: ConfirmSpec[] = [];
+  const recordedOf = (runner: ResultRunner, runnerWords: string): RecordedTimeView[] | undefined => {
+    const times = recorded.get(runner.bibNumber) ?? [];
+    const current = runner.result?.status === "FINISHED" ? runner.result.gunTimeMs : null;
+    if (!recordedTimesOffered(times, current)) return undefined;
+    return times.map((time) => {
+      const timeWords = formatResultTime(time.gunTimeMs);
+      const choice = chosenTimeValue(runner.bibNumber, time.gunTimeMs);
+      const isCurrent = time.gunTimeMs === current;
+      if (!isCurrent) {
+        chooseQuestions.push({
+          when: [{ field: CHOICE_BOX, equals: choice }],
+          title: t("results.recorded.confirmTitle"),
+          body: t("results.recorded.confirmBody", { time: timeWords, runner: runnerWords }),
+          confirmLabel: t("results.recorded.use"),
+          cancelLabel: confirm.cancel,
+        });
+      }
+      return {
+        time: timeWords,
+        by: t("results.recorded.by", { name: time.by ?? t("timing.accountGone"), at: formatTimeWithSeconds(time.at, { locale, timeZone: zone }) }),
+        current: isCurrent,
+        choice,
+        useLabel: t("results.recorded.useFor", { time: timeWords, runner: runnerWords }),
+      };
+    });
+  };
   const registered: RegisteredLine[] = view.registered.map((runner) => ({
     bibNumber: runner.bibNumber,
     name: runner.name ?? "",
@@ -246,6 +299,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     outOfRanking: runner.outOfRanking,
     marks: marksOf(runner),
     writtenBy: writtenByOf(runner),
+    recorded: recordedOf(runner, `#${runner.bibNumber} ${runner.name ?? ""}`.trim()),
   }));
   const typed: TypedLine[] = view.typed.map((runner) => ({
     values: {
@@ -264,6 +318,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     hasResult: true,
     outOfRanking: runner.outOfRanking,
     writtenBy: writtenByOf(runner),
+    recorded: recordedOf(runner, `#${runner.bibNumber} ${runner.name ?? ""}`.trim()),
   }));
 
   // ---- The refusal summary's labels, by the unindexed name of a box (`fieldLabelOf`) ------------------------------
@@ -295,7 +350,6 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     awardRules,
   );
   const bands = bandKeysOf(view.ageBandStarts);
-  const confirm = await confirmWords();
 
   const total = view.counts.FINISHED + view.counts.DNF + view.counts.DNS + view.counts.DSQ;
   const downloadHref = `/api/admin/events/${id}/results?lang=${locale}`;
@@ -303,7 +357,6 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   // «Istoricul sosirilor» (§986): one line a write — when, who, what with the number and the time, and from where; the runner's
   // name read live beside the number (the trail stores none).
   const history = await readFinishHistory(db, actor, id);
-  const zone = event.timezone || CLUB_TIME_ZONE;
   const historyLineWords = (line: FinishHistoryEntry): string => {
     const when = `${formatDay(line.at, { locale, timeZone: zone, style: "short" })}, ${formatTimeWithSeconds(line.at, { locale, timeZone: zone })}`;
     const what = line.what;
@@ -335,6 +388,10 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           status: statusAndTime(what.status, what.gunTimeMs),
           boxes: what.boxes.map((box) => t(`results.history.box.${box}`)).join(", "),
         });
+        break;
+      case "chosen":
+        // «Folosește» (§NNN): one of the times recorded at the line made the runner's.
+        words = t("results.history.what.chosen", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
         break;
       case "deleted":
         words = t("results.history.what.deleted", { runner: runner(what.bibNumber), status: status(what.status) });
@@ -399,10 +456,17 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {t(canTick ? "results.notStarted" : "results.notStartedEnterOnly")}
         </Alert>
       )}
-      {errorCode && (
-        <Alert severity="error" data-testid="results-error">
-          {/* A CONFLICT here is the reset's (§997): results arrived or the start changed since its page was drawn — nothing was wiped. */}
-          {errorCode === "CONFLICT" ? t("results.reset.changed") : t(`errors.${errorCode}`)}
+      {(errorCode || timeErrorCode) && (
+        <Alert severity="error" id={RESULTS_ALERT_ANCHOR} tabIndex={-1} sx={{ scrollMarginTop: 16 }} data-testid="results-error">
+          {/* A refused «Folosește» (§NNN) says its own CONFLICT — the results changed since the page was drawn —; a CONFLICT in
+              `resultsError` is the reset's (§997): results arrived or the start changed since its page was drawn — nothing was wiped. */}
+          {timeErrorCode
+            ? timeErrorCode === "CONFLICT"
+              ? t("results.recorded.changed")
+              : t(`errors.${timeErrorCode}`)
+            : errorCode === "CONFLICT"
+              ? t("results.reset.changed")
+              : t(`errors.${errorCode}`)}
         </Alert>
       )}
 
@@ -497,6 +561,27 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={id} />
       </ActionForm>
+
+      {/* A line's «Folosește» under «Timpi la sosire» (§NNN): one hidden form for the whole page, as «Șterge»'s; the button names it with
+          `form=` and posts `choice=<number>:<milliseconds>`. Asks first — each button its own question, the time and the runner named —
+          and posts the page's fingerprint, so a page older than another save changes nothing. Drawn only while some line offers a choice. */}
+      {chooseQuestions.length > 0 && (
+        <ActionForm
+          id={CHOOSE_TIME_FORM_ID}
+          hidden
+          action={chooseRecordedTimeAction}
+          confirm={[
+            ...chooseQuestions,
+            // Asked only of a press no question above names — none the page draws —, so no press goes unasked.
+            { title: t("results.recorded.confirmTitle"), body: t("results.recorded.confirmBodyAny"), confirmLabel: t("results.recorded.use"), cancelLabel: confirm.cancel },
+          ]}
+          data-testid="results-choose-form"
+        >
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={id} />
+          <input type="hidden" name="fingerprint" value={view.fingerprint} />
+        </ActionForm>
+      )}
 
       {/* «Categorii de vârstă» (§850): the ages the race's categories start at, a form of its own — a change ranks the stored rows again, not a save of them. */}
       <Panel glyph="filters" level={3} title={t("results.categories.title")} aside={t("results.categories.aside", { count: String(bands.length * 2) })} id="box-results-categories" data-testid="results-categories">

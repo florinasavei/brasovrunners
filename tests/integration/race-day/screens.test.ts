@@ -74,6 +74,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   setResultAgeBandsAction: vi.fn(),
   setResultAwardsAction: vi.fn(),
   resetEventResultsAction: vi.fn(),
+  chooseRecordedTimeAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
   recordFinishPressAction: vi.fn(),

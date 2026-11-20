@@ -293,6 +293,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setResultsPublishedAction: [],
   // «Resetează clasamentul» (§997): every result of the race and the gun given, wiped before the start — nothing to undo it with.
   resetEventResultsAction: [],
+  // «Folosește» under a line's «Timpi la sosire» (§NNN): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
+  chooseRecordedTimeAction: [],
 };
 
 /**

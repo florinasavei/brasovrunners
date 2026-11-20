@@ -29,6 +29,33 @@ export function resultBox(key: string, box: ResultRowBox): string {
 /** The box that carries how many blank typed lines «Adaugă un alergător neînscris» asked for, posted with the form so a script-less press can add another. */
 export const EXTRA_ROWS = "extraRows";
 
+/**
+ * «Folosește» under a line's «Timpi la sosire» (§NNN): the page's one hidden form its buttons name with `form=`, as «Șterge»'s do, and
+ * the box each button posts — `choice`, `<number>:<milliseconds>` (`chosenTimeValue`, read back by `readChosenTime`). Here, in a module
+ * with no React, so the page that draws the question, the island that draws the button and the action that reads it spell it one way.
+ */
+export const CHOOSE_TIME_FORM_ID = "choose-recorded-time";
+export const CHOICE_BOX = "choice";
+
+/** What a «Folosește» button posts: the line's number and the time, `101:2717000`. */
+export function chosenTimeValue(bibNumber: number, gunTimeMs: number): string {
+  return `${bibNumber}:${gunTimeMs}`;
+}
+
+/** A posted `choice`, read back: the number and the time, or null for anything the page never draws. */
+export function readChosenTime(value: string): { bibNumber: number; gunTimeMs: number } | null {
+  const match = /^(\d{1,6}):(\d{1,9})$/.exec(value.trim());
+  return match ? { bibNumber: Number(match[1]), gunTimeMs: Number(match[2]) } : null;
+}
+
+/** Where «Clasament» is drawn again after a «Folosește» that went through: at the line of that number (`id` on the line). */
+export function resultLineAnchor(bibNumber: number): string {
+  return `result-line-${bibNumber}`;
+}
+
+/** Where it is drawn again after a refused one: at the page's alert, which says why. */
+export const RESULTS_ALERT_ANCHOR = "results-alert";
+
 /** A registered runner's row key, by the race number. */
 export function registeredRowKey(bibNumber: number): string {
   return `r[${bibNumber}]`;

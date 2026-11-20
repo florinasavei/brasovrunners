@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { CLOCK_BUTTON_CLASS, useClockPicker } from "@/shared/forms/pickers/ClockPickerHost";
 import { writeBox } from "@/shared/forms/pickers/clock-values";
 import { useRecall } from "@/shared/forms/recall";
@@ -11,7 +11,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import { openFoldsAround } from "@/shared/ui/fold";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
-import { EXTRA_ROWS, RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
+import { CHOICE_BOX, CHOOSE_TIME_FORM_ID, EXTRA_ROWS, RESULT_ROW_BOXES, resultBox, resultLineAnchor, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
 import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "../domain/result-time";
 
@@ -30,6 +30,11 @@ import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "
  * («12345» → «1:23:45», `normalizeTypedResultTime`). The button and its wrapper are plain elements styled once by the list
  * (`TIME_STYLES`), so a line grows by a button and its glyph, nothing more; without scripts the host hides the button and the box
  * is the box it was.
+ *
+ * **«Timpi la sosire»** (§NNN): under a line's «Timp», when «Cronometrare» recorded more than one time for its number — or one that is
+ * not the line's —, each time with who pressed it and when, «în clasament» on the one the line shows, and beside each other one a
+ * 44-pixel «Folosește» that posts the page's one hidden form (`CHOOSE_TIME_FORM_ID`, as «Șterge» posts its own), asked first. The
+ * page decides which lines draw it and words every time; this only lays them out.
  *
  * A client island because the recall and the «Adaugă un alergător» button are; plain data crosses the boundary — strings, numbers
  * and booleans — and never an element (`AGENTS.md` §14.1).
@@ -76,6 +81,26 @@ export type ResultWords = {
   noPlaceSettled: string;
   /** «în afara clasamentului» in place of a position: an elite the Administrator left out of the ranking (§910). */
   outOfRanking: string;
+  /** «Timpi la sosire:» over a line's recorded times (§NNN), «în clasament» on the one the line shows, and the button «Folosește». */
+  recordedTitle: string;
+  recordedCurrent: string;
+  recordedUse: string;
+};
+
+/**
+ * One time «Cronometrare» recorded for a line's number (§NNN), as the page worded it: the time, who pressed it and when, whether the
+ * line shows it now («în clasament»), and — for the others — what «Folosește» posts and the button's accessible name.
+ */
+export type RecordedTimeView = {
+  /** «0:45:17», as the «Timp» box writes it. */
+  time: string;
+  /** «Tudor Tehnic, la 09:45:20» — «cont șters» for an account gone. */
+  by: string;
+  current: boolean;
+  /** The button's value, `<number>:<milliseconds>` (`rows.ts#chosenTimeValue`). */
+  choice: string;
+  /** «Folosește 0:45:17 pentru #102 Bia Marin». */
+  useLabel: string;
 };
 
 /** The boxes of a line, as strings, exactly as the form would post them. */
@@ -102,6 +127,8 @@ export type RegisteredLine = {
   marks?: readonly ResultMark[];
   /** Who last wrote the stored result (§986): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
   writtenBy?: string;
+  /** «Timpi la sosire» under «Timp» (§NNN): the times recorded for the number, only when there is a choice; absent otherwise. */
+  recorded?: readonly RecordedTimeView[];
 };
 
 /** One of the club's two marks on a registration, as a line of «Clasament» and a row of «Premii» draw it. */
@@ -121,10 +148,15 @@ export type TypedLine = {
   outOfRanking?: boolean;
   /** Who last wrote the stored result (§986), as a registered line says it. */
   writtenBy?: string;
+  /** «Timpi la sosire» under «Timp» (§NNN), as a registered line draws it: the stored line's number's recorded times, when there is a choice. */
+  recorded?: readonly RecordedTimeView[];
 };
 
 /** The one delete form of the page (`ActionForm`, `id` below): a line's «Șterge» names it with `form=` and posts the number as its own value. */
 export const DELETE_RESULT_FORM_ID = "delete-result";
+
+/** A line the page comes back to after «Folosește» (§NNN): its anchor, clear of the top of the window. */
+const LINE_ANCHOR_SX = { scrollMarginTop: 16 } as const;
 
 const BOX_SX = {
   width: "100%",
@@ -299,6 +331,7 @@ function LineBox({
   testId,
   span,
   pickLabel,
+  below,
 }: {
   name: string;
   caption: string;
@@ -313,6 +346,8 @@ function LineBox({
   span?: boolean;
   /** A time box (§999): the clock button's accessible name beside it, and the box read as a time when it is left. */
   pickLabel?: string;
+  /** What the cell draws under the box: «Timp»'s «Timpi la sosire» (§NNN). */
+  below?: ReactNode;
 }) {
   const recall = useRecall();
   const value = recall.value(name) ?? initial;
@@ -362,6 +397,56 @@ function LineBox({
           {recall.fieldError}
         </Typography>
       ) : null}
+      {below}
+    </Box>
+  );
+}
+
+/**
+ * «Timpi la sosire:» under a line's «Timp» (§NNN): each time «Cronometrare» recorded for the line's number, with who pressed it and
+ * when; «în clasament» on the one the line shows; beside each other one, «Folosește» — a submit of the page's one hidden form
+ * (`CHOOSE_TIME_FORM_ID`) posting `choice=<number>:<milliseconds>`, which asks first, as «Șterge» does. In the «Timp» cell, so it
+ * reads as that box's own, at every width; the words wrap inside the cell rather than widen the line.
+ */
+function RecordedTimes({ times, words }: { times: readonly RecordedTimeView[]; words: ResultWords }) {
+  return (
+    <Box sx={{ mt: 0.75, minWidth: 0 }} data-testid="result-recorded">
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontWeight: 600 }}>
+        {words.recordedTitle}
+      </Typography>
+      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 0.75 }}>
+        {times.map((time) => (
+          <Box component="li" key={time.choice} sx={{ minWidth: 0 }} data-testid="result-recorded-time" data-choice={time.choice} data-current={time.current ? "true" : "false"}>
+            <Typography variant="body2" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" }}>
+              {time.time}
+              {time.current && (
+                <Typography component="span" variant="caption" color="success.main" sx={{ fontWeight: 600, ml: 0.75 }} data-testid="result-recorded-current">
+                  {words.recordedCurrent}
+                </Typography>
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }}>
+              {time.by}
+            </Typography>
+            {!time.current && (
+              <GlyphButton
+                type="submit"
+                form={CHOOSE_TIME_FORM_ID}
+                name={CHOICE_BOX}
+                value={time.choice}
+                icon="confirm"
+                variant="outlined"
+                size="small"
+                sx={{ minHeight: 44, mt: 0.5, maxWidth: "100%" }}
+                aria-label={time.useLabel}
+                data-testid="result-recorded-use"
+              >
+                {words.recordedUse}
+              </GlyphButton>
+            )}
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }
@@ -401,8 +486,8 @@ function PlaceCell({ place, words, settled, outOfRanking = false }: { place: Pla
   );
 }
 
-/** The four boxes every line has, in the column order; the line's key names them. */
-function CommonBoxes({ rowKey, values, words, runner }: { rowKey: string; values: LineValues; words: ResultWords; runner: string }) {
+/** The four boxes every line has, in the column order; the line's key names them. «Timp» carries the line's «Timpi la sosire» when it has them. */
+function CommonBoxes({ rowKey, values, words, runner, recorded }: { rowKey: string; values: LineValues; words: ResultWords; runner: string; recorded?: readonly RecordedTimeView[] }) {
   const box = (name: ResultRowBox) => resultBox(rowKey, name);
   return (
     <>
@@ -415,6 +500,7 @@ function CommonBoxes({ rowKey, values, words, runner }: { rowKey: string; values
         maxLength={14}
         testId="result-time"
         pickLabel={words.pickTime.replace("{runner}", runner)}
+        below={recorded && recorded.length > 0 ? <RecordedTimes times={recorded} words={words} /> : null}
       />
       <LineBox name={box("status")} caption={words.status} label={`${words.status}: ${runner}`} initial={values.status} kind="select" options={words.statusOptions} testId="result-status" />
       <LineBox
@@ -459,7 +545,7 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
       {lines.map((line) => {
         const runner = `#${line.bibNumber} ${line.name}`;
         return (
-          <Box component="li" key={line.bibNumber} sx={LINE_SX} data-testid="result-line" data-bib={line.bibNumber}>
+          <Box component="li" key={line.bibNumber} id={resultLineAnchor(line.bibNumber)} sx={{ ...LINE_SX, ...LINE_ANCHOR_SX }} data-testid="result-line" data-bib={line.bibNumber}>
             <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, minWidth: 0 }}>
               <Typography component="p" variant="body2" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
                 <span data-testid="result-bib">#{line.bibNumber}</span> · {line.name}
@@ -486,7 +572,7 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
               )}
             </Box>
             <PlaceCell place={line.place} words={words} settled={line.hasResult} outOfRanking={line.outOfRanking} />
-            <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} />
+            <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} recorded={line.recorded} />
             {line.hasResult && (
               <Box sx={{ gridColumn: "1 / -1" }}>
                 <DeleteButton bibNumber={line.bibNumber} runner={runner} words={words} />
@@ -539,8 +625,10 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
           const box = (name: ResultRowBox) => resultBox(key, name);
           const initial = line?.values ?? { bib: "", name: "", sex: "", birthDate: "", time: "", status: "", chip: "", note: "" };
           const runner = `${words.typedRow} ${index + 1}`;
+          // A stored line is where «Folosește» comes back to (§NNN): its anchor is its stored number's, whatever its box says since.
+          const anchor = line && Number(initial.bib) > 0 ? resultLineAnchor(Number(initial.bib)) : undefined;
           return (
-            <Box component="li" key={index} sx={LINE_SX} data-testid="typed-line" aria-label={runner}>
+            <Box component="li" key={index} id={anchor} sx={{ ...LINE_SX, ...LINE_ANCHOR_SX }} data-testid="typed-line" aria-label={runner}>
               <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, display: "grid", gap: 1, gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 2fr)", minWidth: 0 }}>
                 <LineBox name={box("bib")} caption={words.bib} label={`${words.bib}: ${runner}`} initial={initial.bib} inputMode="numeric" maxLength={6} testId="typed-bib" />
                 <LineBox name={box("name")} caption={words.name} label={`${words.name}: ${runner}`} initial={initial.name} maxLength={RESULT_NAME_MAX} testId="typed-name" />
@@ -575,7 +663,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 )}
               </Box>
               <PlaceCell place={line?.place ?? null} words={words} settled={line?.hasResult === true} outOfRanking={line?.outOfRanking === true} />
-              <CommonBoxes rowKey={key} values={initial} words={words} runner={runner} />
+              <CommonBoxes rowKey={key} values={initial} words={words} runner={runner} recorded={line?.recorded} />
               {/* «Șterge» removes the stored result of the number the line was drawn with, whatever has been typed in the box since. */}
               {line?.hasResult && Number(initial.bib) > 0 && (
                 <Box sx={{ gridColumn: "1 / -1" }}>

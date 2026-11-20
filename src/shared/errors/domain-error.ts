@@ -110,6 +110,9 @@ export type DomainErrorCode =
   | "RESULT_PRESS_BEFORE_RESET"
   // «Resetează clasamentul» once the race's planned gun has passed (§997): the results can only be wiped before the start.
   | "RESULTS_RESET_AFTER_START"
+  // «Folosește» on «Clasament» (§NNN) with a time that is not one «Cronometrare» recorded for that number since the last reset — a
+  // stale page or a forged post: nothing is written, and no made-up time reaches the ranking.
+  | "RESULT_TIME_NOT_RECORDED"
   // «Start» outside its window (§986): from three hours before the planned gun to six hours after.
   | "RACE_GUN_WINDOW"
   // «Start» moved or taken off once a runner is «Sosit» (§986): the gun is fixed; a correction of the times is «Clasament»'s.

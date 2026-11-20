@@ -2909,7 +2909,8 @@
       "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
       "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
       "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is.",
-      "RESULTS_RESET_AFTER_START": "The results can only be reset before the start."
+      "RESULTS_RESET_AFTER_START": "The results can only be reset before the start.",
+      "RESULT_TIME_NOT_RECORDED": "Nothing changed: that time is not among those recorded on «Timing» for this number since the last reset."
     },
     "editor": {
       "draftPreview": {
@@ -10001,7 +10002,7 @@
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
-                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
+                "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time. A number entered more than once on «Timing» shows every time caught under «Time», with who entered it and when: «Use» puts another time in the results, after a question.",
                 "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's. A trial run before the race? The Administrator wipes it with «Reset the results»."
               ]
             },
@@ -12688,7 +12689,7 @@
       "delete": "Delete",
       "deleteFor": "Delete the result: {runner}",
       "deleteTitle": "Delete the result?",
-      "deleteBody": "The result of the runner with number {bibNumber} leaves the results. The others' places are worked out again.",
+      "deleteBody": "The result of the runner with number {bibNumber} leaves the results. The others' places are worked out again. Anything not saved on the page is lost: save it first.",
       "publish": {
         "title": "On the event's page",
         "label": "The results are public on the event's page",
@@ -12821,6 +12822,7 @@
           "created": "added {runner}: {status}",
           "updated": "changed {runner}: {status}",
           "updatedBoxes": "changed {runner}: {status} ({boxes})",
+          "chosen": "chose {time} for {runner} from the recorded times",
           "deleted": "deleted the result of {runner} ({status})",
           "gunSet": "started the race at {time}",
           "gunMoved": "moved the start to {time} (was {previous})",
@@ -12844,6 +12846,17 @@
           "registration": "registration",
           "nameAgreed": "name consent"
         }
+      },
+      "recorded": {
+        "title": "Times at the finish:",
+        "by": "{name}, at {at}",
+        "current": "in the results",
+        "use": "Use",
+        "useFor": "Use {time} for {runner}",
+        "confirmTitle": "Use this time?",
+        "confirmBody": "Make {time} the time of {runner}? The result becomes «Finished», keeping its chip time and note, and the places are worked out again. Anything not saved on the page is lost: save it first.",
+        "confirmBodyAny": "Make the chosen time the runner's? The result becomes «Finished», keeping its chip time and note, and the places are worked out again. Anything not saved on the page is lost: save it first.",
+        "changed": "The time was not changed: someone saved the results in the meantime. Look at the line again and choose again."
       },
       "reset": {
         "title": "Reset the results",
@@ -15615,6 +15628,8 @@
         "other": "Read {count} rows from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet."
       },
       "resultDeleted": "Result deleted. The others' places were worked out again.",
+      "resultTimeChosen": "#{bib}: the chosen time is now in the results, and the places were worked out again.",
+      "resultTimeUnchanged": "#{bib} already had this time; nothing to change.",
       "resultsPublished": "The results are now public on the event's page.",
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
