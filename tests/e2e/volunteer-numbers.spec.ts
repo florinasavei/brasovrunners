@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, amending §948, BR-REQ-050-02 and BR-REQ-071-01 — every volunteer's number is V001, V002, … by itself, and «Descarcă pentru
+ * §1023, amending §948, BR-REQ-050-02 and BR-REQ-071-01 — every volunteer's number is V001, V002, … by itself, and «Descarcă pentru
  * random.org» (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»), walked as the
  * Organizer at 320 pixels and on a desktop, against the production build.
  *
@@ -99,7 +99,7 @@ async function fitsTheScreen(page: Page): Promise<void> {
   expect(overflow, "horizontal overflow").toBeLessThanOrEqual(0);
 }
 
-test.describe("§NNN the volunteers' V numbers and the raffle's file for random.org", () => {
+test.describe("§1023 the volunteers' V numbers and the raffle's file for random.org", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("a volunteer confirmed on «Voluntari» shows «Nr. V002»; «Tombolă» counts the volunteers; «Descarcă pentru random.org» hands out numbers alone", async ({ page }) => {

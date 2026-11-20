@@ -220,7 +220,7 @@ async function runner(name: string, bibNumber: number | null, more: Partial<type
   return row.id;
 }
 
-/** A confirmed volunteer holding the V number given (§NNN: «V001» is 1), or none. */
+/** A confirmed volunteer holding the V number given (§1023: «V001» is 1), or none. */
 async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
@@ -281,7 +281,7 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     const page = await tab();
     expect(words(/data-testid="raffle-settings-line"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe("Participă: alergătorii, elitele, voluntarii · din oficiu");
     expect(words(/data-testid="raffle-counts"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe("Participă: 4 · Alergători: 1 · Elite: 2 · Voluntari: 1 · Prezenți dintre ei: 1");
-    // Every person, by the race number, then the volunteers by their V number (§NNN), the numberless last: number, name, group,
+    // Every person, by the race number, then the volunteers by their V number (§1023), the numberless last: number, name, group,
     // «Participă» and its reason, «Prezent».
     expect(rowsOf(page)).toEqual([
       expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu/),
@@ -308,7 +308,7 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     // The two files, for this event, and the page printable.
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?lang=ro"`);
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?present=1&amp;lang=ro"`);
-    // «Descarcă pentru random.org» and its present-only twin (§NNN), with the «?» that says how to use the file.
+    // «Descarcă pentru random.org» and its present-only twin (§1023), with the «?» that says how to use the file.
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?format=random-org&amp;lang=ro"`);
     expect(page).toContain(`href="/api/admin/events/${eventId}/raffle?format=random-org&amp;present=1&amp;lang=ro"`);
     expect(page).toContain(`aria-label="${ro.Admin.registrations.raffle.randomOrgHelp}"`);
@@ -409,7 +409,7 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
       expect(rowsOf(page), role).toEqual([
         expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu$/),
         expect.stringMatching(/^7 Ana Popescu Alergător Da Da$/),
-        // The volunteer by their V number (§NNN), after the race numbers.
+        // The volunteer by their V number (§1023), after the race numbers.
         expect.stringMatching(/^V001 Ion Voluntar Voluntar Da Nu$/),
         expect.stringMatching(/^— Elena Waiting Alergător Nu · neconfirmat Nu$/),
         // A line of the elite list: its «Prezent» in words — the tick is the organizers'.

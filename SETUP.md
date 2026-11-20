@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.91-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.92-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.91-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2771,12 +2771,12 @@ An agent never approves either text.
    poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they decide in both modes —, **«Cum
    participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt deschise»**. Save: the page comes
    back with «Tombolă» open on what was saved. None of the four travels to a series' other dates, a copy or the event's file.
-   **Nothing to set for the volunteers** (`DECISIONS.md` §NNN): each draws the event's next volunteer number, «V001», «V002»…, the
+   **Nothing to set for the volunteers** (`DECISIONS.md` §1023): each draws the event's next volunteer number, «V001», «V002»…, the
    moment the organizers confirm them, and takes part with it; a volunteer is out only while not confirmed, when the organizers took
    them out or, «Cu înscriere separată», until they sign up — each row of «Ziua cursei» → «Tombolă» says why.
 4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
    (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
-   volunteer's own number, «V007» or just 7 — `DECISIONS.md` §NNN) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
+   volunteer's own number, «V007» or just 7 — `DECISIONS.md` §1023) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
    number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
    tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
@@ -2791,7 +2791,7 @@ An agent never approves either text.
    role — a Voluntar at the raffle's table — opens the same tab since §1014: the same table, counts and filters, without how and when
    anybody signed up, and one press, «Înscrie» on a runner's row, with «A acceptat regulamentul» ticked once the person accepted. **At the draw,
    untick «Înscrierile la tombolă sunt deschise»** in the editor, then take **«Descarcă pentru random.org»** (or «— doar prezenții»):
-   one number per line, no names — the race numbers, then the volunteers' «V001», «V002»… (`DECISIONS.md` §NNN). Paste it into
+   one number per line, no names — the race numbers, then the volunteers' «V001», «V002»… (`DECISIONS.md` §1023). Paste it into
    random.org → «List Randomizer», «Randomize», and look the first number up in «Lista pentru tombolă (CSV)» or on «Tombolă» for the
    name. The steps: `docs/RUNBOOKS.md` § The raffle on race day.
 6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):

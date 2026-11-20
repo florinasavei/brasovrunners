@@ -196,7 +196,7 @@ export async function readVolunteerPlan<T extends Record<string, unknown>>(db: D
       email,
       phone,
       state,
-      // The person's V number (§NNN), «V007» on the plan's chip; null while they are not confirmed.
+      // The person's V number (§1023), «V007» on the plan's chip; null while they are not confirmed.
       volunteerNumber,
       roleIds,
       checkpointId,

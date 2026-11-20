@@ -8,7 +8,7 @@ import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/
 import type { VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN, amending §948 — the event editor's «Voluntari» card once the volunteers number themselves V001, V002, …: the box «Numerele
+ * §1023, amending §948 — the event editor's «Voluntari» card once the volunteers number themselves V001, V002, …: the box «Numerele
  * voluntarilor încep de la» is gone (no form, no label, no action left to post it to), and a confirmed person's row wears «Nr. V007»
  * — in both languages; a person without a number wears none. BR-REQ-050-02.
  */
@@ -151,7 +151,7 @@ async function drawCard(volunteers: VolunteerItem[], language: "ro" | "en" = "ro
   return html(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer: { action: translate, setupHref: null } } as ComponentProps<typeof TranslateProvider>, drawn)));
 }
 
-describe("§NNN BR-REQ-050-02 the «Voluntari» card once the volunteers number themselves", () => {
+describe("§1023 BR-REQ-050-02 the «Voluntari» card once the volunteers number themselves", () => {
   it("has no «Numerele voluntarilor încep de la» — no form, no box, no words — in either language", async () => {
     for (const language of ["ro", "en"] as const) {
       const page = await drawCard([person({})], language);

@@ -204,7 +204,7 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
       .where(eq(eventVolunteers.id, ref.id))
       .limit(1);
     if (!row) return null;
-    // A volunteer takes part with their V number (§NNN): drawn by itself at the confirmation, so every confirmed volunteer has one.
+    // A volunteer takes part with their V number (§1023): drawn by itself at the confirmation, so every confirmed volunteer has one.
     return {
       ref,
       eventId: row.eventId,
@@ -257,7 +257,7 @@ export async function findRaffleEntry<T extends Record<string, unknown>>(db: Dat
 export type RaffleRosterRow = {
   ref: RafflePersonRef;
   kind: RaffleKind;
-  /** The number: a race number for a runner or an elite, the V number's integer for a volunteer (§NNN) — two series; null for none. */
+  /** The number: a race number for a runner or an elite, the V number's integer for a volunteer (§1023) — two series; null for none. */
   number: number | null;
   /** The number as the raffle writes it (`raffleNumberText`): «7» or «007» as the event writes a race number, «V007» for a volunteer; null for none. */
   label: string | null;
@@ -291,7 +291,7 @@ export type RaffleRoster = {
 /**
  * Everybody of the event's three groups with the answer (§984). Who is listed: every real registration still standing (cancelled,
  * expired and test ones left out — a test registration is in no count the club is given, §30), every volunteer not cancelled, every
- * line of the elite list; who takes part is the one function's answer. A volunteer by their V number (§NNN), in the order
+ * line of the elite list; who takes part is the one function's answer. A volunteer by their V number (§1023), in the order
  * `compareRaffleRows` gives: the race numbers, then the V numbers, then whoever has none. Four queries, whatever the size of the
  * event. The caller asks the role (`raffle-list.ts#readRaffleRoster`).
  */

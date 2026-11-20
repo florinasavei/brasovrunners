@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §NNN, amending §948 — every volunteer's number is V001, V002, … by itself (the owner, 2026-11-20: «vreau sa le dai numar de
+ * §1023, amending §948 — every volunteer's number is V001, V002, … by itself (the owner, 2026-11-20: «vreau sa le dai numar de
  * voluntar V001 V002 la toti voluntarii automat!»). BR-REQ-050-02.
  *
  * What is protected, on real PostgreSQL (PGlite):
@@ -128,7 +128,7 @@ const setState = (id: string, next: "REGISTERED" | "CANCELLED", minute = 70) => 
 const confirmedInTrail = (id: string, minute: number) =>
   db.insert(auditLogs).values({ actorStaffUserId: admin.id, action: "volunteer.state_changed", entityType: "event", entityId: eventId, metadataJson: { volunteerId: id, from: "REGISTERED", to: "CONFIRMED" }, createdAt: at(minute) });
 
-describe("§NNN BR-REQ-050-02 a volunteer's V number: drawn by itself at the confirmation, in order, once", () => {
+describe("§1023 BR-REQ-050-02 a volunteer's V number: drawn by itself at the confirmation, in order, once", () => {
   it("gives every event's volunteers 1, 2, 3 … in the order the organizers confirm them — with nothing to set — and says it in the trail", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
     const dan = await volunteer("Dan Ene", "REGISTERED", 2);
@@ -239,7 +239,7 @@ describe("§NNN BR-REQ-050-02 a volunteer's V number: drawn by itself at the con
   });
 });
 
-describe("§NNN BR-REQ-050-02 a series of their own: the runners' and the volunteers' numbers never meet", () => {
+describe("§1023 BR-REQ-050-02 a series of their own: the runners' and the volunteers' numbers never meet", () => {
   it("a volunteer's draw reads no race number, no elite line and no desk spare: V001 beside race number 1", async () => {
     await runner("Ion Ionescu", 1);
     await runner("Mara Dima", 2);
@@ -268,7 +268,7 @@ describe("§NNN BR-REQ-050-02 a series of their own: the runners' and the volunt
   });
 });
 
-describe("§NNN BR-REQ-050-02 the confirmed volunteers who have none are numbered by themselves", () => {
+describe("§1023 BR-REQ-050-02 the confirmed volunteers who have none are numbered by themselves", () => {
   it("the maintenance job numbers them after the event's highest, in the order they were first confirmed, then added — audited with a count, never a person", async () => {
     // V001 held, V002 deleted (in the trail): the next is 3.
     await volunteer("Held One", "CONFIRMED", 1, { volunteerNumber: 1 });
@@ -328,7 +328,7 @@ describe("§NNN BR-REQ-050-02 the confirmed volunteers who have none are numbere
   });
 });
 
-describe("§NNN the V number in the volunteers' files", () => {
+describe("§1023 the V number in the volunteers' files", () => {
   const words = (catalogue: typeof ro) => (key: string) => key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue.Admin) as string;
 
   it("is the CSV's last column, «V001», under its heading «Număr» unchanged — empty for a person without one — in both languages", async () => {

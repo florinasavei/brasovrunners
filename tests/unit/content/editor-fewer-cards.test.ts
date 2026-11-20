@@ -124,7 +124,7 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
   });
 
   it("is the card at #box-registration, which opens itself while the declaration is missing, and wears the outline", () => {
-    // …and after a press in the race numbers' card: the elite card's (§895) or the save that moved the raffle's settings (§NNN).
+    // …and after a press in the race numbers' card: the elite card's (§895) or the save that moved the raffle's settings (§1023).
     expect(body).toMatch(/id="box-registration"[\s\S]*openWhen=\{\{ attention: line\.missing, saved: bibPrintSaved \|\| raffleSaved \}\}[\s\S]*tone=\{risk \? "risk" : "default"\}/);
     // The page hands it the languages, for the programme's and the rules' texts.
     expect(EDIT).toMatch(/<RegistrationBox\s+\{\.\.\.box\}\s+heading=\{flow\.headings\.registration\}\s+risk=\{risk\}\s+languages=\{languages\}/);

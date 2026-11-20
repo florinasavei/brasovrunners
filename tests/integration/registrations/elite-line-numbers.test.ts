@@ -216,7 +216,7 @@ describe("§990 every later draw steps over a line's number", () => {
     expect((await addEliteEntry(db, admin, eventId, { name: "Ana Lungu", bibNumber: "" }, later(4))).bibNumber).toBe(9);
   });
 
-  // A volunteer's draw is no longer here: since §NNN volunteers are numbered V001, V002, … in a series of their own, which reads no race number.
+  // A volunteer's draw is no longer here: since §1023 volunteers are numbered V001, V002, … in a series of their own, which reads no race number.
   it("the desk's box and its suggestions treat a line's number as worn", async () => {
     const eventId = await race({ bibStartNumber: 1 });
     expect((await addEliteEntry(db, admin, eventId, { name: "Ingrid Pop", bibNumber: "" }, NOW)).bibNumber).toBe(1);

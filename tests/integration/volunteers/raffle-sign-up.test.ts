@@ -166,7 +166,7 @@ async function runner(
   return { id: row.id, participantId, email };
 }
 
-/** A confirmed volunteer holding the V number given (§NNN: «V001» is 1), or none. */
+/** A confirmed volunteer holding the V number given (§1023: «V001» is 1), or none. */
 async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
@@ -294,7 +294,7 @@ describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name",
   it("matches a confirmed volunteer by the volunteer's own number with «Sunt voluntar», and a registration marked «Elită» by its race number", async () => {
     const ion = await volunteer("Ion Voluntar", 1);
     const eliud = await runner("Eliud Kipchoge", 3, { elite: true });
-    // The V number as it is written (§NNN); «v1», «001» and «1» name the same volunteer, who is in already and reads the same thank-you.
+    // The V number as it is written (§1023); «v1», «001» and «1» name the same volunteer, who is in already and reads the same thank-you.
     expect(await signUpForRaffleByForm(db, eventId, form("V001", "ion voluntar", { volunteer: true }), NOW, TRACE)).toBe("done");
     for (const typed of ["v1", "001", "1"]) expect(await signUpForRaffleByForm(db, eventId, form(typed, "Ion Voluntar", { volunteer: true }), NOW, TRACE), typed).toBe("done");
     expect(await signUpForRaffleByForm(db, eventId, form("3", "Kipchoge Eliud"), NOW, TRACE)).toBe("done");
@@ -583,7 +583,7 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     // The file is the same answer, by the number, the numberless lines last by name — «Elită» for a marked registration and a line alike.
     const admin = await staff("ADMIN");
     const list = await exportRaffleList(db, admin, eventId, NOW);
-    // The race numbers first, then the volunteers by their V number (§NNN), then the numberless line.
+    // The race numbers first, then the volunteers by their V number (§1023), then the numberless line.
     expect(list.rows.map((row) => `${row.label ?? "—"} ${row.name} ${row.kind}`)).toEqual([
       "2 Radu Munteanu RUNNER",
       "3 Eliud Kipchoge ELITE",

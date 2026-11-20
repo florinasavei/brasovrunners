@@ -40,7 +40,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
   }
 }
 
-/** A race of ten places a month away, one role, one confirmed runner wearing number 1 and one volunteer holding V001 (§NNN). */
+/** A race of ten places a month away, one role, one confirmed runner wearing number 1 and one volunteer holding V001 (§1023). */
 async function seed(tag: string) {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
@@ -121,7 +121,7 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     await expect(dialog.getByTestId("confirm-dialog-skip-email")).toHaveText("Transformă în voluntar fără email");
     await confirmDialog(page, "Transformi alergătorul în voluntar?");
 
-    // ---- On the volunteer's own page: confirmed, the role given, the event's next V number (§NNN): V002, after Oana's V001 ----
+    // ---- On the volunteer's own page: confirmed, the role given, the event's next V number (§1023): V002, after Oana's V001 ----
     await expect(page).toHaveURL(/\/ro\/admin\/volunteers\/[0-9a-f-]{36}\?saved=runnerBecameVolunteer/, { timeout: 30_000 });
     await expect(page.getByTestId("toast-live")).toContainText("Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.", { timeout: 30_000 });
     await hydrated(page);
@@ -179,7 +179,7 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     const lines = (await response.text()).replace(/^\uFEFF/, "").split("\r\n");
     // «Prezent» (§949, §983): the runner was not checked in at the desk, and nobody ticked the volunteer «Prezent» on the «Voluntari» list.
     expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `V001,Oana Voluntar ${tag},Voluntar,Nu`, ""]);
-    // «Descarcă pentru random.org» (§NNN): the same people, one number per line and nothing else, its «?» beside it.
+    // «Descarcă pentru random.org» (§1023): the same people, one number per line and nothing else, its «?» beside it.
     const randomOrg = page.getByTestId("registrations-raffle-random-org");
     await expect(randomOrg).toHaveText(/Descarcă pentru random\.org/);
     expect((await randomOrg.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);

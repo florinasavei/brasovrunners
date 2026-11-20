@@ -575,7 +575,7 @@ export const events = pgTable(
      */
     volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
     /**
-     * «Numerele voluntarilor încep de la» (migration `0203`, §948) — **kept, read by nothing** since §NNN: the first number of
+     * «Numerele voluntarilor încep de la» (migration `0203`, §948) — **kept, read by nothing** since §1023: the first number of
      * the volunteers' old series, which drew into `event_volunteers.bib_number`. The volunteers are numbered V001, V002, … by
      * themselves now (`event_volunteers.volunteer_number`), so the box left the «Voluntari» card and nothing draws from this
      * start; what it holds stays, untouched. Expand only: dropped by a later contract release once no serving code reads it.

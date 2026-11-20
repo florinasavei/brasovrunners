@@ -112,7 +112,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const keeps = (value: Filter) => (row: RaffleRosterRow) =>
     value === "in" ? row.reason === "in" : value === "out" ? row.reason !== "in" : value === "present" ? row.reason === "in" && row.present : true;
   const rows = everybody.filter(keeps(filter));
-  // Those taking part whom the file for random.org cannot hold — no number to write (§NNN).
+  // Those taking part whom the file for random.org cannot hold — no number to write (§1023).
   const withoutNumber = raffleWithoutNumber(everybody.filter((row) => row.reason === "in"));
   // How many each view holds, said on its pill.
   const filterCounts = Object.fromEntries(FILTERS.map((value) => [value, everybody.filter(keeps(value)).length])) as Record<Filter, number>;
@@ -244,7 +244,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
     );
 
   const columns: AdminColumn<RaffleRosterRow>[] = [
-    // The number as the raffle writes it (§NNN): a race number as the event writes it, a volunteer's «V007»; «—» for none.
+    // The number as the raffle writes it (§1023): a race number as the event writes it, a volunteer's «V007»; «—» for none.
     { key: "number", label: t("raffle.columns.number"), render: (row) => <span data-testid="raffle-row-number">{row.label ?? "—"}</span> },
     {
       key: "name",
@@ -354,7 +354,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               </Typography>
             )}
             {/* The settings are the editor's, whose save is the Administrator's (§542): the way there for who may press it — to the
-                «Tombolă» fold itself (§NNN), which opens with every card around it on arrival (`OpenFoldFromHash`). */}
+                «Tombolă» fold itself (§1023), which opens with every card around it on arrival (`OpenFoldFromHash`). */}
             {canEditEventFields(actor) && (
               <Box sx={NOT_ON_PAPER}>
                 <GlyphButton

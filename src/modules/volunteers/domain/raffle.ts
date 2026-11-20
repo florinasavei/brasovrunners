@@ -63,7 +63,7 @@ export function raffleSettingsOf(row: RaffleSettingsRow): RaffleSettings {
 const RAFFLE_SETTINGS_COLUMNS = ["hasRaffle", "raffleRunners", "raffleElites", "raffleVolunteers", "raffleSignUp", "raffleSignUpOpen"] as const satisfies readonly (keyof RaffleSettingsRow)[];
 
 /**
- * Whether a save moved any of the raffle's settings (§NNN): the editor's «Tombolă» fold opens by itself right after such a save, so
+ * Whether a save moved any of the raffle's settings (§1023): the editor's «Tombolă» fold opens by itself right after such a save, so
  * what was saved is in sight — as the race numbers' card opens after a press inside it (§895). A save that wrote none of them, or
  * wrote them as they were, moved nothing.
  */
@@ -172,7 +172,7 @@ export type RafflePerson = {
    */
   confirmed: boolean;
   /**
-   * Wears a number: a registration's race number, a volunteer's V number (§NNN, amending §948 — every confirmed volunteer has one,
+   * Wears a number: a registration's race number, a volunteer's V number (§1023, amending §948 — every confirmed volunteer has one,
    * drawn by itself at the confirmation). A line of the elite list takes part by name: always true.
    */
   hasNumber: boolean;
@@ -199,7 +199,7 @@ export function raffleParticipation(person: RafflePerson, settings: Pick<RaffleS
 }
 
 /**
- * Which block of the raffle's order a row falls in (§NNN): a race number — a registration's or an elite line's, one series — first,
+ * Which block of the raffle's order a row falls in (§1023): a race number — a registration's or an elite line's, one series — first,
  * then a volunteer's V number — a series of its own, never compared with a race number — then whoever has no number.
  */
 function raffleBlockOf(row: { number: number | null; kind: RaffleKind }): 0 | 1 | 2 {
@@ -208,7 +208,7 @@ function raffleBlockOf(row: { number: number | null; kind: RaffleKind }): 0 | 1 
 }
 
 /**
- * A row of the raffle's files and tab, in the order they are read (§NNN, amending §984): the race numbers rising — runners and elites
+ * A row of the raffle's files and tab, in the order they are read (§1023, amending §984): the race numbers rising — runners and elites
  * together, one series —, then the volunteers by their V number rising (V001, V002, …), then the numberless lines by name. The two
  * series are never interleaved: a volunteer's 1 is «V001», not a race number 1.
  */
@@ -220,7 +220,7 @@ export function compareRaffleRows(a: { number: number | null; name: string; kind
 }
 
 /**
- * A raffle row's number as the raffle writes it (§NNN) — on the tab, in «Lista pentru tombolă» and in the file for random.org alike:
+ * A raffle row's number as the raffle writes it (§1023) — on the tab, in «Lista pentru tombolă» and in the file for random.org alike:
  * a race number as the event writes it (§735: «7», or «007» under `pad3`) for a runner and an elite, the V number for a volunteer
  * («V007», `volunteer-number.ts`), null for a line with no number.
  */

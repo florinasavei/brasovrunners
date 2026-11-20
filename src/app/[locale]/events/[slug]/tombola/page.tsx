@@ -100,7 +100,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const volunteersMay = raffle.settings.groups.VOLUNTEER;
   const typed = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
   const refused = new Set((one(asked.fields) ?? "").split(",").filter((box): box is (typeof BOXES)[number] => (BOXES as readonly string[]).includes(box)));
-  // A volunteer's V number refused from a runner («V7», «Sunt voluntar» unticked, §NNN): the box's pattern lets the V through for the
+  // A volunteer's V number refused from a runner («V7», «Sunt voluntar» unticked, §1023): the box's pattern lets the V through for the
   // volunteers, so the refusal says whose number that is — only where «Sunt voluntar» is drawn to be ticked.
   const volunteerNumberTyped = volunteersMay && typed.volunteer !== "on" && /^\s*[Vv]/.test(typed.number ?? "");
   // The widget as the other public forms draw it (§254, §675): only while the Administrator's switch is on and its keys are set.
@@ -174,7 +174,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               defaultValue={typed.number ?? ""}
               required
               autoComplete="off"
-              // Digits, or a volunteer's V number as it is written («V007», §NNN): the keypad stays numeric, so «7» is enough.
+              // Digits, or a volunteer's V number as it is written («V007», §1023): the keypad stays numeric, so «7» is enough.
               slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[Vv]?[0-9]*", maxLength: String(RAFFLE_NUMBER_MAX).length + 1, "data-testid": "raffle-number" } }}
               sx={{ maxWidth: 320 }}
             />
@@ -188,7 +188,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               autoComplete="name"
               slotProps={{ htmlInput: { maxLength: RAFFLE_TYPED_NAME_MAX, "data-testid": "raffle-name" } }}
             />
-            {/* «Sunt voluntar» (§984): only while the event's volunteers may take part; the number is then the volunteer's V number (§NNN). */}
+            {/* «Sunt voluntar» (§984): only while the event's volunteers may take part; the number is then the volunteer's V number (§1023). */}
             {volunteersMay && (
               <CheckboxField name="volunteer" defaultChecked={typed.volunteer === "on"} help={t("raffle.volunteerHelp")}>
                 {t("raffle.volunteer")}

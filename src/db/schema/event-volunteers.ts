@@ -298,7 +298,7 @@ export const eventVolunteers = pgTable(
      */
     present: boolean("present").notNull().default(false),
     /**
-     * The volunteer's number of the old series (migration `0203`, §948) — **kept, read by nothing new** since §NNN: the
+     * The volunteer's number of the old series (migration `0203`, §948) — **kept, read by nothing new** since §1023: the
      * volunteers are numbered V001, V002, … in `volunteer_number` below, and this column only holds what the series
      * «Numerele voluntarilor încep de la» (`events.volunteer_bib_start`, gone from the «Voluntari» card) drew before, untouched.
      * Nothing draws into it any more. The runners' draw still reads it as worn (`registrations/bibs.ts#wornNumbers`), and a
@@ -422,7 +422,7 @@ export const eventVolunteers = pgTable(
       .on(t.eventId, t.bibNumber)
       .where(sql`${t.bibNumber} IS NOT NULL`),
     check("event_volunteers_bib_number_positive", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} > 0`),
-    // One V number once among an event's volunteers (§NNN): the draw, under the event lock, gives the next one; this refuses a second.
+    // One V number once among an event's volunteers (§1023): the draw, under the event lock, gives the next one; this refuses a second.
     uniqueIndex("event_volunteers_event_volunteer_number_unique")
       .on(t.eventId, t.volunteerNumber)
       .where(sql`${t.volunteerNumber} IS NOT NULL`),

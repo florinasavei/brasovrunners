@@ -194,7 +194,7 @@ export type VolunteerItem = {
    */
   present: boolean;
   /**
-   * The volunteer's number (§NNN, amending §948): 1, 2, 3, … of the event's own volunteers' series, written «V001» everywhere
+   * The volunteer's number (§1023, amending §948): 1, 2, 3, … of the event's own volunteers' series, written «V001» everywhere
    * (`domain/volunteer-number.ts#formatVolunteerNumber`) — drawn by itself when the organizers confirm the person, kept through a
    * cancellation; null before. The old series' `bib_number` is read by nothing here.
    */
@@ -1939,7 +1939,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
-    // «Confirmă» may draw the person's V number (§NNN), which is drawn under the event row's lock — the one serialization point of
+    // «Confirmă» may draw the person's V number (§1023), which is drawn under the event row's lock — the one serialization point of
     // every number given at an event, so two confirmations never share one. Taken here, before the person's own row: the order «Transformă în alergător» takes them in
     // (`transform.ts`: the event, then the volunteer), so the two presses on one person wait in a line, never in a circle (40P01).
     if (state === "CONFIRMED") await lockEventForCapacity(tx, request.eventId);
@@ -2108,7 +2108,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       // The person's choices go with them (CASCADE), and so does their signed agreement with any upload of it half-sent (§998).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
       // The numbers, when the person had them: the row is gone, and the trail is what keeps each from being given again — the V number
-      // (§NNN) from the volunteers' next draw (`volunteer-numbers.ts#highestVolunteerNumber`), a number of the old series (§948) from a
+      // (§1023) from the volunteers' next draw (`volunteer-numbers.ts#highestVolunteerNumber`), a number of the old series (§948) from a
       // runner's (`bibs.ts#retiredBibNumbers`).
       await audit("volunteer.deleted", {
         volunteerId: current.id,
@@ -2126,7 +2126,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (state === "CONFIRMED" && !guardianAllowsConfirm(current)) {
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
-      // The volunteer's V number (§NNN, amending §948): drawn by itself the moment the organizers confirm the person — the next
+      // The volunteer's V number (§1023, amending §948): drawn by itself the moment the organizers confirm the person — the next
       // one the event never gave, under the event row's lock taken above — and never a second one for somebody who has theirs (a
       // person cancelled and reopened). Every event numbers its volunteers: there is no series to set and no runner's number to step over.
       const drawn = state === "CONFIRMED" && current.volunteerNumber === null ? await drawVolunteerNumber(tx, current.eventId) : null;

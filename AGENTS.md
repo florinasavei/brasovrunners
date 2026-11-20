@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.91-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.92-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.91-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2278,7 +2278,7 @@ registrations
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
 - bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§548), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
 - provisional_bib_number integer null  -- retired by §548 (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
-  -- an event's volunteers are numbered V001, V002, … in a series of their own (§NNN, amending §948): `event_volunteers.volunteer_number`, unique per event, drawn at the volunteer's «Confirmă» under the same event-row lock (`volunteers/volunteer-numbers.ts#drawVolunteerNumber`) — one above the highest the event ever gave, a cancelled row's or a deleted one's trail row included, so never reissued — and compared with no race number, elite line or spare: V001 and race number 1 are two people. The old series — `event_volunteers.bib_number` from `events.volunteer_bib_start` («Numerele voluntarilor încep de la», gone from the «Voluntari» card) — stays in the schema untouched until a contract release; nothing draws into it, and only the runners' draw still reads an old number as worn
+  -- an event's volunteers are numbered V001, V002, … in a series of their own (§1023, amending §948): `event_volunteers.volunteer_number`, unique per event, drawn at the volunteer's «Confirmă» under the same event-row lock (`volunteers/volunteer-numbers.ts#drawVolunteerNumber`) — one above the highest the event ever gave, a cancelled row's or a deleted one's trail row included, so never reissued — and compared with no race number, elite line or spare: V001 and race number 1 are two people. The old series — `event_volunteers.bib_number` from `events.volunteer_bib_start` («Numerele voluntarilor încep de la», gone from the «Voluntari» card) — stays in the schema untouched until a contract release; nothing draws into it, and only the runners' draw still reads an old number as worn
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -3109,7 +3109,7 @@ share the purpose. Steps 3–8 remain M4.
 
 «Lista pentru tombolă» (§948, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
 one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
-with their V number (since 2026-11-20, `DECISIONS.md` §NNN: «V001», drawn by itself at the confirmation, so every confirmed
+with their V number (since 2026-11-20, `DECISIONS.md` §1023: «V001», drawn by itself at the confirmation, so every confirmed
 volunteer has one) — the race numbers first, then the V numbers, as four columns: the number as the raffle writes it (a race
 number as the event writes it, §735; a volunteer's «V001»), the name, «Alergător», «Elită» or «Voluntar»,
 and «Prezent» — «Da» or «Nu»: whether the runner was checked in — at the desk, or by «Am ajuns» from their own link — and,
@@ -3127,7 +3127,7 @@ of a person. Taken by whoever reads the registrations and works the volunteers (
 asserted in the route and the service; recorded as `event.raffle_list_exported` with the counts and which of the
 two files it was (`onlyPresent`), never a name.
 
-**«Descarcă pentru random.org»** and **«Descarcă pentru random.org — doar prezenții»** (2026-11-20, `DECISIONS.md` §NNN;
+**«Descarcă pentru random.org»** and **«Descarcă pentru random.org — doar prezenții»** (2026-11-20, `DECISIONS.md` §1023;
 `?format=random-org`, with or without `present=1`) stand beside the two CSVs wherever they are: the same people, in the same
 order, as a plain-text file (`text/plain; charset=utf-8`, no BOM) of **one number per line** as the raffle writes it, each
 line ended CRLF — no header, no name, no blank line — named `tombola-<day>-random-org.txt` / `tombola-prezenti-<day>-random-org.txt`,
@@ -3677,7 +3677,7 @@ never on both lists or on neither —
   Nothing the person told the organizers as a volunteer is copied onto the registration.
 
 A number never moves with the person: the runner's stays retired with the cancelled registration and the volunteer's V
-number (§NNN) with the cancelled row; each list draws its own — a runner turned volunteer the next V number at the
+number (§1023) with the cancelled row; each list draws its own — a runner turned volunteer the next V number at the
 confirmation, a volunteer turned runner a race number when confirmed. One audit row ties the two (`registration.became_volunteer`,
 `volunteer.became_runner`), ids only, beside each verb's own.
 

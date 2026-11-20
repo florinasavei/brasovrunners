@@ -316,7 +316,7 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 3 · Alergători: 3 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 1");
         const names = page.locator('[data-testid="raffle-row-name"]:visible');
         await expect(names).toHaveText([seeded.ana.name, seeded.bogdan.name, seeded.cristina.name, seeded.volunteer]);
-        // The race numbers, then the volunteer by his V number (§NNN).
+        // The race numbers, then the volunteer by his V number (§1023).
         await expect(page.locator('[data-testid="raffle-row-number"]:visible')).toHaveText(["1", "2", "3", "V001"]);
         const answers = page.locator('[data-testid="raffle-row-in"]:visible');
         await expect(answers).toHaveText(["Da", "Da", "Da", "Nu · nu s-a înscris"]);
@@ -339,7 +339,7 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         expect(file.lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.ana.name},Alergător,Nu`, `2,${seeded.bogdan.name},Alergător,Nu`, `3,${seeded.cristina.name},Alergător,Da`, ""]);
         const present = await csvLines(page, (await page.getByTestId("raffle-download-present").getAttribute("href")) as string);
         expect(present.lines).toEqual(["Număr,Nume,Categorie,Prezent", `3,${seeded.cristina.name},Alergător,Da`, ""]);
-        // «Descarcă pentru random.org» (§NNN): the same three, numbers only.
+        // «Descarcă pentru random.org» (§1023): the same three, numbers only.
         const randomOrg = page.getByTestId("raffle-download-random-org");
         await tall(randomOrg, "the random.org file's button");
         expect(await (await page.request.get((await randomOrg.getAttribute("href")) as string)).text()).toBe("1\r\n2\r\n3\r\n");

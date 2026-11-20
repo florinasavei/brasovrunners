@@ -3175,7 +3175,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       ? await announceSave(tx, { actor: input.actor, request, saved: savedEvent, dates: [thisDate, ...otherDates], now })
       : undefined;
     const holdsMoved = combineHoldMoves(holdMoves);
-    // Whether this date's raffle settings moved (§NNN): the editor opens its «Tombolă» fold right after such a save. One edition's own (§984).
+    // Whether this date's raffle settings moved (§1023): the editor opens its «Tombolă» fold right after such a save. One edition's own (§984).
     const raffleChanged = raffleSettingsMoved(current, savedEvent);
     return notice ? { appliedTo, offered, placeAnnounced, holdsMoved, raffleChanged, notice } : { appliedTo, offered, placeAnnounced, holdsMoved, raffleChanged };
   });

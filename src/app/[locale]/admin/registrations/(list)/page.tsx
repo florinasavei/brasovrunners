@@ -1517,7 +1517,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.raffle.presentButton")}
             </GlyphButton>
           )}
-          {/* «Descarcă pentru random.org» and its present-only twin (§NNN; the owner, 2026-11-20): the same people as the two files above, one
+          {/* «Descarcă pentru random.org» and its present-only twin (§1023; the owner, 2026-11-20): the same people as the two files above, one
               number per line and no name — a text file to paste into random.org's List Randomizer. The route asserts the role again. */}
           {filters.eventId && canTakeRaffleList(actor.role) && (
             <>

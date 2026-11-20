@@ -305,12 +305,12 @@ describe("§983 «Lista pentru tombolă — doar prezenții» on the registratio
     const tree = await listPage({ eventId: "all" });
     expect(buttonOf(tree, "registrations-raffle-list")).toBeUndefined();
     expect(buttonOf(tree, "registrations-raffle-present")).toBeUndefined();
-    // Nor the two files for random.org (§NNN).
+    // Nor the two files for random.org (§1023).
     expect(buttonOf(tree, "registrations-raffle-random-org")).toBeUndefined();
     expect(buttonOf(tree, "registrations-raffle-random-org-present")).toBeUndefined();
   });
 
-  it("§NNN has «Descarcă pentru random.org» and its present-only twin right after the two CSVs, under the same condition, with the «?» that says how to use them", async () => {
+  it("§1023 has «Descarcă pentru random.org» and its present-only twin right after the two CSVs, under the same condition, with the «?» that says how to use them", async () => {
     const race = await createRace();
     await register(race.id);
     for (const role of ["ADMIN", "MODERATOR"] as const) {

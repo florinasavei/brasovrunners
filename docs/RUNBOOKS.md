@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.91-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1073,7 +1073,7 @@ period. «Toate datele unei persoane» lists a person's results.
 
 ## The raffle on race day: drawing the winner
 
-How an event's raffle is drawn (`DECISIONS.md` §948, §949, §983, §984 and §NNN). The club's own procedure for a raffle with a
+How an event's raffle is drawn (`DECISIONS.md` §948, §949, §983, §984 and §1023). The club's own procedure for a raffle with a
 sign-up of its own is `SETUP.md` §47; the colleagues' version is the backoffice «Ghid», section Organizator, «Tombola: numerele
 voluntarilor și extragerea pe random.org». The draw is never made on the site: the site hands out who takes part, numbers only, and
 random.org shuffles them.

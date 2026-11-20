@@ -251,7 +251,7 @@ async function press(fields: Record<string, string>): Promise<{ to: string; toas
 }
 const presentOf = async (id: string) => (await db.select({ present: eventVolunteers.present }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].present;
 
-describe("§NNN the V number on the «Voluntari» list", () => {
+describe("§1023 the V number on the «Voluntari» list", () => {
   it("is a chip «Nr. V001» beside the name of a person who has one, in both languages, and none for a person who has not", async () => {
     state.actor = staff.MODERATOR;
     // Ana holds V001; Dan (offered) and Ion (confirmed before any number was drawn) hold none — so every chip drawn is hers (the
@@ -430,7 +430,7 @@ describe("§983 the raffle's two files on the «Voluntari» list's toolbar", () 
     expect(byTestId(english, "volunteers-raffle-present")[0].props).toMatchObject({ href: `/api/admin/events/${raceId}/raffle?present=1&lang=en`, children: "Raffle list — present only (CSV)" });
   });
 
-  it("§NNN has «Descarcă pentru random.org» and its present-only twin beside them, with their «?»", async () => {
+  it("§1023 has «Descarcă pentru random.org» and its present-only twin beside them, with their «?»", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
     state.actor = staff.MODERATOR;
     const tree = await listTree({ eventId: raceId });

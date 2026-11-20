@@ -13,7 +13,7 @@ import { type Recall, RecallProvider } from "@/shared/forms/recall";
 import type { FoldNode } from "@/shared/ui/fold";
 
 /**
- * §NNN, BR-REQ-050-02 — «Tombolă», a folded section of the event editor's race numbers' card (the owner, 2026-11-20: «plus că aici ar
+ * §1023, BR-REQ-050-02 — «Tombolă», a folded section of the event editor's race numbers' card (the owner, 2026-11-20: «plus că aici ar
  * trebui să fie o secțiune colapsată cu „Tombola”»; his other half, «vreau să le dau automat numere și voluntarilor», is the volunteers'
  * V series, numbered at «Confirmă»), rendered to the HTML the server sends:
  *
@@ -180,7 +180,7 @@ function refusedInside(markup: string, name: string): { node: HTMLElement; folds
 
 const SETTINGS: RaffleSettingsRow = { hasRaffle: true, raffleRunners: true, raffleElites: true, raffleVolunteers: true, raffleSignUp: false, raffleSignUpOpen: false };
 
-describe("§NNN BR-REQ-050-02 «Tombolă»: one fold of «Numere de concurs (BIB)» for everything about the raffle", () => {
+describe("§1023 BR-REQ-050-02 «Tombolă»: one fold of «Numere de concurs (BIB)» for everything about the raffle", () => {
   it("holds «Avem tombolă» and every setting under it, closed on arrival, a level-4 fold inside the race numbers' card", async () => {
     const markup = await render(RACE);
     const raffle = fold(markup, "box-raffle");
@@ -261,7 +261,7 @@ describe("§NNN BR-REQ-050-02 «Tombolă»: one fold of «Numere de concurs (BIB
   });
 });
 
-describe("§NNN BR-REQ-050-02 the save that opens «Tombolă»: one that moved a raffle setting", () => {
+describe("§1023 BR-REQ-050-02 the save that opens «Tombolă»: one that moved a raffle setting", () => {
   it("is any of the six settings moved, and never a save that wrote them as they were", () => {
     expect(raffleSettingsMoved(SETTINGS, { ...SETTINGS })).toBe(false);
     for (const column of ["hasRaffle", "raffleRunners", "raffleElites", "raffleVolunteers", "raffleSignUp", "raffleSignUpOpen"] as const) {
@@ -277,7 +277,7 @@ describe("§NNN BR-REQ-050-02 the save that opens «Tombolă»: one that moved a
   });
 });
 
-describe("§NNN BR-REQ-050-02 nothing in the fold about the volunteers' numbers: each confirmed volunteer wears a V number by themselves", () => {
+describe("§1023 BR-REQ-050-02 nothing in the fold about the volunteers' numbers: each confirmed volunteer wears a V number by themselves", () => {
   it("draws «Voluntarii» with its tick and its help alone — no count, no way to a numbers form — in both languages", async () => {
     for (const locale of ["ro", "en"] as const) {
       const own = foldMarkup(await render(RACE, { locale }), "box-raffle");

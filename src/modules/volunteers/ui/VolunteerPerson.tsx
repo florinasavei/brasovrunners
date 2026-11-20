@@ -980,7 +980,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
       {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit || person.volunteerNumber !== null || (as === "section" && person.present)) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
-          {/* The volunteer's V number (§NNN, amending §948): first, as a runner's on the registrations list — «Nr. V007», what the raffle says. */}
+          {/* The volunteer's V number (§1023, amending §948): first, as a runner's on the registrations list — «Nr. V007», what the raffle says. */}
           {person.volunteerNumber !== null && (
             <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: formatVolunteerNumber(person.volunteerNumber) })} testId="volunteer-number" />
           )}

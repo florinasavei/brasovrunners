@@ -13,7 +13,7 @@ import { isUuid } from "@/shared/ids";
  * «Lista pentru tombolă» on an event's registrations list (§948; the owner, 2026-11-15: «vreau să fac o tombolă și
  * trebuie să pot exporta toți voluntarii și toți participanții»): everybody who takes part in the event's raffle, by the
  * number, as a UTF-8 file with a BOM in the reader's language (`lang`): the number as the raffle writes it — a race number as
- * the event writes it, a volunteer's «V007» (§NNN) —, the name, the group, and «Prezent» — a runner checked in at the desk or by
+ * the event writes it, a volunteer's «V007» (§1023) —, the name, the group, and «Prezent» — a runner checked in at the desk or by
  * «Am ajuns» from their own link, a volunteer ticked «Prezent» on the «Voluntari» list (`modules/volunteers/raffle-list.ts`).
  *
  * `?present=1` (§983; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți») is the second scope,
@@ -21,7 +21,7 @@ import { isUuid } from "@/shared/ids";
  * four columns for the same people, of whom only those who were there, under a name of its own
  * (`tombola-prezenti-<day>.csv`). Anything else in the address is the whole file.
  *
- * `?format=random-org` (§NNN; the owner, 2026-11-20) is «Descarcă pentru random.org», of either scope: the same people, one
+ * `?format=random-org` (§1023; the owner, 2026-11-20) is «Descarcă pentru random.org», of either scope: the same people, one
  * number per line and nothing else — `text/plain; charset=utf-8`, no BOM, no header, no name, CRLF, no blank line — to paste into
  * random.org's List Randomizer; `tombola-<day>-random-org.txt` / `tombola-prezenti-<day>-random-org.txt`. Anything else in
  * `format` is the CSV.
@@ -49,7 +49,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
   // «doar prezenții» (§983): `present=1` and nothing else asks for the short scope.
   const onlyPresent = search.get("present") === "1";
-  // «Descarcă pentru random.org» (§NNN): `format=random-org` and nothing else asks for the text file.
+  // «Descarcă pentru random.org» (§1023): `format=random-org` and nothing else asks for the text file.
   const format: RaffleListFormat = search.get("format") === "random-org" ? "random-org" : "csv";
   const now = new Date();
 

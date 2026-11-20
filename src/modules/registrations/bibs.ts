@@ -120,7 +120,7 @@ async function wornNumbers<T extends Record<string, unknown>>(
     .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
   for (const row of elite) if (row.number !== null) taken.add(row.number);
   // And the numbers of the volunteers' old series (§948), whatever each one's state — kept on the rows that drew one before the
-  // volunteers were numbered V001, V002, … in a series of their own (§NNN, `event_volunteers.volunteer_number`, which no runner's
+  // volunteers were numbered V001, V002, … in a series of their own (§1023, `event_volunteers.volunteer_number`, which no runner's
   // draw reads): harmless, and a runner is never handed a number a volunteer once wore. Nothing draws into this column any more.
   const volunteers = await db
     .select({ number: eventVolunteers.bibNumber })
@@ -263,7 +263,7 @@ async function replacedBibNumbers<T extends Record<string, unknown>>(db: Databas
 /**
  * The numbers of the volunteers' old series (§948) whose rows were deleted from this event's list: the row is gone and its
  * number with it, so the delete writes the number into its own trail row (`volunteer.deleted`, about the event, `bibNumber`) and
- * every runner's draw reads it back. Nothing draws into the old series since §NNN — a volunteer's V number (`volunteerNumber` in
+ * every runner's draw reads it back. Nothing draws into the old series since §1023 — a volunteer's V number (`volunteerNumber` in
  * the same row) is the volunteers' own draw's business (`volunteers/volunteer-numbers.ts`) — so these are only the numbers some
  * volunteer once wore. The number and never the person, as an erasure's.
  */

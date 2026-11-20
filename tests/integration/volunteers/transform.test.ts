@@ -221,7 +221,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     });
     expect((await db.select().from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
     expect((await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
-    // Every event numbers its volunteers (§NNN): the person drew V001 at the confirmation.
+    // Every event numbers its volunteers (§1023): the person drew V001 at the confirmation.
     expect(result).toEqual({ eventId: event.id, volunteerId: volunteer.id, volunteerNumber: 1 });
 
     // The emails: the person's two, and the next in line's offer.
@@ -271,7 +271,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     expect((await trail("registration.became_volunteer"))[0].metadata).toMatchObject({ from: "WAITLISTED" });
   });
 
-  it("§NNN BR-REQ-050-02: the runner's number stays retired with the registration, and the volunteer draws the next V number at the confirmation", async () => {
+  it("§1023 BR-REQ-050-02: the runner's number stays retired with the registration, and the volunteer draws the next V number at the confirmation", async () => {
     const { event, roleId } = await createRace(150);
     const radu = await registered(event, "Radu", 0, true);
     expect(radu.bibNumber).toBe(1);

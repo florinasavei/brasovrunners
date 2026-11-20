@@ -4,11 +4,11 @@ import { formatVolunteerNumber, VOLUNTEER_NUMBER_DIGITS, VOLUNTEER_NUMBER_PREFIX
 import { buildRaffleRandomOrgText, raffleCsvFileName, raffleRandomOrgFileName, type RaffleRow, raffleWithoutNumber } from "@/modules/volunteers/raffle-list";
 
 /**
- * §NNN, amending §948 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!») — the V
+ * §1023, amending §948 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!») — the V
  * number as people read and type it, the raffle's order with two series in it, and «Descarcă pentru random.org»'s text, pure.
  * BR-REQ-050-02 and BR-REQ-071-01.
  */
-describe("§NNN BR-REQ-050-02 a volunteer's number is written «V» and three digits at least", () => {
+describe("§1023 BR-REQ-050-02 a volunteer's number is written «V» and three digits at least", () => {
   it.each([
     [1, "V001"],
     [7, "V007"],
@@ -47,7 +47,7 @@ describe("§NNN BR-REQ-050-02 a volunteer's number is written «V» and three di
   });
 });
 
-describe("§NNN BR-REQ-071-01 the raffle with two series: the race numbers, then the V numbers", () => {
+describe("§1023 BR-REQ-071-01 the raffle with two series: the race numbers, then the V numbers", () => {
   const row = (number: number | null, name: string, kind: RaffleKind) => ({ number, name, kind });
 
   it("orders runners and elites together by their race number, then the volunteers by their V number, then whoever has none, by name", () => {
@@ -74,7 +74,7 @@ describe("§NNN BR-REQ-071-01 the raffle with two series: the race numbers, then
   });
 });
 
-describe("§NNN BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
+describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
   const raffleRow = (number: number | null, label: string | null, name: string, kind: RaffleKind, present = false): RaffleRow => ({ number, label, name, kind, present });
 
   it("is one line per participant, each the number as the raffle writes it and CRLF — no header, no name, no blank line, no BOM", () => {

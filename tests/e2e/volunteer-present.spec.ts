@@ -35,7 +35,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 
 type Seeded = { eventId: string; participantId: string; runner: string; ana: string; dan: string };
 
-/** A race a week away that holds a raffle, one role, a runner the desk checked in wearing number 1, and two confirmed volunteers holding V001 and V002 (§NNN). */
+/** A race a week away that holds a raffle, one role, a runner the desk checked in wearing number 1, and two confirmed volunteers holding V001 and V002 (§1023). */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
@@ -163,7 +163,7 @@ test.describe("§983 «Prezent» on the «Voluntari» list and the raffle among 
       // The whole file beside it keeps everybody, Dan's «Prezent» said «Nu».
       const whole = await page.request.get((await page.getByTestId("volunteers-raffle-list").getAttribute("href")) as string);
       expect((await whole.text()).replace(/^﻿/, "").split("\r\n")).toEqual(["Număr,Nume,Categorie,Prezent", `1,${seeded.runner},Alergător,Da`, `V001,${anaName},Voluntar,Da`, `V002,Dan Absent ${tag},Voluntar,Nu`, ""]);
-      // «Descarcă pentru random.org — doar prezenții» (§NNN), from the same screen: the same two, numbers only.
+      // «Descarcă pentru random.org — doar prezenții» (§1023), from the same screen: the same two, numbers only.
       const present = page.getByTestId("volunteers-raffle-random-org-present");
       expect((await present.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await present.getAttribute("href")).toBe(`/api/admin/events/${seeded.eventId}/raffle?format=random-org&present=1&lang=ro`);

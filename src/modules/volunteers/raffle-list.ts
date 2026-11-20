@@ -30,7 +30,7 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
   race's elite list (§895), which takes part by name: its number when it has one, else an empty number cell, the numberless lines after
   the numbered ones, by name — and «Voluntar». A line's «Prezent» is the organizers' tick on the «Tombolă» tab.
 
-  Since §NNN (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»): a volunteer takes
+  Since §1023 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»): a volunteer takes
   part with their V number — every confirmed volunteer has one, drawn by itself at the confirmation (`volunteer-numbers.ts`) — and
   every file writes a number as the raffle writes it (`domain/raffle.ts#raffleNumberText`): a race number as the event writes it,
   «V007» for a volunteer. The order is the race numbers, then the V numbers, then whoever has none (`compareRaffleRows`). Beside the
@@ -55,7 +55,7 @@ export type RaffleRow = { number: number | null; label: string | null; name: str
 
 export type RaffleList = { rows: RaffleRow[]; runners: number; elites: number; volunteers: number };
 
-/** The two formats of one list: the CSV with the names (`csv`), and one number per line for random.org (`random-org`, §NNN). */
+/** The two formats of one list: the CSV with the names (`csv`), and one number per line for random.org (`random-org`, §1023). */
 export const RAFFLE_LIST_FORMATS = ["csv", "random-org"] as const;
 export type RaffleListFormat = (typeof RAFFLE_LIST_FORMATS)[number];
 
@@ -139,7 +139,7 @@ export function buildRaffleCsv(words: RaffleCsvWords, rows: readonly RaffleRow[]
 }
 
 /**
- * «Descarcă pentru random.org» (§NNN): the same people as the CSV of the same scope, **one number per line** as the raffle writes it — a
+ * «Descarcă pentru random.org» (§1023): the same people as the CSV of the same scope, **one number per line** as the raffle writes it — a
  * race number as the event writes it, an elite's number, «V007» — in the raffle's order, each line ending CRLF, and nothing else: no
  * header, no name (a name would leave the site for random.org, a third party the privacy notice does not name), no BOM, no blank line —
  * what random.org's List Randomizer takes pasted as it is. A participant with no number (a line of the elite list nobody numbered yet)
@@ -150,7 +150,7 @@ export function buildRaffleRandomOrgText(rows: readonly RaffleRow[]): string {
   return rows.flatMap((row) => (row.label === null || row.label === "" ? [] : [`${row.label}\r\n`])).join("");
 }
 
-/** How many of the people taking part the file for random.org cannot hold: those with no number (§NNN). */
+/** How many of the people taking part the file for random.org cannot hold: those with no number (§1023). */
 export function raffleWithoutNumber(rows: ReadonlyArray<{ label: string | null }>): number {
   return rows.filter((row) => row.label === null || row.label === "").length;
 }
@@ -161,7 +161,7 @@ export function raffleCsvFileName(day: string, options: RaffleListOptions = {}):
 }
 
 /**
- * The file for random.org's name (§NNN), as the CSV's is built: `tombola-2026-11-21-random-org.txt`, and the present-only one
+ * The file for random.org's name (§1023), as the CSV's is built: `tombola-2026-11-21-random-org.txt`, and the present-only one
  * `tombola-prezenti-2026-11-21-random-org.txt`. ASCII alone.
  */
 export function raffleRandomOrgFileName(day: string, options: RaffleListOptions = {}): string {

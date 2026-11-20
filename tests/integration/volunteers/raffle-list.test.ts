@@ -34,7 +34,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * runner's is by the desk's check-in; and `?present=1` is a second file beside the whole one — the same rules, of whom only the
  * runners the desk checked in and the volunteers ticked «Prezent» — under a name of its own, its download said in the trail.
  *
- * §NNN (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»): a volunteer takes part with
+ * §1023 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!»): a volunteer takes part with
  * their V number, written «V001»; the race numbers come first, then the V numbers; and `?format=random-org` is «Descarcă pentru
  * random.org» — the same people, one number per line, no header, no name, CRLF, `text/plain` — its download said in the trail by `format`.
  */
@@ -128,7 +128,7 @@ async function runner(name: string, bibNumber: number | null, status: "CONFIRMED
   });
 }
 
-/** A volunteer, holding the V number given (§NNN: «V001» is 1) or none. */
+/** A volunteer, holding the V number given (§1023: «V001» is 1) or none. */
 async function volunteer(
   name: string,
   volunteerNumber: number | null,
@@ -167,7 +167,7 @@ async function everybody() {
   await runner("Mara Cancelled", 3, "CANCELLED");
   await runner("Confirmed Nonumber", null);
   await runner("Test Runner", 9, "CONFIRMED", { kind: "TEST" });
-  // V002 and V001 (§NNN): the volunteers' own series, compared with no race number — Ion's V001 is not Ana's 1.
+  // V002 and V001 (§1023): the volunteers' own series, compared with no race number — Ion's V001 is not Ana's 1.
   await volunteer("Oana Voluntar", 2);
   await volunteer("Ion Voluntar", 1);
   await volunteer("Vlad Offered", null, "REGISTERED");
@@ -182,7 +182,7 @@ async function everybody() {
 }
 
 describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a number, by the number", () => {
-  it("holds the confirmed runners and the confirmed volunteers who have a number — each once, the race numbers first, then the V numbers (§NNN) — and nobody else", async () => {
+  it("holds the confirmed runners and the confirmed volunteers who have a number — each once, the race numbers first, then the V numbers (§1023) — and nobody else", async () => {
     await everybody();
     const list = await exportRaffleList(db, admin, eventId, NOW);
     expect(list.rows).toEqual([
@@ -227,7 +227,7 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     const [row, ...more] = await trail();
     expect(more).toEqual([]);
     expect(row).toMatchObject({ actorStaffUserId: admin.id, participantId: null, entityType: "event", entityId: eventId, createdAt: NOW });
-    // Which of the two files (§983): the whole one — and which format (§NNN): the CSV.
+    // Which of the two files (§983): the whole one — and which format (§1023): the CSV.
     expect(row.metadataJson).toEqual({ runners: 2, elites: 1, volunteers: 2, onlyPresent: false, signUp: false, format: "csv" });
   });
 
@@ -259,7 +259,7 @@ describe("§948 BR-REQ-071-01 the file", () => {
     presentNo: catalogue.Admin.registrations.raffle.present.no,
   });
 
-  it("is four columns — the number as the raffle writes it («V001» for a volunteer, §NNN), the name, which group, whether the person is present (§949, §983) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
+  it("is four columns — the number as the raffle writes it («V001» for a volunteer, §1023), the name, which group, whether the person is present (§949, §983) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
     const csv = buildRaffleCsv(words(ro), [
       { number: 1, label: "1", name: "Ana Pop", kind: "RUNNER", present: true },
       { number: 2, label: "2", name: '=HYPERLINK("x")', kind: "RUNNER", present: false },
@@ -433,7 +433,7 @@ describe("§983 BR-REQ-071-01 «Prezent» for a volunteer, and «Lista pentru to
   });
 });
 
-describe("§NNN BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
+describe("§1023 BR-REQ-071-01 «Descarcă pentru random.org»: one number per line, nothing else", () => {
   const lines = (body: string) => body.split("\r\n");
 
   it("is the same people as the CSV of the same scope, one number per line as the raffle writes it — the race numbers, then the V numbers — CRLF, no header, no name, no BOM, no blank line, as text/plain", async () => {

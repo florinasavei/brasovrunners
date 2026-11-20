@@ -91,7 +91,7 @@ export type SummaryWords = {
   hiddenList: { on: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   /**
-   * «Tombolă»'s closed line (§NNN), a fold of the race numbers' card: `off` («nu avem») while «Avem tombolă» is unticked; else the
+   * «Tombolă»'s closed line (§1023), a fold of the race numbers' card: `off` («nu avem») while «Avem tombolă» is unticked; else the
    * groups ticked, by their short names, or `nobody`, then how — «Alergători, elite, voluntari · din oficiu».
    */
   raffle: { off: string; groups: Record<RaffleKind, string>; nobody: string; automatic: string; signUp: string };
@@ -540,7 +540,7 @@ export function bibsSummary(
 }
 
 /**
- * «Tombolă»'s closed line (§NNN), a fold of the race numbers' card: «nu avem» while «Avem tombolă» is unticked, else who may take part
+ * «Tombolă»'s closed line (§1023), a fold of the race numbers' card: «nu avem» while «Avem tombolă» is unticked, else who may take part
  * — the groups ticked in «Cine poate participa», in the editor's order, or «nicio grupă bifată» — and how: «Alergători, elite, voluntari
  * · din oficiu», «Alergători · cu înscriere separată». From the saved event; the create form's defaults (no raffle) on create.
  */

@@ -93,7 +93,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     expect(body.indexOf("{rules}")).toBeLessThan(body.indexOf("{declarationCard}"));
     expect(body.indexOf("{declarationCard}")).toBeLessThan(body.indexOf("{programme}"));
     // …and back from a press on the race numbers' card inside it (§895, «Elită») or the save that moved the raffle's settings in its
-    // «Tombolă» fold (§NNN), so the card is in sight again.
+    // «Tombolă» fold (§1023), so the card is in sight again.
     expect(box).toContain("openWhen={{ attention: line.missing, saved: bibPrintSaved || raffleSaved }}");
     // «Regulamentul» is a level-3 card of its own now, the declaration no longer inside it.
     const text = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/TextBoxes.tsx"), "utf8");

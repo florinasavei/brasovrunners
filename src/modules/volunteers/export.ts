@@ -149,7 +149,7 @@ export function volunteerExport(
     guardianConsent: isVolunteerMinor(person.age) ? yesNo(person.guardianAcceptedAt !== null) : "",
     // «Are kit» (§904): the organizers' own mark, for whoever packs the kits from the file.
     hasKit: yesNo(person.hasKit),
-    // The volunteer's V number (§NNN, amending §948), written «V007» as everywhere: for the raffle and for whoever hands out the badges.
+    // The volunteer's V number (§1023, amending §948), written «V007» as everywhere: for the raffle and for whoever hands out the badges.
     volunteerNumber: volunteerNumberText(person.volunteerNumber),
   }));
 

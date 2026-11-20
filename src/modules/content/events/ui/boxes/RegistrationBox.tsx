@@ -109,7 +109,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *    foot of «Regulamentul», under the minimum age (§799); there is no `#box-conditions` any more;
  * 3. the day itself: «Programul zilei și ce să aduci» (`#box-schedule`), then, while the club
  *    registers them here, «Kit de participare» (`#box-kit`, §554) and «Numere de concurs (BIB)»
- *    (`#box-bibs`, with «Tombolă» — `#box-raffle`, §NNN —, the designer and, on the editor, allocation
+ *    (`#box-bibs`, with «Tombolă» — `#box-raffle`, §1023 —, the designer and, on the editor, allocation
  *    and printing);
  * 4. «Lista publică a participanților» (`#box-start-list`, §512), last, as the page draws it last.
  *
@@ -153,7 +153,7 @@ export default async function RegistrationBox({
   rsvpAsk = DEFAULT_RSVP_ASK_SETTINGS,
 }: BoxProps & {
   /**
-   * The page is back from the save that moved the raffle's settings (§NNN, `?raffle=1`): «Tombolă», the race numbers' card and this
+   * The page is back from the save that moved the raffle's settings (§1023, `?raffle=1`): «Tombolă», the race numbers' card and this
    * box open by themselves (`openWhen.saved`), so what was saved is in sight.
    */
   raffleSaved?: boolean;
@@ -816,7 +816,7 @@ export default async function RegistrationBox({
                       />
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
                       {/*
-                        6.3.2.1 — «Tombolă» (§NNN, amending how §949 and §984 drew it; the owner, 2026-11-20: «aici ar trebui să fie o
+                        6.3.2.1 — «Tombolă» (§1023, amending how §949 and §984 drew it; the owner, 2026-11-20: «aici ar trebui să fie o
                         secțiune colapsată cu „Tombola”»): everything the editor holds about the event's raffle in one fold of this card,
                         where §949 put it because a raffle is drawn on the race numbers. An option a race may skip, so a fold at the next
                         level (`EventEditorLayout`'s rule): closed on arrival, its line saying who and how (`raffleSummary`), open by itself

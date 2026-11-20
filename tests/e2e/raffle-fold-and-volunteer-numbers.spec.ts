@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01 — the editor's «Tombolă» fold, and the volunteers in the raffle with the V numbers they drew at
+ * §1023, BR-REQ-050-02, BR-REQ-041-01 — the editor's «Tombolă» fold, and the volunteers in the raffle with the V numbers they drew at
  * «Confirmă» (the owner, 2026-11-20: «vreau să le dau automat numere și voluntarilor, pentru că văd că deși voluntarii sunt bifați
  * aici… cumva sunt excluși de pe lista de la tombolă: plus că aici ar trebui să fie o secțiune colapsată cu „Tombola”»), walked at 320
  * pixels and on a desktop against the production build, as the Administrator:
@@ -40,7 +40,7 @@ type Seeded = { eventId: string; participantIds: string[] };
 
 /**
  * A published race a week away holding a raffle «Din oficiu», every group ticked: two numbered runners, and two confirmed volunteers
- * holding V001 and V002, as «Confirmă» numbered them (§NNN).
+ * holding V001 and V002, as «Confirmă» numbered them (§1023).
  */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
@@ -118,7 +118,7 @@ async function nothingAboutSettingNumbers(page: Page): Promise<void> {
   await expect(page.getByText(/Numerele voluntarilor încep de la|voluntari confirmați nu au număr/)).toHaveCount(0);
 }
 
-test.describe("§NNN «Tombolă» in the editor, and the volunteers in the raffle with their V numbers", () => {
+test.describe("§1023 «Tombolă» in the editor, and the volunteers in the raffle with their V numbers", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("the fold opens, a group unticked is saved and comes back open; «Tombolă» counts V001 and V002 and «Schimbă în editor» lands on the fold", async ({ page }) => {

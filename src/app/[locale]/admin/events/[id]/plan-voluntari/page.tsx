@@ -763,7 +763,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <Typography component="span" sx={place === undefined ? PERSON_NAME_SX : POINT_PERSON_NAME_SX} data-testid="plan-person-name">
           <Link href={{ pathname: "/admin/volunteers/[id]", params: { id: person.id } }}>{person.name}</Link>
         </Typography>
-        {/* The person's V number (§NNN): «Nr. V007», as on the «Voluntari» list and the person's page. */}
+        {/* The person's V number (§1023): «Nr. V007», as on the «Voluntari» list and the person's page. */}
         {person.volunteerNumber !== null && (
           <Typography component="span" variant="body2" sx={{ ml: 1, whiteSpace: "nowrap" }} data-testid="plan-person-volunteer-number">
             {t("volunteers.chips.number", { number: formatVolunteerNumber(person.volunteerNumber) })}

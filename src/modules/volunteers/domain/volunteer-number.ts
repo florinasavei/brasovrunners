@@ -1,5 +1,5 @@
 /*
-  A volunteer's number as people read it (§NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001
+  A volunteer's number as people read it (§1023, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001
   V002 la toti voluntarii automat!»): the event's own volunteers' series — 1, 2, 3, … in the order the organizers confirm them
   (`event_volunteers.volunteer_number`, `volunteer-numbers.ts#drawVolunteerNumber`) — written «V» and at least three digits:
   «V001», «V012», «V123», «V1000». Pure: the «Voluntari» list and the person's chip, the plan, the volunteers' CSV and Excel, the

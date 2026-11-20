@@ -48,7 +48,7 @@ const READERS = new Set(
     "src/db/schema/events.ts",
     "src/db/schema/registrations.ts",
     "src/db/schema/event-volunteers.ts",
-    // «Avem tombolă»: the editor's box and the closed bar of its «Tombolă» fold (`raffleSummary`, §NNN), the form's reader, the
+    // «Avem tombolă»: the editor's box and the closed bar of its «Tombolă» fold (`raffleSummary`, §1024), the form's reader, the
     // fields' schema and the save.
     "src/modules/content/events/ui/boxes/RegistrationBox.tsx",
     "src/modules/content/events/ui/box-summaries.ts",

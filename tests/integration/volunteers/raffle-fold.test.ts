@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — the editor's «Tombolă» fold (the owner, 2026-11-20: «plus că aici ar trebui să fie o secțiune colapsată cu
+ * §1023, BR-REQ-050-02 — the editor's «Tombolă» fold (the owner, 2026-11-20: «plus că aici ar trebui să fie o secțiune colapsată cu
  * „Tombola”»), and the volunteers in the raffle with the V numbers they draw at «Confirmă» (his other half: «vreau să le dau automat
  * numere și voluntarilor… cumva sunt excluși de pe lista de la tombolă»), read from a real database:
  *
@@ -184,7 +184,7 @@ async function runner(name: string, bibNumber: number | null): Promise<string> {
   return row.id;
 }
 
-/** A volunteer, confirmed unless told otherwise, holding the V number given (§NNN: «V001» is 1) — or none yet. */
+/** A volunteer, confirmed unless told otherwise, holding the V number given (§1023: «V001» is 1) — or none yet. */
 async function volunteer(name: string, volunteerNumber: number | null, more: Partial<typeof eventVolunteers.$inferInsert> = {}): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
@@ -218,7 +218,7 @@ const NUMBERS_LINE = /raffle-volunteers-without-number|box-volunteer-numbers|Num
 /** The page's markup and its words, so an id, a link or a sentence of that line would all be found. */
 const markupAndWords = (page: string) => `${page}\n${words(page)}`;
 
-describe("§NNN «Ziua cursei» → «Tombolă» with the volunteers numbered by themselves", () => {
+describe("§1023 «Ziua cursei» → «Tombolă» with the volunteers numbered by themselves", () => {
   it("counts the confirmed volunteers with their V numbers, after the race numbers, and says nothing about setting numbers", async () => {
     await saturday();
     const page = await tab();
@@ -240,7 +240,7 @@ describe("§NNN «Ziua cursei» → «Tombolă» with the volunteers numbered by
   });
 
   it("says «Nu · fără număr» on the row alone of a confirmed volunteer the deployment left without a V number yet — no line, no link", async () => {
-    // Confirmed in the minutes between the migration and the new deployment: the maintenance job numbers them (§NNN); until then the
+    // Confirmed in the minutes between the migration and the new deployment: the maintenance job numbers them (§1023); until then the
     // row says why, as every other row does.
     await volunteer("Ion Voluntar", null);
     const page = await tab();
@@ -269,7 +269,7 @@ describe("§NNN «Ziua cursei» → «Tombolă» with the volunteers numbered by
   });
 });
 
-describe("§NNN the editor page: «Tombolă» open after its save", () => {
+describe("§1023 the editor page: «Tombolă» open after its save", () => {
   const registrationBox = async (searchParams: Record<string, string> = {}) => {
     const tree = await EditEventPage({ params: Promise.resolve({ locale: "ro", id: eventId }), searchParams: Promise.resolve(searchParams) } as never);
     const box = everything(tree).find((element) => element.type === RegistrationBox);
@@ -295,7 +295,7 @@ describe("§NNN the editor page: «Tombolă» open after its save", () => {
   });
 });
 
-describe("§NNN the save says when it moved the raffle's settings", () => {
+describe("§1023 the save says when it moved the raffle's settings", () => {
   /** The editor's settings as they post for this race, the raffle's boxes drawn as the fold draws them. */
   async function settingsForm(raffle: { volunteers: boolean; how: "true" | "false" }): Promise<FormData> {
     const [row] = await db.select({ version: events.version }).from(events).where(eq(events.id, eventId));

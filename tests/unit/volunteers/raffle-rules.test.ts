@@ -169,7 +169,7 @@ describe("§984 BR-REQ-071-01 who takes part, and why not — one answer for bot
     expect(raffleKindOfRegistration({ elite: false })).toBe("RUNNER");
   });
 
-  it("orders the rows by the race number, then the volunteers by their V number (§NNN), then the numberless lines of the elite list by name", () => {
+  it("orders the rows by the race number, then the volunteers by their V number (§1023), then the numberless lines of the elite list by name", () => {
     const rows = [
       { number: null, name: "Zoe Elita", kind: "ELITE" as const },
       { number: 12, name: "Radu", kind: "RUNNER" as const },

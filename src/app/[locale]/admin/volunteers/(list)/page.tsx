@@ -528,7 +528,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           <Link href={{ pathname: "/admin/volunteers/[id]", params: { id: row.id } }} aria-label={t("volunteers.screen.openNamed", { name: row.name })}>
             {row.name}
           </Link>
-          {/* The person's V number (§NNN; the owner, 2026-11-20: «numar de voluntar V001 V002 la toti voluntarii automat»): drawn by itself
+          {/* The person's V number (§1023; the owner, 2026-11-20: «numar de voluntar V001 V002 la toti voluntarii automat»): drawn by itself
               at the confirmation, so every confirmed row says it beside the name — «Nr. V007», as the person's page and the plan do. */}
           {row.volunteerNumber !== null && (
             <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: formatVolunteerNumber(row.volunteerNumber) })} testId="volunteer-list-number" />
@@ -907,7 +907,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
                 >
                   {t("registrations.raffle.presentButton")}
                 </GlyphButton>
-                {/* «Descarcă pentru random.org» and its present-only twin (§NNN): the same people, one number per line and no name — the
+                {/* «Descarcă pentru random.org» and its present-only twin (§1023): the same people, one number per line and no name — the
                     volunteers by their V number after the race numbers —, for random.org's List Randomizer. */}
                 <GlyphButton
                   icon="download"

@@ -855,7 +855,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         // the place itself — nothing typed goes in a URL. When the organizer also told the
         // participants, the notice's own banner says so, and "nobody was written to" would be false.
         announced: placeAnnounced && notice?.kind !== "update" ? "1" : undefined,
-        // The save moved the raffle's settings (§NNN): the editor opens «Tombolă» and the cards around it, so what was saved is in sight.
+        // The save moved the raffle's settings (§1023): the editor opens «Tombolă» and the cards around it, so what was saved is in sight.
         raffle: raffleChanged ? "1" : undefined,
         ...(notice?.kind === "update" ? { notice: "update", queued: String(notice.queued) } : {}),
         ...(notice?.kind === "nothingToTell" ? { notice: "none" } : {}),

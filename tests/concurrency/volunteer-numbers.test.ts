@@ -14,7 +14,7 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 
 /**
- * §948, §NNN — the volunteers' V numbers and the two transforms under real connections racing (BR-REQ-050-02, BR-REQ-034-01).
+ * §948, §1023 — the volunteers' V numbers and the two transforms under real connections racing (BR-REQ-050-02, BR-REQ-034-01).
  *
  * Three things only a second connection can show, which PGlite — one connection, everything in a line whether or not a
  * row is locked (`tests/helpers/db.ts`) — cannot:
@@ -31,7 +31,7 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-050-02 the volunteers' V numbers and the transforms, pressed at once", () => {
+describe("§1023 BR-REQ-050-02 the volunteers' V numbers and the transforms, pressed at once", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   // The real clock: the events start a month from now, and the notices inserted here are the ones in force.
@@ -69,7 +69,7 @@ describe("§NNN BR-REQ-050-02 the volunteers' V numbers and the transforms, pres
     await pool.end();
   });
 
-  /** A race with one volunteers' role, its runners' numbers from 1; its volunteers are numbered V001, V002, … by themselves (§NNN). */
+  /** A race with one volunteers' role, its runners' numbers from 1; its volunteers are numbered V001, V002, … by themselves (§1023). */
   async function race(capacity: number) {
     const [event] = await db
       .insert(events)

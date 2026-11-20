@@ -222,7 +222,7 @@ describe("§984 BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(page).not.toBeNull();
     const markup = page as string;
     expect(words(markup.slice(markup.indexOf('data-testid="raffle-title"'), markup.indexOf("</h1>")))).toContain(ro.Event.raffle.title);
-    // The race number: digits, on a phone's number pad — or a volunteer's V number as it is written, «V007» (§NNN), so an optional V
+    // The race number: digits, on a phone's number pad — or a volunteer's V number as it is written, «V007» (§1023), so an optional V
     // first and one character more; the name as at registration, at most the column's length.
     const number = tagOf(markup, 'name="number"') ?? "";
     expect(number).toMatch(/inputmode="numeric"/i);
@@ -327,7 +327,7 @@ describe("§984 BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(unknown).not.toContain(ro.Event.raffle.done);
   });
 
-  it("says under a runner's number refused for «V7» that a number starting with V is a volunteer's, «Sunt voluntar» to tick (§NNN)", async () => {
+  it("says under a runner's number refused for «V7» that a number starting with V is a volunteer's, «Sunt voluntar» to tick (§1023)", async () => {
     await approveTexts();
     // The box's pattern lets «V7» through for the volunteers; the service refuses it as a race number and the action keeps what was typed.
     state.draft = sealFormDraft({ number: "V7", name: "Ion Voluntar", volunteer: "" });

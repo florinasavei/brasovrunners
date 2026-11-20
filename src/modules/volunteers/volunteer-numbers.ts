@@ -6,7 +6,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
 
 /*
-  The volunteers' V numbers (§NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti
+  The volunteers' V numbers (§1023, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti
   voluntarii automat!»): every event numbers its volunteers 1, 2, 3, … — written «V001», «V002», «V003»
   (`domain/volunteer-number.ts`) — by itself, the moment the organizers confirm a person, in the order they confirm them.
 
@@ -65,7 +65,7 @@ const FIRST_CONFIRMED_AT = sql<Date | null>`(
 )`;
 
 /**
- * The maintenance job's step (§NNN): every confirmed volunteer who has no V number yet is given one — event by event, each in its
+ * The maintenance job's step (§1023): every confirmed volunteer who has no V number yet is given one — event by event, each in its
  * own transaction under the event row's lock, in the order they were first confirmed, then added, then by id (the migration's
  * own order), after the highest the event ever gave. Idempotent: a run that finds nobody writes nothing — one read of a small
  * table — and a person numbered meanwhile by a confirmation is not found again. Who it finds: a volunteer the code serving while
