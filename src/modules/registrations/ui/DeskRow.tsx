@@ -262,28 +262,33 @@ export default async function DeskRow({
               the focus. Not on a closed desk, and not while the address was never confirmed — the email that tells the person would go
               where nobody vouched for it: «Confirmă pe hârtie» first. Anywhere else the chip as it was.
             */}
-            {!terminal &&
-              (mayRecordWish ? (
-                <ActionForm action={recordListWishAtDeskAction} confirm={wishQuestion} data-testid="desk-site-name-form">
-                  {hidden}
-                  {/* The wish this press records — never a flip: a second press of a stale row lands on the same state. */}
-                  <input type="hidden" name="listed" value={showing ? "1" : "0"} />
-                  <GlyphButton
-                    icon={row.namedOnSite ? "siteNamed" : "siteAnonymous"}
-                    type="submit"
-                    variant="outlined"
-                    color="inherit"
-                    size="small"
-                    sx={{ minHeight: 44 }}
-                    aria-label={t(showing ? "desk.siteWish.showAria" : "desk.siteWish.hideAria", { state: eyeWords })}
-                    data-testid="desk-site-name"
-                  >
-                    {eyeWords}
-                  </GlyphButton>
-                </ActionForm>
-              ) : (
-                <StatusChip glyph={row.namedOnSite ? "visible" : "hidden"} variant="outlined" label={eyeWords} testId="desk-site-name" />
-              ))}
+            {/*
+              The state and the press apart (the owner, 2026-11-20, of a row whose button read «ANONIM»: «aici nu e clară acțiunea:
+              trebuie să fie „ascunde-l din clasament” și „afișează-l în clasament”»): the chip says how the person appears — «Cu nume» /
+              «Anonim» — and the button says what it does, «Afișează numele în clasament» / «Ascunde numele din clasament», with the
+              eye of the state it leads to. «Numele», not «-l»/«-o»: the words never guess whether the runner is a man or a woman, and
+              the number and the time are on the results either way — only the name is shown or hidden.
+            */}
+            {!terminal && <StatusChip glyph={row.namedOnSite ? "visible" : "hidden"} variant="outlined" label={eyeWords} testId="desk-site-name" />}
+            {!terminal && mayRecordWish && (
+              <ActionForm action={recordListWishAtDeskAction} confirm={wishQuestion} data-testid="desk-site-name-form">
+                {hidden}
+                {/* The wish this press records — never a flip: a second press of a stale row lands on the same state. */}
+                <input type="hidden" name="listed" value={showing ? "1" : "0"} />
+                <GlyphButton
+                  icon={showing ? "siteNamed" : "siteAnonymous"}
+                  type="submit"
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  sx={{ minHeight: 44 }}
+                  aria-label={t(showing ? "desk.siteWish.showAria" : "desk.siteWish.hideAria", { state: eyeWords })}
+                  data-testid="desk-site-name-press"
+                >
+                  {t(showing ? "desk.siteWish.showButton" : "desk.siteWish.hideButton")}
+                </GlyphButton>
+              </ActionForm>
+            )}
             {/*
               «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
               e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).

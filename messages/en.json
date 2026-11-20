@@ -8006,7 +8006,7 @@
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
         "A search opens only the sections with a match. After a press you are back on the person's row, its section open: whoever is marked present moves to “Present”.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
-        "The eye beside the name says how they appear on the site: “By name” or “Anonymous”. Press it only when the person tells you what they want; asking for their name, they get an email to take it back.",
+        "Beside the name it says “By name” or “Anonymous”; press “Show the name in the results” / “Hide the name from the results” only when the person tells you what they want.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
@@ -8120,7 +8120,9 @@
         "showAria": "{state}: press if the person tells you they want to appear by name",
         "hideAria": "{state}: press if the person asks to no longer appear by name",
         "clubHiddenNamed": "Hidden by the club («On the site» unticked). The person wants their name shown.",
-        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous."
+        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous.",
+        "showButton": "Show the name in the results",
+        "hideButton": "Hide the name from the results"
       },
       "eliteFold": "Elite and bib",
       "sections": {
@@ -9753,12 +9755,12 @@
             {
               "title": "They want to appear by name, or no longer",
               "steps": [
-                "Beside the name, the eye says how the person appears on the site and in the results: «By name» or «Anonymous».",
-                "They tell you they want to appear by name? Press «Anonymous», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
+                "Beside the name it says how the person appears on the site and in the results: «By name» or «Anonymous»; the button beside it says what it changes.",
+                "They tell you they want to appear by name? Press «Show the name in the results», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
                 "The person gets an email at once with the button «I do not want to appear on the participants & results list». The registration's history keeps that you recorded it.",
-                "They ask to no longer appear by name? Press «By name», then «Yes — hide the name». No email leaves.",
+                "They ask to no longer appear by name? Press «Hide the name from the results», then «Yes — hide the name». No email leaves.",
                 "Under the name it says «Hidden by the club…»? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
-                "On a row whose address is not confirmed the eye is not a button: first «Confirm on paper». Never press it without the person's spoken agreement."
+                "On a row whose address is not confirmed there is no button: first «Confirm on paper». Never press it without the person's spoken agreement."
               ]
             },
             {
