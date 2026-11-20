@@ -755,7 +755,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
 
   const registration = await findRegistrationById(db, context.token.registrationId ?? "");
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
-  // The event's own row, one read: race day's start, state and zone, and the public list the list's block speaks of (§NNN).
+  // The event's own row, one read: race day's start, state and zone, and the public list the list's block speaks of (§1016).
   const event = await findEventForRegistrationById(db, registration.eventId);
   if (!event) throw new DomainError("NOT_FOUND", "no such event");
   // How long before the start a participant may say "I am here" from their own link: the club's
@@ -782,7 +782,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
     /**
-     * The event's public participant list is drawn now (§NNN): switched on (`NAMES`) and inside the club's days after the event
+     * The event's public participant list is drawn now (§1016): switched on (`NAMES`) and inside the club's days after the event
      * (§421) — the only list a confirmed person off it is a «Participant (nume ascuns)» row of, which the list's block says. Display
      * only: nothing here or behind the page's presses reads it.
      */

@@ -37,7 +37,7 @@ const EMAIL = "familia.pop@example.ro";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
-/** The language the pages are rendered in: Română unless a test asks for English (§NNN renders both). */
+/** The language the pages are rendered in: Română unless a test asks for English (§1016 renders both). */
 let intlLocale: "ro" | "en" = "ro";
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
@@ -474,13 +474,13 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
 });
 
 /**
- * §NNN, BR-REQ-039-01 — «Lista publică și clasamentul»: the public-list choice in a clearly marked block of its own, for every
+ * §1016, BR-REQ-039-01 — «Lista publică și clasamentul»: the public-list choice in a clearly marked block of its own, for every
  * registration on «Gestionează înscrierea» — a family's page too — and on «Înscrierile mele», in both languages. A heading on
  * every registration, the state in bold beside the eye (open when shown, crossed when not), the sentence off the list naming the
  * label the public list prints instead («Participant (nume ascuns)», read from `Event.startList`), and one contained button,
  * the same in both states; placed right under the state, the number and the QR, before the declaration line and the rest.
  */
-describe("§NNN «Lista publică și clasamentul», a block of its own on every registration", () => {
+describe("§1016 «Lista publică și clasamentul», a block of its own on every registration", () => {
   type Locale = "ro" | "en";
   const LOCALES: Locale[] = ["ro", "en"];
 

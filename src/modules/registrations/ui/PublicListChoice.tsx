@@ -25,7 +25,7 @@ export type PublicListChoiceWords = {
 };
 
 /**
- * The public participant list's choice, one registration's (§NNN, BR-REQ-039-01; the rule is §143's and §186's, unchanged): its own
+ * The public participant list's choice, one registration's (§1016, BR-REQ-039-01; the rule is §143's and §186's, unchanged): its own
  * clearly marked block on «Gestionează înscrierea» — every person of a family's page included — and on «Înscrierile mele», drawn
  * where the eye lands, under the registration's state, number and QR.
  *

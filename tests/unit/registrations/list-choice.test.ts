@@ -3,7 +3,7 @@ import { catalogueOf } from "@/i18n/catalogue";
 import { LIST_CHOICE_STATES, type ListChoiceFacts, type ListChoiceState, listChoiceNamesResults, listChoiceState } from "@/modules/registrations/domain/list-choice";
 
 /**
- * BR-REQ-039-01, §NNN — what «Lista publică și clasamentul» says about a registration's name on «Gestionează înscrierea» and
+ * BR-REQ-039-01, §1016 — what «Lista publică și clasamentul» says about a registration's name on «Gestionează înscrierea» and
  * «Înscrierile mele». The tick is one for the list and the results (§570, §808), so on a race the block names both, but it may say
  * «și în clasament» only where the published results would print the name; and off the list it may say «pe listă apari ca
  * „Participant (nume ascuns)”» only where the public list draws that row — a confirmed registration inside the places, on a list the
@@ -75,7 +75,7 @@ const underResults: ListChoiceFacts = {
   firstResultsNameAskNoticeVersion: null,
 };
 
-describe("BR-REQ-039-01 the list's block says where the name stands, and only what the list and the results draw (§NNN)", () => {
+describe("BR-REQ-039-01 the list's block says where the name stands, and only what the list and the results draw (§1016)", () => {
   it("follows the rule written out by hand over every combination of the facts it reads", () => {
     let count = 0;
     const seen = new Set<string>();

@@ -6,7 +6,7 @@ import { mintActionLink, mintProfileLink } from "./support/action-link";
 import { hydrated } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-039-01, BR-REQ-041-01 — «Lista publică și clasamentul», the public-list choice in a block of its own (the owner,
+ * §1016, BR-REQ-039-01, BR-REQ-041-01 — «Lista publică și clasamentul», the public-list choice in a block of its own (the owner,
  * 2026-11-20, of the manage page's list switch: «trebuie ca asta sa fie mai vizibila»), walked at 320 pixels and on a desktop
  * against the production build:
  *
@@ -149,7 +149,7 @@ async function prominent(block: Locator, name: string): Promise<string> {
   return classes;
 }
 
-test.describe("§NNN the public-list choice stands out: its own block, under the QR, one button both ways", () => {
+test.describe("§1016 the public-list choice stands out: its own block, under the QR, one button both ways", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("a runner off the list finds the block under the QR above the fold, puts the name on and takes it off again", async ({ page }) => {

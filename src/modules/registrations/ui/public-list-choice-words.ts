@@ -3,7 +3,7 @@ import { type ListChoiceFacts, type ListChoiceState, listChoiceNamesResults, lis
 import type { PublicListChoiceWords } from "@/modules/registrations/ui/PublicListChoice";
 
 /**
- * «Lista publică și clasamentul»'s words (§NNN), worded on the server in the page's language: one place for the two pages that draw
+ * «Lista publică și clasamentul»'s words (§1016), worded on the server in the page's language: one place for the two pages that draw
  * the block — the manage page and «Înscrierile mele» — so a registration's block says one thing on both, from one rule
  * (`domain/list-choice.ts`). Read once per page; the function it returns words one registration's block.
  *

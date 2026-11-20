@@ -117,7 +117,7 @@ export type MyRegistration = {
   /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
   listed: boolean;
   /**
-   * What the list's block says beside that answer (§NNN, `domain/list-choice.ts`): the event's type — only a race takes results —
+   * What the list's block says beside that answer (§1016, `domain/list-choice.ts`): the event's type — only a race takes results —
    * and «Vreau să apar cu numele în clasament» with the notice it was given under (§879), so the block says «și în clasament» only
    * where the published results would print the name.
    */
@@ -125,7 +125,7 @@ export type MyRegistration = {
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
   /**
-   * The event's public participant list is drawn now (§NNN): switched on (`NAMES`) and inside the club's days after the event (§421)
+   * The event's public participant list is drawn now (§1016): switched on (`NAMES`) and inside the club's days after the event (§421)
    * — where a confirmed person off it is a «Participant (nume ascuns)» row, which the list's block says. Display only.
    */
   listShown: boolean;
@@ -185,7 +185,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventTimezone: events.timezone,
       eventStatus: events.eventStatus,
       eventType: events.type,
-      // Whether the event's public list is drawn now (§NNN): its switch, and its end for the club's days after it (§421).
+      // Whether the event's public list is drawn now (§1016): its switch, and its end for the club's days after it (§421).
       participantListVisibility: events.participantListVisibility,
       eventEndsAt: events.endsAt,
       checkinCode: registrations.checkinCode,

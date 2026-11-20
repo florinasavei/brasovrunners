@@ -235,7 +235,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         })
       : null;
   /*
-    «Lista publică și clasamentul» (§NNN): each person's block says where their name stands by the one rule (`listChoiceState`) —
+    «Lista publică și clasamentul» (§1016): each person's block says where their name stands by the one rule (`listChoiceState`) —
     «și în clasament» only where the published results would print it, from the event's type `details` already carries and the
     notices read above; off the list, «Participant (nume ascuns)» only for a confirmed person inside the places on a list the event
     shows now (`live.listShown`, read with the event's row) — in the words both pages share (`publicListChoiceWords`).
@@ -479,7 +479,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
                 {/*
                   The public participant list, each person's own choice (BR-REQ-039-01; `DECISIONS.md` §143), in a block of its
-                  own since §NNN: right under the state, the number and the QR — before the declaration line, the offers and the
+                  own since §1016: right under the state, the number and the QR — before the declaration line, the offers and the
                   rest — with a heading on every person, a family's too. The manage token is read, never spent — the same page
                   must still be able to cancel — and the sentence reads the row as it stands now. `#list` is the link's own
                   person's, where every press lands (the confirmation email's list link opens its own page, `/inregistrari/lista/…`).

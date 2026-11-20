@@ -48,7 +48,7 @@ export type ManagedPerson = {
   listOptOut: boolean;
   /**
    * On «Lista de invitați speciali» (§643): read only so the list's block never tells such a person off the list that they are a
-   * «Participant (nume ascuns)» row — the public list never draws them (§743, §NNN). Display only.
+   * «Participant (nume ascuns)» row — the public list never draws them (§743, §1016). Display only.
    */
   outsideCapacity: boolean;
   /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */

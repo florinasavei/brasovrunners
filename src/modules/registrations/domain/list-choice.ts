@@ -2,7 +2,7 @@ import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { publicResultName } from "@/modules/results/domain/public-name";
 
 /**
- * What the public-list choice's block says about a registration's name (§NNN, BR-REQ-039-01): the block «Lista publică și
+ * What the public-list choice's block says about a registration's name (§1016, BR-REQ-039-01): the block «Lista publică și
  * clasamentul» on «Gestionează înscrierea» and on «Înscrierile mele». It changes how the choice is drawn, never the rule
  * (§143, §186): the tick is the person's own, off unless they gave it, and the one write is `list-consent.ts`'s.
  *

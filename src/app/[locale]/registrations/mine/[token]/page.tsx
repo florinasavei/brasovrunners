@@ -216,7 +216,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     : [];
 
   /*
-    «Lista publică și clasamentul» (§NNN): the registration's own page's block, per registration — its sentence by the one rule
+    «Lista publică și clasamentul» (§1016): the registration's own page's block, per registration — its sentence by the one rule
     (`listChoiceState`), from the event's type and the notices that describe the results (cached, read only while the page lists
     somebody), and off the list «Participant (nume ascuns)» only for a confirmed registration inside the places on a list its event
     shows now (`item.listShown`) — in the words both pages share (`publicListChoiceWords`).
@@ -489,7 +489,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
               {/*
                 The public participant list, the participant's own choice (BR-REQ-039-01; `DECISIONS.md` §143), in the same
-                block as the registration's own page since §NNN: under the state and the QR, before the cancel and the offers.
+                block as the registration's own page since §1016: under the state and the QR, before the cancel and the offers.
                 The link is read, never spent — as "I am here" above — so cancel stays.
               */}
               {listChoiceWords && (
