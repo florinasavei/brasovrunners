@@ -9618,11 +9618,11 @@
             {
               "title": "Angajamentul echipei, la fiecare intrare",
               "steps": [
-                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la fiecare intrare în cont, cât timp clubul are un angajament al echipei în vigoare, se deschide întâi pagina lui, în locul paginii pe care ai cerut-o.",
+                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la fiecare intrare în cont se deschide întâi angajamentul echipei aprobat de club, în locul paginii cerute.",
                 "Citește textul până la capăt: ce date vezi, cum le păstrezi confidențiale, ce faci cu listele tipărite și ce faci dacă pierzi telefonul.",
                 "Scrie-ți numele în «Numele tău complet», bifează «Am citit și accept angajamentul» și apasă «Accept și intru».",
-                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Cât rămâi în cont nu ți se mai cere, decât dacă clubul aprobă între timp o versiune nouă. După «Ieși din cont», la următoarea intrare îl accepți din nou.",
-                "Pentru ziua cursei: intră în cont pe telefonul tău cu o zi înainte și nu apăsa «Ieși din cont» — așa nu îl citești la masă.",
+                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Cât rămâi în cont nu ți se mai cere, decât dacă clubul aprobă între timp o versiune nouă.",
+                "După «Ieși din cont», la următoarea intrare îl accepți din nou. Pentru ziua cursei, intră în cont pe telefonul tău cu o zi înainte și rămâi în cont: așa nu îl citești la masă.",
                 "Până accepți, nicio pagină a backoffice-ului nu se deschide. «Ieși din cont» rămâne sus.",
                 "Administratorii nu îl acceptă aici: ei aprobă textul în «Documente legale»."
               ]
@@ -10621,7 +10621,7 @@
                 "«Documente legale» → «Versiune nouă» → sub «Pornește de la șablon», «Angajament de confidențialitate și protecția datelor pentru echipă».",
                 "Completează datele clubului rămase de forma <…>, în română și în engleză, și apasă «Salvează ciorna». Un jurist ar trebui să citească textul întâi.",
                 "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
-                "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă, apoi la fiecare intrare în cont.",
+                "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă, apoi la fiecare intrare în cont.",
                 "Nu e printre textele din «Aprobă acum textele care lipsesc…» și nici din «Aprobă ciornele», chiar dacă «Regenerează din șabloane» i-a făcut ciorna: se aprobă separat, citit pentru el.",
                 "«Echipa» arată pe rândul fiecărui coleg ultima acceptare — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
               ]

@@ -2726,10 +2726,14 @@ below `ADMIN` — whose session has not accepted *that* version is answered by n
 the moment it was signed in**: Auth.js's `jwt` callback writes `signedInAt` (milliseconds) when Zitadel hands it `account` —
 at a sign-in, and only then (`staffTokenAt`) — and keeps it as the token is refreshed; nothing a browser posts as an update
 writes it; the development sign-in writes the same moment beside its id (`DEV_STAFF_SIGNED_IN_COOKIE`) and sign-out drops
-both. The undertaking is owed unless the account accepted the version in force at or after that moment
-(`teamAgreementOwedThisSession`, read from the per-sign-in record). A session signed in before §NNN carries no moment: it
-owes the version unless the account accepted it at a sign-in at all — every row of that record was written since §NNN, so
-it is asked once and not again until its next sign-in; no token is rewritten and nobody is signed out. A page being drawn
+both. The undertaking is owed unless the account accepted the version in force at or after that moment, or a row of the
+per-sign-in record names that very sign-in (`teamAgreementOwedThisSession`, one query): the press and the sign-in read
+their moments on whichever servers took them, and a row stored a little before the sign-in it names still answers it —
+compared by the moments alone, the gate would ask again and every next press would meet the unique key, writing nothing,
+until sign-out.
+A session signed in before §NNN carries no moment: it owes the version unless the account accepted it at a sign-in at
+all — every row of that record was written since §NNN, so it is asked once and not again until its next sign-in; no
+token is rewritten and nobody is signed out. A page being drawn
 (the proxy's `x-br-path`, no `next-action` header) is sent to `/admin/acord?returnTo=<the page>`, a same-site path only; a Server
 Action and a route handler are refused with `FORBIDDEN`, the reason saying to accept the undertaking. The staff preview
 asks the same through `assertTeamAgreementAccepted`. The admin and `/devs` layouts ask `teamAgreementOwedFor` and only

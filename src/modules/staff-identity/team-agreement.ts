@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lte, type SQL, sql } from "drizzle-orm";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { staffTeamAgreementAcceptances, staffTeamAgreementSignInAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -24,10 +24,10 @@ import { teamAgreementName, teamAgreementOwedThisSession } from "./domain/team-a
  * asked — a text the club has not approved binds nobody — and «Sarcini» carries the club's row.
  *
  * **Owed at every sign-in since §NNN** (amending §1006, which asked it once per account and version): a session owes the version in
- * force unless the account accepted it at or after the moment the session was signed in (`teamAgreementOwedThisSession`). Every
- * acceptance is kept, with the sign-in it answers (`staff_team_agreement_sign_in_acceptances`); the acceptances made once per
- * account under §1006 (`staff_team_agreement_acceptances`) stay where they are, for «Echipa» and as reliances on their version,
- * and answer no sign-in. A new version in force is asked at the next request, as before.
+ * force unless the account accepted it at or after the moment the session was signed in, or an acceptance names that very sign-in
+ * (`teamAgreementOwedThisSession`). Every acceptance is kept, with the sign-in it answers (`staff_team_agreement_sign_in_acceptances`);
+ * the acceptances made once per account under §1006 (`staff_team_agreement_acceptances`) stay where they are, for «Echipa» and as
+ * reliances on their version, and answer no sign-in. A new version in force is asked at the next request, as before.
  */
 
 /** The version of the undertaking in force — its id and its number — or null. */
@@ -71,26 +71,36 @@ export async function outstandingTeamAgreement<T extends Record<string, unknown>
   now: Date,
 ): Promise<TeamAgreementVersion | null> {
   if (!mustAcceptTeamAgreement(account.role)) return null;
+  const accepted = staffTeamAgreementSignInAcceptances;
   /*
     A join, never a correlated `exists` in the selection: with one table in its FROM, Drizzle writes a selection's columns bare,
     and a bare `"id"` inside the subquery would be the acceptance's own. The version in force comes first and, beside it, the
-    account's newest acceptance of it in the per-sign-in record — or nothing, a left join's nulls last.
+    account's acceptances of it in the per-sign-in record, folded into two facts — the newest moment (null when there is none),
+    and whether one of them names this very sign-in, which answers it whatever the two servers' clocks wrote (§NNN).
   */
   const [row] = await db
-    .select({ id: legalDocuments.id, version: legalDocuments.version, lastAcceptedAt: staffTeamAgreementSignInAcceptances.acceptedAt })
+    .select({
+      id: legalDocuments.id,
+      version: legalDocuments.version,
+      // A Date through the column's own reader; null — never read — when the account has no acceptance of it.
+      lastAcceptedAt: sql`max(${accepted.acceptedAt})`.mapWith(accepted.acceptedAt) as SQL<Date | null>,
+      acceptedThisSignIn:
+        signedInAt === null ? sql<boolean>`false` : sql<boolean>`coalesce(bool_or(${eq(accepted.signedInAt, signedInAt)}), false)`,
+    })
     .from(legalDocuments)
-    .leftJoin(
-      staffTeamAgreementSignInAcceptances,
-      and(
-        eq(staffTeamAgreementSignInAcceptances.legalDocumentId, legalDocuments.id),
-        eq(staffTeamAgreementSignInAcceptances.staffUserId, account.id),
-      ),
-    )
+    .leftJoin(accepted, and(eq(accepted.legalDocumentId, legalDocuments.id), eq(accepted.staffUserId, account.id)))
     .where(inForce(now))
-    .orderBy(desc(legalDocuments.version), sql`${staffTeamAgreementSignInAcceptances.acceptedAt} desc nulls last`)
+    .groupBy(legalDocuments.id, legalDocuments.version)
+    .orderBy(desc(legalDocuments.version))
     .limit(1);
   if (!row) return null;
-  const owed = teamAgreementOwedThisSession({ subject: account.role, inForce: true, signedInAt, lastAcceptedAt: row.lastAcceptedAt });
+  const owed = teamAgreementOwedThisSession({
+    subject: account.role,
+    inForce: true,
+    signedInAt,
+    lastAcceptedAt: row.lastAcceptedAt,
+    acceptedThisSignIn: row.acceptedThisSignIn,
+  });
   return owed ? { id: row.id, version: row.version } : null;
 }
 

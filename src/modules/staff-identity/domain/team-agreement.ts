@@ -18,20 +18,28 @@ import { mustAcceptTeamAgreement, type StaffSubject } from "./roles";
  *   development sign-in) owes it unless the account accepted the version in force **at or after** that moment: accepted before
  *   the sign-in — at the previous one — is owed again; at or after it — on this sign-in, or on another device signed in since —
  *   is not.
+ * - **An acceptance answers the sign-in it names, whatever the clocks wrote** (`acceptedThisSignIn`): the moment of a press is
+ *   read by the server that took the press, the moment of the sign-in by the one that took the sign-in, and a press whose clock
+ *   ran behind would be stored before the sign-in it answers. Compared by the moments alone, the gate would ask again, and the
+ *   next press would meet the unique key and write nothing — asked until sign-out. A row that names this very sign-in ends it.
  * - **A session signed in before §NNN** carries no moment (`signedInAt` null): it owes the version in force unless the account
  *   accepted it under this rule at all — `lastAcceptedAt` is read from the per-sign-in record, every row of which was written
  *   since §NNN shipped, so the acceptances made once per account under §1006 never answer. Such a session is asked once and not
  *   again until its next sign-in, which writes the moment: no token is rewritten, nobody is signed out, nothing loops.
  *
- * `lastAcceptedAt` is the newest acceptance of the version in force by this account in that record, or null.
+ * `lastAcceptedAt` is the newest acceptance of the version in force by this account in that record, or null; `acceptedThisSignIn`
+ * says whether one of that record's rows of the version names this session's sign-in (`signed_in_at` equal to `signedInAt`) —
+ * false for a session that carries no moment.
  */
 export function teamAgreementOwedThisSession(input: {
   subject: StaffSubject;
   inForce: boolean;
   signedInAt: Date | null;
   lastAcceptedAt: Date | null;
+  acceptedThisSignIn: boolean;
 }): boolean {
   if (!mustAcceptTeamAgreement(input.subject) || !input.inForce) return false;
+  if (input.acceptedThisSignIn) return false;
   if (input.lastAcceptedAt === null) return true;
   return input.signedInAt !== null && input.lastAcceptedAt.getTime() < input.signedInAt.getTime();
 }

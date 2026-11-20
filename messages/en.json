@@ -9618,11 +9618,11 @@
             {
               "title": "The team's undertaking, at every sign-in",
               "steps": [
-                "If your role is «Voluntar», «Redactor», «Organizator» or «Tehnic», each time you sign in, while the club has a team undertaking in force, its page opens first, instead of the page you asked for.",
+                "If your role is «Voluntar», «Redactor», «Organizator» or «Tehnic», each time you sign in, the team's undertaking the club approved opens first, instead of the page you asked for.",
                 "Read the text to the end: which data you see, how you keep it confidential, what to do with printed lists and what to do if you lose your phone.",
                 "Type your name in «Your full name», tick «I have read and accept the undertaking» and press «Accept and enter».",
-                "You land on the page you had asked for, for example the number scanned at the desk. While you stay signed in it is not asked again, unless the club approves a new version meanwhile. After «Sign out», you accept it again at your next sign-in.",
-                "For race day: sign in on your own phone the day before and do not press «Sign out» — that way you do not read it at the desk.",
+                "You land on the page you had asked for, for example the number scanned at the desk. While you stay signed in it is not asked again, unless the club approves a new version meanwhile.",
+                "After «Sign out», you accept it again at your next sign-in. For race day, sign in on your own phone the day before and stay signed in: that way you do not read it at the desk.",
                 "Until you accept, no backoffice page opens. «Sign out» stays at the top.",
                 "Administrators do not accept it here: they approve the text in «Legal documents»."
               ]
@@ -10621,7 +10621,7 @@
                 "«Legal documents» → «New version» → under «Start from the template», «Team confidentiality and data protection undertaking».",
                 "Fill in the club's facts left shaped <…>, in Romanian and in English, and press «Save draft». A lawyer should read the text first.",
                 "Under «Approve this version» tick «I confirm the club has approved this text and it may become public», press «Approve and publish» and confirm.",
-                "Approve it at least a day before the race, not on its morning: from then on, every volunteer, copywriter, organiser and technical colleague is stopped at the next page until they accept, then at every sign-in.",
+                "Approve it at least a day before the race: from then on, every volunteer, copywriter, organiser and technical colleague is stopped at the next page until they accept, then at every sign-in.",
                 "It is among the texts of neither «Approve the missing texts now…» nor «Approve the drafts», even when «Regenerate from the templates» made its draft: it is approved on its own, read for itself.",
                 "«Staff» shows on each colleague's row the latest acceptance — the version, the date and the name typed —, «Not accepted» or «Not required»."
               ]

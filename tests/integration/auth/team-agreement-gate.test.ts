@@ -361,6 +361,16 @@ describe("§1006 §NNN the team's undertaking, at every sign-in", () => {
     // «în cont», never «în platformă»: the backoffice never says «platforma» / "the platform" (§522, `plain-words.test.ts`).
     expect(ro.Admin.teamAgreement.intro).toContain("Îl accepți la fiecare intrare în cont.");
     expect(en.Admin.teamAgreement.intro).toContain("You accept it each time you sign in.");
+    // The guide's two tasks about it say so, each step short too (≤ 200 characters), in both languages.
+    for (const [locale, catalogue, everySignIn] of [
+      ["ro", ro, "la fiecare intrare"],
+      ["en", en, "every sign-in"],
+    ] as const) {
+      const tasks = catalogue.Admin.guide.sections.flatMap((section) => section.tasks).filter((task) => /angajamentul echipei|team's undertaking/i.test(task.title));
+      expect(tasks, locale).toHaveLength(2);
+      expect(tasks.flatMap((task) => task.steps).some((step) => step.includes(everySignIn)), locale).toBe(true);
+      for (const step of tasks.flatMap((task) => task.steps)) expect(step.length, `${locale}: ${step}`).toBeLessThanOrEqual(200);
+    }
   });
 
   it("keeps no way back that is not a path on this site, and sends on whoever owes nothing", async () => {
@@ -482,6 +492,28 @@ describe("§1006 §NNN the team's undertaking, at every sign-in", () => {
     as("MODERATOR", laptop);
     page("/ro/admin/registrations");
     expect((await requireStaff()).id).toBe(staff.MODERATOR.id);
+  });
+
+  it("lets a session through once an acceptance names its sign-in, even when the press's clock ran behind the sign-in's — no loop", async () => {
+    const id = await undertaking(1);
+    const signedIn = new Date(Date.now() - 60_000);
+    as("CONTRIBUTOR", signedIn);
+    page("/ro/admin/checkin");
+    expect(await redirectedTo(requireStaff())).toBe("/ro/admin/acord?returnTo=%2Fro%2Fadmin%2Fcheckin");
+    // The press read its moment on a server whose clock is five seconds behind the one that took the sign-in.
+    expect(await accept("CONTRIBUTOR", id, { at: new Date(signedIn.getTime() - 5_000) })).toBe("accepted");
+    const [row] = await acceptances();
+    expect(row.signedInAt).toEqual(signedIn);
+    expect(row.acceptedAt.getTime()).toBeLessThan(signedIn.getTime());
+    // Answered: the page and the press open, and a second press is still nothing.
+    expect((await requireStaff()).id).toBe(staff.CONTRIBUTOR.id);
+    action("/ro/admin/checkin");
+    expect((await requireStaff()).id).toBe(staff.CONTRIBUTOR.id);
+    expect(await accept("CONTRIBUTOR", id)).toBe("already");
+    // The next sign-in is a sign-in of its own: that row names the one before it.
+    as("CONTRIBUTOR", new Date());
+    page("/ro/admin/checkin");
+    expect(await redirectedTo(requireStaff())).toBe("/ro/admin/acord?returnTo=%2Fro%2Fadmin%2Fcheckin");
   });
 
   it("asks a session signed in before §NNN once — it carries no moment — and §1006's acceptance answers no sign-in", async () => {

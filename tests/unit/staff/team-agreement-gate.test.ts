@@ -25,7 +25,7 @@ describe("§NNN the undertaking is owed once per sign-in, not once per account",
   const SIGNED_IN = new Date("2026-11-21T07:00:00.000Z");
   const at = (offsetMs: number) => new Date(SIGNED_IN.getTime() + offsetMs);
   const owed = (lastAcceptedAt: Date | null, signedInAt: Date | null = SIGNED_IN, role: (typeof STAFF_ROLES)[number] = "CONTRIBUTOR", inForce = true) =>
-    teamAgreementOwedThisSession({ subject: role, inForce, signedInAt, lastAcceptedAt });
+    teamAgreementOwedThisSession({ subject: role, inForce, signedInAt, lastAcceptedAt, acceptedThisSignIn: false });
 
   it("is owed when the account accepted the version in force before this session was signed in — at the previous sign-in", () => {
     expect(owed(at(-1))).toBe(true);
@@ -42,6 +42,17 @@ describe("§NNN the undertaking is owed once per sign-in, not once per account",
     expect(owed(null)).toBe(true);
   });
 
+  it("is not owed once an acceptance names this very sign-in, whatever the two servers' clocks wrote — no loop until sign-out", () => {
+    // The press's server read its moment five seconds before the sign-in's server read the sign-in's: stored before it.
+    const pressed = { subject: "CONTRIBUTOR" as const, inForce: true, signedInAt: SIGNED_IN, lastAcceptedAt: at(-5_000) };
+    expect(teamAgreementOwedThisSession({ ...pressed, acceptedThisSignIn: true })).toBe(false);
+    // The same moment, from a row that names another sign-in, is the sign-in before's: owed.
+    expect(teamAgreementOwedThisSession({ ...pressed, acceptedThisSignIn: false })).toBe(true);
+    // It never asks a role that is not asked, nor anybody while no version is in force.
+    expect(teamAgreementOwedThisSession({ ...pressed, subject: "ADMIN", acceptedThisSignIn: false })).toBe(false);
+    expect(teamAgreementOwedThisSession({ ...pressed, inForce: false, acceptedThisSignIn: false })).toBe(false);
+  });
+
   it("asks a session signed in before §NNN — it carries no moment — once: owed until an acceptance at a sign-in, then not", () => {
     // The per-sign-in record holds only acceptances made since §NNN shipped: any one answers such a session.
     expect(owed(null, null)).toBe(true);
@@ -56,8 +67,8 @@ describe("§NNN the undertaking is owed once per sign-in, not once per account",
       expect(owed(null, SIGNED_IN, role, false), role).toBe(false);
     }
     // A subject as the session hands it — the actor, with its grants — is read by its role alone.
-    expect(teamAgreementOwedThisSession({ subject: { role: "ADMIN" }, inForce: true, signedInAt: SIGNED_IN, lastAcceptedAt: null })).toBe(false);
-    expect(teamAgreementOwedThisSession({ subject: { role: "MODERATOR" }, inForce: true, signedInAt: SIGNED_IN, lastAcceptedAt: null })).toBe(true);
+    expect(teamAgreementOwedThisSession({ subject: { role: "ADMIN" }, inForce: true, signedInAt: SIGNED_IN, lastAcceptedAt: null, acceptedThisSignIn: false })).toBe(false);
+    expect(teamAgreementOwedThisSession({ subject: { role: "MODERATOR" }, inForce: true, signedInAt: SIGNED_IN, lastAcceptedAt: null, acceptedThisSignIn: false })).toBe(true);
   });
 });
 
