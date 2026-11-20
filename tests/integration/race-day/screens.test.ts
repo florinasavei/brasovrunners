@@ -15,11 +15,11 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §979, §984, §986, §996 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs
- * on the desk, «Lucruri de adus», «Cronometrare», «Clasament» and «Jurnal» — the current one marked, the event carried, «Clasament»
- * not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone,
- * «Tombolă» fourth of the organizers' six for an event that holds a raffle — and, since §1014, third of every other desk role's four —
- * and their «Jurnal» last, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
+ * §979, §984, §986, §996, §1018 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6):
+ * the tabs on the desk, «Lucruri de adus», «Cronometrare», «Clasament» and «Jurnal» — the current one marked, the event carried,
+ * «Clasament» not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone,
+ * «Tombolă» fourth of the organizers' seven for an event that holds a raffle — and, since §1014, third of every other desk role's four —
+ * and their «Jurnal» then «Declarații» last, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
  * page by role; the desk's line of free spares (§444) as ranges, and its two other states; and the walk-in's «Numărul dat acum» as a
  * select of the free spares, the lowest chosen.
  */
@@ -223,6 +223,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
       { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
       { href: `/ro/admin/checkin/jurnal?eventId=${id}`, label: "Jurnal", current: false },
+      { href: `/ro/admin/checkin/declaratii?eventId=${id}`, label: "Declarații", current: false },
     ]);
     expect(html.indexOf('data-testid="race-day-tabs"')).toBeLessThan(html.indexOf("Masa de ridicare a numerelor"));
     // Never on paper.
@@ -237,6 +238,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       ["Cronometrare Sosiri", false],
       ["Lucruri de adus Lucruri", true],
       ["Jurnal", false],
+      ["Declarații", false],
     ]);
     expect(tabs(await results(id))).toEqual([
       { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: false },
@@ -244,6 +246,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
       { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
       { href: `/ro/admin/checkin/jurnal?eventId=${id}`, label: "Jurnal", current: false },
+      { href: `/ro/admin/checkin/declaratii?eventId=${id}`, label: "Declarații", current: false },
     ]);
     expect(tabs(await timing(id)).map((tab) => [tab.label, tab.current])).toEqual([
       ["Prezența", false],
@@ -251,6 +254,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       ["Cronometrare Sosiri", true],
       ["Lucruri de adus Lucruri", false],
       ["Jurnal", false],
+      ["Declarații", false],
     ]);
     expect(tabs(await journal(id))).toEqual([
       { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: false },
@@ -258,18 +262,19 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
       { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
       { href: `/ro/admin/checkin/jurnal?eventId=${id}`, label: "Jurnal", current: true },
+      { href: `/ro/admin/checkin/declaratii?eventId=${id}`, label: "Declarații", current: false },
     ]);
   });
 
   it("draw no glyph below `sm` (`compact`), so a role's row of three fits a 320-pixel phone, and every glyph from `sm` up", async () => {
     const id = await race();
     const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "timing", eventId: id, actor: staff.ADMIN! }), "ro"));
-    // Five glyph wrappers — «Jurnal»'s the trail's clock (§996) —, each `display: none` below `sm` and inline-flex from it.
-    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(5);
+    // Six glyph wrappers — «Jurnal»'s the trail's clock (§996), «Declarații»'s the pen (§1018) —, each `display: none` below `sm` and inline-flex from it.
+    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(6);
     expect(raw).toMatch(/@media \(min-width:600px\)\{[^}]*display:inline-flex/);
   });
 
-  it("stand six for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus», «Jurnal» last — in a row that scrolls (§984, §996)", async () => {
+  it("stand seven for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus», «Jurnal» and «Declarații» last — in a row that scrolls (§984, §996, §1018)", async () => {
     const id = await race({ hasRaffle: true });
     for (const role of ["MODERATOR", "ADMIN"] as const) {
       state.actor = staff[role];
@@ -280,6 +285,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
         { href: `/ro/admin/checkin/tombola?eventId=${id}`, label: "Tombolă", current: false },
         { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
         { href: `/ro/admin/checkin/jurnal?eventId=${id}`, label: "Jurnal", current: false },
+        { href: `/ro/admin/checkin/declaratii?eventId=${id}`, label: "Declarații", current: false },
       ]);
     }
     expect(tabs(await timing(id)).map((tab) => [tab.label, tab.current])).toEqual([
@@ -289,13 +295,14 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       ["Tombolă", false],
       ["Lucruri de adus Lucruri", false],
       ["Jurnal", false],
+      ["Declarații", false],
     ]);
-    // Six are wider than a phone: the row carries the scroller that brings the current entry into view (`SubNavCurrent`, its hidden
+    // Seven are wider than a phone: the row carries the scroller that brings the current entry into view (`SubNavCurrent`, its hidden
     // span), scrolls inside itself, and still draws its glyphs from `sm` up only.
-    const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "journal", eventId: id, actor: staff.ADMIN! }), "ro"));
+    const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "declarations", eventId: id, actor: staff.ADMIN! }), "ro"));
     expect(raw).toMatch(/<span hidden=""><\/span>/);
     expect(raw).toMatch(/overflow-x:auto/);
-    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(6);
+    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(7);
     // The desk's other roles see «Tombolă» too since §1014 — four entries, «Tombolă» before «Lucruri de adus», at the same address.
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
@@ -310,7 +317,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(tabs(renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "desk", eventId: id, actor: "MEMBER" }), "ro")))).toEqual([]);
     state.actor = staff.MODERATOR;
     state.locale = "en";
-    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Raffle", "Things to bring Things", "Log"]);
+    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Raffle", "Things to bring Things", "Log", "Declarations"]);
   });
 
   it("draw no «Clasament» for a role that cannot open the results — «Cronometrare» for every desk role — and say the tabs in English too", async () => {
@@ -321,7 +328,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     }
     state.actor = staff.MODERATOR;
     state.locale = "en";
-    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Things to bring Things", "Log"]);
+    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Things to bring Things", "Log", "Declarations"]);
   });
 
   it("carry no event, and draw no «Clasament», when no event takes entries", async () => {
@@ -331,6 +338,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
       { href: "/ro/admin/checkin/cronometrare", label: "Cronometrare Sosiri", current: false },
       { href: "/ro/admin/checkin/lucruri", label: "Lucruri de adus Lucruri", current: false },
       { href: "/ro/admin/checkin/jurnal", label: "Jurnal", current: false },
+      { href: "/ro/admin/checkin/declaratii", label: "Declarații", current: false },
     ]);
   });
 });
@@ -494,9 +502,10 @@ describe("§979 the top nav on «Lucruri de adus»", () => {
     const { activeAdminTabHref } = await import("@/modules/staff-identity/domain/admin-tab-match");
     const nav = [{ href: "/ro/admin" }, { href: "/ro/admin/checkin" }, { href: "/ro/admin/registrations" }];
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/lucruri")).toBe("/ro/admin/checkin");
-    // «Cronometrare» (§986) the same: under the desk's path — and «Jurnal» (§996).
+    // «Cronometrare» (§986) the same: under the desk's path — and «Jurnal» (§996), and «Declarații» (§1018).
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/cronometrare")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/jurnal")).toBe("/ro/admin/checkin");
+    expect(activeAdminTabHref(nav, "/ro/admin/checkin/declaratii")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/events/0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10/results")).toBe("/ro/admin");
   });
 });

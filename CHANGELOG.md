@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.88-2026-11-20
+
+- **«Ziua cursei» → «Declarații»** — the Organizer and the Administrators see every signed declaration of the race on one page, in the desk's folds by state with their counts: the number, the name, when, the signature (a minor's two), the version, who recorded a paper one and the fingerprint, each a tap from its PDF and its registration, searchable by name or number; no identity document on the page. §1018.
 ## BR-V4.87-2026-11-20
 
 - **«Anonim» → «Cu nume» at the desk, on the runner's word** — the desk row's eye is a button for every desk role: it asks first whether the person just said they want their name on the participant list and in the results, records it as theirs with who recorded it, and emails them at once with a one-tap way back; «Cu nume» → «Anonim» the same way, with no email; a name the club hid stays hidden. §1017.

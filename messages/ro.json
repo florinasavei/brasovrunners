@@ -7991,7 +7991,7 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Sus sunt taburile zilei cursei: „Prezența” (această masă), „Cronometrare” și „Lucruri de adus”; organizatorii au și „Clasament”, „Tombolă” și „Jurnal” (cine a scanat, cine a marcat prezent).",
+        "Sus sunt taburile: „Prezența” (această masă), „Cronometrare”, „Tombolă” și „Lucruri de adus”; organizatorii au și „Clasament”, „Jurnal” (cine a scanat, cine a marcat prezent) și „Declarații”.",
         "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
@@ -9812,6 +9812,18 @@
                 "„participantul” înseamnă că alergătorul a apăsat singur «Am ajuns — marchează-mă prezent» din linkul lui; „cont șters”, un cont scos de atunci din «Echipa».",
                 "«Cont» și «Ce s-a făcut» aleg ce vezi; apoi «Arată». Se văd cele mai noi 300 de rânduri, iar dedesubt câte mai sunt.",
                 "Ca jurnalul să numească omul, fiecare om de la masă are contul lui de Voluntar: nu folosiți un singur cont pe mai multe telefoane."
+              ]
+            },
+            {
+              "title": "Declarațiile semnate: «Declarații»",
+              "steps": [
+                "O deschid Organizatorul și Administratorii: «Ziua cursei» → «Declarații», apoi alege cursa la «Eveniment» și apasă «Caută».",
+                "Sus scrie câte declarații sunt semnate. Dedesubt, pe secțiuni după stare, ca la «Prezența»: «Confirmați», deschisă; apoi, închise, «De semnat din nou», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare» și «Anulate sau expirate». Lângă fiecare titlu, câți sunt; o secțiune fără nimeni nu apare.",
+                "Pe un rând fără număr de concurs scrie „—”: numărul apare doar după confirmare. Numărul unei înscrieri anulate sau expirate e tăiat.",
+                "Pe fiecare rând: numărul, numele, când a semnat, semnătura (la un minor, a lui și a părintelui), versiunea și amprenta. „pe hârtie, înregistrată de …” spune cine a înregistrat la masă o declarație pe hârtie.",
+                "Cauți pe cineva? La «Nume sau număr» scrie o parte din nume (merge și numele părintelui care a semnat pentru un minor) sau numărul de concurs și apasă «Caută».",
+                "«Declarația (PDF)» deschide declarația semnată; fiecare descărcare rămâne în istoricul înscrierii, cu numele tău. «Pagina înscrierii» duce la înscriere.",
+                "Actul de identitate nu e pe pagină, ca să nu-l vadă cine stă în fața mesei: e doar în PDF și pe pagina înscrierii."
               ]
             },
             {
@@ -13288,7 +13300,8 @@
         "raffle": "Tombolă",
         "timing": "Cronometrare",
         "timingShort": "Sosiri",
-        "journal": "Jurnal"
+        "journal": "Jurnal",
+        "declarations": "Declarații"
       },
       "items": {
         "title": "Lucruri de adus",
@@ -13396,6 +13409,30 @@
         },
         "empty": "Nimic încă la acest eveniment: niciun cod scanat, nimeni marcat prezent, niciun voluntar bifat.",
         "emptyFiltered": "Nimic pentru alegerea aceasta. Alege „Toate conturile” și „Tot”."
+      },
+      "declarations": {
+        "title": "Declarațiile semnate",
+        "intro": "Fiecare declarație semnată pentru evenimentul ales: cine, când, cum, versiunea și amprenta. Actul de identitate e doar în PDF.",
+        "count": {
+          "one": "{count} declarație semnată",
+          "few": "{count} declarații semnate",
+          "other": "{count} de declarații semnate"
+        },
+        "search": "Nume sau număr",
+        "searchHelp": "Scrie o parte din nume sau numărul de concurs. Fără nimic: toate declarațiile evenimentului.",
+        "sections": {
+          "confirmed": "Confirmați ({n})",
+          "unsigned": "De semnat din nou ({n})",
+          "addressUnconfirmed": "Adresă neconfirmată ({n})",
+          "offered": "Ofertă de loc deschisă ({n})",
+          "waitlisted": "Pe lista de așteptare ({n})",
+          "voided": "Anulate sau expirate ({n})"
+        },
+        "signedAt": "Semnată {when}",
+        "version": "versiunea {version}",
+        "pdf": "Declarația (PDF)",
+        "registration": "Pagina înscrierii",
+        "empty": "Nicio declarație semnată încă la acest eveniment."
       }
     },
     "raffle": {

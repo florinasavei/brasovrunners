@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.88` | «Ziua cursei» → «Declarații»: every signed declaration of the race, for the organizers (§1018) |
 | `BR-V4.87` | desk: «Anonim» → «Cu nume» on the runner's word, recorded and emailed with a one-tap undo (§1017) |
 | `BR-V4.86` | the public-list choice in a block of its own on the manage page and «Înscrierile mele» (§1016) |
 | `BR-V4.85` | «PR Kit» in the backoffice for every role: logo kit, sticker sheets, YouTube poster (§1015) |
