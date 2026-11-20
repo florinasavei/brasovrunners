@@ -300,7 +300,7 @@ export const PANEL_GLYPHS = {
   // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,
   importCsv: UploadFileIcon,
-  // «PR Kit» (§NNN): the club's mark on a page for «Logo», the scissors of the cut lines for «Autocolante», a screen with the
+  // «PR Kit» (§1015): the club's mark on a page for «Logo», the scissors of the cut lines for «Autocolante», a screen with the
   // play triangle for «Afiș YouTube», and «Aspect»'s own palette for «Culori» — the same subject, the club's colours.
   prLogo: BrandingWatermarkIcon,
   prStickers: ContentCutIcon,

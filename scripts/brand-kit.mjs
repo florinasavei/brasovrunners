@@ -1,5 +1,5 @@
 /**
- * The «PR Kit»'s logo files (§NNN): the club's lockup and its mountains alone, each in the palette's primary, in white
+ * The «PR Kit»'s logo files (§1015): the club's lockup and its mountains alone, each in the palette's primary, in white
  * and in black, as an SVG with a measured margin and an explicit size — so no viewer clips the lockup's last letter, as
  * a frame drawn tight to the artwork lets Word, Canva and some print shops' tools do. `scripts/brand-assets.mjs`
  * writes them, and a PNG of each, into `public/brand/kit/`; `brand-assets-lock.mjs` locks their sha256 beside the

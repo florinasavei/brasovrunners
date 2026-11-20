@@ -4,7 +4,7 @@ import { KIT_MARGIN, type LogoInk, type LogoShape, logoFileName } from "./domain
 import type { Box } from "./domain/sheets";
 
 /**
- * The kit's logo as vector paths (§NNN), read from the file `yarn brand:assets` wrote (`public/brand/kit/`,
+ * The kit's logo as vector paths (§1015), read from the file `yarn brand:assets` wrote (`public/brand/kit/`,
  * `scripts/brand-kit.mjs`): its frame, the drawing inside it, the group's translation and each path's data and fill rule —
  * what pdfkit's `doc.path()` draws the PDFs from, so the logo on a sticker, on the poster and in the logo's own PDF is the
  * very artwork of the SVG beside it, never a raster.

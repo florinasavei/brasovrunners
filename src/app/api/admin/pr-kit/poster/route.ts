@@ -9,7 +9,7 @@ import { env } from "@/shared/config/env";
 import { CLUB_HASHTAGS } from "@/theme/brand";
 
 /**
- * «PR Kit» → «Afiș YouTube» (§NNN): the A4 poster as a PDF, drawn on request — `GET /api/admin/pr-kit/poster?locale=ro` — its
+ * «PR Kit» → «Afiș YouTube» (§1015): the A4 poster as a PDF, drawn on request — `GET /api/admin/pr-kit/poster?locale=ro` — its
  * code to the club's channel, `CLUB_YOUTUBE_URL`, its words in `locale`'s language, the club's hashtags at its foot. While the
  * variable is not set there is no poster: not found here, and one line on the page saying where it is set.
  *

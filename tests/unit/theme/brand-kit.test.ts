@@ -20,7 +20,7 @@ import {
 import { parseKitSvg } from "@/modules/pr-kit/logo-vector";
 
 /**
- * BR-REQ-101-01 (§885, §NNN) — the «PR Kit»'s logo files are the club's lockup as `yarn brand:assets` measured and wrote it.
+ * BR-REQ-101-01 (§885, §1015) — the «PR Kit»'s logo files are the club's lockup as `yarn brand:assets` measured and wrote it.
  *
  * - **Measured, never guessed**: the drawing's box comes from the path data itself — every segment's ends, every curve's and
  *   arc's turning points — under the group's translation; this club's lockup measures 73.04 → 2926.96 across and
@@ -40,7 +40,7 @@ const measured = measureLogo(source, club.logo.mark.viewBox);
 
 const close = (actual: number[], expected: number[], digits = 2) => actual.forEach((value, index) => expect(value, `[${index}]`).toBeCloseTo(expected[index], digits));
 
-describe("BR-REQ-101-01 §NNN the logo's drawing, measured from its path data", () => {
+describe("BR-REQ-101-01 §1015 the logo's drawing, measured from its path data", () => {
   it("measures lines, both Béziers, their smooth forms and arcs exactly, absolute or relative", () => {
     expect(pathBounds("M0 0 H10 V5 H0 Z")).toEqual([0, 0, 10, 5]);
     expect(pathBounds("m 2,3 l 4,0 0,4 -4,0 z")).toEqual([2, 3, 6, 7]);
@@ -76,7 +76,7 @@ describe("BR-REQ-101-01 §NNN the logo's drawing, measured from its path data", 
   });
 });
 
-describe("BR-REQ-101-01 §NNN the kit's committed files", () => {
+describe("BR-REQ-101-01 §1015 the kit's committed files", () => {
   for (const shape of ["lockup", "mountains"] as const) {
     for (const { key: ink, hex } of kitColours(club.palette)) {
       const svgName = kitFileName(club.slug, shape, ink, "svg");

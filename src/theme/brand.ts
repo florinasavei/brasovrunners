@@ -411,7 +411,7 @@ export const SHEET_FRAME = {
 } as const;
 
 /**
- * The «PR Kit»'s print colours (§NNN): the logo's three inks — the club's primary, white for a dark ground or a photograph,
+ * The «PR Kit»'s print colours (§1015): the logo's three inks — the club's primary, white for a dark ground or a photograph,
  * black for a print in one ink — which `scripts/brand-assets.mjs` writes the kit's files in too; the paper and the codes'
  * black on it; the sticker sheets' light-grey cut line on paper and white on the primary; and YouTube's own red under the
  * poster's play button, with its white triangle — a provider's mark keeps its colours, as `PROVIDER_LOGO`'s do. The

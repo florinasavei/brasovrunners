@@ -28,14 +28,14 @@ import {
 import { CLUB_SLUG, PALETTE } from "@/theme/brand";
 
 /**
- * §NNN — «PR Kit»: what the kit holds and what every file is called.
+ * §1015 — «PR Kit»: what the kit holds and what every file is called.
  *
  * Every download is named from the club's slug (`club.json`, read through `brand.ts`), never a literal — so a fork's files carry
  * the fork's name — and the app's names are the very names `yarn brand:assets` writes (`scripts/brand-kit.mjs`), shape by shape,
  * ink by ink. The address under a code is the site's address as a person reads it: no scheme, no `www.`, no closing slash —
  * the code keeps the whole one. And the club's colour is the palette's primary, as hex and as RGB.
  */
-describe("§NNN the PR kit's files and names", () => {
+describe("§1015 the PR kit's files and names", () => {
   it("names every file from the club's slug", () => {
     for (const { shape, ink } of logoVariants()) {
       for (const format of LOGO_FORMATS) expect(logoFileName(shape, ink, format).startsWith(`${CLUB_SLUG}-`), `${shape} ${ink} ${format}`).toBe(true);

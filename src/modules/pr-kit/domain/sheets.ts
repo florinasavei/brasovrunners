@@ -1,7 +1,7 @@
 import type { StickerSheetKey } from "./kit";
 
 /**
- * The sticker sheets' geometry (§NNN), in millimetres — the owner's approved sheets of 2026-11-20, reproduced: an A4 page, 9 mm
+ * The sticker sheets' geometry (§1015), in millimetres — the owner's approved sheets of 2026-11-20, reproduced: an A4 page, 9 mm
  * margins left and right and 8 mm top and bottom, the stickers in a grid filling the rest, a light-grey dashed line on every
  * cut. Pure, so `tests/unit/pr-kit/sheets.test.ts` can hold every sheet to it without drawing one.
  *

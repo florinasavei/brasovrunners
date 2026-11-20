@@ -1,7 +1,7 @@
 import { CLUB_SLUG, PR_KIT_COLOURS } from "@/theme/brand";
 
 /**
- * «PR Kit» (§NNN; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we can download it
+ * «PR Kit» (§1015; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we can download it
  * at any time, even the volunteers can do that»): what the kit holds and what each file is called — pure, so the page, the
  * routes and the tests read one list.
  *
@@ -86,7 +86,7 @@ export function posterFileName(locale: string, slug: string = CLUB_SLUG): string
 }
 
 /**
- * An address as a person reads it under a code (§NNN): no scheme, no `www.`, no closing slash — the site's address prints as
+ * An address as a person reads it under a code (§1015): no scheme, no `www.`, no closing slash — the site's address prints as
  * its host alone, a channel's as its host and its handle. The code itself keeps the whole address.
  */
 export function shownAddress(url: string): string {

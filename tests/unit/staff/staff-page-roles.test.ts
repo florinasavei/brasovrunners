@@ -145,7 +145,7 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
     expect(inviteSelects).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
   });
 
-  it("says under the invitation's role what the volunteer's bar holds: the race day and «PR Kit» (§NNN)", () => {
+  it("says under the invitation's role what the volunteer's bar holds: the race day and «PR Kit» (§1015)", () => {
     // The bar offers a Voluntar «Ziua cursei», «PR Kit», «Ghid»; the picker said «doar ziua cursei» and ended the line «Atât.».
     expect(visibleAdminSections("CONTRIBUTOR")).toContain("prKit");
     const select = page.invite.find((element) => element.props.name === "role" && element.props.select === true)!;

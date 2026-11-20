@@ -51,7 +51,7 @@ const FORMAT_ICON = { svg: "download", png: "download", pdf: "pdf" } as const sa
 const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
 
 /**
- * «PR Kit» (§NNN; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we can download it
+ * «PR Kit» (§1015; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we can download it
  * at any time, even the volunteers can do that»): the club's logo files, the sticker sheets and the YouTube poster, and the
  * club's colour for a print shop — for every backoffice role, the volunteers included (`canWorkTheDesk`), asserted here and
  * again by every route a link below leads to (`modules/pr-kit/http.ts`, BR-REQ-060-01). The team's undertaking (§1006) stands

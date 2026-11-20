@@ -1123,7 +1123,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *                                             §450; a Superadministrator's row is not (canManageMember)
  *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
  *                                             `canWriteLegalTexts` (§450)
- *     prKit          canWorkTheDesk           `admin/pr-kit/page.tsx` — «PR Kit» (§NNN): the logo files, the
+ *     prKit          canWorkTheDesk           `admin/pr-kit/page.tsx` — «PR Kit» (§1015): the logo files, the
  *                                             sticker sheets and the YouTube poster, every role; its routes ask again
  *     guide          every staff session      `admin/guide/page.tsx`
  *
@@ -1135,7 +1135,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *
  * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, the shop
- * (§687), then the settings, what is owed, the team, the legal texts, the «PR Kit» (§NNN) and the
+ * (§687), then the settings, what is owed, the team, the legal texts, the «PR Kit» (§1015) and the
  * guide. A role is offered the same order with its own gaps — the volunteer's bar is «Ziua cursei»,
  * «PR Kit», «Ghid», and «Ziua cursei», «Magazin», «PR Kit», «Ghid» for a volunteer who runs the shop.
  *
@@ -1273,7 +1273,7 @@ export function visibleAdminSections(subject: StaffSubject): AdminSection[] {
     // the Administrator writes one (§46, §181, §203).
     legal: canReadContent(role),
     /*
-      «PR Kit» (§NNN; the owner, 2026-11-20: «so we can download it at any time, even the volunteers can do that»): the
+      «PR Kit» (§1015; the owner, 2026-11-20: «so we can download it at any time, even the volunteers can do that»): the
       club's logo files, the sticker sheets and the YouTube poster, for every backoffice role — the volunteer's bar is
       «Ziua cursei», «PR Kit», «Ghid». The page and its routes ask the same gate again (`admin/pr-kit/page.tsx`,
       `modules/pr-kit/http.ts`).

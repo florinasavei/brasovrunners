@@ -5,7 +5,7 @@ import { codeMatrix, drawCode, drawLogo, fittedSize, kitDocument, textLine } fro
 import { readLogoVector } from "./logo-vector";
 
 /**
- * «Autocolante» (§NNN): one A4 sheet of stickers as a PDF, drawn on request — the owner's approved sheets of 2026-11-20,
+ * «Autocolante» (§1015): one A4 sheet of stickers as a PDF, drawn on request — the owner's approved sheets of 2026-11-20,
  * reproduced with pdfkit. Two carry a code to the site, the address from `APP_BASE_URL` printed under it without its scheme
  * (error correction M, four modules of quiet zone inside every sticker, `sheets.ts`); four carry the logo alone, one of them
  * white on the club's primary. The logo is the kit's own vector paths and the code vector squares, so the sheet prints sharp at

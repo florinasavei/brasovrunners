@@ -284,7 +284,7 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
-    /** «PR Kit» (§NNN): the club's logo files, the sticker sheets and the YouTube poster, for every backoffice role. */
+    /** «PR Kit» (§1015): the club's logo files, the sticker sheets and the YouTube poster, for every backoffice role. */
     "/admin/pr-kit": "/admin/pr-kit",
     /**
      * The team's undertaking (§1006): where a colleague below the Administrator reads and accepts it before the backoffice opens

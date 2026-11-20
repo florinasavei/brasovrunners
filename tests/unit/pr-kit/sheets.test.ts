@@ -19,7 +19,7 @@ import {
 } from "@/modules/pr-kit/domain/sheets";
 
 /**
- * §NNN — «PR Kit» → «Autocolante»: the six A4 sheets' geometry, as the owner approved them on 2026-11-20, without drawing one.
+ * §1015 — «PR Kit» → «Autocolante»: the six A4 sheets' geometry, as the owner approved them on 2026-11-20, without drawing one.
  *
  * Every sticker lies inside the page's margins (9 mm left and right, 8 mm top and bottom); the cells tile the grid with nothing
  * between them; and on the two sheets with a code, the code's **quiet zone — four modules on every side — lies inside its
@@ -33,7 +33,7 @@ const ASPECTS = { lockup: 1162.459 / 2853.918, square: 1 };
 
 const sheets = STICKER_SHEET_KEYS.map((key) => STICKER_SHEETS[key]);
 
-describe("§NNN the sticker sheets' geometry", () => {
+describe("§1015 the sticker sheets' geometry", () => {
   it("holds the six sheets, named by their counts", () => {
     expect(sheets.map((sheet) => [sheet.key, stickerCount(sheet), sheet.cols, sheet.rows])).toEqual([
       ["qr-12", 12, 3, 4],

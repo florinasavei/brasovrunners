@@ -3,7 +3,7 @@ import { POSTER_FRAME, posterLayout } from "@/modules/pr-kit/domain/poster";
 import { A4_MM, type Box, contains, overlaps, QUIET_ZONE_MODULES, quietZone } from "@/modules/pr-kit/domain/sheets";
 
 /**
- * §NNN — «PR Kit» → «Afiș YouTube»: the A4 poster's geometry, as the owner approved it on 2026-11-20.
+ * §1015 — «PR Kit» → «Afiș YouTube»: the A4 poster's geometry, as the owner approved it on 2026-11-20.
  *
  * The frame stands 7 mm in from the edge; everything else stands inside it, top to bottom in the approved order, nothing over
  * anything; and the code keeps its **quiet zone of four modules** clear of the card's border and of the tab on its top edge —
@@ -20,7 +20,7 @@ function inner(frame: Box): Box {
   return { x: frame.x + half, y: frame.y + half, width: frame.width - POSTER_FRAME.stroke, height: frame.height - POSTER_FRAME.stroke };
 }
 
-describe("§NNN the YouTube poster's geometry", () => {
+describe("§1015 the YouTube poster's geometry", () => {
   it("frames the page 7 mm in from its edge", () => {
     const { frame } = posterLayout({ modules: 33, leadLines: 2, logoAspect: LOCKUP, ...WIDTHS });
     const half = POSTER_FRAME.stroke / 2;

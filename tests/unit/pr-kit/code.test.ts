@@ -5,7 +5,7 @@ import { mm } from "@/modules/pr-kit/domain/sheets";
 import { codeMatrix, drawCode } from "@/modules/pr-kit/draw";
 
 /**
- * §NNN — the «PR Kit»'s codes are drawn as vector squares from `qrcode`'s matrix, never pasted as a picture. A code drawn
+ * §1015 — the «PR Kit»'s codes are drawn as vector squares from `qrcode`'s matrix, never pasted as a picture. A code drawn
  * transposed or mirrored still shows its three finder squares in three corners and reads as nothing: so every dark module the
  * sheets and the poster draw is checked against the library's own picture of the same address, module for module, and every
  * light one against its light — error correction M (the stickers) and Q (the poster).
@@ -41,7 +41,7 @@ function drawn(url: string, level: "M" | "Q") {
   return { size: matrix.size, dark, rects };
 }
 
-describe("§NNN the codes, drawn module by module", () => {
+describe("§1015 the codes, drawn module by module", () => {
   for (const url of ["https://example.org", "https://qa.example-club.org", "https://www.youtube.com/@example-club"]) {
     for (const level of ["M", "Q"] as const) {
       it(`draws ${url} at ${level} as qrcode's own picture of it`, async () => {

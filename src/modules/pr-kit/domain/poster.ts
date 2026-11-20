@@ -1,7 +1,7 @@
 import { A4_MM, type Box, QUIET_ZONE_MODULES, TEXT_METRICS, fitInside } from "./sheets";
 
 /**
- * The YouTube poster's geometry (§NNN), in millimetres: the owner's approved A4 of 2026-11-20 — the logo; «Suntem pe» over a
+ * The YouTube poster's geometry (§1015), in millimetres: the owner's approved A4 of 2026-11-20 — the logo; «Suntem pe» over a
  * red rounded play button beside «YouTube»; one line saying what the channel holds; the code in a card framed in the primary,
  * a «SCANEAZĂ-MĂ» tab on its top edge; how to scan it; the address without its scheme; the club's hashtags at the foot; a
  * rounded frame in the primary 7 mm in from the edge.

@@ -7,7 +7,7 @@ import { type Box, mm } from "./domain/sheets";
 import type { LogoVector } from "./logo-vector";
 
 /**
- * What the «PR Kit»'s PDFs share (§NNN): a document with the site's Roboto, collected into one buffer; the logo drawn from its
+ * What the «PR Kit»'s PDFs share (§1015): a document with the site's Roboto, collected into one buffer; the logo drawn from its
  * vector paths (`logo-vector.ts`); a code drawn module by module from `qrcode`'s matrix, never a picture — so a print shop
  * enlarges either without a soft edge. Every size in here is in millimetres and turned into points at the last moment.
  */

@@ -244,7 +244,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/pages/team",
       // «Unelte» (§926): the page's switch and its tools' ticks, one screen by hand.
       "/admin/pages/tools",
-      // «PR Kit» (§NNN): the logo files, the sticker sheets and the YouTube poster for every role, one screen by hand.
+      // «PR Kit» (§1015): the logo files, the sticker sheets and the YouTube poster for every role, one screen by hand.
       "/admin/pr-kit",
       "/admin/registrations",
       "/admin/registrations/[id]",

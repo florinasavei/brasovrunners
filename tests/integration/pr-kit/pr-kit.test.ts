@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — «PR Kit» (the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
+ * BR-REQ-060-01, §1015 — «PR Kit» (the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
  * can download it at any time, even the volunteers can do that»), through the real page, the real shell and the real routes:
  *
  * - «PR Kit» stands in the top bar of every backoffice role — the «Voluntar» too — just before «Ghid», wearing its glyph;
@@ -174,7 +174,7 @@ async function pageHtml(locale: "ro" | "en" = "ro"): Promise<string> {
   return renderToStaticMarkup(tree).replace(/<style\b[\s\S]*?<\/style>/g, "");
 }
 
-describe("BR-REQ-060-01 §NNN «PR Kit» in the top bar, for every backoffice role", () => {
+describe("BR-REQ-060-01 §1015 «PR Kit» in the top bar, for every backoffice role", () => {
   for (const role of BACKOFFICE_ROLES) {
     it(`${role}: «PR Kit» just before «Ghid», to /admin/pr-kit`, async () => {
       const tabs = await tabsFor(role);
@@ -198,7 +198,7 @@ describe("BR-REQ-060-01 §NNN «PR Kit» in the top bar, for every backoffice ro
   });
 });
 
-describe("BR-REQ-060-01 §NNN the «PR Kit» page", () => {
+describe("BR-REQ-060-01 §1015 the «PR Kit» page", () => {
   for (const role of ["CONTRIBUTOR", "ADMIN"] as const) {
     it(`${role}: lists the logo in two shapes and three inks, the six sheets, the poster and the colour`, async () => {
       state.actor = actor(role);
@@ -247,7 +247,7 @@ describe("BR-REQ-060-01 §NNN the «PR Kit» page", () => {
   });
 });
 
-describe("BR-REQ-060-01 §NNN the routes refuse on the server", () => {
+describe("BR-REQ-060-01 §1015 the routes refuse on the server", () => {
   const every = () => [logo(logoFileName("lockup", "primary", "svg")), logo(logoFileName("mountains", "white", "pdf")), stickers("qr-12"), poster()];
 
   it("without a staff session: UNAUTHENTICATED, 401", async () => {
@@ -289,7 +289,7 @@ describe("BR-REQ-060-01 §NNN the routes refuse on the server", () => {
   });
 });
 
-describe("§NNN the files", () => {
+describe("§1015 the files", () => {
   for (const sheet of STICKER_SHEET_KEYS) {
     it(`«${sheet}»: a one-page A4 PDF named by its count`, async () => {
       const response = await stickers(sheet);

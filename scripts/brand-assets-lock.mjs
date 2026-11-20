@@ -10,7 +10,7 @@ import { KIT_DIR, kitFiles } from "./brand-kit.mjs";
  * builds; `tests/unit/theme/brand-assets-lock.test.ts` computes it again and fails with «run yarn brand:assets»
  * when a source or a colour moved and the rasters did not.
  *
- * Since §NNN it locks the «PR Kit»'s logo files too (`brand-kit.mjs`): each SVG and PNG in `public/brand/kit/`,
+ * Since §1015 it locks the «PR Kit»'s logo files too (`brand-kit.mjs`): each SVG and PNG in `public/brand/kit/`,
  * named from the club's slug, by its sha256 — an SVG's text with LF endings, a PNG's bytes as they are — so a kit
  * file changed or left behind without the script fails the same test.
  */
@@ -25,7 +25,7 @@ export function clubConfig(root) {
 
 /**
  * The club's palette, as the script paints with it: `tints.emailBand` behind the white lockup (the primary when the
- * club leaves it out), the primary's ink for the glyph, and the primary itself — the kit's coloured logo (§NNN) — the
+ * club leaves it out), the primary's ink for the glyph, and the primary itself — the kit's coloured logo (§1015) — the
  * colours the committed rasters hold, which the lock test reads back from the PNGs themselves.
  */
 export function brandColours(root) {

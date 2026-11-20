@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-060-01, BR-REQ-041-01 criteria 1 and 6, §NNN — «PR Kit» for the volunteers too (the owner, 2026-11-20: «also put them
+ * BR-REQ-060-01, BR-REQ-041-01 criteria 1 and 6, §1015 — «PR Kit» for the volunteers too (the owner, 2026-11-20: «also put them
  * in the backoffice website and call it "PR Kit" so we can download it at any time, even the volunteers can do that»), on a
  * production build, at 320 pixels and on a desktop:
  *
@@ -16,7 +16,7 @@ async function fitsTheScreen(page: Page): Promise<void> {
   expect(overflow, "horizontal overflow").toBeLessThanOrEqual(0);
 }
 
-test.describe("§NNN «PR Kit» for a volunteer", () => {
+test.describe("§1015 «PR Kit» for a volunteer", () => {
   test("a «Voluntar» opens «PR Kit» from the top bar and saves a sticker sheet as a PDF", async ({ page }) => {
     await signIn(page, "Dev Contributor");
     await page.getByRole("tab", { name: "PR Kit" }).click();

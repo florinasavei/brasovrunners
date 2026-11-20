@@ -17,7 +17,7 @@ import { KIT_DIR, KIT_PNG_WIDTH, KIT_SHAPES, inPixels, kitColours, kitFileName, 
  * sources to, so a changed source without a rebuild fails the tests. `--lock-only` writes the lock alone,
  * for a change that moved nothing the rasters are drawn from.
  *
- * It also writes the «PR Kit»'s logo files (§NNN, `brand-kit.mjs`): the lockup and its mountains in the primary, white
+ * It also writes the «PR Kit»'s logo files (§1015, `brand-kit.mjs`): the lockup and its mountains in the primary, white
  * and black, as padded SVGs with an explicit size and 4000-pixel PNGs, in `public/brand/kit/`, locked by their sha256.
  */
 
@@ -153,7 +153,7 @@ for (const { name, crop, pad } of lockOnly ? [] : SQUARES) {
 }
 
 /*
-  The «PR Kit»'s logo files (§NNN; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
+  The «PR Kit»'s logo files (§1015; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
   can download it at any time, even the volunteers can do that»), in `public/brand/kit/`: the lockup and its mountains alone,
   each in the palette's primary, in white and in black — an SVG whose frame is 4 % outside the drawing as measured from its own
   path data, 200 mm wide with its height written out, and a transparent PNG 4000 pixels wide drawn from that SVG. Named from

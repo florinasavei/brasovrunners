@@ -38,7 +38,7 @@ describe("BR-REQ-101-01: the brand rasters are built from today's sources (§885
   });
 
   /*
-    §NNN: the «PR Kit»'s logo files, named from the club's slug, each by its sha256 — so a kit file edited by hand, or one left
+    §1015: the «PR Kit»'s logo files, named from the club's slug, each by its sha256 — so a kit file edited by hand, or one left
     from a slug that changed, fails here as a source changed without a rebuild does.
   */
   it("locks every file of the PR kit, named from the club's slug, and nothing else", () => {

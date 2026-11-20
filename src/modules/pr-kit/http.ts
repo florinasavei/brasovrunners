@@ -5,7 +5,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { contentDisposition } from "@/shared/http/content-disposition";
 
 /**
- * The «PR Kit»'s door (§NNN), asked by every one of its routes on the server whatever the page drew (BR-REQ-060-01): a staff
+ * The «PR Kit»'s door (§1015), asked by every one of its routes on the server whatever the page drew (BR-REQ-060-01): a staff
  * session that works the desk (`canWorkTheDesk`) — every backoffice role, the volunteers included, never a club member. No
  * session is `UNAUTHENTICATED` (401); a role that may not, or a colleague who still owes the team's undertaking (§1006), is
  * `FORBIDDEN` (403). `null` lets the request through.

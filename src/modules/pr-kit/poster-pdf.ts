@@ -12,7 +12,7 @@ export type PosterWords = { kicker: string; brand: string; lead: string; tab: st
 const SPACING = { kicker: -0.3, brand: -0.6 } as const;
 
 /**
- * «Afiș YouTube» (§NNN): the owner's approved A4 poster of 2026-11-20, reproduced with pdfkit — the club's logo; «Suntem pe»
+ * «Afiș YouTube» (§1015): the owner's approved A4 poster of 2026-11-20, reproduced with pdfkit — the club's logo; «Suntem pe»
  * over YouTube's red play button beside «YouTube»; what the channel holds; the code to `CLUB_YOUTUBE_URL` in a white card
  * framed in the primary, «SCANEAZĂ-MĂ» on its top edge; how to scan it; the address without its scheme; the club's hashtags;
  * a rounded frame in the primary 7 mm in from the edge. Error correction Q, as the approved poster's: a poster on a wall gets

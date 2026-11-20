@@ -290,7 +290,7 @@ export type ActionIconName =
   // «Clasament»'s «Timp» and «Timp cip» (§999): the clock face on the button beside each box that opens the page's one clock
   // picker — a time picked, never the stopwatch of «Cronometrare», which keeps one.
   | "pickTime"
-  // «PR Kit» (§NNN): the tab's glyph — a brand's swatches and its brush, the club's look to take away; never the loudspeaker of
+  // «PR Kit» (§1015): the tab's glyph — a brand's swatches and its brush, the club's look to take away; never the loudspeaker of
   // «Trimite un mesaj participanților», which is a message, nor the palette of «Aspect», which is the site's own settings.
   | "prKit";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,

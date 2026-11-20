@@ -427,7 +427,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives each role the sections it may open and nothing it may not", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
     // volunteer's whole backoffice: a person handing out numbers is not offered the events. «PR Kit»
-    // (§NNN) is every role's too — the owner: «even the volunteers can do that».
+    // (§1015) is every role's too — the owner: «even the volunteers can do that».
     expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "prKit", "guide"]);
     // A club member (§524) has no backoffice at all: not one section, not even the guide — the
     // session answers "no staff" for them before any section is asked (`session.ts`).

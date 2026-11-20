@@ -130,7 +130,7 @@ const nextConfig: NextConfig = {
     "/[locale]/devs/docs/**": ["./*.md", "./docs/*.md"],
     // `/admin/tasks`'s "Aplicația" / "The app" panel reads `docs/QUEUE.md` the same way (§397).
     "/[locale]/admin/tasks/**": ["./docs/QUEUE.md"],
-    // «PR Kit» (§NNN): the logo's files, read by a name chosen at runtime, and the font its PDFs set their words in.
+    // «PR Kit» (§1015): the logo's files, read by a name chosen at runtime, and the font its PDFs set their words in.
     "/api/admin/pr-kit/**": ["./public/brand/kit/*", "./src/theme/pdf/Roboto-*.ttf"],
   },
 
