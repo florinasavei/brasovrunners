@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.91-2026-11-20
+
+- **The desk's eye says what it does** — beside «Cu nume» / «Anonim», the button reads «Afișează numele în clasament» or «Ascunde numele din clasament», asked first as before. §1022.
 ## BR-V4.90-2026-11-20
 
 - **The team's and the members' invitation leaves a minute and a half after Zitadel's** — the press that asked Zitadel for the account sends the club's email itself, ninety seconds after Zitadel answered, whatever «Când pleacă emailurile» says; the email, «Echipa»'s lines, the dialog and the toast say Zitadel's comes first, and nothing waits when no email of Zitadel's is coming. §1021.

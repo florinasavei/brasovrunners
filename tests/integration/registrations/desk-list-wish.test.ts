@@ -178,7 +178,7 @@ async function eyeOf(id: string, role: StaffRole | undefined, over: { readOnly?:
   const row = await deskRowOf(id);
   const all = elements(await DeskRow({ row, locale: "ro", back: "desk", eventId: raceId, minorSigns: { ro: false, en: false }, ...(role ? { role } : {}), ...over }));
   const form = all.find((element) => element.props["data-testid"] === "desk-site-name-form");
-  const button = all.find((element) => element.props["data-testid"] === "desk-site-name");
+  const button = all.find((element) => element.props["data-testid"] === "desk-site-name-press");
   const chip = all.find((element) => element.props.testId === "desk-site-name");
   const club = all.find((element) => element.props["data-testid"] === "desk-site-name-club");
   const listed = form ? elements(form.props.children).find((element) => element.props.name === "listed")?.props.value : undefined;
@@ -472,7 +472,9 @@ describe("§1017 the club's hide stands (§910)", () => {
     expect((await listPublicStartList(db, raceId)).map((entry) => entry.displayName)).not.toContain(elite.displayName);
 
     const eye = await eyeOf(elite.id, "CONTRIBUTOR");
-    expect(eye.press?.words).toBe(ro.Admin.desk.siteAnonymous);
+    // The chip says the state, the button the action: the person's own wish is «Cu nume», so the press hides (2026-11-20).
+    expect(eye.chip).toEqual({ label: "Anonim", glyph: "hidden" });
+    expect(eye.press?.words).toBe(ro.Admin.desk.siteWish.hideButton);
     expect(eye.club).toBe(ro.Admin.desk.siteWish.clubHiddenNamed);
     // The press is the person's own wish the other way now: hiding.
     expect(eye.press?.listed).toBe("0");
@@ -481,12 +483,12 @@ describe("§1017 the club's hide stands (§910)", () => {
 });
 
 describe("§1017 the eye on the row", () => {
-  it("is a press for every desk role — 44 pixels, asking first, naming the person and the email — and the chip for no role", async () => {
+  it("is a press for every desk role — 44 pixels, saying its action, asking first, naming the person and the email — beside the state's chip", async () => {
     const ana = await anonymousRunner("Ana Ochi");
     for (const role of DESK_ROLES) {
       const eye = await eyeOf(ana.id, role);
-      expect(eye.chip, role).toBeNull();
-      expect(eye.press, role).toMatchObject({ words: "Anonim", icon: "siteAnonymous", listed: "1", minHeight: 44 });
+      expect(eye.chip, role).toEqual({ label: "Anonim", glyph: "hidden" });
+      expect(eye.press, role).toMatchObject({ words: "Afișează numele în clasament", icon: "siteNamed", listed: "1", minHeight: 44 });
       expect(eye.press?.question, role).toMatchObject({
         title: ro.Admin.desk.siteWish.showTitle.replace("{name}", "Ana Ochi"),
         body: "Numele apare pe site; persoana primește un email și poate retrage oricând.",
@@ -506,7 +508,8 @@ describe("§1017 the eye on the row", () => {
     const ana = await anonymousRunner("Ana După Apăsare");
     await recordListWishAtDesk(db, actor, ana.id, true, NOW);
     const eye = await eyeOf(ana.id, "CONTRIBUTOR");
-    expect(eye.press).toMatchObject({ words: "Cu nume", icon: "siteNamed", listed: "0" });
+    expect(eye.chip).toEqual({ label: "Cu nume", glyph: "visible" });
+    expect(eye.press).toMatchObject({ words: "Ascunde numele din clasament", icon: "siteAnonymous", listed: "0" });
     expect(eye.press?.question).toMatchObject({ title: "Ana După Apăsare a cerut să nu mai apară cu numele?", confirmLabel: "Da — ascunde numele" });
     expect(String(eye.press?.question.email)).toContain("Nu pleacă niciun email");
 
@@ -528,6 +531,8 @@ describe("§1017 the eye on the row", () => {
 
   it("speaks English too", async () => {
     expect(en.Admin.desk.siteWish.showConfirm).toBe("Yes, they said so — show on the site");
+    expect(en.Admin.desk.siteWish.showButton).toBe("Show the name in the results");
+    expect(en.Admin.desk.siteWish.hideButton).toBe("Hide the name from the results");
     expect(en.Admin.desk.siteWish.cancel).toBe("Cancel");
     for (const catalogue of [ro, en]) {
       for (const [key, words] of Object.entries(catalogue.Admin.desk.siteWish)) expect(words.length, key).toBeLessThanOrEqual(200);
