@@ -3,8 +3,6 @@ import DrawIcon from "@mui/icons-material/Draw";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -23,8 +21,14 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { confirmByKey } from "@/modules/registrations/domain/unsigned-release";
-import { readMyRegistrations } from "@/modules/registrations/my-registrations";
-import { cachedAddressCap, cachedFamilyRegistrationOpen, cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
+import { readMyRegistrations, type MyRegistration } from "@/modules/registrations/my-registrations";
+import {
+  cachedAddressCap,
+  cachedFamilyRegistrationOpen,
+  cachedFirstResultsNameAskNoticeVersion,
+  cachedFirstResultsNoticeVersion,
+  cachedPromotionalMaterialsOffered,
+} from "@/modules/public-cache/reads";
 import { countForm } from "@/i18n/count-form";
 import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
 import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
@@ -49,6 +53,8 @@ import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName"
 import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
 import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
 import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
+import { listChoiceState } from "@/modules/registrations/domain/list-choice";
+import PublicListChoice, { type PublicListChoiceWords } from "@/modules/registrations/ui/PublicListChoice";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -207,6 +213,41 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
         .map((eventId) => context.items.filter((item) => item.eventId === eventId && isSignable(item.status)))
         .filter((items) => items.length > 1)
     : [];
+
+  /*
+    «Lista publică și clasamentul» (§NNN): the registration's own page's block, per registration — its sentence by the one rule
+    (`listChoiceState`), from the event's type and the notices that describe the results (cached, read only while the page lists
+    somebody), and, off the list, the label the public list prints instead of a name, read from the list's own words.
+  */
+  const listing = context.ok && context.items.length > 0;
+  const firstResults = listing ? await cachedFirstResultsNoticeVersion() : null;
+  const resultsAskLine = context.ok && context.items.some((item) => item.resultsNameConsent) ? await cachedFirstResultsNameAskNoticeVersion() : null;
+  const tEvent = listing ? await getTranslations("Event") : null;
+  const listChoiceWords = (item: MyRegistration): PublicListChoiceWords => {
+    const state = listChoiceState({
+      listed: item.listed,
+      eventType: item.eventType,
+      privacyNoticeVersion: item.privacyNoticeVersion,
+      resultsNameConsent: item.resultsNameConsent,
+      resultsConsentVersion: item.resultsConsentVersion,
+      firstResultsNoticeVersion: firstResults,
+      firstResultsNameAskNoticeVersion: resultsAskLine,
+    });
+    return {
+      title: t("list.choice.title"),
+      state:
+        state === "listedWithResults"
+          ? t("list.choice.listedWithResults")
+          : state === "listed"
+            ? t("list.choice.listed")
+            : t("list.choice.notListed", { anonymous: tEvent ? tEvent("startList.anonymous") : "" }),
+      press: item.listed ? t("list.choice.optOut") : t("list.optIn"),
+      pressing: t("list.choice.saving"),
+      help: t("list.choice.helpMine"),
+      changed: t("list.changed"),
+      failed: t("list.failed"),
+    };
+  };
 
   /** The declaration's line under one person (§519), or null where there is nothing to say (cancelled). */
   const declarationLine = (item: { status: Parameters<typeof declarationStateKey>[0]; declarationSignedAt: Date | null; eventTimezone: string }) => {
@@ -432,9 +473,10 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 </Box>
               )}
 
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-                {item.status === "CONFIRMED" &&
-                  (here === item.id || item.checkedInAt ? (
+              {/* «Sunt aici» stays under its QR: the answer once pressed, the button while it is open (§77). */}
+              {item.status === "CONFIRMED" && (here === item.id || item.checkedInAt || hereFailed === item.id || item.selfCheckinOpen) && (
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", mb: 1.5 }}>
+                  {here === item.id || item.checkedInAt ? (
                     <Alert severity="success" sx={{ py: 0 }}>
                       {t("manage.selfCheckInDone")}
                     </Alert>
@@ -442,7 +484,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     <Alert severity="warning" sx={{ py: 0 }}>
                       {t("manage.selfCheckInFailed")}
                     </Alert>
-                  ) : item.selfCheckinOpen ? (
+                  ) : (
                     <form action={selfCheckInFromMyRegistrationsAction}>
                       <input type="hidden" name="locale" value={locale} />
                       <input type="hidden" name="token" value={token} />
@@ -452,60 +494,45 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                         {t("manage.selfCheckIn")}
                       </Button>
                     </form>
-                  ) : null)}
-                {/* The cancel with its reason (§558), on a line of its own under the race-day buttons. */}
-                <Box component="form" action={cancelFromMyRegistrationsAction} sx={{ flexBasis: "100%" }} data-testid="mine-cancel">
-                  <input type="hidden" name="locale" value={locale} />
-                  <input type="hidden" name="token" value={token} />
-                  <input type="hidden" name="registrationId" value={item.id} />
-                  <CancelReasonFields
-                    {...reasonWords.fields}
-                    problem={person === item.id ? reasonProblem : undefined}
-                    problemText={person === item.id && reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
-                  />
-                  <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
-                    <EventBusyIcon aria-hidden="true" sx={glyphSx("small")} />
-                    {t("mine.cancel")}
-                  </Button>
-                </Box>
-              </Stack>
+                  )}
+                </Stack>
+              )}
+
+              {/*
+                The public participant list, the participant's own choice (BR-REQ-039-01; `DECISIONS.md` §143), in the same
+                block as the registration's own page since §NNN: under the state and the QR, before the cancel and the offers.
+                The link is read, never spent — as "I am here" above — so cancel stays.
+              */}
+              <PublicListChoice
+                registrationId={item.id}
+                listed={item.listed}
+                level={3}
+                outcome={list === item.id ? "changed" : listFailed === item.id ? "failed" : null}
+                words={listChoiceWords(item)}
+                action={setListConsentFromMyRegistrationsAction}
+                fields={{ locale, token, registrationId: item.id }}
+                data-testid="my-list-choice"
+              />
+
+              {/* The cancel with its reason (§558), on a line of its own under the race-day buttons. */}
+              <Box component="form" action={cancelFromMyRegistrationsAction} data-testid="mine-cancel">
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="token" value={token} />
+                <input type="hidden" name="registrationId" value={item.id} />
+                <CancelReasonFields
+                  {...reasonWords.fields}
+                  problem={person === item.id ? reasonProblem : undefined}
+                  problemText={person === item.id && reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
+                />
+                <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                  <EventBusyIcon aria-hidden="true" sx={glyphSx("small")} />
+                  {t("mine.cancel")}
+                </Button>
+              </Box>
               {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 {t.rich("cancelKeepsRecord", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
               </Typography>
-
-              {/*
-                The public participant list, the participant's own switch (BR-REQ-039-01;
-                `DECISIONS.md` §143): the answer as it stands, and the button that sets the other
-                one. The link is read, never spent — as "I am here" above — so cancel stays.
-              */}
-              <Stack spacing={1} sx={{ mt: 1.5 }}>
-                {list === item.id && (
-                  <Alert severity="success" sx={{ py: 0 }}>
-                    {t("list.changed")}
-                  </Alert>
-                )}
-                {listFailed === item.id && (
-                  <Alert severity="warning" sx={{ py: 0 }}>
-                    {t("list.failed")}
-                  </Alert>
-                )}
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.listed ? t("list.shortListed") : t("list.shortNotListed")}
-                  </Typography>
-                  <form action={setListConsentFromMyRegistrationsAction}>
-                    <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="token" value={token} />
-                    <input type="hidden" name="registrationId" value={item.id} />
-                    <input type="hidden" name="listed" value={item.listed ? "0" : "1"} />
-                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
-                      {item.listed ? <VisibilityOffIcon aria-hidden="true" sx={glyphSx("small")} /> : <VisibilityIcon aria-hidden="true" sx={glyphSx("small")} />}
-                      {item.listed ? t("list.optOut") : t("list.optIn")}
-                    </Button>
-                  </form>
-                </Stack>
-              </Stack>
 
               {/*
                 The offers and benefits (§562): «Nu mai vreau» whenever the row says yes; a no only says

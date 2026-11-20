@@ -1,7 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { ReactElement, ReactNode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { catalogueOf } from "@/i18n/catalogue";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -16,6 +17,7 @@ import { familyStepWordsKey } from "@/modules/registrations/domain/family-signin
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import type { FamilySigningPass } from "@/modules/registrations/family-signing";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -35,19 +37,27 @@ const EMAIL = "familia.pop@example.ro";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
+/** The language the pages are rendered in: Română unless a test asks for English (§NNN renders both). */
+let intlLocale: "ro" | "en" = "ro";
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
-// The manage page, rendered with the real catalogues.
+// The manage page, rendered with the real catalogues, in the language the test names.
 vi.mock("next-intl/server", async (importOriginal) => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const ro = (await import("../../../messages/ro.json")).default;
+  const en = (await import("../../../messages/en.json")).default;
   return {
     ...(await importOriginal<Record<string, unknown>>()),
-    getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Registrations" }),
-    getLocale: async () => "ro",
+    getTranslations: async (namespace: string) => createTranslator({ locale: intlLocale, messages: intlLocale === "ro" ? ro : en, namespace: namespace as "Registrations" }),
+    getLocale: async () => intlLocale,
     setRequestLocale: () => {},
   };
 });
+// «Înscrierile mele»'s toast slot reads the request's cookies: none here.
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers(),
+  cookies: async () => ({ get: () => undefined, getAll: () => [], has: () => false, set: () => {}, delete: () => {} }),
+}));
 vi.mock("@/i18n/navigation", async (importOriginal) => {
   const { createElement } = await import("react");
   return {
@@ -66,6 +76,7 @@ const { consumeAndCancel, consumeAndSignDeclaration, consumeAndSignFamilyDeclara
 const { setListConsentFromManageLink } = await import("@/modules/registrations/list-consent");
 const { confirmRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { default: ManageRegistrationPage } = await import("@/app/[locale]/registrations/manage/[token]/page");
+const { default: MyRegistrationsPage } = await import("@/app/[locale]/registrations/mine/[token]/page");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -78,6 +89,7 @@ beforeEach(async () => {
   // The token pages read their own clock; the test's instants are the clock.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
+  intlLocale = "ro";
   await resetTables(db);
   await approve();
 });
@@ -458,5 +470,243 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect(html.match(/data-testid="manage-person"/g)).toHaveLength(1);
     expect(html).not.toContain("Înscrierile de pe această adresă");
     expect(html).toContain("Anulează înscrierea pentru Vecina Singură");
+  });
+});
+
+/**
+ * §NNN, BR-REQ-039-01 — «Lista publică și clasamentul»: the public-list choice in a clearly marked block of its own, for every
+ * registration on «Gestionează înscrierea» — a family's page too — and on «Înscrierile mele», in both languages. A heading on
+ * every registration, the state in bold beside the eye (open when shown, crossed when not), the sentence off the list naming the
+ * label the public list prints instead («Participant (nume ascuns)», read from `Event.startList`), and one contained button,
+ * the same in both states; placed right under the state, the number and the QR, before the declaration line and the rest.
+ */
+describe("§NNN «Lista publică și clasamentul», a block of its own on every registration", () => {
+  type Locale = "ro" | "en";
+  const LOCALES: Locale[] = ["ro", "en"];
+
+  /** A text as React writes it between tags. */
+  const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+  const words = (locale: Locale) => catalogueOf(locale).Registrations.list;
+  /** The sentence off the list, the public list's own label in it — never typed here or in the page. */
+  const offTheList = (locale: Locale) => words(locale).choice.notListed.replace("{anonymous}", catalogueOf(locale).Event.startList.anonymous);
+
+  /** A privacy notice that describes the results, in force from before the registrations: the results print a listed name. */
+  async function approveResultsNotice() {
+    const privacy: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Clasamentul: {{results}}"] }] } },
+      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["The results: {{results}}"] }] } },
+    ];
+    await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 2, effectiveAt: new Date("2026-01-02T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  }
+
+  /** One person, confirmed online: a one-person page with the QR, the number and «Declarația semnată ți-a fost trimisă pe email.» */
+  async function singleConfirmed() {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Vecina", NOW, { lastName: "Singură", email: "singura@example.ro" }), NOW);
+    const [alone] = await rowsOf(event.id);
+    await confirmEmail(db, event, alone.id, at(1));
+    vi.setSystemTime(at(20));
+    const declare = await declarationLink(alone.id, at(20));
+    vi.setSystemTime(at(21));
+    await consumeAndSignDeclaration(declare, await signing("Vecina Singură"), at(21));
+    const manage = await issueActionToken(db, { participantId: alone.participantId, registrationId: alone.id, purpose: "MANAGE_REGISTRATION", expiresAt: at(60 * 24 * 7), now: at(22) });
+    vi.setSystemTime(at(23));
+    return { alone, secret: manage.secret };
+  }
+
+  /** Ana, Maria and Ion on one address, each confirmed: Ana ticked the list, the two other adults did not (§421). */
+  async function confirmedFamily() {
+    const people = await family();
+    const { ana, maria, ion } = people;
+    vi.setSystemTime(at(20));
+    const declare = await declarationLink(ana.id, at(20));
+    vi.setSystemTime(at(21));
+    await consumeAndSignDeclaration(declare, await signing("Ana Pop"), at(21));
+    await consumeAndSignFamilyDeclaration(declare, passOf(people, [ana.id]), maria.id, await signing("Maria Pop"), at(22));
+    await consumeAndSignFamilyDeclaration(declare, passOf(people, [ana.id, maria.id]), ion.id, await signing("Ion Pop"), at(23));
+    const manage = await issueActionToken(db, { participantId: ana.participantId, registrationId: ana.id, purpose: "MANAGE_REGISTRATION", expiresAt: at(60 * 24 * 7), now: at(24) });
+    const mine = await issueActionToken(db, { participantId: ana.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(60 * 24 * 7), now: at(24) });
+    vi.setSystemTime(at(25));
+    return { ...people, secret: manage.secret, mineSecret: mine.secret };
+  }
+
+  async function managePage(token: string, locale: Locale, searchParams: Record<string, string> = {}) {
+    intlLocale = locale;
+    const element = (await ManageRegistrationPage({ params: Promise.resolve({ locale, token }), searchParams: Promise.resolve(searchParams) })) as ReactElement;
+    return renderToStaticMarkup(element).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+  }
+
+  async function minePage(token: string, locale: Locale) {
+    intlLocale = locale;
+    const element = (await MyRegistrationsPage({ params: Promise.resolve({ locale, token }), searchParams: Promise.resolve({}) })) as ReactElement;
+    const stream = await renderToReadableStream(withClientWords(element, locale));
+    await stream.allReady;
+    return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+  }
+
+  /** Each block on a page: its own `<section>` through its `</section>` — it nests none. */
+  function blocks(page: string, testId: string): string[] {
+    const found: string[] = [];
+    const marker = `data-testid="${testId}"`;
+    for (let at = page.indexOf(marker); at >= 0; at = page.indexOf(marker, at + 1)) {
+      found.push(page.slice(page.lastIndexOf("<section", at), page.indexOf("</section>", at) + "</section>".length));
+    }
+    return found;
+  }
+
+  /** The block's one button: its MUI classes (the variant, the colour, the size), its type and its words. */
+  function press(block: string) {
+    const button = /<button([^>]*)>([\s\S]*?)<\/button>/.exec(block);
+    if (!button) throw new Error("the block has no button");
+    const classes = (/class="([^"]*)"/.exec(button[1])?.[1] ?? "").split(/\s+/).filter((name) => name.startsWith("MuiButton"));
+    return { classes: classes.sort(), type: /type="([^"]*)"/.exec(button[1])?.[1], text: button[2] };
+  }
+
+  /** One registration's block, read: listed or not, its heading, its sentence and eye, its press and the answer it posts. */
+  function read(block: string) {
+    const state = /data-testid="[a-z-]+-state"[^>]*>([\s\S]*?)<\/p>/.exec(block)?.[1] ?? "";
+    return {
+      listed: /data-listed="(true|false)"/.exec(block)?.[1],
+      own: /^<section[^>]*\sid="list"/.test(block),
+      heading: /<(h[2-4])[^>]*>([^<]*)<\/h[2-4]>/.exec(block)?.slice(1, 3),
+      state: /<span>([^<]*)<\/span>/.exec(state)?.[1],
+      eye: state.includes('data-testid="VisibilityOffIcon"') ? "crossed" : state.includes('data-testid="VisibilityIcon"') ? "open" : "none",
+      posts: /name="listed" value="([01])"/.exec(block)?.[1],
+      press: press(block),
+    };
+  }
+
+  it("draws a one-person page's block right under the QR and the check-in, before the declaration line and the cancel, in both languages, listed and not", async () => {
+    await approveResultsNotice();
+    const { alone, secret } = await singleConfirmed();
+    for (const locale of LOCALES) {
+      const list = words(locale);
+      const states: ReturnType<typeof read>[] = [];
+      for (const listOptOut of [false, true]) {
+        await db.update(registrations).set({ listOptOut }).where(eq(registrations.id, alone.id));
+        const page = await managePage(secret, locale);
+        const found = blocks(page, "manage-list-choice");
+        expect(found, `${locale}: one block`).toHaveLength(1);
+        const block = read(found[0]);
+        states.push(block);
+        expect(block.own, "`#list` is the link's own person's").toBe(true);
+        expect(block.heading).toEqual(["h2", escaped(list.choice.title)]);
+        expect(block.listed).toBe(listOptOut ? "false" : "true");
+        // Bold beside the eye: open while shown, crossed while not.
+        expect(block.eye).toBe(listOptOut ? "crossed" : "open");
+        expect(block.state).toBe(escaped(listOptOut ? offTheList(locale) : list.choice.listedWithResults));
+        expect(found[0]).toContain(escaped(list.choice.help));
+        // The button sets the other answer.
+        expect(block.posts).toBe(listOptOut ? "1" : "0");
+        expect(block.press.type).toBe("submit");
+        expect(block.press.text).toContain(escaped(listOptOut ? list.optIn : list.choice.optOut));
+        // Order on the page: the QR and «Sunt aici»'s line → the block → the declaration line → the cancel.
+        const qr = page.indexOf('data-testid="qr-with-name"');
+        const checkIn = page.indexOf(escaped(catalogueOf(locale).Registrations.manage.selfCheckInClosed.split("{")[0]));
+        const at = page.indexOf('data-testid="manage-list-choice"');
+        const declaration = page.indexOf('data-testid="manage-declaration-sent"');
+        const cancel = page.indexOf('data-testid="manage-person-cancel"');
+        expect(qr).toBeGreaterThan(0);
+        expect(checkIn).toBeGreaterThan(qr);
+        expect(at).toBeGreaterThan(checkIn);
+        expect(declaration).toBeGreaterThan(at);
+        expect(cancel).toBeGreaterThan(declaration);
+      }
+      // The same prominence both ways: one contained, primary, large button, its classes identical whichever answer it gives.
+      const [listed, notListed] = states;
+      expect(listed.press.classes).toContain("MuiButton-contained");
+      expect(listed.press.classes).toContain("MuiButton-colorPrimary");
+      expect(listed.press.classes).toContain("MuiButton-sizeLarge");
+      expect(listed.press.classes).toEqual(notListed.press.classes);
+    }
+  });
+
+  it("says only the list, never «în clasament», while no notice describes the results — the results then print «Participant #…»", async () => {
+    const { secret } = await singleConfirmed();
+    for (const locale of LOCALES) {
+      const [block] = blocks(await managePage(secret, locale), "manage-list-choice");
+      expect(read(block).state).toBe(escaped(words(locale).choice.listed));
+    }
+  });
+
+  it("draws the block for every person of a family's page, each with its heading, its state and the same button, the anchor on the link's own", async () => {
+    await approveResultsNotice();
+    const { ana, maria, ion, secret } = await confirmedFamily();
+    for (const locale of LOCALES) {
+      const list = words(locale);
+      const page = await managePage(secret, locale);
+      const found = blocks(page, "manage-list-choice").map(read);
+      expect(found).toHaveLength(3);
+      // A heading on every registration, under the person's own `h3`.
+      for (const block of found) expect(block.heading).toEqual(["h4", escaped(list.choice.title)]);
+      // Ana ticked the list; the two other adults on the address did not (§421).
+      expect(found.map((block) => [block.listed, block.own, block.posts, block.eye])).toEqual([
+        ["true", true, "0", "open"],
+        ["false", false, "1", "crossed"],
+        ["false", false, "1", "crossed"],
+      ]);
+      expect(found[0].state).toBe(escaped(list.choice.listedWithResults));
+      expect(found[1].state).toBe(escaped(offTheList(locale)));
+      expect(found[2].state).toBe(escaped(offTheList(locale)));
+      expect(found[0].press.text).toContain(escaped(list.choice.optOut));
+      expect(found[1].press.text).toContain(escaped(list.optIn));
+      for (const block of found) expect(block.press.classes).toEqual(found[0].press.classes);
+      expect(found[0].press.classes).toContain("MuiButton-contained");
+      // In each person's card: the QR → the block → the declaration line.
+      const cards = page.split('data-testid="manage-person"').slice(1);
+      expect(cards).toHaveLength(3);
+      for (const [index, card] of cards.entries()) {
+        const name = [ana, maria, ion][index].registeredName;
+        expect(card).toContain(escaped(name));
+        const qr = card.indexOf('data-testid="qr-with-name"');
+        const at = card.indexOf('data-testid="manage-list-choice"');
+        expect(qr, `${name}: QR`).toBeGreaterThan(0);
+        expect(at, `${name}: the block under the QR`).toBeGreaterThan(qr);
+        expect(card.indexOf('data-testid="manage-declaration-sent"'), `${name}: the declaration under the block`).toBeGreaterThan(at);
+      }
+      // `#list` once, on the link's own person.
+      expect(page.match(/id="list"/g)).toHaveLength(1);
+    }
+  });
+
+  it("answers a press in the pressed person's block only", async () => {
+    const { maria, secret } = await confirmedFamily();
+    const found = blocks(await managePage(secret, "ro", { list: "1", person: maria.id }), "manage-list-choice");
+    expect(found.map((block) => block.includes('data-testid="manage-list-choice-changed"'))).toEqual([false, true, false]);
+    expect(found[1]).toContain(escaped(words("ro").changed));
+  });
+
+  it("draws the same block on «Înscrierile mele», per registration, under the QR and before the cancel, in both languages", async () => {
+    await approveResultsNotice();
+    const { mineSecret } = await confirmedFamily();
+    for (const locale of LOCALES) {
+      const list = words(locale);
+      const page = await minePage(mineSecret, locale);
+      const found = blocks(page, "my-list-choice").map(read);
+      expect(found).toHaveLength(3);
+      for (const block of found) {
+        expect(block.heading).toEqual(["h3", escaped(list.choice.title)]);
+        expect(block.own).toBe(false);
+        expect(block.press.classes).toEqual(found[0].press.classes);
+      }
+      expect(found[0].press.classes).toContain("MuiButton-contained");
+      expect(found.map((block) => [block.listed, block.posts, block.eye])).toEqual([
+        ["true", "0", "open"],
+        ["false", "1", "crossed"],
+        ["false", "1", "crossed"],
+      ]);
+      expect(found[0].state).toBe(escaped(list.choice.listedWithResults));
+      expect(found[1].state).toBe(escaped(offTheList(locale)));
+      expect(page).toContain(escaped(list.choice.helpMine));
+      const items = page.split('data-testid="my-registration"').slice(1);
+      expect(items).toHaveLength(3);
+      for (const item of items) {
+        const qr = item.indexOf('data-testid="qr-with-name"');
+        const at = item.indexOf('data-testid="my-list-choice"');
+        expect(qr).toBeGreaterThan(0);
+        expect(at).toBeGreaterThan(qr);
+        expect(item.indexOf('data-testid="mine-cancel"')).toBeGreaterThan(at);
+      }
+    }
   });
 });

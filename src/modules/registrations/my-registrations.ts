@@ -117,6 +117,14 @@ export type MyRegistration = {
   /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
   listed: boolean;
   /**
+   * What the list's block says beside that answer (§NNN, `domain/list-choice.ts`): the event's type — only a race takes results —
+   * and «Vreau să apar cu numele în clasament» with the notice it was given under (§879), so the block says «și în clasament» only
+   * where the published results would print the name.
+   */
+  eventType: string;
+  resultsNameConsent: boolean;
+  resultsConsentVersion: number;
+  /**
    * Whether there is a health note, or a Strava link or Instagram username, to withdraw (§322).
    * Booleans and never the values: the page offers the button and does not print the note.
    */
@@ -166,6 +174,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
       eventStatus: events.eventStatus,
+      eventType: events.type,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
@@ -185,6 +194,8 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       promoConsent: registrations.promoConsent,
       promoConsentAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
+      resultsNameConsent: registrations.resultsNameConsent,
+      resultsConsentVersion: registrations.resultsConsentVersion,
       birthDate: registrations.birthDate,
       // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
       declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(

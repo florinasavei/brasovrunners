@@ -7,8 +7,6 @@ import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import SaveIcon from "@mui/icons-material/Save";
 import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
@@ -79,6 +77,8 @@ import {
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
+import { listChoiceState } from "@/modules/registrations/domain/list-choice";
+import PublicListChoice, { type PublicListChoiceWords } from "@/modules/registrations/ui/PublicListChoice";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -233,6 +233,37 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           eventType: (await eventTypeOf(getDb(), live.registration.eventId)) ?? "",
         })
       : null;
+  /*
+    «Lista publică și clasamentul» (§NNN): each person's block says where their name stands by the one rule (`listChoiceState`) —
+    «și în clasament» only where the published results would print it, from the event's type `details` already carries and the
+    notices read above — and, off the list, the label the public list prints instead of a name, read from the list's own words.
+  */
+  const tEvent = live ? await getTranslations("Event") : null;
+  const listChoiceWords = (one: (typeof people)[number]): PublicListChoiceWords => {
+    const state = listChoiceState({
+      listed: !one.listOptOut,
+      eventType: details?.type ?? null,
+      privacyNoticeVersion: one.privacyNoticeVersion,
+      resultsNameConsent: one.resultsNameConsent,
+      resultsConsentVersion: one.resultsConsentVersion,
+      firstResultsNoticeVersion: firstResults,
+      firstResultsNameAskNoticeVersion: resultsAskLine,
+    });
+    return {
+      title: t("list.choice.title"),
+      state:
+        state === "listedWithResults"
+          ? t("list.choice.listedWithResults")
+          : state === "listed"
+            ? t("list.choice.listed")
+            : t("list.choice.notListed", { anonymous: tEvent ? tEvent("startList.anonymous") : "" }),
+      press: one.listOptOut ? t("list.optIn") : t("list.choice.optOut"),
+      pressing: t("list.choice.saving"),
+      help: t("list.choice.help"),
+      changed: t("list.changed"),
+      failed: t("list.failed"),
+    };
+  };
   /*
     «Completează-ți datele» (§905): for each person still registered whose registration lacks an answer the public
     form requires, a card with only those boxes and a save button — a confirmed one too, its declaration untouched.
@@ -454,13 +485,39 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         </Typography>
                       )}
                     </Box>
-                    {/* The signed declaration went by email only after an online signature; a paper one at the desk (§67) had no email. */}
+                  </Box>
+                )}
+
+                {/*
+                  The public participant list, each person's own choice (BR-REQ-039-01; `DECISIONS.md` §143), in a block of its
+                  own since §NNN: right under the state, the number and the QR — before the declaration line, the offers and the
+                  rest — with a heading on every person, a family's too. The manage token is read, never spent — the same page
+                  must still be able to cancel — and the sentence reads the row as it stands now. `#list` is the link's own
+                  person's, where the confirmation email's list link and every press land.
+                */}
+                {active && (
+                  <PublicListChoice
+                    id={one.own ? "list" : undefined}
+                    registrationId={one.id}
+                    listed={!one.listOptOut}
+                    level={family ? 4 : 2}
+                    outcome={answered && list === "1" ? "changed" : answered && list === "0" ? "failed" : null}
+                    words={listChoiceWords(one)}
+                    action={setListConsentFromManageAction}
+                    fields={{ locale, token, registrationId: one.id }}
+                    data-testid="manage-list-choice"
+                  />
+                )}
+
+                {/* The signed declaration went by email only after an online signature; a paper one at the desk (§67) had no email. */}
+                {confirmed && (
+                  <Box sx={{ mb: 2 }}>
                     {one.declarationMethod === "EMAIL_LINK" ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="manage-declaration-sent">
+                      <Typography variant="body2" color="text.secondary" data-testid="manage-declaration-sent">
                         {t("manage.signedSent")}
                       </Typography>
                     ) : one.declarationMethod === "PAPER" ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="manage-declaration-paper">
+                      <Typography variant="body2" color="text.secondary" data-testid="manage-declaration-paper">
                         {t("manage.signedPaper")}
                       </Typography>
                     ) : null}
@@ -488,55 +545,6 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         <SaveIcon />
                       </SubmitButton>
                     </Box>
-                    {!family && <Divider sx={{ mt: 3 }} />}
-                  </Box>
-                )}
-
-                {/*
-                  The public participant list, each person's own switch (BR-REQ-039-01; `DECISIONS.md`
-                  §143). The manage token is read, never spent — the same page must still be able to
-                  cancel — and the sentence reads the row as it stands now. `#list` is the link's own
-                  person's, where the confirmation email's list link lands.
-                */}
-                {active && (
-                  <Box id={one.own ? "list" : undefined} sx={{ mb: 2 }}>
-                    {!family && (
-                      <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-                        {t("list.title")}
-                      </Typography>
-                    )}
-                    {answered && list === "1" && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        {t("list.changed")}
-                      </Alert>
-                    )}
-                    {answered && list === "0" && (
-                      <Alert severity="warning" sx={{ mb: 2 }}>
-                        {t("list.failed")}
-                      </Alert>
-                    )}
-                    <Typography sx={{ mb: 1 }}>
-                      {family ? (one.listOptOut ? t("list.shortNotListed") : t("list.shortListed")) : one.listOptOut ? t("list.notListed") : t("list.listed")}
-                    </Typography>
-                    <form action={setListConsentFromManageAction}>
-                      <input type="hidden" name="locale" value={locale} />
-                      <input type="hidden" name="token" value={token} />
-                      <input type="hidden" name="registrationId" value={one.id} />
-                      <input type="hidden" name="listed" value={one.listOptOut ? "1" : "0"} />
-                      <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
-                        {one.listOptOut ? (
-                          <VisibilityIcon aria-hidden="true" sx={glyphSx("medium")} />
-                        ) : (
-                          <VisibilityOffIcon aria-hidden="true" sx={glyphSx("medium")} />
-                        )}
-                        {one.listOptOut ? t("list.optIn") : t("list.optOut")}
-                      </Button>
-                    </form>
-                    {!family && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        {t("list.help")}
-                      </Typography>
-                    )}
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}
