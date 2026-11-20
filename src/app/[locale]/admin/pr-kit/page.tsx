@@ -58,8 +58,9 @@ const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
  * in front of it as in front of every page: `requireStaff` sends a colleague who owes it there.
  *
  * Nothing here writes: every link is a GET that hands a file out. The logo's tiles show the kit's own SVGs, each on the ground
- * it is meant for; the sticker sheets and the poster are drawn on request. The poster is offered only while the club's
- * YouTube address is set (`CLUB_YOUTUBE_URL`); until then one line says where it is set.
+ * it is meant for, read straight from the public `/brand/kit/` — the club's public logo, open to anybody, which the logo route
+ * hands out only as an attachment under its slug name; the sticker sheets and the poster are drawn on request. The poster is
+ * offered only while the club's YouTube address is set (`CLUB_YOUTUBE_URL`); until then one line says where it is set.
  */
 export default async function PrKitPage({ params }: Props) {
   const { locale } = await params;

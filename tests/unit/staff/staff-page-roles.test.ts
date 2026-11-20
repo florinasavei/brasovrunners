@@ -1,7 +1,9 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { StaffUser } from "@/db/schema/staff-users";
-import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLES, type StaffRole, visibleAdminSections } from "@/modules/staff-identity/domain/roles";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 
 /**
  * BR-REQ-060-01, §450 — what an Administrator and a Superadministrator see on `/admin/staff`.
@@ -141,6 +143,19 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
   it("offers every role but the Superadministrator in the invitation", () => {
     const inviteSelects = roleOptions(page.invite);
     expect(inviteSelects).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
+  });
+
+  it("says under the invitation's role what the volunteer's bar holds: the race day and «PR Kit» (§NNN)", () => {
+    // The bar offers a Voluntar «Ziua cursei», «PR Kit», «Ghid»; the picker said «doar ziua cursei» and ended the line «Atât.».
+    expect(visibleAdminSections("CONTRIBUTOR")).toContain("prKit");
+    const select = page.invite.find((element) => element.props.name === "role" && element.props.select === true)!;
+    expect(String(select.props.helperText)).toContain("«PR Kit»");
+    const volunteer = elements(select.props.children).find((option) => option.props.value === "CONTRIBUTOR")!;
+    expect([volunteer.props.children].flat().join("")).toContain("«PR Kit»");
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Admin.staff.roleHelp).toContain("«PR Kit»");
+      expect(catalogue.Admin.staff.roles.CONTRIBUTOR).toContain("«PR Kit»");
+    }
   });
 
   it("shows a Superadministrator's row as a line with no verb", () => {

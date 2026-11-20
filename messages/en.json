@@ -4211,9 +4211,9 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
-      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day only: the desk and «Timing».",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day (the desk and «Timing») and «PR Kit».",
       "roles": {
-        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number, signs up for the raffle; under «Timing», records finishes and undoes their own press. That is all.",
+        "CONTRIBUTOR": "the desk: scans, checks people in, confirms on paper, gives a free place, types a number, signs up for the raffle; «Timing»: records finishes, undoes their own press; downloads «PR Kit». That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",

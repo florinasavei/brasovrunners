@@ -11,7 +11,10 @@ import { kitFilePath } from "@/modules/pr-kit/logo-vector";
  * wrote (`public/brand/kit/`), handed out as they are; the PDF is drawn here from the same SVG's paths (`logo-pdf.ts`). Any other
  * name is not found — the name is matched whole against the kit's list, so it never reaches the disk as a path.
  *
- * Every backoffice role, the volunteers included (`refusePrKit`); a GET that writes nothing.
+ * Every backoffice role, the volunteers included (`refusePrKit`); a GET that writes nothing. **The SVG and the PNG are public
+ * files all the same** — the club's public logo, which the page's tiles read straight from `/brand/kit/` and anybody can fetch
+ * without signing in — so for them this route only makes the download an attachment under its slug name; what the role guards
+ * is the PDF drawn on request.
  */
 export async function GET(_request: Request, context: { params: Promise<{ file: string }> }): Promise<Response> {
   const refused = await refusePrKit();
