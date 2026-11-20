@@ -25,6 +25,7 @@ import {
   summariseRegistrationsForAdmin,
   listEventsTakingInvitations,
   listEventsWithRegistrations,
+  listReconfirmAnswers,
   listRegistrationsForAdmin,
   listResubmissionMarks,
   readPlaceDeadlines,
@@ -388,7 +389,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, rowNotes, emailSummaries, family, t, minorSigns] = await Promise.all([
+  const [resubmissions, rowNotes, emailSummaries, family, t, minorSigns, reconfirmAnswers] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
     // «Note interne» (§777, §943): each row's live notes, newest first — one grouped read over the page's ids, only for a
     // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
@@ -411,6 +412,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       new Date(),
       rows.filter((row) => row.guardianName).map((row) => row.eventId),
     ),
+    /*
+      «A reconfirmat» (the decision «Cere reconfirmarea», §1019): each row's answer, one grouped read over the page's ids — the
+      reader the export's «Reconfirmare» calls, by the definition the filter `reconfirm` narrows with, so the three never disagree.
+    */
+    listReconfirmAnswers(db, rows.map((row) => row.id)),
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
@@ -624,8 +630,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
           {/* «Ambasador» (§948): the club's label, the bib as any other — for every role that reads the list. */}
           {row.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={t("registrations.ambassador.chip")} testId="ambassador-chip" />}
-          {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
-          {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
+          {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state;
+              the answer «yes», as the filter keeps it and the export writes it (§1019). */}
+          {reconfirmAnswers.get(row.id) === "yes" && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
