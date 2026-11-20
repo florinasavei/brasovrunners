@@ -16,7 +16,7 @@ import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { exportPersonData } from "@/modules/registrations/person-data";
-import { canWorkTheDesk, STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canReadRaffle, canWorkTheDesk, STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { RAFFLE_KINDS, type RaffleKind } from "@/modules/volunteers/domain/raffle";
 import {
   deleteRaffleEntry,
@@ -654,12 +654,28 @@ describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and ever
     }
   });
 
-  it("is read by the organizers alone (BR-REQ-060-01)", async () => {
+  it("is read by every desk role — the «Tombolă» tab's since §NNN — and by no member (BR-REQ-060-01)", async () => {
     for (const role of STAFF_ROLES) {
       const actor = await staff(role);
-      if (canTakeRaffleList(role)) expect(await readRaffleRoster(db, actor, eventId, NOW), role).not.toBeNull();
+      if (canReadRaffle(role)) expect(await readRaffleRoster(db, actor, eventId, NOW), role).not.toBeNull();
       else expect((await failureOf(readRaffleRoster(db, actor, eventId, NOW))).code, role).toBe("FORBIDDEN");
     }
+    expect(STAFF_ROLES.filter((role) => !canReadRaffle(role))).toEqual(["MEMBER"]);
+  });
+
+  it("offers the desk's «Înscrie» on the tab only to a registration that may sign up and was not taken out (§NNN)", async () => {
+    const people = await saturday();
+    await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.radu.id));
+    const roster = await readRaffleRoster(db, await staff("CONTRIBUTOR"), eventId, NOW);
+    const offered = (roster?.rows ?? []).filter((row) => row.deskMaySignUp).map((row) => row.ref.id);
+    // Every row that may sign up by the organizers' door, but a volunteer, an elite line and anybody taken out.
+    const staffDoor = (roster?.rows ?? []).filter((row) => row.maySignUp);
+    expect(offered.sort()).toEqual(staffDoor.filter((row) => row.ref.table === "registration" && row.inRaffle).map((row) => row.ref.id).sort());
+    expect(offered).toContain(people.ana.id);
+    expect(offered).not.toContain(people.radu.id);
+    expect(offered).not.toContain(people.ion);
+    expect(offered).not.toContain(people.zoe);
+    expect(roster?.rows.find((row) => row.ref.id === people.radu.id)).toMatchObject({ reason: "takenOut", maySignUp: true, deskMaySignUp: false });
   });
 });
 

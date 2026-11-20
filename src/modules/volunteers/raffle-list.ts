@@ -3,7 +3,7 @@ import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
-import { canManageVolunteers, canReadRegistrations, type StaffSubject } from "@/modules/staff-identity/domain/roles";
+import { canManageVolunteers, canReadRaffle, canReadRegistrations, type StaffSubject } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import type { RaffleKind } from "./domain/raffle";
@@ -51,15 +51,21 @@ export type RaffleListOptions = { onlyPresent?: boolean };
 
 /**
  * Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. A role or an account, so an
- * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984).
+ * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984). Since §NNN it is no longer who reads the «Tombolă»
+ * tab — every desk role does (`canReadRaffle`) — but what stays the organizers' there: the two files, whose names leave the site, the
+ * exclusion, «Șterge înscrierea», an elite line's ticks, the organizers' «Înscrie» of anybody, how and when each person signed up, and
+ * the reason «scos de organizatori».
  */
 export function canTakeRaffleList(subject: StaffSubject): boolean {
   return canReadRegistrations(subject) && canManageVolunteers(subject);
 }
 
-/** Everybody of the event's three groups with the answer — the «Tombolă» tab's read — for the organizers alone (BR-REQ-060-01). */
+/**
+ * Everybody of the event's three groups with the answer — the «Tombolă» tab's read — for every desk role (`canReadRaffle`, §NNN): a
+ * name, a number, a group, a state and whether the person was there, never an address, an email or a telephone (BR-REQ-060-01).
+ */
 export async function readRaffleRoster<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string, now: Date): Promise<RaffleRoster | null> {
-  if (!canTakeRaffleList(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the raffle`);
+  if (!canReadRaffle(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the raffle`);
   return readRaffleRosterRows(db, eventId, now);
 }
 

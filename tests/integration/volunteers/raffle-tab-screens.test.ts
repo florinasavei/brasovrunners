@@ -14,8 +14,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
-import { type StaffRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
-import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { canReadRaffle, type StaffRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { decodeFlash, FLASH_COOKIE } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
@@ -27,10 +26,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți participanții la tombolă», «vreau să văd în dreptul
  * fiecărei persoane dacă participă la tombolă»), read from a real database:
  *
- * - «Ziua cursei» → «Tombolă»: drawn among the tabs only for an event that holds a raffle and only for the organizers; the settings in
- *   one line, the counts, the four filters, everybody of the three groups with «Participă» and its reason, how and when they signed
- *   up in the sign-up mode, whether they were there; «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and a line's «Prezent»;
- *   the two files; a 404 for every other role; both languages;
+ * - «Ziua cursei» → «Tombolă»: drawn among the tabs only for an event that holds a raffle; the settings in one line, the counts, the
+ *   four filters, everybody of the three groups with «Participă» and its reason, how and when they signed up in the sign-up mode,
+ *   whether they were there; «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and a line's «Prezent»; the two files; both
+ *   languages. Since §NNN every desk role's, a 404 to a member: a «Voluntar» reads the same table, counts and filters with words of
+ *   its own and the desk's «Înscrie la tombolă» on a registration — never the organizers' presses, files, how and when, the reason
+ *   «scos de organizatori» or anybody's address, email or telephone — and the file's route still refuses them;
  * - its presses, each asking its capability and coming back with the toast or the refusal's code;
  * - the desk — inside each row of its list, where a search by name or number lands, and on a scanned person's view: «Tombolă:
  *   participă / nu participă» for every desk role, and «Înscrie la tombolă» in the open sign-up mode, coming back where it was
@@ -105,6 +106,7 @@ const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
 const { default: DeskRow } = await import("@/modules/registrations/ui/DeskRow");
 const { default: AdminVolunteerPage } = await import("@/app/[locale]/admin/volunteers/[id]/page");
 const { raceDayTabs } = await import("@/modules/race-day/ui/RaceDayTabs");
+const { GET: raffleFile } = await import("@/app/api/admin/events/[id]/raffle/route");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -344,17 +346,19 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     expect(await names("nope")).toHaveLength(5);
   });
 
-  it("is a 404 to every role but the organizers, and stands among «Ziua cursei»'s tabs only for an event that holds a raffle", async () => {
+  it("is a page for every desk role and a 404 to a member, and stands among «Ziua cursei»'s tabs only for an event that holds a raffle (§NNN)", async () => {
     for (const role of STAFF_ROLES) {
       state.actor = staff[role];
-      if (canTakeRaffleList(role)) await expect(tabTree(), role).resolves.toBeTruthy();
+      if (canReadRaffle(role)) await expect(tabTree(), role).resolves.toBeTruthy();
       else await expect(tabTree(), role).rejects.toThrow("NOT_FOUND");
     }
+    expect(STAFF_ROLES.filter((role) => !canReadRaffle(role))).toEqual(["MEMBER"]);
     const tabsOf = async (id: string, role: StaffRole) => words(await html(await raceDayTabs({ locale: "ro", active: "desk", eventId: id, actor: staff[role]! })));
-    expect(await tabsOf(eventId, "MODERATOR")).toContain("Tombolă");
-    expect(await tabsOf(eventId, "CONTRIBUTOR")).not.toContain("Tombolă");
+    // The Voluntar, the Organizer and the Administrators — every desk role — see it; a member sees no tab at all.
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV", "MODERATOR", "ADMIN", "SUPERADMIN"] as const) expect(await tabsOf(eventId, role), role).toContain("Tombolă");
+    expect(await tabsOf(eventId, "MEMBER")).not.toContain("Tombolă");
     const plain = await race({ hasRaffle: false });
-    expect(await tabsOf(plain.eventId, "ADMIN")).not.toContain("Tombolă");
+    for (const role of ["CONTRIBUTOR", "ADMIN"] as const) expect(await tabsOf(plain.eventId, role), role).not.toContain("Tombolă");
     // An event that holds none, opened by its address: one sentence, no table.
     state.actor = staff.ADMIN;
     const page = html(await RafflePage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: plain.eventId }) }));
@@ -368,6 +372,168 @@ describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups,
     expect(words(/data-testid="raffle-settings-line"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "")).toBe("Taking part: the runners, the elites, the volunteers · automatically");
     expect(rowsOf(page).find((row) => row.includes("Elena Waiting"))).toMatch(/No · not confirmed/);
     expect(page).not.toContain("Participă");
+  });
+});
+
+describe("§NNN BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and every other desk role: the table, the chips, the desk's sign-up — never the organizers' presses, files or anybody's address", () => {
+  /** The desk roles that are not organizers: the Voluntar, the Redactor and Tehnic. */
+  const DESK_ONLY = ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const;
+  const testIdsOf = (markup: string) => new Set([...markup.matchAll(/data-testid="([^"]+)"/g)].map((match) => match[1]));
+  /** Which rows of the tab hold a press of `testId`, by the person's id. */
+  const holding = async (testId: string) =>
+    [...rowActionsOf(await tabTree())].filter(([, nodes]) => nodes.some((node) => node.props["data-testid"] === testId)).map(([id]) => id).sort();
+
+  it("draws the same table, counts and four filters a «Voluntar» reads, with words of its own — and none of the organizers' presses, files or way to the editor", async () => {
+    const people = await saturday();
+    for (const role of DESK_ONLY) {
+      state.actor = staff[role];
+      const page = await tab();
+      // The roster as the organizers read it «Din oficiu»: number, name, group, «Participă», «Prezent» — by the number.
+      expect(rowsOf(page), role).toEqual([
+        expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu$/),
+        expect.stringMatching(/^7 Ana Popescu Alergător Da Da$/),
+        expect.stringMatching(/^500 Ion Voluntar Voluntar Da Nu$/),
+        expect.stringMatching(/^— Elena Waiting Alergător Nu · neconfirmat Nu$/),
+        // A line of the elite list: its «Prezent» in words — the tick is the organizers'.
+        expect.stringMatching(/^— Zoe Elita Elită Da Nu$/),
+      ]);
+      expect(words(/data-testid="raffle-settings-line"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? ""), role).toBe("Participă: alergătorii, elitele, voluntarii · din oficiu");
+      expect(words(/data-testid="raffle-counts"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? ""), role).toBe("Participă: 4 · Alergători: 1 · Elite: 2 · Voluntari: 1 · Prezenți dintre ei: 1");
+      // The four pills, each with its count, the one in force marked — and they filter as for the organizers.
+      const pills = elements(byTestId(await tabTree(), "raffle-filters")[0]).filter((element) => typeof element.props.label === "string").map((element) => [element.props.label, element.props.active]);
+      expect(pills, role).toEqual([
+        ["Toți: 5", true],
+        ["Participă: 4", false],
+        ["Nu participă: 1", false],
+        ["Doar prezenții: 1", false],
+      ]);
+      expect(rowsOf(await tab({ filter: "present" })).map((row) => row.split(" ").slice(1, 3).join(" ")), role).toEqual(["Ana Popescu"]);
+      // What they can do here, in their own words; the organizers' mention the file.
+      expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? ""), role).toBe(ro.Admin.raffle.introDesk);
+      // Nothing of the organizers': no file, no exclusion, no deletion, no elite tick, no way to the editor, no STAFF sign-up.
+      const ids = testIdsOf(page);
+      for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-delete-form", "raffle-elite-present-form", "raffle-settings-edit", "raffle-sign-up-form"]) {
+        expect(ids.has(id), `${role}: ${id}`).toBe(false);
+      }
+      expect(page, role).not.toContain(`/api/admin/events/${eventId}/raffle`);
+      // «Din oficiu» offers a desk role nothing to press: no column of presses at all. The page still prints.
+      expect(elements(await tabTree()).find((element) => element.props.tableId === "raffle-roster")?.props.rowActions, role).toBeUndefined();
+      expect(page, role).toContain(ro.Admin.raffle.print);
+      // Never an address, an email or a telephone: the people of the race have all three, and none reaches the page.
+      for (const secret of ["example.test", "@", "+40712345678", "0712345678"]) expect(page, `${role}: ${secret}`).not.toContain(secret);
+    }
+    // The organizers, on the same page: their words, their presses and their files.
+    state.actor = staff.MODERATOR;
+    const theirs = await tab();
+    expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(theirs)?.[1] ?? "")).toBe(ro.Admin.raffle.intro);
+    for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-elite-present-form"]) expect(testIdsOf(theirs).has(id), id).toBe(true);
+    expect(await holding("raffle-exclusion-form")).toEqual([people.ana, people.eliud, people.elena, people.ion, people.zoe].sort());
+    // English, for a desk role.
+    state.actor = staff.CONTRIBUTOR;
+    state.locale = "en";
+    const english = await tab();
+    expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(english)?.[1] ?? "")).toBe(en.Admin.raffle.introDesk);
+    expect(rowsOf(english).find((row) => row.includes("Elena Waiting"))).toMatch(/No · not confirmed/);
+  });
+
+  it("says «scos de organizatori», and how and when each signed up, to the organizers alone — a desk role reads «Nu» and the answer (§984)", async () => {
+    const people = await saturday();
+    await signUpMode();
+    const { signUpForRaffleByStaff } = await import("@/modules/volunteers/raffle-entries");
+    await signUpForRaffleByStaff(db, staff.MODERATOR!, { person: { table: "registration", id: people.eliud }, accepted: true, eventId }, new Date());
+    await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.ana));
+    for (const role of DESK_ONLY) {
+      state.actor = staff[role];
+      const page = await tab();
+      const rows = rowsOf(page);
+      expect(rows.find((row) => row.includes("Ana Popescu")), role).toMatch(/^7 Ana Popescu Alergător Nu Da$/);
+      expect(rows.find((row) => row.includes("Eliud Kipchoge")), role).toMatch(/^3 Eliud Kipchoge Elită Da Nu$/);
+      expect(rows.find((row) => row.includes("Ion Voluntar")), role).toMatch(/Nu · nu s-a înscris/);
+      expect(page, role).not.toContain(ro.Admin.raffle.reasons.takenOut);
+      expect(page, role).not.toContain(`>${ro.Admin.raffle.columns.how}<`);
+      expect(page, role).not.toContain(ro.Admin.raffle.methods.STAFF);
+    }
+    state.actor = staff.MODERATOR;
+    const theirs = rowsOf(await tab());
+    expect(theirs.find((row) => row.includes("Ana Popescu"))).toMatch(/Nu · scos de organizatori/);
+    expect(theirs.find((row) => row.includes("Eliud Kipchoge"))).toMatch(/Da de organizatori · /);
+  });
+
+  it("offers a «Voluntar» the desk's «Înscrie la tombolă» on a registration that may still sign up — never a volunteer, an elite line, a person waiting or one taken out", async () => {
+    const people = await saturday();
+    const radu = await runner("Radu Scos", 9, { inRaffle: false });
+    await signUpMode();
+    for (const role of DESK_ONLY) {
+      state.actor = staff[role];
+      // Ana and Eliud: registrations, confirmed with a number, not in, not taken out. Not Ion (a volunteer), Zoe (a line), Elena, Radu.
+      expect(await holding("raffle-desk-sign-up-form"), role).toEqual([people.ana, people.eliud].sort());
+      expect(await holding("raffle-sign-up-form"), role).toEqual([]);
+      expect(await holding("raffle-exclusion-form"), role).toEqual([]);
+    }
+    // Each form is the desk's door, coming back to the tab with the filter it was pressed under.
+    state.actor = staff.CONTRIBUTOR;
+    const actionsOf = rowActionsOf(await tabTree({ filter: "out" }));
+    const form = (actionsOf.get(people.ana) ?? []).find((node) => node.props["data-testid"] === "raffle-desk-sign-up-form");
+    expect(form?.props.action).toBe(actions.raffleDeskSignUpAction);
+    const hidden = (name: string) => elements(form).find((element) => element.props.name === name)?.props.value;
+    expect([hidden("back"), hidden("eventId"), hidden("filter"), hidden("registrationId"), hidden("uiLocale")]).toEqual(["raffle", eventId, "out", people.ana, "ro"]);
+    // The acceptance's tick, required, with the desk's help line; the button names the person.
+    expect(elements(form).some((element) => element.props.name === "accepted" && element.props.required === true && element.props.help === ro.Admin.raffle.acceptedHelp)).toBe(true);
+    expect(elements(form).find((element) => element.props["data-testid"] === "raffle-desk-sign-up")?.props["aria-label"]).toBe("Înscrie la tombolă: Ana Popescu");
+    // The organizers keep their own door on the same rows — STAFF, any kind of person — and never the desk's.
+    state.actor = staff.MODERATOR;
+    expect(await holding("raffle-desk-sign-up-form")).toEqual([]);
+    expect(await holding("raffle-sign-up-form")).toEqual([people.ana, people.eliud, people.ion, people.zoe, radu].sort());
+  });
+
+  it("records a DESK sign-up pressed by a «Voluntar» on the tab — back at the row with its toast —, refuses it without the tick, and to a member", async () => {
+    const people = await saturday();
+    await signUpMode();
+    state.actor = staff.CONTRIBUTOR;
+    expect(await press(actions.raffleDeskSignUpAction, { back: "raffle", registrationId: people.ana, filter: "out" })).toEqual({
+      to: `/ro/admin/checkin/tombola?eventId=${eventId}&filter=out&error=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
+      toast: null,
+    });
+    expect(await entries()).toEqual([]);
+    expect(await press(actions.raffleDeskSignUpAction, { back: "raffle", registrationId: people.ana, filter: "out", accepted: "on" })).toEqual({
+      to: `/ro/admin/checkin/tombola?eventId=${eventId}&filter=out#raffle-${people.ana}`,
+      toast: { kind: "success", key: "raffleSignedUp" },
+    });
+    expect((await entries()).map((entry) => [entry.registrationId, entry.method, entry.recordedByStaffUserId, entry.ip])).toEqual([[people.ana, "DESK", staff.CONTRIBUTOR!.id, null]]);
+    expect((await press(actions.raffleDeskSignUpAction, { back: "raffle", registrationId: people.ana, accepted: "on" })).toast).toMatchObject({ key: "raffleAlready" });
+    // The row now says it, and offers nothing more.
+    const rows = rowsOf(await tab());
+    expect(rows.find((row) => row.includes("Ana Popescu"))).toMatch(/^7 Ana Popescu Alergător Da Da$/);
+    expect(await holding("raffle-desk-sign-up-form")).toEqual([people.eliud]);
+    // A member is no staff (§524): refused, nothing written.
+    state.actor = staff.MEMBER;
+    expect((await press(actions.raffleDeskSignUpAction, { back: "raffle", registrationId: people.eliud, accepted: "on" })).to).toBe(`/ro/admin/checkin/tombola?eventId=${eventId}&error=FORBIDDEN#admin-alert`);
+    expect((await entries()).map((entry) => entry.registrationId)).toEqual([people.ana]);
+    // A forged id: not found, nothing written.
+    state.actor = staff.CONTRIBUTOR;
+    expect((await press(actions.raffleDeskSignUpAction, { back: "raffle", registrationId: people.ion, accepted: "on" })).to).toContain("error=NOT_FOUND");
+    expect(await entries()).toHaveLength(1);
+  });
+
+  it("still refuses a «Voluntar» the raffle's two files — by the route — while the roster's read is every desk role's but a member's", async () => {
+    await saturday();
+    const file = (query = "") => raffleFile(new Request(`http://localhost/api/admin/events/${eventId}/raffle${query}`), { params: Promise.resolve({ id: eventId }) });
+    for (const role of [...DESK_ONLY, "MEMBER"] as const) {
+      state.actor = staff[role];
+      for (const query of ["?lang=ro", "?present=1&lang=ro"]) {
+        const refused = await file(query);
+        expect(refused.status, `${role} ${query}`).toBe(403);
+        expect(await refused.text(), `${role} ${query}`).not.toContain("Ana Popescu");
+      }
+    }
+    state.actor = staff.MODERATOR;
+    expect((await file("?lang=ro")).status).toBe(200);
+    const { readRaffleRoster } = await import("@/modules/volunteers/raffle-list");
+    for (const role of STAFF_ROLES) {
+      const read = readRaffleRoster(db, staff[role]!, eventId, new Date());
+      if (canReadRaffle(role)) expect((await read)?.rows.map((row) => row.name), role).toContain("Ana Popescu");
+      else await expect(read, role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
   });
 });
 

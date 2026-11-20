@@ -9598,7 +9598,7 @@
             {
               "title": "Ce poate fiecare rol",
               "steps": [
-                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența — și tabul «Tombolă», când cursa are tombolă. Vede nume, stare și număr, niciodată o adresă de email.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
                 "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă; lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
                 "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
@@ -9719,6 +9719,15 @@
                 "Vin mai mulți deodată: apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
+              "title": "La tombolă: cine participă, și înscrie pe cineva",
+              "steps": [
+                "Când cursa are tombolă, «Ziua cursei» → «Tombolă» îl deschide orice rol de la masă: Voluntarul, Redactorul, Organizatorul, rolul Tehnic și Administratorii. Alege cursa la «Evenimentul» și apasă «Arată».",
+                "Vezi pe toată lumea după număr: numele, grupa, «Participă» și «Prezent». Filtrele de deasupra tabelului aleg pe cine vezi: toți, cei care participă, cei care nu participă sau doar prezenții.",
+                "Cu înscriere separată, un alergător care nu s-a înscris are pe rândul lui «A acceptat regulamentul» și «Înscrie». Bifează doar după ce persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal, apoi apasă «Înscrie».",
+                "Fișierele pentru extragere, scoaterea cuiva de la tombolă, ștergerea unei înscrieri și înscrierea unui voluntar sau a unei elite de pe lista de elită rămân ale Organizatorului și ale Administratorilor: cheamă-i."
               ]
             },
             {
@@ -13235,6 +13244,7 @@
     "raffle": {
       "title": "Tombolă",
       "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "introDesk": "Toți alergătorii, elitele și voluntarii evenimentului: cine participă la tombolă și cine e prezent. Cu înscriere separată, înscrie aici un alergător după ce a acceptat regulamentul.",
       "noEvent": "Niciun eveniment de arătat.",
       "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
       "event": "Evenimentul",

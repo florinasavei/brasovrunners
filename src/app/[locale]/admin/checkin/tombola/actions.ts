@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
-import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canReadRaffle } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { deleteRaffleEntry, setEliteLineRaffleTick, signUpForRaffleAtDesk, signUpForRaffleByStaff } from "@/modules/volunteers/raffle-entries";
@@ -20,10 +20,11 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
 
 /*
   The organizers' presses of «Ziua cursei» → «Tombolă» (§984), and the desk's «Înscrie la tombolă». Each asks its capability at the
-  door, by name — the tab's the Organizer's and the Administrators' (`canTakeRaffleList`), the desk's every desk role
-  (`canWorkTheDesk`) — and the service asks it again (BR-REQ-060-01). A press that went through comes back with its toast; a refused
-  one comes back to the page's alert with its code in the address. None of them emails anybody, and no public cache is expired:
-  no public page reads a sign-up, an exclusion or a presence.
+  door, by name — the organizers' presses the Organizer's and the Administrators' (`canTakeRaffleList`), the desk's every desk role
+  (`canReadRaffle`, the roles that work the desk and, since §NNN, read the tab) — and the service asks it again (BR-REQ-060-01). The
+  desk's press is pressed at the desk and, by a desk role that is not an organizer, on the tab itself. A press that went through
+  comes back with its toast; a refused one comes back to the page's alert with its code in the address. None of them emails anybody,
+  and no public cache is expired: no public page reads a sign-up, an exclusion or a presence.
 */
 
 /** The tab's filters the press keeps: the four the page knows, anything else none. */
@@ -146,13 +147,19 @@ export async function raffleDeleteEntryAction(form: FormData): Promise<void> {
 
 /**
  * Where the desk's press comes back to, rebuilt from fields and never taken from the form as a path: the desk's list with its event
- * and its search (`back=desk`, as the desk's other verbs come back to it), or else the scanned person's view.
+ * and its search (`back=desk`, as the desk's other verbs come back to it), the «Tombolă» tab with its event and its filter
+ * (`back=raffle`, §NNN), or else the scanned person's view.
  *
  * On the desk's list (§1002) the row comes back too, as the desk's other verbs bring it (`row=`, the registration's id alone): the
  * section that holds it is drawn open, and a sign-up that went through lands on the row — its toast saying so — a refusal on
- * the alert (`listReturnAnchor`, §943).
+ * the alert (`listReturnAnchor`, §943). On the tab, as the tab's own presses come back: at the row (`#raffle-<id>`) with the toast,
+ * or at the alert with the refusal's code.
  */
 function deskAddress(form: FormData, outcome: { saved: string } | { error: string }): string {
+  if (field(form, "back") === "raffle") {
+    const registrationId = field(form, "registrationId");
+    return tabAddress(form, "error" in outcome ? { error: outcome.error } : { hash: isUuid(registrationId) ? `raffle-${registrationId}` : undefined });
+  }
   const locale = localeOf(form);
   const query = new URLSearchParams();
   let path: string;
@@ -176,20 +183,24 @@ function deskAddress(form: FormData, outcome: { saved: string } | { error: strin
   return `${path}?${query.toString()}#${hash}`;
 }
 
-/** The desk's list lands on the row (`deskAddress`), out of the alert's sight: the sign-up's toast says what the alert says. */
+/**
+ * The desk's list and the «Tombolă» tab land on the row (`deskAddress`), out of the alert's sight: the sign-up's toast says what the
+ * alert says. The tab draws no `saved=` sentence at all — its presses speak by the toast alone.
+ */
 async function toastAtDeskRow(form: FormData, saved: string): Promise<void> {
-  if (field(form, "back") === "desk") await flashOutcome({ saved });
+  const back = field(form, "back");
+  if (back === "desk" || back === "raffle") await flashOutcome({ saved });
 }
 
 /**
- * «Înscrie la tombolă» at the desk (DESK), under a row of the desk's list or on a scanned person's view: every desk role, the person
- * having accepted the rules on paper or aloud (`accepted=on`). Back where it was pressed, with the desk's own sentence (`saved=`), or
- * its refusal (`error=`).
+ * «Înscrie la tombolă» at the desk (DESK), under a row of the desk's list, on a scanned person's view or — for a desk role that is not
+ * an organizer — on a row of the «Tombolă» tab (§NNN): every desk role (`canReadRaffle`), the person having accepted the rules on paper
+ * or aloud (`accepted=on`). Back where it was pressed, with the desk's own sentence (`saved=`) or the toast, or its refusal (`error=`).
  */
 export async function raffleDeskSignUpAction(form: FormData): Promise<void> {
   let outcome: "created" | "already";
   try {
-    const actor = await requireStaffCapability(canWorkTheDesk);
+    const actor = await requireStaffCapability(canReadRaffle);
     outcome = await signUpForRaffleAtDesk(getDb(), actor, { registrationId: field(form, "registrationId"), accepted: form.get("accepted") === "on" }, new Date());
   } catch (error) {
     if (!isDomainError(error)) throw error;
@@ -197,5 +208,7 @@ export async function raffleDeskSignUpAction(form: FormData): Promise<void> {
   }
   const saved = outcome === "created" ? "raffleSignedUp" : "raffleAlready";
   await toastAtDeskRow(form, saved);
+  // From the tab, as the tab's own presses: its path revalidated, so the row comes back with its new answer.
+  if (field(form, "back") === "raffle") revalidatePath(getPathname({ locale: localeOf(form), href: "/admin/checkin/tombola" }));
   redirect(deskAddress(form, { saved }));
 }

@@ -435,7 +435,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Înscrie la tombolă» on «Ziua cursei» → «Tombolă» and on a volunteer's page (§984): the organizers record a person's sign-up.
   raffleSignUpAction:
     "records one person's raffle sign-up, the acceptance of the rules ticked by its own box, undone by «Șterge înscrierea», which asks; it emails nobody, is on no public page and changes no state, place, number or count but the raffle's",
-  // The same at the race-day desk, on the desk's view of a person (§984).
+  // The same at the race-day desk, on the desk's view of a person (§984) — and, for a desk role that is not an organizer, on «Tombolă» (§NNN).
   raffleDeskSignUpAction:
     "records one person's raffle sign-up at the desk, the acceptance of the rules ticked by its own box, undone on «Tombolă» by «Șterge înscrierea», which asks; it emails nobody and changes no state, place, number or count but the raffle's",
   // «Scoate» / «Pune înapoi» on a row of «Tombolă» (§984): the organizers' exclusion, through each kind's own tick.
