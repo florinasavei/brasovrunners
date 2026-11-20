@@ -877,6 +877,19 @@ export function canReadRaceDayJournal(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Declarații» (§1018)** — every signed declaration of one event on one page: each registration that holds one,
+ * by state, its number, its name, when and how it was signed, the version, the fingerprint, and the links to its PDF and to the
+ * registration. Whoever reads the participant list (`canReadRegistrations`): **the Organizer, the Administrator and the
+ * Superadministrator**, written as that function so moving the line moves both — the declarations are part of the list they read
+ * already (§289), each one a link to the PDF route that asserts the same and records every download. The desk's other roles (the
+ * desk Volunteer, the Redactor, Tehnic) are drawn no tab and meet the 404 an unknown page gets (BR-REQ-060-01); a member is no staff
+ * (§524). Reading only: nothing on the page changes anything, and no identity document is on it — that stays in the PDF.
+ */
+export function canReadRaceDayDeclarations(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject);
+}
+
+/**
  * **Publishing a race's results (§808)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
  * like the public participant list's switch (§201) and unlike the entering. **The Administrator and the
  * Superadministrator** alone (`canManageRegistrations`: whoever decides what the club tells the public about the
