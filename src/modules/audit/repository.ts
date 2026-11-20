@@ -813,7 +813,9 @@ export type AuditAction =
    * A race's results (§808), entity `event`: one row per result created, changed or deleted by «Salvează tot clasamentul» or the
    * row's own «Șterge» — the race number, the state, the times and, for a change, the names of the boxes that changed — never a
    * runner's name, sex, birth date or note, so an erased person leaves nothing of themselves in the trail. The rankings the
-   * save recomputes are not audited row by row: they follow from the rows that are.
+   * save recomputes are not audited row by row: they follow from the rows that are. «Folosește» under a line's «Timpi la sosire»
+   * (§1012) writes one too — `.updated`, or `.created` for a result made again — with `chosenFromHistory: true`: a time recorded at
+   * the line made the runner's.
    */
   | "event_result.created"
   | "event_result.updated"

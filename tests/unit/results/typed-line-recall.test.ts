@@ -36,6 +36,10 @@ const words: ResultWords = {
   noPlace: "fără loc încă",
   noPlaceSettled: "fără loc",
   outOfRanking: "în afara clasamentului",
+  // «Timpi la sosire» (§1012): drawn only for a line the page gives recorded times, which no line here has.
+  recordedTitle: "Timpi la sosire:",
+  recordedCurrent: "în clasament",
+  recordedUse: "Folosește",
 };
 const stored = (agreed: boolean, bib: string, name: string): TypedLine => ({
   values: { bib, name, sex: "", birthDate: "", time: "0:42:00", status: "FINISHED", chip: "", note: "" },

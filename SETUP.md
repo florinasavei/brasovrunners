@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.81-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.84-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.81-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.84-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1145,6 +1145,10 @@ Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a 
 else, and `/admin` takes them straight to it). The finish line is the desk's too since §986:
 a Voluntar records finishers on **Ziua cursei → Cronometrare** and undoes their own press for
 ten minutes; «Start», «Clasament» and its corrections stay the Organizer's and the Administrators'.
+So is the raffle's tab since §1014: for an event that holds a raffle, a Voluntar reads **Ziua cursei →
+Tombolă** — everybody by number, whether each takes part and was there — and signs a runner up there
+with «Înscrie» once the person has accepted the rules; the two files, «Scoate» / «Pune înapoi» and
+«Șterge înscrierea» stay the Organizer's and the Administrators'.
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
@@ -2772,7 +2776,9 @@ An agent never approves either text.
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the
-   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. **At the draw,
+   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. Every other desk
+   role — a Voluntar at the raffle's table — opens the same tab since §1014: the same table, counts and filters, without how and when
+   anybody signed up, and one press, «Înscrie» on a runner's row, with «A acceptat regulamentul» ticked once the person accepted. **At the draw,
    untick «Înscrierile la tombolă sunt deschise»** in the editor, then take «Lista pentru tombolă» (or «— doar prezenții») and draw from it.
 6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
    the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing

@@ -10,8 +10,8 @@ import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
-import { deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
-import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
+import { chooseRecordedFinishTime, deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
+import { CHOICE_BOX, EXTRA_ROWS, postedResultRows, readChosenTime, RESULTS_ALERT_ANCHOR, resultLineAnchor } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -158,6 +158,34 @@ export async function saveEventResultsAction(_previous: FormOutcome | null, form
   // A save that only moved places (a corrected answer changed a category) wrote no result: it says the places were counted again, not «0 rezultate».
   if (!saved.changed && saved.rewritten > 0) return backToPage(form, { saved: "resultsRecalculated" });
   return backToPage(form, saved.changed ? { saved: "resultsSaved", count: String(count) } : { saved: "resultsUnchanged" });
+}
+
+/**
+ * «Folosește» under a line's «Timpi la sosire» (§1012): one of the times «Cronometrare» recorded for the number becomes the line's
+ * «Sosit» time (`chooseRecordedFinishTime`), asked first — the page's one hidden form, as «Șterge» is, its button posting
+ * `choice=<number>:<milliseconds>:<the line's fingerprint>`. Through: back to «Clasament» at the line (`#result-line-<number>`), the
+ * toast naming the number. Refused — CONFLICT for a line changed since the page was drawn (that line's alone: another number's arrival
+ * refuses nothing), `RESULT_DISQUALIFIED`, `RESULT_TIME_NOT_RECORDED`, FORBIDDEN, NOT_FOUND, `RESULTS_NOT_OPEN` —: back with
+ * `?timeError=<code>` at the page's alert, which says why; nothing was written.
+ */
+export async function chooseRecordedTimeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const id = eventIdOf(form);
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id } } });
+  // A value the page never drew is no number and no time: the service asserts the role first, then refuses it as no recorded time.
+  const choice = readChosenTime(field(form, CHOICE_BOX)) ?? { bibNumber: 0, gunTimeMs: 0, lineFingerprint: null };
+  let outcome: { changed: boolean; bibNumber: number };
+  try {
+    const actor = await requireStaff();
+    outcome = await chooseRecordedFinishTime(getDb(), actor, { eventId: id, ...choice }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    revalidatePath(path);
+    redirect(`${path}?timeError=${encodeURIComponent(error.code)}#${RESULTS_ALERT_ANCHOR}`);
+  }
+  await flashOutcome({ saved: outcome.changed ? "resultTimeChosen" : "resultTimeUnchanged", bib: String(outcome.bibNumber) });
+  revalidatePath(path);
+  redirect(`${path}#${resultLineAnchor(outcome.bibNumber)}`);
 }
 
 /** The row's own «Șterge»: asks first (§384) — a deleted result is gone, and the audit row keeps its number and state, never a name. */
