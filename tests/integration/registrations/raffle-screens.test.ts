@@ -305,6 +305,40 @@ describe("§983 «Lista pentru tombolă — doar prezenții» on the registratio
     const tree = await listPage({ eventId: "all" });
     expect(buttonOf(tree, "registrations-raffle-list")).toBeUndefined();
     expect(buttonOf(tree, "registrations-raffle-present")).toBeUndefined();
+    // Nor the two files for random.org (§1023).
+    expect(buttonOf(tree, "registrations-raffle-random-org")).toBeUndefined();
+    expect(buttonOf(tree, "registrations-raffle-random-org-present")).toBeUndefined();
+  });
+
+  it("§1023 has «Descarcă pentru random.org» and its present-only twin right after the two CSVs, under the same condition, with the «?» that says how to use them", async () => {
+    const race = await createRace();
+    await register(race.id);
+    for (const role of ["ADMIN", "MODERATOR"] as const) {
+      state.actor = await staff(role);
+      const tree = await listPage({ eventId: race.id });
+      const text = buttonOf(tree, "registrations-raffle-random-org");
+      const present = buttonOf(tree, "registrations-raffle-random-org-present");
+      expect(text?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?format=random-org&lang=ro`);
+      expect(present?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?format=random-org&present=1&lang=ro`);
+      expect([text?.props.children, present?.props.children], role).toEqual(["Descarcă pentru random.org", "Descarcă pentru random.org — doar prezenții"]);
+      // Label in name, and the house's 44-pixel target.
+      for (const button of [text, present]) {
+        expect(String(button?.props["aria-label"]).startsWith(`${button?.props.children}:`), role).toBe(true);
+        expect(button?.props.sx, role).toEqual(buttonOf(tree, "registrations-raffle-list")?.props.sx);
+      }
+      // After the two CSVs, in that order.
+      const order = elements(tree).map((element) => element.props["data-testid"]);
+      expect(order.indexOf("registrations-raffle-random-org"), role).toBeGreaterThan(order.indexOf("registrations-raffle-present"));
+      expect(order.indexOf("registrations-raffle-random-org-present"), role).toBe(order.indexOf("registrations-raffle-random-org") + 1);
+      const help = elements(tree).find((element) => element.props.testId === "registrations-raffle-random-org-help");
+      expect(help?.props.text, role).toBe("Un număr pe rând, fără nume: îl lipești în random.org → List Randomizer, apoi cauți câștigătorul după număr în lista CSV.");
+    }
+    // In English, the help line under 200 characters in both languages.
+    state.actor = await staff("ADMIN");
+    state.locale = "en";
+    const english = buttonOf(await listPage({ eventId: race.id }), "registrations-raffle-random-org");
+    expect(english?.props).toMatchObject({ href: `/api/admin/events/${race.id}/raffle?format=random-org&lang=en`, children: "Download for random.org" });
+    for (const catalogue of [ro, en]) expect(catalogue.Admin.registrations.raffle.randomOrgHelp.length).toBeLessThanOrEqual(200);
   });
 
   it("speaks English on the English page", async () => {

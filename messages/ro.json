@@ -1035,7 +1035,7 @@
       "name": "Numele",
       "nameHelp": "Numele cu care te-ai înscris, de exemplu „Ana Popescu”.",
       "volunteer": "Sunt voluntar",
-      "volunteerHelp": "Atunci scrie mai sus numărul tău de voluntar.",
+      "volunteerHelp": "Atunci scrie mai sus numărul tău de voluntar: V007 sau doar 7.",
       "rules": "Citește Regulamentul tombolei",
       "accept": "Am citit și accept Regulamentul tombolei",
       "notice": "Ce păstrăm despre înscriere scrie în <privacy>nota de confidențialitate</privacy>. Nu primești niciun e-mail pentru ea.",
@@ -1048,6 +1048,7 @@
       "fix": "Verifică ce ai scris mai jos.",
       "errors": {
         "number": "Scrie numărul de concurs, doar cifre.",
+        "volunteerNumber": "Un număr care începe cu V e al unui voluntar: bifează „Sunt voluntar” mai jos. Numărul de concurs al unui alergător are doar cifre.",
         "name": "Scrie numele, cel mult 120 de caractere.",
         "accept": "Bifează că accepți Regulamentul tombolei."
       },
@@ -1403,7 +1404,7 @@
       "toVolunteer": {
         "title": "Transformă în voluntar",
         "intro": "Înscrierea se anulează și locul se eliberează, ca la orice anulare. Persoana trece pe lista voluntarilor acestui eveniment, confirmată, cu rolul pe care îl alegi.",
-        "numberNote": "Numărul de concurs al înscrierii rămâne retras. Ca voluntar primește un număr numai dacă evenimentul are seria de numere a voluntarilor.",
+        "numberNote": "Numărul de concurs al înscrierii rămâne retras. Ca voluntar primește la confirmare numărul de voluntar următor, de exemplu V007.",
         "role": "Rolul de voluntar",
         "action": "Transformă în voluntar",
         "noRoles": "Evenimentul nu are încă niciun rol de voluntar. Adaugă unul în cardul «Voluntari» al evenimentului, apoi revino aici.",
@@ -1422,6 +1423,11 @@
         "buttonLabel": "Lista pentru tombolă (CSV): alergătorii, elitele și voluntarii care participă, cu numărul, numele, grupa și dacă persoana e prezentă",
         "presentButton": "Lista pentru tombolă — doar prezenții (CSV)",
         "presentButtonLabel": "Lista pentru tombolă — doar prezenții (CSV): cei care participă și au fost prezenți — alergătorii marcați la masă sau cu „Am ajuns” din linkul lor, voluntarii și elitele bifați „Prezent”",
+        "randomOrgButton": "Descarcă pentru random.org",
+        "randomOrgButtonLabel": "Descarcă pentru random.org: un fișier text cu un număr pe rând, fără nume — numerele de concurs, apoi numerele de voluntar (V001…)",
+        "randomOrgPresentButton": "Descarcă pentru random.org — doar prezenții",
+        "randomOrgPresentButtonLabel": "Descarcă pentru random.org — doar prezenții: un număr pe rând, fără nume, doar cei care participă și au fost prezenți",
+        "randomOrgHelp": "Un număr pe rând, fără nume: îl lipești în random.org → List Randomizer, apoi cauți câștigătorul după număr în lista CSV.",
         "columns": {
           "number": "Număr",
           "name": "Nume",
@@ -2843,7 +2849,6 @@
       "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă.",
       "BADGE_SIZE_TOO_SMALL": "Nu s-a salvat: un ecuson de {width} × {height} mm nu are loc pentru tot ce ai bifat: {what}. Fă-l de cel puțin {minHeight} mm înălțime sau debifează unul.",
       "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
-      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "Numerele voluntarilor trebuie să înceapă peste cele ale alergătorilor: locurile cursei, rezervele de la masă și numerele date deja. Alege un număr mai mare. Nu s-a salvat nimic.",
       "RUNNER_TO_VOLUNTEER_MINOR": "Persoana are sub 18 ani în ziua evenimentului. Adaug-o de mână la «Voluntari», cu datele părintelui sau ale tutorelui. Nu s-a schimbat nimic.",
       "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "Voluntarul nu are adresă de email, iar o înscriere are nevoie de una. Completeaz-o cu «Modifică», apoi încearcă din nou. Nu s-a schimbat nimic.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
@@ -3938,6 +3943,17 @@
             "toPrint": "de tipărit: {count}",
             "spares": "rezervă {from}–{to}"
           },
+          "raffle": {
+            "off": "nu avem",
+            "groups": {
+              "RUNNER": "alergători",
+              "ELITE": "elite",
+              "VOLUNTEER": "voluntari"
+            },
+            "nobody": "nicio grupă bifată",
+            "automatic": "din oficiu",
+            "signUp": "cu înscriere separată"
+          },
           "bibDesign": {
             "parts": "{parts}",
             "footer": "subsol: {parts}"
@@ -4157,6 +4173,7 @@
         }
       },
       "raffle": {
+        "title": "Tombolă",
         "who": "Cine poate participa la tombolă",
         "runners": "Alergătorii",
         "elites": "Elitele",
@@ -6566,12 +6583,6 @@
         "withdrawing": "Se retrage…",
         "withdrawTitle": "Retragi invitația?",
         "withdrawBody": "Linkul nu mai merge. Dacă persoana îl deschide, află că invitația a fost retrasă."
-      },
-      "numbers": {
-        "label": "Numerele voluntarilor încep de la",
-        "help": "Fiecare voluntar confirmat primește un număr din seria lui, de aici în sus — niciodată unul purtat de un alergător. Alege un număr peste cele ale alergătorilor. Gol: fără numere.",
-        "save": "Salvează numerele",
-        "saving": "Se salvează…"
       },
       "choicesMax": {
         "label": "Cel mult câte roluri poate bifa o persoană",
@@ -10095,6 +10106,14 @@
               ]
             },
             {
+              "title": "Tombola în ziua cursei",
+              "steps": [
+                "«Ziua cursei» → «Tombolă»: toți alergătorii, elitele și voluntarii evenimentului, fiecare cu «Participă» și, când nu participă, de ce. Cine participă și cum hotărăște Administratorul, în editorul evenimentului.",
+                "Voluntarii participă cu numărul lor de voluntar, V001, V002…, pe care îl primesc singuri în clipa în care îi confirmi: nu setezi nimic.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie. Pe rândul lui scrie de ce."
+              ]
+            },
+            {
               "title": "O schimbare la eveniment",
               "steps": [
                 "«Alergări» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
@@ -10129,6 +10148,17 @@
                 "Vrei alte grupe? Pe «Clasament», la «Categorii de vârstă», scrie în «Vârstele de la care încep grupele» vârstele de început, separate prin virgulă — „18, 35, 45, 55” dă sub 18, 18-34, 35-44, 45-54 și 55+ — și apasă «Salvează categoriile». Rândul de sub căsuță arată grupele cum le va spune site-ul. Gol înseamnă grupele standard.",
                 "Fă asta înainte de cursă, sau înainte ca Administratorul să publice clasamentul: locurile la categorie ale rezultatelor deja salvate se recalculează pe loc, iar pagina evenimentului și CSV-ul le preiau.",
                 "La «Premii» vezi podiumul din rezultatele salvate: primele locuri la feminin și la masculin, apoi — dacă premiezi și categoriile — primele din fiecare categorie, cu numărul, numele și timpul. Scrie la «Câte locuri premiezi» câte dai (de la 1 la 10), bifează sau debifează «Premiezi și fiecare categorie» și apasă «Salvează premiile». Pentru „top 5 la feminin și la masculin”: 5, debifat."
+              ]
+            },
+            {
+              "title": "Tombola: numerele voluntarilor și extragerea pe random.org",
+              "steps": [
+                "Voluntarii au numere de la sine: V001, V002, V003… Fiecare primește următorul număr în clipa în care îl confirmi; nu setezi nimic. Numărul apare lângă nume pe «Voluntari», pe pagina persoanei, în plan și în Excel.",
+                "Un număr de voluntar nu se dă a doua oară: cine e anulat sau șters își păstrează numărul retras. V007 și numărul de concurs 7 sunt doi oameni diferiți.",
+                "În ziua cursei bifează «Prezent» la voluntarii veniți, pe «Voluntari»; alergătorii îi marchează masa.",
+                "«Ziua cursei» → «Tombolă» (sau lista de înscrieri, sau «Voluntari», cu evenimentul ales): «Descarcă pentru random.org» — sau «Descarcă pentru random.org — doar prezenții» —, un fișier text cu un număr pe rând, fără nume.",
+                "Pe random.org → List Randomizer: lipește tot conținutul fișierului și apasă Randomize. Primul număr din listă e câștigătorul.",
+                "Cauți numărul câștigător în «Lista pentru tombolă (CSV)» sau pe «Tombolă»: acolo e numele. Numerele de concurs sunt ale alergătorilor și elitelor, cele cu V ale voluntarilor."
               ]
             },
             {
@@ -10408,6 +10438,18 @@
                 "Cineva înscris, chiar cu BIB-ul tipărit, primește un BIB gol? «Înscrieri» → înscrierea lui → «Dă-i un BIB gol» → la «BIB-ul gol» alege numărul de pe hârtie → «Dă-i BIB-ul». Numărul vechi se retrage, iar BIB-ul tipărit cu el nu mai e bun.",
                 "O invitație poate da un BIB gol: la «Trimite invitații noi» bifează «La confirmare primește un BIB gol»; când se confirmă, persoana primește cel mai mic BIB gol liber atunci.",
                 "Cine are fiecare BIB gol dat apare sub «Numere de rezervă pentru înscrierile de la fața locului»: numărul, apoi numele, cu link spre înscriere."
+              ]
+            },
+            {
+              "title": "Tombola: cine participă și cum",
+              "steps": [
+                "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Tombolă». Închisă, bara ei spune cine participă și cum, de pildă „Alergători, elite, voluntari · din oficiu”.",
+                "Bifează «Avem tombolă», apoi, la «Cine poate participa la tombolă», grupele care participă: «Alergătorii», «Elitele», «Voluntarii».",
+                "La «Cum participă» alege «Din oficiu: toți cei bifați mai sus» sau «Cu înscriere separată: doar cei care se înscriu» — a doua doar cu Regulamentul tombolei și nota de confidențialitate în vigoare. Cu înscriere separată, bifează «Înscrierile la tombolă sunt deschise» și debifeaz-o la extragere.",
+                "Pentru voluntari nu setezi nimic: fiecare primește numărul lui de voluntar, V001, V002…, în clipa în care e confirmat, și participă cu el.",
+                "Un voluntar nu participă cât timp nu e confirmat, dacă l-ai scos de la tombolă sau, cu înscriere separată, până se înscrie.",
+                "Apasă «Salvează». După salvare, «Tombolă» rămâne deschisă, cu ce ai salvat.",
+                "În ziua cursei, «Ziua cursei» → «Tombolă» îi arată pe toți, dacă participă și, când nu participă, de ce."
               ]
             },
             {
@@ -13478,9 +13520,14 @@
     "raffle": {
       "title": "Tombolă",
       "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "randomOrgMissing": {
+        "one": "{count} participant fără număr nu e în fișierul pentru random.org: dă-i întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
+        "few": "{count} participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului.",
+        "other": "{count} de participanți fără număr nu sunt în fișierul pentru random.org: dă-le întâi un număr, cu „Dă număr elitelor fără număr” din editorul evenimentului."
+      },
       "introDesk": "Toți alergătorii, elitele și voluntarii evenimentului: cine participă la tombolă și cine e prezent. Cu înscriere separată, înscrie aici un alergător după ce a acceptat regulamentul.",
       "noEvent": "Niciun eveniment de arătat.",
-      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
+      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs” → „Tombolă”.",
       "event": "Evenimentul",
       "show": "Arată",
       "settings": {
@@ -15840,8 +15887,6 @@
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
-      "volunteerNumbersOn": "Seria de numere a voluntarilor e salvată. Voluntarii confirmați care nu aveau număr l-au primit.",
-      "volunteerNumbersOff": "Voluntarii nu mai primesc numere. Cele date deja rămân.",
       "volunteerChoicesMaxOn": {
         "one": "Limita e salvată: pe formularul public se poate bifa cel mult {count} rol.",
         "few": "Limita e salvată: pe formularul public se pot bifa cel mult {count} roluri.",

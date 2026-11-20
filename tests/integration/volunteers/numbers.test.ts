@@ -1,5 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
@@ -7,60 +7,37 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { bibNumberInUse, pickBibNumber, pickVolunteerNumber, runnersLastNumber } from "@/modules/registrations/bibs";
-import { STAFF_ROLES, canManageVolunteers, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { bibNumberInUse, pickBibNumber } from "@/modules/registrations/bibs";
+import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { buildVolunteersCsv } from "@/modules/volunteers/csv";
-import { volunteerExport, volunteerExportHeader } from "@/modules/volunteers/export";
-import { changeVolunteer, exportVolunteers, listVolunteers, setVolunteerNumbersStart } from "@/modules/volunteers/volunteers";
-import { isDomainError } from "@/shared/errors/domain-error";
+import { volunteerExport, volunteerExportHeader, volunteerSheetWords } from "@/modules/volunteers/export";
+import { readRaffleRoster } from "@/modules/volunteers/raffle-list";
+import { highestVolunteerNumber, numberWaitingVolunteers } from "@/modules/volunteers/volunteer-numbers";
+import { changeVolunteer, exportVolunteers, listVolunteers } from "@/modules/volunteers/volunteers";
+import { buildVolunteersWorkbook } from "@/modules/volunteers/workbook";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §948 — the volunteers' numbers (the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and, asked
- * which numbers, «Serie proprie»). BR-REQ-038-01, and BR-REQ-060-01 for who.
+ * §1023, amending §948 — every volunteer's number is V001, V002, … by itself (the owner, 2026-11-20: «vreau sa le dai numar de
+ * voluntar V001 V002 la toti voluntarii automat!»). BR-REQ-050-02.
  *
  * What is protected, on real PostgreSQL (PGlite):
- * - an event gives its volunteers no number until «Numerele voluntarilor încep de la» is set, and the start is refused at
- *   or below any number a runner wears or may come to wear — a capped race's last number, the desk's spares, a number
- *   worn, retired or on the elite list;
- * - saving the start gives every confirmed volunteer without a number theirs, in the order they were added, and nobody
- *   else; a person confirmed later draws the next free one; nobody draws twice; a cancelled person keeps theirs;
- * - one number is one person at the event: a runner's draw and the desk's hand-typed number treat a volunteer's as worn,
- *   and a volunteer's draw steps over every number a runner, an elite line or the desk's spares hold;
- * - a deleted volunteer's number is never drawn again;
- * - the series switched off stops the draws and takes no number back;
- * - whoever may manage volunteers sets it, nobody else; the trail names the start and a count, never a person;
- * - the volunteers' file carries the number.
+ * - every event numbers its volunteers 1, 2, 3, … — written «V001» — the moment the organizers confirm each, in the order they are
+ *   confirmed, with nothing to set first; a person confirmed again keeps theirs; nobody draws twice;
+ * - a number is never given again: a cancelled volunteer keeps theirs, retired, and a deleted one's stays retired through the
+ *   trail (`volunteer.deleted`, `volunteerNumber`);
+ * - its own series: a runner's draw reads no V number and a volunteer's draw reads no race number, an elite line or a spare —
+ *   V001 and race number 1 are two people; a number of the old series (`bib_number`) stays on its row, untouched, still worn for
+ *   the runners' draw, and the row draws its V number like everybody;
+ * - the table refuses one V number twice at an event, and nought;
+ * - the maintenance job gives a V number to a confirmed volunteer who has none — in the order they were first confirmed, after
+ *   the event's highest — audited with a count and never a person, and writes nothing on the next run;
+ * - the volunteers' CSV and Excel write «V001» under their «Număr» column.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
-
-vi.mock("next/navigation", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/navigation")>()),
-  redirect: (url: string) => {
-    state.redirected.push(url);
-    throw new Error("NEXT_REDIRECT");
-  },
-}));
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
-vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
-vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
-vi.mock("@/db/client", () => ({ getDb: () => state.db }));
-vi.mock("@/i18n/navigation", () => ({
-  getPathname: ({ locale, href }: { locale: string; href: string | { pathname: string; params?: Record<string, string> } }) =>
-    typeof href === "string" ? `/${locale}${href}` : `/${locale}${href.pathname.replace("[id]", href.params?.id ?? "")}`,
-  Link: () => null,
-}));
-vi.mock("@/modules/staff-identity/session", () => ({
-  DEV_STAFF_COOKIE: "dev-staff",
-  requireStaff: async () => state.actor,
-  requireStaffCapability: async () => state.actor,
-}));
-
-const { setVolunteerNumbersStartAction } = await import("@/app/[locale]/admin/events/[id]/volunteer-actions");
-
-const NOW = new Date("2026-11-15T09:00:00.000Z");
+const NOW = new Date("2026-11-20T09:00:00.000Z");
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 
 let db: TestDatabase;
@@ -72,48 +49,49 @@ let serial = 0;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  state.db = db;
 });
 afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
-  state.redirected.length = 0;
   admin = await staff("ADMIN");
-  state.actor = admin;
-  // A race of 150 places whose runners' numbers start at 1: the runners' series is 1–150.
-  const [event] = await db
-    .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2099-11-21T08:00:00.000Z"), registrationMode: "INTERNAL", editorialStatus: "PUBLISHED", publishedAt: NOW, capacity: 150, bibStartNumber: 1, locationName: "Start", acceptsVolunteers: true })
-    .returning({ id: events.id });
-  eventId = event.id;
-  await db.insert(eventTranslations).values([
-    { eventId, locale: "ro", slug: "cros", title: "Crosul" },
-    { eventId, locale: "en", slug: "cross", title: "The cross" },
-  ]);
-  const [role] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 5, position: 0 }).returning({ id: eventVolunteerRoles.id });
-  roleId = role.id;
+  ({ eventId, roleId } = await race("Crosul"));
 });
 
-async function staff(role: StaffRole): Promise<StaffUser> {
+async function staff(role: "ADMIN" | "MODERATOR"): Promise<StaffUser> {
   serial += 1;
   const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}-${serial}@dev.test`, displayName: `Colleague ${role}`, role }).returning();
   return user;
 }
 
-/** A volunteer as the card writes one, in the state given, added at `minute`. */
-async function volunteer(name: string, volunteerState: "REGISTERED" | "CONFIRMED" | "CANCELLED", minute: number, bibNumber: number | null = null): Promise<string> {
+/** A race of 150 places whose runners' numbers start at 1 — and nothing about the volunteers' numbers to set. */
+async function race(title: string) {
+  serial += 1;
+  const [event] = await db
+    .insert(events)
+    .values({ type: "RACE", startsAt: new Date("2099-11-21T08:00:00.000Z"), registrationMode: "INTERNAL", editorialStatus: "PUBLISHED", publishedAt: NOW, capacity: 150, bibStartNumber: 1, locationName: "Start", acceptsVolunteers: true })
+    .returning({ id: events.id });
+  await db.insert(eventTranslations).values([
+    { eventId: event.id, locale: "ro", slug: `cros-${serial}`, title },
+    { eventId: event.id, locale: "en", slug: `cross-${serial}`, title: `${title} (en)` },
+  ]);
+  const [role] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: 5, position: 0 }).returning({ id: eventVolunteerRoles.id });
+  return { eventId: event.id, roleId: role.id };
+}
+
+/** A volunteer as the card writes one, in the state given, added at `minute`; `more` sets other columns (an old-series number, a V number). */
+async function volunteer(name: string, volunteerState: "REGISTERED" | "CONFIRMED" | "CANCELLED", minute: number, more: Partial<typeof eventVolunteers.$inferInsert> = {}, where = { eventId, roleId }): Promise<string> {
   serial += 1;
   const email = `volunteer-${serial}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
-    .values({ eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: volunteerState, source: "STAFF", roleId, bibNumber, createdAt: at(minute), updatedAt: at(minute) })
+    .values({ eventId: where.eventId, name, email, canonicalEmail: email, canonicalizationVersion: 2, phone: "+40712345678", state: volunteerState, source: "STAFF", roleId: where.roleId, createdAt: at(minute), updatedAt: at(minute), ...more })
     .returning({ id: eventVolunteers.id });
-  await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: row.id, roleId, createdAt: at(minute) });
+  await db.insert(eventVolunteerRoleAssignments).values({ volunteerId: row.id, roleId: where.roleId, createdAt: at(minute) });
   return row.id;
 }
 
-/** A runner of the race wearing `bibNumber`, in the status given. */
-async function runner(name: string, bibNumber: number | null, status: "CONFIRMED" | "CANCELLED" = "CONFIRMED"): Promise<string> {
+/** A runner of the race wearing `bibNumber`. */
+async function runner(name: string, bibNumber: number | null): Promise<string> {
   serial += 1;
   const email = `runner-${serial}@example.test`;
   const [participant] = await db
@@ -133,268 +111,248 @@ async function runner(name: string, bibNumber: number | null, status: "CONFIRMED
       privacyAcknowledgedAt: NOW,
       resultsNameConsent: false,
       resultsConsentVersion: 1,
-      status,
+      status: "CONFIRMED",
       confirmedAt: NOW,
       bibNumber,
-      ...(status === "CANCELLED" ? { cancelledAt: NOW, cancellationSource: "ADMIN" as const } : {}),
     })
     .returning({ id: registrations.id });
   return row.id;
 }
 
-async function failureOf(operation: Promise<unknown>) {
-  try {
-    await operation;
-  } catch (error) {
-    if (isDomainError(error)) return error;
-    throw error;
-  }
-  throw new Error("expected a DomainError");
-}
-
-const numberOf = async (id: string) => (await db.select({ bibNumber: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0]?.bibNumber ?? null;
-const startOf = async () => (await db.select({ start: events.volunteerBibStart }).from(events).where(eq(events.id, eventId)))[0].start;
-const trailOf = (action: string) => db.select().from(auditLogs).where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, eventId))).orderBy(asc(auditLogs.createdAt));
-const confirm = (id: string, minute = 60) => changeVolunteer(db, admin, { kind: "setState", eventId, id, state: "CONFIRMED" }, at(minute), { sendEmail: false });
+const numberOf = async (id: string) => (await db.select({ number: eventVolunteers.volunteerNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0]?.number ?? null;
+const oldNumberOf = async (id: string) => (await db.select({ number: eventVolunteers.bibNumber }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0]?.number ?? null;
+const trailOf = (action: string, of = eventId) => db.select().from(auditLogs).where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, of))).orderBy(asc(auditLogs.createdAt));
+const confirm = (id: string, minute = 60, of = eventId) => changeVolunteer(db, admin, { kind: "setState", eventId: of, id, state: "CONFIRMED" }, at(minute), { sendEmail: false });
 const setState = (id: string, next: "REGISTERED" | "CANCELLED", minute = 70) => changeVolunteer(db, admin, { kind: "setState", eventId, id, state: next }, at(minute), { sendEmail: false });
+/** A confirmation as the trail of the release before wrote it: what the migration and the job read the order from. */
+const confirmedInTrail = (id: string, minute: number) =>
+  db.insert(auditLogs).values({ actorStaffUserId: admin.id, action: "volunteer.state_changed", entityType: "event", entityId: eventId, metadataJson: { volunteerId: id, from: "REGISTERED", to: "CONFIRMED" }, createdAt: at(minute) });
 
-describe("§948 BR-REQ-038-01 «Numerele voluntarilor încep de la»: the series' first number", () => {
-  it("an event gives its volunteers no number until the start is set: a confirmation draws none", async () => {
+describe("§1023 BR-REQ-050-02 a volunteer's V number: drawn by itself at the confirmation, in order, once", () => {
+  it("gives every event's volunteers 1, 2, 3 … in the order the organizers confirm them — with nothing to set — and says it in the trail", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
-    await confirm(ana);
-    expect(await numberOf(ana)).toBeNull();
-    expect(await startOf()).toBeNull();
-  });
-
-  it("is refused at or below the runners' numbers — the capped race's last, the desk's spares, a number worn, retired or on the elite list — and writes nothing", async () => {
-    expect(await runnersLastNumber(db, eventId)).toBe(150);
-    for (const start of [1, 100, 150]) {
-      const refusal = await failureOf(setVolunteerNumbersStart(db, admin, { eventId, start }, NOW));
-      expect(refusal.code, String(start)).toBe("VOLUNTEER_NUMBERS_IN_RACE_SERIES");
-      expect(refusal.fields).toEqual(["volunteerBibStart"]);
-    }
-    // A number typed by hand above the series, a line of the elite list, the desk's spares: each moves the runners' last number.
-    await runner("Ion Ionescu", 420);
-    expect(await runnersLastNumber(db, eventId)).toBe(420);
-    await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 777 });
-    expect(await runnersLastNumber(db, eventId)).toBe(777);
-    await db.update(events).set({ walkInBibStart: 800, walkInBibCount: 20 }).where(eq(events.id, eventId));
-    expect(await runnersLastNumber(db, eventId)).toBe(819);
-    expect((await failureOf(setVolunteerNumbersStart(db, admin, { eventId, start: 819 }, NOW))).code).toBe("VOLUNTEER_NUMBERS_IN_RACE_SERIES");
-    expect(await startOf()).toBeNull();
-    expect(await trailOf("event.volunteer_numbers_start_set")).toEqual([]);
-
-    expect(await setVolunteerNumbersStart(db, admin, { eventId, start: 820 }, NOW)).toEqual({ changed: true, assigned: 0 });
-    expect(await startOf()).toBe(820);
-  });
-
-  it("refuses what is no number of a series, naming the box", async () => {
-    for (const start of [0, -5, 1.5, Number.NaN, 99_001]) {
-      const refusal = await failureOf(setVolunteerNumbersStart(db, admin, { eventId, start }, NOW));
-      expect(refusal.code, String(start)).toBe("VALIDATION_ERROR");
-      expect(refusal.fields).toEqual(["volunteerBibStart"]);
-    }
-    expect(await startOf()).toBeNull();
-  });
-
-  it("gives every confirmed volunteer without a number theirs, in the order they were added — never one waiting or cancelled — and says how many in the trail", async () => {
-    const third = await volunteer("Carmen Dima", "CONFIRMED", 30);
-    const first = await volunteer("Ana Pop", "CONFIRMED", 10);
-    const waiting = await volunteer("Bogdan Stan", "REGISTERED", 15);
-    const second = await volunteer("Dan Ene", "CONFIRMED", 20);
-    const cancelled = await volunteer("Eva Radu", "CANCELLED", 5);
-
-    expect(await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW)).toEqual({ changed: true, assigned: 3 });
-    expect([await numberOf(first), await numberOf(second), await numberOf(third)]).toEqual([500, 501, 502]);
-    expect(await numberOf(waiting)).toBeNull();
-    expect(await numberOf(cancelled)).toBeNull();
-
-    const [row, ...more] = await trailOf("event.volunteer_numbers_start_set");
-    expect(more).toEqual([]);
-    expect(row).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
-    expect(row.metadataJson).toEqual({ from: null, to: 500, assigned: 3 });
-    // Never a person: no name, no address, no row's id.
-    for (const gone of ["Ana", "example.test", first]) expect(JSON.stringify(row)).not.toContain(gone);
-
-    // The same start again changes nothing and writes nothing.
-    expect(await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, at(5))).toEqual({ changed: false, assigned: 0 });
-    expect(await trailOf("event.volunteer_numbers_start_set")).toHaveLength(1);
-  });
-
-  it("moved, the numbers given stay and the next person draws from the new start; emptied, nobody new draws and no number is taken back", async () => {
-    const ana = await volunteer("Ana Pop", "CONFIRMED", 1);
-    await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
-    expect(await numberOf(ana)).toBe(500);
-
-    expect(await setVolunteerNumbersStart(db, admin, { eventId, start: 900 }, at(1))).toEqual({ changed: true, assigned: 0 });
-    expect(await numberOf(ana)).toBe(500);
     const dan = await volunteer("Dan Ene", "REGISTERED", 2);
-    await confirm(dan);
-    expect(await numberOf(dan)).toBe(900);
-
-    expect(await setVolunteerNumbersStart(db, admin, { eventId, start: null }, at(2))).toEqual({ changed: true, assigned: 0 });
-    expect(await startOf()).toBeNull();
-    expect([await numberOf(ana), await numberOf(dan)]).toEqual([500, 900]);
     const eva = await volunteer("Eva Radu", "REGISTERED", 3);
-    await confirm(eva);
-    expect(await numberOf(eva)).toBeNull();
-    expect((await trailOf("event.volunteer_numbers_start_set")).map((row) => row.metadataJson)).toEqual([
-      { from: null, to: 500, assigned: 1 },
-      { from: 500, to: 900, assigned: 0 },
-      { from: 900, to: null, assigned: 0 },
-    ]);
-  });
-
-  it.each(STAFF_ROLES.filter((role) => !canManageVolunteers(role)).map((role) => [role] as const))("BR-REQ-060-01 refuses the %s role, and writes nothing", async (role) => {
-    expect((await failureOf(setVolunteerNumbersStart(db, await staff(role), { eventId, start: 500 }, NOW))).code).toBe("FORBIDDEN");
-    expect(await startOf()).toBeNull();
-  });
-
-  it.each(STAFF_ROLES.filter((role) => canManageVolunteers(role)).map((role) => [role] as const))("BR-REQ-060-01 serves the %s role", async (role) => {
-    expect(await setVolunteerNumbersStart(db, await staff(role), { eventId, start: 500 }, NOW)).toEqual({ changed: true, assigned: 0 });
-  });
-});
-
-describe("§948 BR-REQ-038-01 a volunteer's number: drawn at the confirmation, once, and never taken back", () => {
-  beforeEach(async () => {
-    await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
-  });
-
-  it("draws the next free number of the series when the organizers confirm the person, and writes it in the trail", async () => {
-    const ana = await volunteer("Ana Pop", "REGISTERED", 1);
-    const dan = await volunteer("Dan Ene", "REGISTERED", 2);
-    expect(await numberOf(ana)).toBeNull();
-    // Confirmed in the other order: the number follows the confirmation, as a runner's does.
+    expect([await numberOf(ana), await numberOf(dan), await numberOf(eva)]).toEqual([null, null, null]);
+    // Confirmed in another order than they were added: the number follows the confirmation, as a runner's does (§173).
     await confirm(dan, 60);
-    await confirm(ana, 61);
-    expect([await numberOf(dan), await numberOf(ana)]).toEqual([500, 501]);
+    await confirm(eva, 61);
+    await confirm(ana, 62);
+    expect([await numberOf(dan), await numberOf(eva), await numberOf(ana)]).toEqual([1, 2, 3]);
     const states = await trailOf("volunteer.state_changed");
-    expect(states.map((row) => (row.metadataJson as { bibNumber?: number }).bibNumber)).toEqual([500, 501]);
-    expect((await listVolunteers(db, eventId)).map((person) => [person.name, person.bibNumber]).sort()).toEqual([
-      ["Ana Pop", 501],
-      ["Dan Ene", 500],
+    expect(states.map((row) => (row.metadataJson as { volunteerNumber?: number }).volunteerNumber)).toEqual([1, 2, 3]);
+    // The trail names the number, never the old series' column, and never the person.
+    expect(states.every((row) => !("bibNumber" in (row.metadataJson as object)))).toBe(true);
+    expect(JSON.stringify(states)).not.toContain("Ana");
+    expect((await listVolunteers(db, eventId)).map((person) => [person.name, person.volunteerNumber])).toEqual([
+      ["Ana Pop", 3],
+      ["Dan Ene", 1],
+      ["Eva Radu", 2],
     ]);
   });
 
-  it("keeps the number through a cancellation and a reopening, and never draws a second one", async () => {
+  it("numbers every event's volunteers from 1, a series of its own per event", async () => {
+    const other = await race("Alt cros");
+    const ana = await volunteer("Ana Pop", "REGISTERED", 1);
+    const ion = await volunteer("Ion Lupu", "REGISTERED", 2, {}, other);
+    await confirm(ana);
+    await confirm(ion, 61, other.eventId);
+    expect([await numberOf(ana), await numberOf(ion)]).toEqual([1, 1]);
+  });
+
+  it("keeps the number through a cancellation and a reopening, never draws a second one, and gives nobody a cancelled person's", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
     await confirm(ana);
-    expect(await numberOf(ana)).toBe(500);
+    expect(await numberOf(ana)).toBe(1);
     await setState(ana, "CANCELLED");
-    expect(await numberOf(ana)).toBe(500);
-    // Somebody confirmed meanwhile never gets the cancelled person's number.
+    expect(await numberOf(ana)).toBe(1);
+    // Somebody confirmed meanwhile never gets the cancelled person's number: the highest the event gave is the cancelled row's.
     const dan = await volunteer("Dan Ene", "REGISTERED", 2);
     await confirm(dan, 80);
-    expect(await numberOf(dan)).toBe(501);
+    expect(await numberOf(dan)).toBe(2);
     await confirm(ana, 90);
-    expect(await numberOf(ana)).toBe(500);
+    expect(await numberOf(ana)).toBe(1);
     await setState(ana, "REGISTERED", 100);
     await confirm(ana, 110);
-    expect(await numberOf(ana)).toBe(500);
+    expect(await numberOf(ana)).toBe(1);
+    // The reopenings drew nothing: one number each in the trail.
+    expect((await trailOf("volunteer.state_changed")).flatMap((row) => (row.metadataJson as { volunteerNumber?: number }).volunteerNumber ?? [])).toEqual([1, 2]);
   });
 
-  it("a person who already holds a number keeps it at the confirmation: nobody draws a second one", async () => {
-    const ana = await volunteer("Ana Pop", "REGISTERED", 1, 27);
-    await confirm(ana);
-    expect(await numberOf(ana)).toBe(27);
-  });
-
-  it("a deleted volunteer's number is never drawn again: the trail keeps it retired", async () => {
+  it("a cancelled volunteer holding the highest number keeps it retired: the next confirmation draws above it", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
-    await confirm(ana);
-    expect(await numberOf(ana)).toBe(500);
-    await changeVolunteer(db, admin, { kind: "delete", eventId, id: ana }, at(70));
-    const [deleted] = await trailOf("volunteer.deleted");
-    expect(deleted.metadataJson).toMatchObject({ bibNumber: 500 });
     const dan = await volunteer("Dan Ene", "REGISTERED", 2);
-    await confirm(dan, 80);
-    expect(await numberOf(dan)).toBe(501);
-    // A person deleted before they had a number leaves none in the trail.
+    await confirm(ana, 60);
+    await confirm(dan, 61);
+    await setState(dan, "CANCELLED", 62);
     const eva = await volunteer("Eva Radu", "REGISTERED", 3);
-    await changeVolunteer(db, admin, { kind: "delete", eventId, id: eva }, at(90));
-    expect((await trailOf("volunteer.deleted")).at(-1)?.metadataJson).not.toHaveProperty("bibNumber");
+    await confirm(eva, 63);
+    expect(await numberOf(eva)).toBe(3);
+  });
+
+  it("a deleted volunteer's number is never given again: the trail keeps it retired — and a person deleted before they had one leaves none", async () => {
+    const ana = await volunteer("Ana Pop", "REGISTERED", 1);
+    const dan = await volunteer("Dan Ene", "REGISTERED", 2);
+    await confirm(ana, 60);
+    await confirm(dan, 61);
+    await changeVolunteer(db, admin, { kind: "delete", eventId, id: dan }, at(70));
+    const [deleted] = await trailOf("volunteer.deleted");
+    expect(deleted.metadataJson).toMatchObject({ volunteerNumber: 2 });
+    expect(deleted.metadataJson).not.toHaveProperty("bibNumber");
+    expect(await highestVolunteerNumber(db, eventId)).toBe(2);
+    const eva = await volunteer("Eva Radu", "REGISTERED", 3);
+    await confirm(eva, 80);
+    expect(await numberOf(eva)).toBe(3);
+    const ion = await volunteer("Ion Lupu", "REGISTERED", 4);
+    await changeVolunteer(db, admin, { kind: "delete", eventId, id: ion }, at(90));
+    expect((await trailOf("volunteer.deleted")).at(-1)?.metadataJson).not.toHaveProperty("volunteerNumber");
+    // A trail row of another event's deletion is not this event's: its numbers are its own.
+    const other = await race("Alt cros");
+    await db.insert(auditLogs).values({ actorStaffUserId: admin.id, action: "volunteer.deleted", entityType: "event", entityId: other.eventId, metadataJson: { volunteerId: "x", volunteerNumber: 40 }, createdAt: NOW });
+    expect(await highestVolunteerNumber(db, eventId)).toBe(3);
+  });
+
+  it("a row that holds a number of the old series keeps it untouched, and draws its V number at the confirmation like everybody", async () => {
+    const ana = await volunteer("Ana Pop", "REGISTERED", 1, { bibNumber: 500 });
+    await confirm(ana);
+    expect([await numberOf(ana), await oldNumberOf(ana)]).toEqual([1, 500]);
+    // Deleted, both are kept in its trail row: the old one for the runners' draw, the V one for the volunteers'.
+    await changeVolunteer(db, admin, { kind: "delete", eventId, id: ana }, at(70));
+    expect((await trailOf("volunteer.deleted"))[0].metadataJson).toMatchObject({ volunteerNumber: 1, bibNumber: 500 });
+  });
+
+  it("a person who already holds a V number keeps it at the confirmation", async () => {
+    const ana = await volunteer("Ana Pop", "REGISTERED", 1, { volunteerNumber: 7 });
+    await confirm(ana);
+    expect(await numberOf(ana)).toBe(7);
+    const dan = await volunteer("Dan Ene", "REGISTERED", 2);
+    await confirm(dan, 61);
+    expect(await numberOf(dan)).toBe(8);
+  });
+
+  it("the table itself refuses one V number on two volunteers of an event, and nought — and takes the same number at another event", async () => {
+    await volunteer("Ana Pop", "CONFIRMED", 1, { volunteerNumber: 1 });
+    await expect(volunteer("Dan Ene", "CONFIRMED", 2, { volunteerNumber: 1 })).rejects.toThrow();
+    await expect(volunteer("Eva Radu", "CONFIRMED", 3, { volunteerNumber: 0 })).rejects.toThrow();
+    const other = await race("Alt cros");
+    await volunteer("Ion Lupu", "CONFIRMED", 4, { volunteerNumber: 1 }, other);
   });
 });
 
-describe("§948 BR-REQ-038-01 one number is one person at the event", () => {
-  it("a volunteer's draw steps over every number a runner wears — a cancelled one's too — an elite line's, a retired one and the desk's spares", async () => {
-    // The series was set at 500 while nothing stood there; then numbers came to stand in its way.
-    await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
-    await runner("Ion Ionescu", 500);
-    await runner("Mara Dima", 501, "CANCELLED");
-    await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 502 });
-    // 503 was a volunteer's, deleted: retired through the trail.
-    await db.insert(auditLogs).values({ actorStaffUserId: admin.id, action: "volunteer.deleted", entityType: "event", entityId: eventId, metadataJson: { volunteerId: "x", bibNumber: 503 }, createdAt: NOW });
-    await db.update(events).set({ walkInBibStart: 504, walkInBibCount: 3 }).where(eq(events.id, eventId));
-
-    expect(await pickVolunteerNumber(db, eventId, 500)).toBe(507);
+describe("§1023 BR-REQ-050-02 a series of their own: the runners' and the volunteers' numbers never meet", () => {
+  it("a volunteer's draw reads no race number, no elite line and no desk spare: V001 beside race number 1", async () => {
+    await runner("Ion Ionescu", 1);
+    await runner("Mara Dima", 2);
+    await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 3 });
+    await db.update(events).set({ walkInBibStart: 4, walkInBibCount: 3 }).where(eq(events.id, eventId));
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
     await confirm(ana);
-    expect(await numberOf(ana)).toBe(507);
+    expect(await numberOf(ana)).toBe(1);
   });
 
-  it("a runner's draw and the desk's hand-typed number treat a volunteer's number as worn, whatever the volunteer's state", async () => {
-    // Volunteers wearing numbers inside the race's own series — rows from before the start was moved above it.
-    await volunteer("Ana Pop", "CONFIRMED", 1, 1);
-    await volunteer("Dan Ene", "CANCELLED", 2, 2);
+  it("a runner's draw reads no V number: the race's first free number is still its first", async () => {
+    for (const [index, name] of ["Ana Pop", "Dan Ene", "Eva Radu"].entries()) await confirm(await volunteer(name, "REGISTERED", index), 60 + index);
+    expect(await pickBibNumber(db, eventId)).toBe(1);
+    expect(await bibNumberInUse(db, { eventId, number: 1 })).toBe(false);
+  });
+
+  it("a number of the old series still counts as worn for the runners' draw — harmless, and nothing draws into it any more", async () => {
+    await volunteer("Ana Pop", "CONFIRMED", 1, { bibNumber: 1 });
+    await volunteer("Dan Ene", "CANCELLED", 2, { bibNumber: 2 });
     expect(await pickBibNumber(db, eventId)).toBe(3);
     expect(await bibNumberInUse(db, { eventId, number: 1 })).toBe(true);
-    expect(await bibNumberInUse(db, { eventId, number: 2 })).toBe(true);
-    expect(await bibNumberInUse(db, { eventId, number: 3 })).toBe(false);
-  });
-
-  it("the table itself refuses one number on two volunteers of an event, and takes it at another event", async () => {
-    await volunteer("Ana Pop", "CONFIRMED", 1, 500);
-    await expect(volunteer("Dan Ene", "CONFIRMED", 2, 500)).rejects.toThrow();
-    const [other] = await db
-      .insert(events)
-      .values({ type: "RACE", startsAt: new Date("2099-12-21T08:00:00.000Z"), registrationMode: "INTERNAL", locationName: "Start" })
-      .returning({ id: events.id });
-    await db.insert(eventVolunteers).values({ eventId: other.id, name: "Dan Ene", state: "CONFIRMED", source: "STAFF", bibNumber: 500 });
+    // A confirmation writes the V number and leaves the old column alone.
+    const eva = await volunteer("Eva Radu", "REGISTERED", 3);
+    await confirm(eva);
+    expect([await numberOf(eva), await oldNumberOf(eva)]).toEqual([1, null]);
   });
 });
 
-describe("§948 the number in the volunteers' file and on the card's own form", () => {
-  it("is the file's last column, empty for a person without one — in both languages", async () => {
-    await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
+describe("§1023 BR-REQ-050-02 the confirmed volunteers who have none are numbered by themselves", () => {
+  it("the maintenance job numbers them after the event's highest, in the order they were first confirmed, then added — audited with a count, never a person", async () => {
+    // V001 held, V002 deleted (in the trail): the next is 3.
+    await volunteer("Held One", "CONFIRMED", 1, { volunteerNumber: 1 });
+    await db.insert(auditLogs).values({ actorStaffUserId: admin.id, action: "volunteer.deleted", entityType: "event", entityId: eventId, metadataJson: { volunteerId: "gone", volunteerNumber: 2 }, createdAt: NOW });
+    // Confirmed by the code serving during the migration, which wrote no V number: first confirmed in the order Dan, Ana; Eva has
+    // no trail row (written straight into the table), so she comes after both; Zoe was confirmed twice — her first one counts.
+    const ana = await volunteer("Ana Pop", "CONFIRMED", 1);
+    const dan = await volunteer("Dan Ene", "CONFIRMED", 2);
+    const eva = await volunteer("Eva Radu", "CONFIRMED", 0);
+    const zoe = await volunteer("Zoe Lupu", "CONFIRMED", 3);
+    await confirmedInTrail(ana, 20);
+    await confirmedInTrail(dan, 10);
+    await confirmedInTrail(zoe, 15);
+    await confirmedInTrail(zoe, 30);
+    // Waiting or cancelled: never numbered by the job.
+    const waiting = await volunteer("Vlad Waiting", "REGISTERED", 4);
+    const cancelled = await volunteer("Cora Cancelled", "CANCELLED", 5);
+
+    expect(await numberWaitingVolunteers(db, at(100))).toEqual({ events: 1, given: 4 });
+    expect([await numberOf(dan), await numberOf(zoe), await numberOf(ana), await numberOf(eva)]).toEqual([3, 4, 5, 6]);
+    expect([await numberOf(waiting), await numberOf(cancelled)]).toEqual([null, null]);
+    const [row, ...more] = await trailOf("event.volunteer_numbers_given");
+    expect(more).toEqual([]);
+    expect(row).toMatchObject({ actorStaffUserId: null, entityType: "event", entityId: eventId, createdAt: at(100) });
+    expect(row.metadataJson).toEqual({ given: 4, from: 3, to: 6 });
+    expect(JSON.stringify(row)).not.toMatch(/Ana|Dan|Eva|Zoe|example\.test/);
+
+    // Idempotent: nobody left, nothing written.
+    expect(await numberWaitingVolunteers(db, at(101))).toEqual({ events: 0, given: 0 });
+    expect(await trailOf("event.volunteer_numbers_given")).toHaveLength(1);
+  });
+
+  it("leaves no confirmed volunteer out of the raffle for want of a number: once numbered, the raffle counts every one of them", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
+    await volunteer("Ana Pop", "CONFIRMED", 1);
+    await volunteer("Dan Ene", "CONFIRMED", 2);
+    await volunteer("Vlad Waiting", "REGISTERED", 3);
+    const organizer = await staff("MODERATOR");
+    // Before: confirmed with no number — «fără număr», out of the draw.
+    expect((await readRaffleRoster(db, organizer, eventId, at(100)))?.counts.in.VOLUNTEER).toBe(0);
+    await numberWaitingVolunteers(db, at(100));
+    const roster = await readRaffleRoster(db, organizer, eventId, at(101));
+    expect(roster?.counts.in.VOLUNTEER).toBe(2);
+    expect(roster?.rows.filter((row) => row.kind === "VOLUNTEER").map((row) => [row.label, row.reason])).toEqual([
+      ["V001", "in"],
+      ["V002", "in"],
+      [null, "notConfirmed"],
+    ]);
+  });
+
+  it("is a step of the maintenance run, which says how many it gave — none on the next run", async () => {
+    await volunteer("Ana Pop", "CONFIRMED", 1);
+    const run = await runRegistrationMaintenance(db, at(100));
+    expect(run.volunteerNumbersGiven).toBe(1);
+    expect((await listVolunteers(db, eventId)).map((person) => person.volunteerNumber)).toEqual([1]);
+    expect((await runRegistrationMaintenance(db, at(120))).volunteerNumbersGiven).toBe(0);
+  });
+});
+
+describe("§1023 the V number in the volunteers' files", () => {
+  const words = (catalogue: typeof ro) => (key: string) => key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue.Admin) as string;
+
+  it("is the CSV's last column, «V001», under its heading «Număr» unchanged — empty for a person without one — in both languages", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
     await volunteer("Dan Ene", "REGISTERED", 2);
     await confirm(ana);
     const data = await exportVolunteers(db, admin, eventId, at(120));
-    const words = (catalogue: typeof ro) => (key: string) => key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue.Admin) as string;
     const csv = buildVolunteersCsv(volunteerExportHeader(words(ro)), volunteerExport(data, "ro", words(ro), new Map()).rows);
     const lines = csv.split("\r\n");
     expect(lines[0].endsWith(",Număr")).toBe(true);
-    expect(lines.find((line) => line.includes("Ana Pop"))?.endsWith(",500")).toBe(true);
+    expect(lines.find((line) => line.includes("Ana Pop"))?.endsWith(",V001")).toBe(true);
     expect(lines.find((line) => line.includes("Dan Ene"))?.endsWith(",")).toBe(true);
     expect(volunteerExportHeader(words(en as unknown as typeof ro)).bibNumber).toBe("Number");
   });
 
-  it("the card's box saves digits, refuses anything else and a start among the runners' numbers in words, and empties the series", async () => {
-    const press = async (start: string) => {
-      const form = new FormData();
-      form.set("uiLocale", "ro");
-      form.set("eventId", eventId);
-      form.set("start", start);
-      state.redirected.length = 0;
-      await setVolunteerNumbersStartAction(form).catch((error: unknown) => {
-        if (!(error instanceof Error) || error.message !== "NEXT_REDIRECT") throw error;
-      });
-      return state.redirected[0] ?? "";
-    };
-    expect(await press("500")).toBe(`/ro/admin/events/${eventId}#box-volunteers`);
-    expect(await startOf()).toBe(500);
-    // Among the runners' numbers: refused with its own sentence, the series as it was.
-    expect(await press("120")).toContain("volunteerError=VOLUNTEER_NUMBERS_IN_RACE_SERIES");
-    expect(await startOf()).toBe(500);
-    for (const typed of ["12.5", "1e3", "abc", "-4"]) expect(await press(typed), typed).toContain("volunteerError=VALIDATION_ERROR");
-    expect(await startOf()).toBe(500);
-    expect(await press("  ")).toBe(`/ro/admin/events/${eventId}#box-volunteers`);
-    expect(await startOf()).toBeNull();
-    // The words exist in both languages.
-    expect(ro.Admin.errors.VOLUNTEER_NUMBERS_IN_RACE_SERIES.length).toBeGreaterThan(0);
-    expect(en.Admin.errors.VOLUNTEER_NUMBERS_IN_RACE_SERIES.length).toBeGreaterThan(0);
-    expect(ro.Feedback.toast.volunteerNumbersOn.length).toBeGreaterThan(0);
-    expect(en.Feedback.toast.volunteerNumbersOff.length).toBeGreaterThan(0);
+  it("is a text cell «V001» in the Excel file, under the same heading", async () => {
+    const ana = await volunteer("Ana Pop", "REGISTERED", 1);
+    await confirm(ana);
+    const data = await exportVolunteers(db, admin, eventId, at(120));
+    const exported = volunteerExport(data, "ro", words(ro), new Map());
+    const buffer = await buildVolunteersWorkbook(volunteerExportHeader(words(ro)), [{ label: "Crosul", rows: exported.rows, roles: exported.roles }], volunteerSheetWords(words(ro)));
+    const { rows } = readSheet(buffer);
+    const column = rows[0].indexOf("Număr");
+    expect(column).toBeGreaterThan(-1);
+    expect(rows[1][column]).toBe("V001");
   });
 });
