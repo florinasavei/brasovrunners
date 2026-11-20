@@ -41,7 +41,7 @@ import {
   **Nothing new is stored but the scan** (`registration.code_scanned`, `admin-service.ts#recordCodeScan`): the desk's check-ins
   and undos were audited with their actor all along, and so was every «Prezent» on a volunteer (`volunteer.edited`, `fields:
   ["present"]`) and every raffle mark of a registration (`registration.raffle_excluded` / `raffle_included`, `raffle-mark.ts`,
-  their `door` the desk's or none — read here by the action alone, whichever door wrote it), and, since §NNN, every volunteer the
+  their `door` the desk's or none — read here by the action alone, whichever door wrote it), and, since §1028, every volunteer the
   organizers confirmed for the raffle alone (`volunteer.raffle_confirmed`, `volunteers/raffle-confirmation.ts`: whether a minor, and
   how the parent agreed — read by the volunteers' own read, beside the «Prezent» ticks, so the count of queries stays six). The participant's own «Am ajuns» writes no audit row: it is read from the registration itself — checked in, no
   staff account, and no staff check-in row at that very moment (a staff check-in writes its row with the instant it sets,
@@ -97,7 +97,7 @@ const presentTickRows = (eventId: string): SQL =>
     sql`jsonb_typeof(${auditLogs.metadataJson} -> 'present') = 'boolean'`,
   ) as SQL;
 
-/** The volunteers' confirmations for the raffle alone (§NNN) of one event: its own rows on `audit_logs_entity_idx`, the one verb. */
+/** The volunteers' confirmations for the raffle alone (§1028) of one event: its own rows on `audit_logs_entity_idx`, the one verb. */
 const raffleConfirmationRows = (eventId: string): SQL =>
   and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), eq(auditLogs.action, "volunteer.raffle_confirmed")) as SQL;
 
@@ -144,7 +144,7 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
       .leftJoin(actorOf, eq(actorOf.id, auditLogs.actorStaffUserId))
       .where(eq(registrations.eventId, eventId))
       .groupBy(auditLogs.actorStaffUserId, actorOf.displayName, auditLogs.action, registrations.kind),
-    // The volunteers' rows: «Prezent» ticks and confirmations for the raffle (§NNN), told apart by the action.
+    // The volunteers' rows: «Prezent» ticks and confirmations for the raffle (§1028), told apart by the action.
     db
       .select({ actorId: auditLogs.actorStaffUserId, actorName: actorOf.displayName, action: auditLogs.action, n: count() })
       .from(auditLogs)
@@ -213,7 +213,7 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
             volunteerId: eventVolunteers.id,
             name: eventVolunteers.name,
             present: sql<boolean>`((${auditLogs.metadataJson} ->> 'present') = 'true')`.mapWith(Boolean),
-            // A confirmation for the raffle (§NNN): whether a minor, and how the parent agreed — never a name, which the row holds none of.
+            // A confirmation for the raffle (§1028): whether a minor, and how the parent agreed — never a name, which the row holds none of.
             minor: sql<boolean>`((${auditLogs.metadataJson} ->> 'minor') = 'true')`.mapWith(Boolean),
             guardianWay: sql<string | null>`(${auditLogs.metadataJson} ->> 'guardianWay')`,
             total: sql<number>`count(*) over ()`.mapWith(Number),

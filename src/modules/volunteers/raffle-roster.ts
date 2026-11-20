@@ -176,7 +176,7 @@ export type RafflePersonFacts = {
   /** A test registration (§30): never in a raffle — its `confirmed` is false — and given no raffle line or note to read. */
   test?: true;
   /**
-   * A volunteer's own facts for «Confirmă pentru tombolă» (§NNN): the state, whether a minor, the confirmation for the raffle and the
+   * A volunteer's own facts for «Confirmă pentru tombolă» (§1028): the state, whether a minor, the confirmation for the raffle and the
    * organizers' exclusion — what `raffleConfirmationOffered` reads — and, once confirmed for the raffle, a minor's parent's way.
    */
   volunteer?: VolunteerRaffleFacts & { inRaffle: boolean; guardianWay: RaffleGuardianWay | null };
@@ -187,7 +187,7 @@ export function localeOr(value: string | null | undefined): Locale {
 }
 
 /**
- * The volunteers' columns every read of the raffle takes (§1023, §NNN): the state, the V number, the organizers' exclusion, the age
+ * The volunteers' columns every read of the raffle takes (§1023, §1028): the state, the V number, the organizers' exclusion, the age
  * the minor's rule is decided by, and the confirmation for the raffle alone with a minor's parent's agreement.
  */
 const VOLUNTEER_RAFFLE_COLUMNS = {
@@ -210,13 +210,13 @@ type VolunteerRaffleRow = {
   raffleGuardianAgreed: boolean | null;
 };
 
-/** A volunteer's row as «Confirmă pentru tombolă» reads it (§NNN): a minor by the age «Acordul părintelui lipsește» is decided by. */
+/** A volunteer's row as «Confirmă pentru tombolă» reads it (§1028): a minor by the age «Acordul părintelui lipsește» is decided by. */
 function volunteerRaffleFactsOf(row: VolunteerRaffleRow): VolunteerRaffleFacts {
   return { state: row.state, minor: isVolunteerMinor(row.age), raffleConfirmedAt: row.raffleConfirmedAt, raffleGuardianAgreed: row.raffleGuardianAgreed };
 }
 
 /**
- * A volunteer as the one answer reads them: confirmed by the organizers' «Confirmă» (§984), or confirmed for the raffle alone (§NNN,
+ * A volunteer as the one answer reads them: confirmed by the organizers' «Confirmă» (§984), or confirmed for the raffle alone (§1028,
  * `volunteerConfirmedForRaffle` — never a cancelled one, a minor only with the parent's agreement recorded), with their V number
  * (§1023) and the organizers' exclusion.
  */
@@ -260,7 +260,7 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
       .limit(1);
     if (!row) return null;
     // A volunteer takes part with their V number (§1023): drawn by itself at the confirmation — the organizers' «Confirmă», or their
-    // «Confirmă pentru tombolă» (§NNN) — so every volunteer confirmed either way has one.
+    // «Confirmă pentru tombolă» (§1028) — so every volunteer confirmed either way has one.
     return {
       ref,
       eventId: row.eventId,
@@ -297,7 +297,7 @@ export function entryColumnOf(ref: RafflePersonRef) {
 
 /**
  * Whether the person may sign up at all (the gate aside): confirmed, real, a number — what a sign-up of any door requires. A volunteer
- * the organizers confirmed for the raffle alone (§NNN) is confirmed here (`domain/raffle.ts#raffleConfirmed`), with the V number the
+ * the organizers confirmed for the raffle alone (§1028) is confirmed here (`domain/raffle.ts#raffleConfirmed`), with the V number the
  * press drew.
  */
 export function raffleEligible(person: Omit<RafflePerson, "signedUp">): boolean {
@@ -338,14 +338,14 @@ export type RaffleRosterRow = {
    */
   deskMaySignUp: boolean;
   /**
-   * A volunteer the organizers confirmed for the raffle alone (§NNN) who is not confirmed as a volunteer: when, and a minor's parent's
+   * A volunteer the organizers confirmed for the raffle alone (§1028) who is not confirmed as a volunteer: when, and a minor's parent's
    * way — what the row says beside «Da», so nobody reads it as a volunteer's confirmation. Null for everybody else, a volunteer
    * confirmed by «Confirmă» included.
    */
   raffleConfirmation: { at: Date; guardianWay: RaffleGuardianWay | null } | null;
-  /** Whether «Confirmă pentru tombolă» may be offered on the row (§NNN, `raffleConfirmationOffered`): to the organizers, whom the page asks. */
+  /** Whether «Confirmă pentru tombolă» may be offered on the row (§1028, `raffleConfirmationOffered`): to the organizers, whom the page asks. */
   mayConfirmForRaffle: boolean;
-  /** A volunteer under eighteen on the event's day: the press asks the parent's or guardian's agreement and how (§NNN). */
+  /** A volunteer under eighteen on the event's day: the press asks the parent's or guardian's agreement and how (§1028). */
   minor: boolean;
 };
 
@@ -388,9 +388,9 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
   const entryOf = new Map<string, (typeof entries)[number]>();
   for (const entry of entries) entryOf.set(entry.registrationId ?? entry.volunteerId ?? entry.eliteEntryId ?? "", entry);
 
-  // «Cu înscriere separată», «Confirmă pentru tombolă» signs the volunteer up too (§NNN): offered only while the gate takes volunteers.
+  // «Cu înscriere separată», «Confirmă pentru tombolă» signs the volunteer up too (§1028): offered only while the gate takes volunteers.
   const volunteersGate = raffleSignUpClosedFor(facts, now, "VOLUNTEER");
-  /** A volunteer's own facts for «Confirmă pentru tombolă» (§NNN); absent for a registration and a line of the elite list. */
+  /** A volunteer's own facts for «Confirmă pentru tombolă» (§1028); absent for a registration and a line of the elite list. */
   type VolunteerExtras = { facts: VolunteerRaffleFacts; inRaffle: boolean; guardianWay: RaffleGuardianWay | null };
   const row = (ref: RafflePersonRef, number: number | null, name: string, person: Omit<RafflePerson, "signedUp">, present: boolean, volunteer?: VolunteerExtras): RaffleRosterRow => {
     const entry = entryOf.get(ref.id) ?? null;
@@ -421,7 +421,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       const kind = raffleKindOfRegistration(one);
       return row({ table: "registration", id: one.id }, one.bibNumber, one.name, { kind, confirmed: one.status === "CONFIRMED", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle }, one.checkedInAt !== null);
     }),
-    // A volunteer confirmed by «Confirmă», or confirmed for the raffle alone (§NNN), takes part with the V number either drew.
+    // A volunteer confirmed by «Confirmă», or confirmed for the raffle alone (§1028), takes part with the V number either drew.
     ...helpers.map((one) =>
       row({ table: "volunteer", id: one.id }, one.volunteerNumber, one.name, volunteerRafflePerson(one), one.here, { facts: volunteerRaffleFactsOf(one), inRaffle: one.inRaffle, guardianWay: one.raffleGuardianWay }),
     ),
@@ -480,7 +480,7 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
     );
   }
   for (const one of helpers) {
-    // Confirmed by «Confirmă», or for the raffle alone (§NNN): the same answer the tab and the files give.
+    // Confirmed by «Confirmă», or for the raffle alone (§1028): the same answer the tab and the files give.
     reasons.set(one.id, raffleParticipation({ ...volunteerRafflePerson(one), signedUp: signed.has(one.id) }, settings));
   }
   return reasons;
@@ -488,7 +488,7 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
 
 /**
  * One person's raffle line: the answer, whether the event asks a sign-up and whether they hold one, and whether «Înscrie» may be
- * offered — and, for a volunteer (§NNN), whether they are confirmed for the raffle alone (with a minor's parent's way), whether
+ * offered — and, for a volunteer (§1028), whether they are confirmed for the raffle alone (with a minor's parent's way), whether
  * «Confirmă pentru tombolă» may be offered, and whether they are a minor, whose press asks the parent's agreement.
  */
 export type RaffleLine = {
@@ -526,7 +526,7 @@ export async function readRaffleLine<T extends Record<string, unknown>>(db: Data
   const entry = facts.settings.signUp ? await findRaffleEntry(db, ref) : null;
   const line = raffleLineOf(person.person, facts, entry !== null, now);
   if (!person.volunteer) return line;
-  // A volunteer's page (§NNN): confirmed for the raffle alone, or «Confirmă pentru tombolă» to offer — by the tab's own rule.
+  // A volunteer's page (§1028): confirmed for the raffle alone, or «Confirmă pentru tombolă» to offer — by the tab's own rule.
   const confirmedForRaffle = !person.person.confirmed && person.person.confirmedForRaffle === true;
   return {
     ...line,

@@ -34,7 +34,7 @@ export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LIN
 
 /**
  * How a minor volunteer's parent or guardian agreed that the minor takes part in the event's raffle, as the organizer who
- * pressed «Confirmă pentru tombolă» records it (§NNN): by telephone («PHONE», «telefonic»), in person at the event («IN_PERSON»,
+ * pressed «Confirmă pentru tombolă» records it (§1028): by telephone («PHONE», «telefonic»), in person at the event («IN_PERSON»,
  * «la fața locului») or in writing («WRITING», «în scris»). A closed set held by the table's CHECK
  * (`event_volunteers_raffle_guardian_whole`), not an enum type: a fourth way is a migration either way, and a CHECK is the
  * smaller one to widen.
@@ -350,7 +350,7 @@ export const eventVolunteers = pgTable(
      */
     raceDayDecision: text("race_day_decision"),
     /*
-      «Confirmă pentru tombolă» (migration `0227_volunteer_raffle_confirmation`, §NNN, amending §984 and §1023; the owner,
+      «Confirmă pentru tombolă» (migration `0227_volunteer_raffle_confirmation`, §1028, amending §984 and §1023; the owner,
       2026-11-20, the day before the race, of a volunteer of seventeen whose parents' agreement to volunteering was still missing:
       «vreau să pot să o confirm și pe [ea] pentru tombolă, chiar și fără acordul părinților»): the organizers confirmed the person
       **for the raffle alone** — when, and by which staff account (`SET NULL`: an account deleted since is «cont șters»). It is not
@@ -500,7 +500,7 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_guardian_token_expiry", sql`(${t.guardianTokenHash} IS NULL) = (${t.guardianTokenExpiresAt} IS NULL)`),
     // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.
     index("event_volunteers_guardian_document_idx").on(t.guardianDocumentId).where(sql`${t.guardianDocumentId} IS NOT NULL`),
-    // «Confirmă pentru tombolă» (§NNN): nothing of a raffle confirmation — who, the parent's agreement, its way — without its moment.
+    // «Confirmă pentru tombolă» (§1028): nothing of a raffle confirmation — who, the parent's agreement, its way — without its moment.
     check(
       "event_volunteers_raffle_confirmation_whole",
       sql`${t.raffleConfirmedAt} IS NOT NULL OR (${t.raffleConfirmedByStaffUserId} IS NULL AND ${t.raffleGuardianAgreed} IS NULL AND ${t.raffleGuardianWay} IS NULL)`,

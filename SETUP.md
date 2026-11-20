@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.96-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2799,7 +2799,7 @@ An agent never approves either text.
    random.org → «List Randomizer», «Randomize», and look the first number up in «Lista pentru tombolă (CSV)» or on «Tombolă» for the
    name. The steps: `docs/RUNBOOKS.md` § The raffle on race day.
 
-   **A volunteer not confirmed** (`DECISIONS.md` §NNN) — «Înscris», for instance a minor whose parent has not given the
+   **A volunteer not confirmed** (`DECISIONS.md` §1028) — «Înscris», for instance a minor whose parent has not given the
    volunteering agreement yet («Acordul părintelui lipsește») — reads «Nu · neconfirmat» on «Tombolă». The Organizer or an
    Administrator presses **«Confirmă pentru tombolă»** on that row, or on the volunteer's own page, and answers the question that
    names the person. For a minor, choose first **«Cum și-a dat acordul părintele»** — «telefonic», «la fața locului» or «în

@@ -504,7 +504,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         {t("volunteers.screen.raffleTick")}
       </TickButton>
       {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words — and a volunteer who takes part without being
-          «Confirmat» is one the organizers confirmed for the raffle alone (§NNN): said so, a raffle's confirmation, not a volunteer's. */}
+          «Confirmat» is one the organizers confirmed for the raffle alone (§1028): said so, a raffle's confirmation, not a volunteer's. */}
       {raffleReasons.has(row.id) && (
         <RaffleStandingNote
           words={

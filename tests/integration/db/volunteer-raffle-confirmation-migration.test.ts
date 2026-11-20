@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0227_volunteer_raffle_confirmation` (§NNN, amending §984 and §1023; the owner, 2026-11-20: «vreau să pot să o confirm și
+ * Migration `0227_volunteer_raffle_confirmation` (§1028, amending §984 and §1023; the owner, 2026-11-20: «vreau să pot să o confirm și
  * pe [ea] pentru tombolă, chiar și fără acordul părinților»), proven on real PostgreSQL (PGlite): four nullable columns on the
  * event's volunteers — when the organizers confirmed the person for the raffle alone, by which staff account (`ON DELETE SET NULL`),
  * and for a minor that the parent or guardian agreed and how — with the account's foreign key and two CHECKs: nothing of a

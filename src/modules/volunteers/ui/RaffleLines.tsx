@@ -177,7 +177,7 @@ export async function raffleDeskLine(props: {
 }
 
 /**
- * What the «Tombolă» tab and the volunteer's page say of a volunteer confirmed for the raffle alone (§NNN), beside «Da»: that it is a
+ * What the «Tombolă» tab and the volunteer's page say of a volunteer confirmed for the raffle alone (§1028), beside «Da»: that it is a
  * raffle confirmation, never a volunteer's — «confirmat doar pentru tombolă» — and, for a minor, how the parent agreed.
  */
 export function raffleConfirmationWords(t: Translate, guardianWay: RaffleGuardianWay | null): string {
@@ -186,7 +186,7 @@ export function raffleConfirmationWords(t: Translate, guardianWay: RaffleGuardia
 }
 
 /**
- * «Confirmă pentru tombolă» (§NNN, amending §984 and §1023) — the organizers' press on a volunteer who is not confirmed, on the row of
+ * «Confirmă pentru tombolă» (§1028, amending §984 and §1023) — the organizers' press on a volunteer who is not confirmed, on the row of
  * the «Tombolă» tab and on the volunteer's own page: one form, asked first by the house's one dialog — «Confirmi pe Maria Pop pentru
  * tombolă?», what it does (a V number when the person has none, the draw, still unconfirmed as a volunteer, who decided kept), the email
  * nobody gets, «Anulează» focused, «Da, confirmă pentru tombolă». For **a minor** the form holds the way the parent or guardian agreed —
@@ -263,7 +263,7 @@ export async function raffleConfirmForm(props: {
 
 /**
  * A volunteer's page (§984): the line, and — for the organizers who open the page, in the sign-up mode with its gate open —
- * «Înscrie la tombolă» (STAFF), coming back to the page. Since §NNN a volunteer confirmed for the raffle alone reads so beside the
+ * «Înscrie la tombolă» (STAFF), coming back to the page. Since §1028 a volunteer confirmed for the raffle alone reads so beside the
  * chip («Confirmat doar pentru tombolă, nu ca voluntar», a minor's parent's way after it), and one who may be is offered
  * «Confirmă pentru tombolă» (`confirmAction`), coming back to the page.
  */
@@ -274,7 +274,7 @@ export async function raffleVolunteerLine(props: {
   volunteerId: string;
   name: string;
   action: ServerAction;
-  /** «Confirmă pentru tombolă» (§NNN): the organizers' press, drawn while the line says it may be offered. */
+  /** «Confirmă pentru tombolă» (§1028): the organizers' press, drawn while the line says it may be offered. */
   confirmAction?: ActionFormAction;
 }): Promise<ReactElement> {
   const t = await getTranslations("Admin");

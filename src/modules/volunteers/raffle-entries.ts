@@ -156,7 +156,7 @@ async function signUp<T extends Record<string, unknown>>(db: Database<T>, input:
 }
 
 /**
- * The organizers' sign-up (STAFF) of a volunteer they have just confirmed for the raffle (§NNN, «Confirmă pentru tombolă» on an
+ * The organizers' sign-up (STAFF) of a volunteer they have just confirmed for the raffle (§1028, «Confirmă pentru tombolă» on an
  * event «Cu înscriere separată»), written **inside the confirmation's own transaction** — the caller holds the event row's lock and
  * has asked the role (`canTakeRaffleList`), and `person` is the volunteer as the confirmation leaves them (confirmed for the raffle,
  * with their V number). The same checks, row and audit row as the organizers' «Înscrie» (`signUpForRaffleByStaff`): the person's
@@ -306,7 +306,7 @@ export async function signUpForRaffleByForm<T extends Record<string, unknown>>(d
 
 /**
  * The person a number and a name name at the event: a confirmed real registration by its race number, or a volunteer by their V
- * number (§1023) — confirmed by «Confirmă», or confirmed for the raffle alone (§NNN), never a cancelled one: the caller asks the one
+ * number (§1023) — confirmed by «Confirmă», or confirmed for the raffle alone (§1028), never a cancelled one: the caller asks the one
  * answer of whoever is found (`raffleEligible`, a minor's confirmation counting only with the parent's agreement) — or nobody.
  */
 async function matchRafflePerson<T extends Record<string, unknown>>(db: Database<T>, eventId: string, number: number, volunteer: boolean, typed: string): Promise<RafflePersonRef | null> {

@@ -82,7 +82,7 @@ export async function raffleSignUpAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Confirmă pentru tombolă» (§NNN, amending §984 and §1023): the organizers' press on a volunteer who is not confirmed — on the row of
+ * «Confirmă pentru tombolă» (§1028, amending §984 and §1023): the organizers' press on a volunteer who is not confirmed — on the row of
  * the «Tombolă» tab and on the volunteer's own page (`back=volunteer`) —, asked first by the house's dialog, which names the person
  * and, for a minor, holds the box «Părintele sau tutorele a fost de acord să participe la tombolă» (`raffleGuardianAgreed=on`) and the
  * way the parent agreed (`raffleGuardianWay`). «Cu înscriere separată» the row's own tick «A acceptat regulamentul» (`accepted=on`)

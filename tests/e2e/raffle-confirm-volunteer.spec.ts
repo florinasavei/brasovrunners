@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §984 and §1023), BR-REQ-060-01, BR-REQ-071-01, BR-REQ-041-01 — «Confirmă pentru tombolă». The owner, 2026-11-20, the
+ * §1028 (amending §984 and §1023), BR-REQ-060-01, BR-REQ-071-01, BR-REQ-041-01 — «Confirmă pentru tombolă». The owner, 2026-11-20, the
  * day before the race, of a volunteer of seventeen — «Voluntar · Nu · neconfirmat · Nu · Scoate» on «Ziua cursei» → «Tombolă», «Înscris»,
  * «Acordul părintelui lipsește», «Link trimis părintelui» on her page: «vreau să pot să o confirm și pe [ea] pentru tombolă, chiar și
  * fără acordul părinților». Walked at 320 pixels and on a desktop against the production build:
@@ -119,7 +119,7 @@ async function tall(locator: Locator, what: string): Promise<void> {
 /** A person's row on the tab, as the viewport draws it — the wide table's row (its `id`) or the phone's card (its anchor). */
 const rowOf = (page: Page, id: string) => page.locator(`#raffle-${id}:visible, [data-row-anchor="raffle-${id}"]:visible`);
 
-test.describe("§NNN «Confirmă pentru tombolă»: an Organizer confirms a volunteer of seventeen for the raffle, with the parent's agreement", () => {
+test.describe("§1028 «Confirmă pentru tombolă»: an Organizer confirms a volunteer of seventeen for the raffle, with the parent's agreement", () => {
   test.describe.configure({ timeout: 300_000 });
 
   test("an Organizer confirms her «telefonic» on «Tombolă»: she takes part with a V number, stays «Înscris», and «Jurnal» names who decided", async ({ page }) => {

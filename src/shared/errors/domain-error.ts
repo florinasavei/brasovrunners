@@ -150,7 +150,7 @@ export type DomainErrorCode =
   | "RAFFLE_SIGN_UP_CLOSED"
   | "RAFFLE_NOT_ELIGIBLE"
   | "RAFFLE_RULES_NOT_ACCEPTED"
-  // «Confirmă pentru tombolă» (§NNN) on a volunteer under eighteen without the box «Părintele sau tutorele a fost de acord să
+  // «Confirmă pentru tombolă» (§1028) on a volunteer under eighteen without the box «Părintele sau tutorele a fost de acord să
   // participe la tombolă» ticked or without the way the parent agreed (`raffleGuardianRecord`): the refusal names what is missing,
   // and nothing is written.
   | "RAFFLE_GUARDIAN_MISSING"

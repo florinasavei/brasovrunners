@@ -793,7 +793,7 @@ export type AuditAction =
    */
   | "volunteer.became_runner"
   /**
-   * «Confirmă pentru tombolă» (§NNN, `volunteers/raffle-confirmation.ts`), entity `event`: the Organizer or an Administrator — the
+   * «Confirmă pentru tombolă» (§1028, `volunteers/raffle-confirmation.ts`), entity `event`: the Organizer or an Administrator — the
    * actor — confirmed a volunteer who is not confirmed **for the event's raffle alone**. The metadata is the volunteer's id, whether
    * a minor, how the parent or guardian agreed (`guardianWay`: PHONE, IN_PERSON, WRITING; null for an adult), the V number and
    * whether the press drew it (`numberDrawn`), and the sign-up it wrote on an event «Cu înscriere separată» (`raffleEntryId`) —

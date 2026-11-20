@@ -28,7 +28,7 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
  *   round by one of them, PostgreSQL would abort one press with a deadlock (40P01);
  * - runners turned into volunteers at once on a full race free their places through the one allocator: each place is
  *   offered once, nobody is left on both lists, and the volunteers' V numbers are all different;
- * - §NNN: «Confirmă pentru tombolă» draws its V number under the same lock as «Confirmă»: the two pressed at once on twenty
+ * - §1028: «Confirmă pentru tombolă» draws its V number under the same lock as «Confirmă»: the two pressed at once on twenty
  *   people draw twenty different numbers, and both pressed on one person draw one, never a second.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -143,7 +143,7 @@ describe("§1023 BR-REQ-050-02 the volunteers' V numbers and the transforms, pre
     expect([...numbers].sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual(Array.from({ length: 20 }, (_, index) => 1 + index));
   });
 
-  it("§NNN «Confirmă pentru tombolă» and «Confirmă» pressed at the same instant draw different V numbers — on twenty people, and both on one person", async () => {
+  it("§1028 «Confirmă pentru tombolă» and «Confirmă» pressed at the same instant draw different V numbers — on twenty people, and both on one person", async () => {
     const { eventId, roleId } = await race(100);
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
     const people = await Promise.all(Array.from({ length: 20 }, (_, index) => offered(eventId, roleId, `raffle-${index}`)));

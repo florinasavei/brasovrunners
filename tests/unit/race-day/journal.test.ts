@@ -39,7 +39,7 @@ describe("§996 the address's filters", () => {
   });
 
   it("reads `kind` as one of the eight, or every kind", () => {
-    // §NNN: «raffleConfirmed», a volunteer confirmed for the raffle alone, beside the raffle's two kinds of §1020.
+    // §1028: «raffleConfirmed», a volunteer confirmed for the raffle alone, beside the raffle's two kinds of §1020.
     for (const kind of ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "raffleConfirmed", "volunteerPresent", "volunteerAbsent"]) expect(journalKindOf(kind)).toBe(kind);
     for (const junk of [undefined, "", "SCANNED", "all", ["scanned"], "raffle"]) expect(journalKindOf(junk)).toBeNull();
     expect(runnerKindOf("registration.code_scanned")).toBe("scanned");
@@ -67,7 +67,7 @@ describe("§996 the address's filters", () => {
     // The participants: their own check-ins alone.
     expect(journalReads(null, { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: true });
     expect(journalReads("scanned", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
-    // §NNN: a volunteer confirmed for the raffle alone is the volunteers' read's, a staff row — never the participants' own.
+    // §1028: a volunteer confirmed for the raffle alone is the volunteers' read's, a staff row — never the participants' own.
     expect(journalReads("raffleConfirmed", { kind: "all" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: true, selfCheckIns: false });
     expect(journalReads("raffleConfirmed", { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: true, selfCheckIns: false });
     expect(journalReads("raffleConfirmed", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], raffleConfirmations: false, selfCheckIns: false });
@@ -139,7 +139,7 @@ describe("§996 the counts per account", () => {
     expect(accounts.map((who) => (who.kind === "staff" ? who.name : who.kind))).toEqual(["Org1", "QR1"]);
   });
 
-  it("counts the volunteers each account confirmed for the raffle alone (§NNN)", () => {
+  it("counts the volunteers each account confirmed for the raffle alone (§1028)", () => {
     const { rows } = journalSummary(
       [
         { actorId: ACCOUNT, actorName: "Org1", kind: "raffleConfirmed", count: 2, test: false },

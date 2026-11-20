@@ -147,7 +147,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const closedWhy = roster && signUpMode && roster.settings.signUpOpen && roster.gateClosed !== null ? t("raffle.settings.why", { why: t(`raffle.settings.closedWhy.${roster.gateClosed}`) }) : null;
 
   // The organizers' own exclusion, «scos de organizatori», is said to them alone — every other desk role reads «Nu» there, as at the desk (§984).
-  // A volunteer confirmed for the raffle alone (§NNN) says so beside «Da», to every desk role: a raffle's confirmation, not a volunteer's.
+  // A volunteer confirmed for the raffle alone (§1028) says so beside «Da», to every desk role: a raffle's confirmation, not a volunteer's.
   const reasonWords = (row: RaffleRosterRow) =>
     row.reason === "in"
       ? row.raffleConfirmation
@@ -157,7 +157,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
         ? t("raffle.no")
         : `${t("raffle.no")} · ${t(`raffle.reasons.${row.reason}`)}`;
 
-  // «Confirmă pentru tombolă» (§NNN): the organizers' press on a volunteer who is not confirmed, one form per row that may be — each
+  // «Confirmă pentru tombolă» (§1028): the organizers' press on a volunteer who is not confirmed, one form per row that may be — each
   // asked first and worded on the server before the table is drawn (the table draws a row twice, the phone's card and the wide row).
   const confirmForms = new Map<string, ReactNode>();
   if (organizer) {

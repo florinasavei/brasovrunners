@@ -21,7 +21,7 @@ import { decodeFlash, FLASH_COOKIE } from "@/shared/feedback/notice";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §984 and §1023), BR-REQ-071-01, BR-REQ-050-02, BR-REQ-060-01 — «Confirmă pentru tombolă», on real PostgreSQL
+ * §1028 (amending §984 and §1023), BR-REQ-071-01, BR-REQ-050-02, BR-REQ-060-01 — «Confirmă pentru tombolă», on real PostgreSQL
  * (PGlite), through the service and the tab's own action. The owner, 2026-11-20, the day before the race, of a volunteer of
  * seventeen — «Voluntar · Nu · neconfirmat» on «Tombolă», «Înscris», «Acordul părinților lipsește», «Link trimis părintelui» on her
  * page: «vreau să pot să o confirm și pe [ea] pentru tombolă, chiar și fără acordul părinților».
@@ -168,7 +168,7 @@ async function approveTexts() {
   await insertLegalDocumentVersion(db, { key: "RAFFLE_RULES", version: 1, effectiveAt: EFFECTIVE, isApproved: true, contentSha256: computeContentHash(rules), translations: rules, now: EFFECTIVE });
 }
 
-describe("§NNN BR-REQ-060-01 «Confirmă pentru tombolă» is the Organizer's and the Administrators' alone", () => {
+describe("§1028 BR-REQ-060-01 «Confirmă pentru tombolă» is the Organizer's and the Administrators' alone", () => {
   it("is refused to the desk's Voluntar, the Redactor, Tehnic and a member — in the service and at the action's door — with nothing written", async () => {
     const id = await maria();
     for (const role of STAFF_ROLES) expect(canTakeRaffleList(staff[role]!), role).toBe(role === "MODERATOR" || role === "ADMIN" || role === "SUPERADMIN");
@@ -193,7 +193,7 @@ describe("§NNN BR-REQ-060-01 «Confirmă pentru tombolă» is the Organizer's a
   });
 });
 
-describe("§NNN a minor: the parent's or guardian's agreement, and how — required on the server", () => {
+describe("§1028 a minor: the parent's or guardian's agreement, and how — required on the server", () => {
   it("refuses a minor without the box or the way, naming what is missing, with nothing written", async () => {
     const id = await maria();
     for (const [answers, missing] of [
@@ -252,7 +252,7 @@ describe("§NNN a minor: the parent's or guardian's agreement, and how — requi
   });
 });
 
-describe("§NNN one transaction under the event row's lock: the V number, the record, one audit row", () => {
+describe("§1028 one transaction under the event row's lock: the V number, the record, one audit row", () => {
   it("draws the next V number the event never gave — after a deleted volunteer's — and never a second one", async () => {
     const first = await volunteer("Ana Prima");
     await changeVolunteer(db, staff.ADMIN!, { kind: "setState", eventId, id: first, state: "CONFIRMED" }, NOW, { sendEmail: false });
@@ -328,7 +328,7 @@ describe("§NNN one transaction under the event row's lock: the V number, the re
   });
 });
 
-describe("§NNN BR-REQ-071-01 a volunteer confirmed for the raffle takes part in every reader — «Scoate» still takes them out, a cancelled one is in nothing", () => {
+describe("§1028 BR-REQ-071-01 a volunteer confirmed for the raffle takes part in every reader — «Scoate» still takes them out, a cancelled one is in nothing", () => {
   it("is in the roster and its counts, the lists' column, the person's line, «Lista pentru tombolă» and the file for random.org", async () => {
     const id = await maria();
     const waiting = await volunteer("Vlad Așteaptă");
@@ -385,7 +385,7 @@ describe("§NNN BR-REQ-071-01 a volunteer confirmed for the raffle takes part in
   });
 });
 
-describe("§NNN «Cu înscriere separată»: the press signs the volunteer up, by the organizers' own door", () => {
+describe("§1028 «Cu înscriere separată»: the press signs the volunteer up, by the organizers' own door", () => {
   const signUpMode = () => db.update(events).set({ raffleSignUp: true, raffleSignUpOpen: true }).where(eq(events.id, eventId));
 
   it("asks the rules' acceptance and the open gate before anything is written", async () => {
@@ -436,7 +436,7 @@ describe("§NNN «Cu înscriere separată»: the press signs the volunteer up, b
   });
 });
 
-describe("§NNN the tab's action", () => {
+describe("§1028 the tab's action", () => {
   it("comes back to the tab at the row with its toast, or to the volunteer's page", async () => {
     const id = await maria();
     await expect(raffleConfirmVolunteerAction(null, actionForm(id, { raffleGuardianAgreed: "on", raffleGuardianWay: "PHONE", filter: "out" }))).rejects.toThrow("NEXT_REDIRECT");

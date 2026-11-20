@@ -181,7 +181,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle line (§1020, `checkin/raffle-actions.ts`): every desk role,
   // asked first naming the person and the number; handed to the line as `exclusionAction`.
   raffleDeskExclusionAction: ["props.exclusionAction"],
-  // «Confirmă pentru tombolă» on a row of «Ziua cursei» → «Tombolă» and on a volunteer's page (§NNN, `tombola/actions.ts`): the
+  // «Confirmă pentru tombolă» on a row of «Ziua cursei» → «Tombolă» and on a volunteer's page (§1028, `tombola/actions.ts`): the
   // organizers', asked first naming the person — a minor's parent's agreement ticked in the question; handed to the form as `confirmAction`.
   raffleConfirmVolunteerAction: ["props.confirmAction"],
   // Legal.

@@ -14,7 +14,7 @@ import { localeOr, type RafflePersonFacts, readRaffleGateFacts, volunteerRaffleP
 import { drawVolunteerNumber } from "./volunteer-numbers";
 
 /*
-  «Confirmă pentru tombolă» (§NNN, amending §984 and §1023). The owner, 2026-11-20, the day before the race, of a volunteer of
+  «Confirmă pentru tombolă» (§1028, amending §984 and §1023). The owner, 2026-11-20, the day before the race, of a volunteer of
   seventeen whose row on «Ziua cursei» → «Tombolă» read «Voluntar · Nu · neconfirmat» and whose page read «Înscris», «Acordul
   părinților lipsește», «Link trimis părintelui»: «vreau să pot să o confirm și pe [ea] pentru tombolă, chiar și fără acordul
   părinților». The club's approved «Regulamentul tombolei» says «Un participant minor se înscrie cu acordul părintelui sau al
@@ -60,7 +60,7 @@ export type RaffleConfirmationInput = {
 export type RaffleConfirmationResult = { changed: boolean; volunteerNumber: number | null; signedUp: boolean; minor: boolean; guardianWay: RaffleGuardianWay | null };
 
 /**
- * «Confirmă pentru tombolă» on a volunteer of the event (§NNN): the role first (`FORBIDDEN`), then, in one transaction under the event
+ * «Confirmă pentru tombolă» on a volunteer of the event (§1028): the role first (`FORBIDDEN`), then, in one transaction under the event
  * row's lock — the event holding a raffle (`RAFFLE_NOT_HELD`), the person this event's (`NOT_FOUND`) and neither cancelled nor of a
  * group the raffle leaves out (`RAFFLE_NOT_ELIGIBLE`) —, a minor's parent's agreement and its way (`RAFFLE_GUARDIAN_MISSING`), «Cu
  * înscriere separată» the gate open for the volunteers (`RAFFLE_SIGN_UP_CLOSED`) and the rules accepted (`RAFFLE_RULES_NOT_ACCEPTED`)

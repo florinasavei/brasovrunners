@@ -19,7 +19,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §984 and §1023), BR-REQ-060-01, BR-REQ-071-01, BR-REQ-041-01 — «Confirmă pentru tombolă» on the screens, read from a
+ * §1028 (amending §984 and §1023), BR-REQ-060-01, BR-REQ-071-01, BR-REQ-041-01 — «Confirmă pentru tombolă» on the screens, read from a
  * real database:
  *
  * - «Ziua cursei» → «Tombolă»: on the row of a volunteer who is not confirmed — where it read «Nu · neconfirmat» — the organizers'
@@ -187,7 +187,7 @@ async function approveTexts() {
   await insertLegalDocumentVersion(db, { key: "RAFFLE_RULES", version: 1, effectiveAt: EFFECTIVE, isApproved: true, contentSha256: computeContentHash(rules), translations: rules, now: EFFECTIVE });
 }
 
-describe("§NNN «Tombolă»: «Confirmă pentru tombolă» on the row of a volunteer not confirmed, for the organizers alone", () => {
+describe("§1028 «Tombolă»: «Confirmă pentru tombolă» on the row of a volunteer not confirmed, for the organizers alone", () => {
   it("asks first, naming the person; a minor's form holds the three ways and the dialog the parent's box", async () => {
     const minor = await maria();
     const adult = await volunteer("Adrian Adult", { age: 30 });
@@ -284,7 +284,7 @@ describe("§NNN «Tombolă»: «Confirmă pentru tombolă» on the row of a volu
   });
 });
 
-describe("§NNN the volunteer's page: the same press, and the same words once confirmed", () => {
+describe("§1028 the volunteer's page: the same press, and the same words once confirmed", () => {
   const volunteerPage = (id: string) => AdminVolunteerPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) });
 
   it("offers «Confirmă pentru tombolă» beside «Tombolă: nu participă», coming back to the page, then says what was recorded", async () => {
@@ -307,7 +307,7 @@ describe("§NNN the volunteer's page: the same press, and the same words once co
   });
 });
 
-describe("§NNN the «Voluntari» list's «Tombolă» column", () => {
+describe("§1028 the «Voluntari» list's «Tombolă» column", () => {
   it("says a volunteer who takes part without being «Confirmat» is confirmed for the raffle alone", async () => {
     const minor = await maria();
     const waiting = await volunteer("Vlad Așteaptă");
@@ -323,7 +323,7 @@ describe("§NNN the «Voluntari» list's «Tombolă» column", () => {
   });
 });
 
-describe("§NNN «Jurnal»: who decided, when, and how the parent agreed", () => {
+describe("§1028 «Jurnal»: who decided, when, and how the parent agreed", () => {
   const journal = (query: Record<string, string> = {}) =>
     atTheClock(new Date("2099-11-21T08:00:00.000Z"), async () => html(await JournalPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, ...query }) })));
   const linesOf = (markup: string) => [...markup.matchAll(/<li[^>]*data-testid="race-day-journal-line"[^>]*>([\s\S]*?)<\/li>/g)].map((match) => words(match[1]));

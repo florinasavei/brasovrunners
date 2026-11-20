@@ -161,7 +161,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       </Stack>
 
       {/* The raffle (§984): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open —
-          and, for a volunteer not confirmed, «Confirmă pentru tombolă» (§NNN), asked first, a minor's parent's agreement in the question. */}
+          and, for a volunteer not confirmed, «Confirmă pentru tombolă» (§1028), asked first, a minor's parent's agreement in the question. */}
       {raffle &&
         (await raffleVolunteerLine({
           line: raffle,

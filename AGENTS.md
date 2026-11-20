@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.96-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1121,7 +1121,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) —, «Ziua cursei» → «Tombolă» read, a runner signed up there by the desk's door (`canReadRaffle` = `canWorkTheDesk`, §1014) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984), and «Confirmă pentru tombolă» on a volunteer not confirmed (§NNN); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984), and «Confirmă pentru tombolă» on a volunteer not confirmed (§1028); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -3162,7 +3162,7 @@ Since 2026-11-18 (`DECISIONS.md` §984) who is on both files is one answer, the 
 event ticks in «Cine poate participa» — «Alergătorii» (a confirmed real registration with a race number, not marked
 «Elită»; an ambassador runs as a runner), «Elitele» (a registration marked «Elită», and a line of the race's elite list,
 §895, which takes part by name: its number when it has one, else an empty number cell, the numberless lines after the
-numbered ones, by name) and «Voluntarii» (a confirmed volunteer with a number — since 2026-11-20, `DECISIONS.md` §NNN, also one
+numbered ones, by name) and «Voluntarii» (a confirmed volunteer with a number — since 2026-11-20, `DECISIONS.md` §1028, also one
 the organizers confirmed for the raffle alone, «Confirmă pentru tombolă», §15.11) — everybody not taken out and, on an event
 «Cu înscriere separată», only those who signed up (§15.11). The third column says «Alergător», «Elită» or «Voluntar» — a
 registration marked «Elită» is «Elită» too — and a line's «Prezent» is the organizers' tick on «Ziua cursei» → «Tombolă»;
@@ -3620,7 +3620,7 @@ a volunteer's page and on the tab, a line of the elite list's only door. Nobody 
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
 
-**«Confirmă pentru tombolă»** (2026-11-20, `DECISIONS.md` §NNN, amending §984 and §1023; the owner, the day before the race, of a
+**«Confirmă pentru tombolă»** (2026-11-20, `DECISIONS.md` §1028, amending §984 and §1023; the owner, the day before the race, of a
 volunteer of seventeen whose parents' volunteering agreement was still missing: «vreau să pot să o confirm și pe [ea] pentru tombolă,
 chiar și fără acordul părinților»). The Organizer and the Administrators (`canTakeRaffleList`, asserted by
 `checkin/tombola/actions.ts#raffleConfirmVolunteerAction` and again by `volunteers/raffle-confirmation.ts#confirmVolunteerForRaffle`;

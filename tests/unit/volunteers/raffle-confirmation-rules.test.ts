@@ -18,7 +18,7 @@ import { isVolunteerMinor } from "@/modules/volunteers/domain/volunteer";
 import { raffleEligible } from "@/modules/volunteers/raffle-roster";
 
 /**
- * §NNN (amending §984 and §1023), BR-REQ-071-01 — «Confirmă pentru tombolă», the pure half. The owner, 2026-11-20, the day before the
+ * §1028 (amending §984 and §1023), BR-REQ-071-01 — «Confirmă pentru tombolă», the pure half. The owner, 2026-11-20, the day before the
  * race, of a volunteer of seventeen whose parents' volunteering agreement was still missing: «vreau să pot să o confirm și pe [ea]
  * pentru tombolă, chiar și fără acordul părinților». The approved «Regulamentul tombolei»: «Un participant minor se înscrie cu acordul
  * părintelui sau al tutorelui său.»
@@ -40,7 +40,7 @@ const facts = (over: Partial<VolunteerRaffleFacts> = {}): VolunteerRaffleFacts =
 
 const person = (over: Partial<RafflePerson> = {}): RafflePerson => ({ kind: "VOLUNTEER", confirmed: false, hasNumber: true, inRaffle: true, signedUp: false, ...over });
 
-describe("§NNN BR-REQ-071-01 a volunteer confirmed for the raffle alone takes part, with a V number", () => {
+describe("§1028 BR-REQ-071-01 a volunteer confirmed for the raffle alone takes part, with a V number", () => {
   it("is confirmed at the answer's second step — the reasons after it unchanged", () => {
     expect(raffleParticipation(person(), SETTINGS)).toBe("notConfirmed");
     expect(raffleParticipation(person({ confirmedForRaffle: true }), SETTINGS)).toBe("in");
@@ -68,7 +68,7 @@ describe("§NNN BR-REQ-071-01 a volunteer confirmed for the raffle alone takes p
   });
 });
 
-describe("§NNN the minor's rule: the parent's or guardian's agreement, and how", () => {
+describe("§1028 the minor's rule: the parent's or guardian's agreement, and how", () => {
   it("counts a confirmation for the raffle of an adult, of a minor only with the parent's agreement — and of a cancelled person never", () => {
     expect(volunteerConfirmedForRaffle(facts())).toBe(false);
     expect(volunteerConfirmedForRaffle(facts({ raffleConfirmedAt: AT }))).toBe(true);
@@ -109,7 +109,7 @@ describe("§NNN the minor's rule: the parent's or guardian's agreement, and how"
   });
 });
 
-describe("§NNN when «Confirmă pentru tombolă» is offered", () => {
+describe("§1028 when «Confirmă pentru tombolă» is offered", () => {
   const offered = (volunteer: Partial<VolunteerRaffleFacts & { inRaffle: boolean }> = {}, settings: Partial<RaffleSettings> = {}, gateClosed: RaffleGateClosed | null = null) =>
     raffleConfirmationOffered({ volunteer: { ...facts(), inRaffle: true, ...volunteer }, settings: { ...SETTINGS, ...settings }, gateClosed });
 

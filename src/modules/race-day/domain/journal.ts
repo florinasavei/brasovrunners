@@ -12,7 +12,7 @@ import { isUuid } from "@/shared/ids";
  * runner marked present at the desk or by their own «Am ajuns», a check-in taken back (`registration.checked_in`,
  * `registration.checkin_undone`), a runner taken off the event's raffle or put back on it (`registration.raffle_excluded`,
  * `registration.raffle_included` — at the desk, asked first, or by the organizers' tick; §1020: who decided that X does not take
- * part), a volunteer confirmed for the raffle alone by the organizers (`volunteer.raffle_confirmed`, §NNN: who decided, and for a
+ * part), a volunteer confirmed for the raffle alone by the organizers (`volunteer.raffle_confirmed`, §1028: who decided, and for a
  * minor how the parent agreed), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
  */
 export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "raffleConfirmed", "volunteerPresent", "volunteerAbsent"] as const;
@@ -47,7 +47,7 @@ export type JournalWhom =
   | { kind: "volunteer"; id: string; name: string };
 
 /**
- * A line of the log. `raffle` is a confirmation for the raffle's own (§NNN): whether the volunteer was a minor, and how the parent
+ * A line of the log. `raffle` is a confirmation for the raffle's own (§1028): whether the volunteer was a minor, and how the parent
  * or guardian agreed (null for an adult) — what the line says after whom.
  */
 export type JournalLine = {
@@ -93,7 +93,7 @@ export function journalKindOf(value: unknown): JournalKind | null {
 
 /**
  * What the three reads are asked for a filter: the runners' audit rows of these kinds, the volunteers' ticks of these values
- * (`true` ticked, `false` unticked) and their confirmations for the raffle (§NNN, read by the same second read), and the
+ * (`true` ticked, `false` unticked) and their confirmations for the raffle (§1028, read by the same second read), and the
  * participants' own «Am ajuns» — each empty or `false` when the filter leaves it out, so nothing is read for it. The participants'
  * own check-ins have no staff account: one account's filter or the deleted accounts' leaves them out, and only they answer
  * «participanții».
@@ -138,7 +138,7 @@ const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, raffleOu
 
 /**
  * One line per account that acted at the event (§996): how many scans, check-ins, undos, runners taken off the raffle and put
- * back (§1020), volunteers confirmed for the raffle (§NNN) and volunteer ticks — the staff accounts
+ * back (§1020), volunteers confirmed for the raffle (§1028) and volunteer ticks — the staff accounts
  * by name, then the deleted accounts as one, then the participants' own «Am ajuns» (their check-ins alone). A test registration's
  * row is omitted from every count the club is given (§30, AGENTS.md §12.6), but its account is still one the filter offers
  * (`accounts`), so a rehearsal on test rows can be read by account too.

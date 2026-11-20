@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1076,7 +1076,7 @@ period. «Toate datele unei persoane» lists a person's results.
 
 ## The raffle on race day: drawing the winner
 
-How an event's raffle is drawn (`DECISIONS.md` §948, §949, §983, §984, §1023 and §NNN). The club's own procedure for a raffle with a
+How an event's raffle is drawn (`DECISIONS.md` §948, §949, §983, §984, §1023 and §1028). The club's own procedure for a raffle with a
 sign-up of its own is `SETUP.md` §47; the colleagues' version is the backoffice «Ghid», section Organizator, «Tombola: numerele
 voluntarilor și extragerea pe random.org». The draw is never made on the site: the site hands out who takes part, numbers only, and
 random.org shuffles them.
@@ -1103,7 +1103,7 @@ number 7 are two different people: the two series never meet. A line of the elit
 ### A volunteer who is not confirmed
 
 A volunteer still «Înscris» — a minor whose parent has not given the volunteering agreement, for instance — reads «Nu ·
-neconfirmat» and is in no file (`DECISIONS.md` §NNN). Before the draw:
+neconfirmat» and is in no file (`DECISIONS.md` §1028). Before the draw:
 
 1. On «Ziua cursei» → «Tombolă» (or on the volunteer's own page), on the person's row: for a **minor**, choose «Cum și-a dat
    acordul părintele» — «telefonic», «la fața locului» or «în scris» —, then press **«Confirmă pentru tombolă»**.
