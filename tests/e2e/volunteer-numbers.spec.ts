@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
@@ -158,6 +158,10 @@ test.describe("§NNN the volunteers' V numbers and the raffle's file for random.
       const lines = body.split("\r\n");
       expect(lines.at(-1)).toBe("");
       expect(lines.slice(0, -1).every((line) => /^V?\d+$/.test(line))).toBe(true);
+      // And pressed as a person presses it: the browser saves a file of that name holding the same lines, nothing else.
+      const [download] = await Promise.all([page.waitForEvent("download"), button.click()]);
+      expect(download.suggestedFilename()).toMatch(/^tombola-\d{4}-\d{2}-\d{2}-random-org\.txt$/);
+      expect(readFileSync(await download.path(), "utf8")).toBe("1\r\nV001\r\nV002\r\n");
       // The present-only one beside it: nobody checked in or ticked yet — an empty file, not a blank line.
       const present = await page.request.get((await page.getByTestId("raffle-download-random-org-present").getAttribute("href")) as string);
       expect(present.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-prezenti-\d{4}-\d{2}-\d{2}-random-org\.txt"/);
