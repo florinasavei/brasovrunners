@@ -9,10 +9,17 @@ import { routing } from "@/i18n/routing";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import { isBackofficeRole, mustAcceptTeamAgreement, type StaffSubject } from "./domain/roles";
-import { gateRequestOf, isTeamAgreementPath, localeOfPath, TEAM_AGREEMENT_REFUSAL, teamAgreementReturnTo } from "./domain/team-agreement";
+import { isBackofficeRole, mustAcceptTeamAgreement, type StaffRole, type StaffSubject } from "./domain/roles";
+import {
+  gateRequestOf,
+  isTeamAgreementPath,
+  localeOfPath,
+  signInMomentOf,
+  TEAM_AGREEMENT_REFUSAL,
+  teamAgreementReturnTo,
+} from "./domain/team-agreement";
 import { findStaffUserById, type StaffAccount } from "./repository";
-import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
+import { DEV_STAFF_COOKIE, DEV_STAFF_SIGNED_IN_COOKIE } from "./dev-staff-cookie";
 import { outstandingTeamAgreement, type TeamAgreementVersion } from "./team-agreement";
 
 /**
@@ -44,29 +51,54 @@ import { outstandingTeamAgreement, type TeamAgreementVersion } from "./team-agre
 export { DEV_STAFF_COOKIE };
 
 /**
- * Whoever is signed in — a member or a colleague — or null (§524). For the members' zone and the
- * sign-in page; never a door to anything staff may do, which is `getCurrentStaffUser`'s.
+ * The session behind a request: the account it names and the moment it was signed in (§1026) — null for a session signed in
+ * before §1026, which carries no moment.
  */
-export async function getCurrentAccount(): Promise<StaffAccount | null> {
-  if (isDevStaffSwitcherEnabled()) {
-    const id = (await cookies()).get(DEV_STAFF_COOKIE)?.value;
-    if (!id) return null;
+type SessionFacts = { staffUserId: string; signedInAt: Date | null };
 
-    // A cookie naming a staff user who has since been removed is not a session. Revoking
-    // access has to take effect on the next request, not at the next sign-in.
-    return (await findStaffUserById(getDb(), id)) ?? null;
+/**
+ * The session behind this request, read once per render (React's `cache`, as `outstandingThisRequest` below; outside a render it
+ * is read afresh every time): the development switcher's two cookies — the account's id and the moment the development sign-in
+ * wrote — or Auth.js's session, whose `signedInAt` the `jwt` callback wrote at the Zitadel sign-in and keeps as the token is
+ * refreshed (`staffTokenAt`). Null without a session, or while the door has no lock (`STAFF_AUTH_MODE=disabled`).
+ */
+const sessionThisRequest = cache(async (): Promise<SessionFacts | null> => {
+  if (isDevStaffSwitcherEnabled()) {
+    const jar = await cookies();
+    const id = jar.get(DEV_STAFF_COOKIE)?.value;
+    if (!id) return null;
+    return { staffUserId: id, signedInAt: signInMomentOf(jar.get(DEV_STAFF_SIGNED_IN_COOKIE)?.value) };
   }
 
   if (env.STAFF_AUTH_MODE === "provider") {
     const session = await auth();
     if (!session?.staffUserId) return null;
-
-    // Re-read the row rather than trusting the token: a role change or a revoked access
-    // takes effect on the very next request, not when the session eventually expires.
-    return (await findStaffUserById(getDb(), session.staffUserId)) ?? null;
+    return { staffUserId: session.staffUserId, signedInAt: signInMomentOf(session.signedInAt) };
   }
 
   return null;
+});
+
+/**
+ * Whoever is signed in — a member or a colleague — or null (§524). For the members' zone and the
+ * sign-in page; never a door to anything staff may do, which is `getCurrentStaffUser`'s.
+ */
+export async function getCurrentAccount(): Promise<StaffAccount | null> {
+  const session = await sessionThisRequest();
+  if (!session) return null;
+
+  // A cookie or a token naming a staff user who has since been removed is not a session. Re-read
+  // the row rather than trusting either: a role change or a revoked access takes effect on the
+  // very next request, not at the next sign-in or when the session eventually expires.
+  return (await findStaffUserById(getDb(), session.staffUserId)) ?? null;
+}
+
+/**
+ * The moment this request's session was signed in (§1026), or null for a session signed in before §1026: the sign-in an acceptance
+ * of the team's undertaking on `/admin/acord` answers, kept with it.
+ */
+export async function currentSignInMoment(): Promise<Date | null> {
+  return (await sessionThisRequest())?.signedInAt ?? null;
 }
 
 /** The staff member signing this request, or null — and null for a member, who is no staff (§524). */
@@ -79,8 +111,9 @@ export async function getCurrentStaffUser(): Promise<StaffAccount | null> {
  * The staff member signing this request — and, since §1006, one who owes the team's undertaking nothing.
  *
  * **The team's undertaking (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
- * platformă»).** A colleague below the Administrator (`mustAcceptTeamAgreement`) who has not accepted the version of
- * `STAFF_DATA_AGREEMENT` in force is answered by nothing of the backoffice until they do, and it is asserted here — the one line
+ * platformă»), at every sign-in since §1026.** A colleague below the Administrator (`mustAcceptTeamAgreement`) whose session has not
+ * accepted the version of `STAFF_DATA_AGREEMENT` in force — the account accepted it before this session was signed in, or never —
+ * is answered by nothing of the backoffice until they do (`teamAgreementOwedThisSession`), and it is asserted here — the one line
  * every backoffice page, action and route handler asks before anything else — never by hiding a button:
  *
  * - a page being drawn sends the reader to `/admin/acord`, the page they asked for kept as `returnTo` (a same-site path only);
@@ -96,32 +129,40 @@ export async function requireStaff(): Promise<StaffAccount> {
   return staffUser;
 }
 
+/** The staff member the gate asks about: the session's own account, read by the caller. */
+type TeamAgreementSubject = { id: string; role: StaffRole };
+
 /**
  * The team's undertaking asked of a staff member the caller has read already (§1006): nothing when nothing is owed; otherwise a
  * page being drawn is sent to `/admin/acord` and anything else is refused with `FORBIDDEN`. `requireStaff` asks it, and so does
  * the staff preview of a draft, which reads its staff member itself to answer a stranger 404.
  */
-export async function assertTeamAgreementAccepted(staffUser: StaffSubject & { id: string }): Promise<void> {
+export async function assertTeamAgreementAccepted(staffUser: TeamAgreementSubject): Promise<void> {
   if (await owedThisRequest(staffUser)) await refuseUntilTeamAgreementAccepted();
 }
 
 /**
- * The version of the undertaking an account has not accepted, asked of the database once per request (§1006) however many doors
- * ask it — the layout's bare shell, the page's `requireStaff`, a page that asks the door again —, as `deadlinesForThisRequest` is
- * read once per backoffice render. React scopes `cache` to the render of one request; outside a render — a Server Action's body, a
- * route handler, a test — it calls through every time, so a press that has just written the acceptance is never answered from a
- * moment before it. Keyed by the account's id.
+ * The version of the undertaking this session owes, asked of the database once per request (§1006) however many doors ask it —
+ * the layout's bare shell, the page's `requireStaff`, a page that asks the door again —, as `deadlinesForThisRequest` is read once
+ * per backoffice render. React scopes `cache` to the render of one request; outside a render — a Server Action's body, a route
+ * handler, a test — it calls through every time, so a press that has just written the acceptance is never answered from a moment
+ * before it. Keyed by the account's id, its role and the session's sign-in moment in milliseconds (§1026; `cache` compares its
+ * arguments by identity, so a number, never a `Date`).
  */
 const outstandingThisRequest = cache(
-  (staffUserId: string): Promise<TeamAgreementVersion | null> => outstandingTeamAgreement(getDb(), staffUserId, new Date()),
+  (staffUserId: string, role: StaffRole, signedInAt: number | null): Promise<TeamAgreementVersion | null> =>
+    outstandingTeamAgreement(getDb(), { id: staffUserId, role }, signedInAt === null ? null : new Date(signedInAt), new Date()),
 );
 
 /**
- * The version this colleague owes: none, with no query, for a role that is not asked (`mustAcceptTeamAgreement`); else the
- * request's one read.
+ * The version this session owes: none, with no query, for a role that is not asked (`mustAcceptTeamAgreement`); else the
+ * request's one read, for the moment this request's session was signed in (§1026) — the one session the caller read its staff
+ * member from.
  */
-async function owedThisRequest(staffUser: StaffSubject & { id: string }): Promise<TeamAgreementVersion | null> {
-  return mustAcceptTeamAgreement(staffUser) ? outstandingThisRequest(staffUser.id) : null;
+async function owedThisRequest(staffUser: TeamAgreementSubject): Promise<TeamAgreementVersion | null> {
+  if (!mustAcceptTeamAgreement(staffUser)) return null;
+  const signedInAt = await currentSignInMoment();
+  return outstandingThisRequest(staffUser.id, staffUser.role, signedInAt === null ? null : signedInAt.getTime());
 }
 
 /**
@@ -166,7 +207,7 @@ async function refuseUntilTeamAgreementAccepted(): Promise<never> {
  * a page drawn for the router from a whole document. The page under it sends the reader, through its own `requireStaff`: a
  * page is fetched afresh on every navigation.
  */
-export async function teamAgreementOwedFor(staffUser: StaffSubject & { id: string }): Promise<TeamAgreementVersion | null> {
+export async function teamAgreementOwedFor(staffUser: TeamAgreementSubject): Promise<TeamAgreementVersion | null> {
   return owedThisRequest(staffUser);
 }
 
