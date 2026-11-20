@@ -501,11 +501,15 @@ describe("§974 the way back: every form carries its view, every press comes bac
     // Refused — another event's point — to the alert, the view kept.
     expect(await pressed(() => placeVolunteerAction(form({ view: "points", volunteerId: race.people.ion, checkpointId: race.points.elsewhere, at: water })))).toBe(back(`view=points&open=${water}&planError=NOT_FOUND`, "admin-alert"));
 
-    // «Salvează punctul»: to the point, open; refused, to the alert.
+    // «Salvează punctul»: to the point, open. Refused, since §1011 it is the form's own state — the page is not left at all, so its
+    // fold stays as the person opened it (the house's kept form, `plan-points-screens.test.ts`).
     const spring = await ownPoint("route", "Izvor", "3,4");
-    expect(await pressed(() => editPlanPointAction(form({ view: "points", pointId: spring, place: "route", name: "Izvorul rece", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}`, `point-${spring}`));
-    expect(await pressed(() => editPlanPointAction(form({ view: "points", pointId: spring, place: "route", name: "", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}&planError=PLAN_POINT_NAME_MISSING`, "admin-alert"));
-    // The refused point is drawn open under the alert, its group too: the pencil is one press away.
+    expect(await pressed(() => editPlanPointAction(null, form({ view: "points", pointId: spring, place: "route", name: "Izvorul rece", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}`, `point-${spring}`));
+    state.redirected.length = 0;
+    expect(await editPlanPointAction(null, form({ view: "points", pointId: spring, place: "route", name: "", km: "3,4", coordinates: "" }))).toMatchObject({ error: "PLAN_POINT_NAME_MISSING", fields: ["name"] });
+    expect(state.redirected).toEqual([]);
+    // A press of a point that lands at the alert (the others of this page: «Pune aici», «Șterge punctul») still draws the point open
+    // under it, its group too: the pencil is one press away.
     const refused = await planPage({ view: "points", open: spring, planError: "PLAN_POINT_NAME_MISSING" });
     expect(refused).toContain('id="admin-alert"');
     expect(drawnOpen(elementWith(refused, `id="point-${spring}"`))).toBe(true);

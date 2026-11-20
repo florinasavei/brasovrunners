@@ -11,7 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { readVolunteerPlan } from "@/modules/volunteers/plan";
-import { changePlanPoint, PLAN_POINTS_MAX } from "@/modules/volunteers/plan-points";
+import { changePlanPoint, listPlanPoints, PLAN_POINTS_MAX } from "@/modules/volunteers/plan-points";
 import { sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { decodeFlash } from "@/shared/feedback/notice";
@@ -52,8 +52,13 @@ const state = vi.hoisted(() => ({
   flashed: [] as string[],
   /** How many times the verbs' service was reached. */
   changed: 0,
-  /** A form whose action answered a refusal: the action, and the state it returned — what `useActionState` hands the form. */
-  refused: undefined as undefined | { action: unknown; outcome: unknown },
+  /**
+   * A form whose action answered a refusal: the action, and the state it returned — what `useActionState` hands the form. With
+   * `nth`, only the nth form of that action in the page's order gets it (§1011: one «Modifică punctul» a point, and React hands a
+   * plain POST's answer to the one form that posted it, by its place in the tree); the count is `refusedCalls`.
+   */
+  refused: undefined as undefined | { action: unknown; outcome: unknown; nth?: number },
+  refusedCalls: 0,
 }));
 
 // `useActionState` as the server answers it on a plain POST (§315): the form whose action returned a refusal is rendered
@@ -62,8 +67,13 @@ vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
   return {
     ...actual,
-    useActionState: (action: unknown, initial: unknown, permalink?: string) =>
-      state.refused && action === state.refused.action ? [state.refused.outcome, action, false] : actual.useActionState(action as never, initial as never, permalink),
+    useActionState: (action: unknown, initial: unknown, permalink?: string) => {
+      if (state.refused && action === state.refused.action) {
+        state.refusedCalls += 1;
+        if (state.refused.nth === undefined || state.refused.nth === state.refusedCalls) return [state.refused.outcome, action, false];
+      }
+      return actual.useActionState(action as never, initial as never, permalink);
+    },
   };
 });
 vi.mock("next-intl/server", () => ({
@@ -164,6 +174,7 @@ beforeEach(async () => {
   state.asked.length = 0;
   state.flashed.length = 0;
   state.refused = undefined;
+  state.refusedCalls = 0;
   vi.mocked(revalidateTag).mockClear();
   for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const) {
     [staff[role]] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}@example.test`, displayName: `Staff ${role}`, role }).returning();
@@ -724,17 +735,17 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     await place(race.people.radu, spring);
     // A point's press comes back to «Pe puncte», the point drawn open (§974).
     const atSpring = `${planPath()}?view=points&open=${spring}#point-${spring}`;
-    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4,25", coordinates: PIATA })))).toBe(atSpring);
+    expect(await pressed(() => editPlanPointAction(null, form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4,25", coordinates: PIATA })))).toBe(atSpring);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);
     expect(await rowOf(spring)).toMatchObject({ nameRo: "Izvorul rece", nameEn: "Izvorul rece", km: "4.25", latitude: "45.642710", longitude: "25.588710", planOnly: true, startFinish: false });
     // Radu stays where he stands: a point changed under a person moves nobody.
     expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, race.people.radu)))[0].checkpointId).toBe(spring);
 
     state.flashed.length = 0;
-    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4.25", coordinates: PIATA })))).toBe(atSpring);
+    expect(await pressed(() => editPlanPointAction(null, form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4.25", coordinates: PIATA })))).toBe(atSpring);
     expect(toasted()).toEqual([{ kind: "info", key: "volunteerUnchanged" }]);
     // To the start–finish: no kilometre, no number — and the page draws it in the other group.
-    await pressed(() => editPlanPointAction(form({ pointId: spring, place: "startFinish", name: "Izvorul rece", km: "4,25", coordinates: "" })));
+    await pressed(() => editPlanPointAction(null, form({ pointId: spring, place: "startFinish", name: "Izvorul rece", km: "4,25", coordinates: "" })));
     expect(await rowOf(spring)).toMatchObject({ startFinish: true, km: "0.00", latitude: null });
     expect(planPointsOf(groupOf(await planPage(POINTS), "startFinish")).map((part) => planPointBar(part).name)).toEqual(["Izvorul rece"]);
     expect(state.asked).toEqual(["canManageVolunteers", "canManageVolunteers", "canManageVolunteers"]);
@@ -744,7 +755,7 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
 
   it("saves the coordinates alone of an editor's point, whatever else the form posts", async () => {
     const before = await rowOf(race.points.junction);
-    expect(await pressed(() => editPlanPointAction(form({ pointId: race.points.junction, place: "startFinish", name: "Alt nume", km: "99", coordinates: PIATA })))).toBe(
+    expect(await pressed(() => editPlanPointAction(null, form({ pointId: race.points.junction, place: "startFinish", name: "Alt nume", km: "99", coordinates: PIATA })))).toBe(
       `${planPath()}?view=points&open=${race.points.junction}#point-${race.points.junction}`,
     );
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);
@@ -756,22 +767,31 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     expect(point).not.toContain('data-testid="plan-point-own"');
   });
 
-  it("brings a refused save back to the page's alert, where its sentence is — the box's rule, a point gone meanwhile, a role that may not", async () => {
+  // Since §1011 a refused «Salvează punctul» is the form's own state, as «Adaugă punctul»'s always was: it redirects nowhere (it
+  // came back to the page's alert under §953). What the page draws with it is the §1011 block at the end of this file.
+  it("answers a refused save as the form's own state — the box's rule, a point gone meanwhile, a role that may not — and writes nothing", async () => {
     const spring = await ownPoint("route", "Izvor", "3,4");
     const before = await rowOf(spring);
     const boxes = { pointId: spring, place: "route", name: "Izvor", km: "3,4", coordinates: "" };
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, name: "" })))).toBe(alertOf("PLAN_POINT_NAME_MISSING", spring));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID", spring));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID", spring));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN", spring));
+    const refusedWith = async (fields: Record<string, string>) => {
+      state.redirected.length = 0;
+      const outcome = (await editPlanPointAction(null, form({ ...boxes, ...fields }))) as FormOutcome;
+      expect(state.redirected, JSON.stringify(fields)).toEqual([]);
+      return outcome;
+    };
+    expect(await refusedWith({ name: "" })).toMatchObject({ error: "PLAN_POINT_NAME_MISSING", fields: ["name"], errorValues: { max: "60" }, values: { name: [""], km: ["3,4"] } });
+    expect(await refusedWith({ km: "departe" })).toMatchObject({ error: "PLAN_POINT_KM_INVALID", fields: ["km"], values: { km: ["departe"] } });
+    expect(await refusedWith({ coordinates: "nicăieri" })).toMatchObject({ error: "COORDINATES_INVALID", fields: ["coordinates"], values: { coordinates: ["nicăieri"] } });
+    expect(await refusedWith({ place: "undeva" })).toMatchObject({ error: "PLAN_POINT_PLACE_UNKNOWN", fields: ["place"] });
     // A point that is not on this plan — another event's, or no id at all — is said as a point no longer on the plan, never as
     // the backoffice's «Înregistrarea nu mai există», which names a registration.
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE", race.points.elsewhere));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: "not-an-id" })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await refusedWith({ pointId: race.points.elsewhere })).toMatchObject({ error: "PLAN_POINT_GONE", fields: [], values: { name: ["Izvor"] } });
+    expect(await refusedWith({ pointId: "not-an-id" })).toMatchObject({ error: "PLAN_POINT_GONE", fields: [] });
     expect(await rowOf(spring)).toEqual(before);
     expect(toasted()).toEqual([]);
 
-    // The page says each code in words, in the alert region — a sentence that counts is given its number.
+    // The page still says each code in words in the alert region, for the presses that land there («Șterge punctul», «Pune
+    // aici») — a sentence that counts is given its number.
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const errors = (locale === "ro" ? ro : en).Admin.errors as Record<string, string>;
@@ -785,10 +805,11 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     }
     state.locale = "ro";
 
-    // The Tehnic role's press writes nothing: refused at the door, the service never reached.
+    // The Tehnic role's press writes nothing: refused at the door, the service never reached — the save as its form's state, the
+    // delete at the page's alert.
     state.changed = 0;
     state.actor = staff.DEV;
-    expect(await pressed(() => editPlanPointAction(form(boxes)))).toBe(alertOf("FORBIDDEN", spring));
+    expect(await refusedWith({})).toMatchObject({ error: "FORBIDDEN", fields: [], values: { name: ["Izvor"] } });
     expect(await pressed(() => removePlanPointAction(form({ pointId: spring })))).toBe(alertOf("FORBIDDEN", spring));
     expect(state.changed).toBe(0);
     expect(await rowOf(spring)).toEqual(before);
@@ -991,19 +1012,30 @@ describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe punc
     expect(offPaper(await planPage(POINTS, race.raceId, true), 'data-testid="plan-point-edit"')).toBe(true);
   });
 
-  it("saves the note from «Salvează punctul» and comes back to that point, open; a note in one language or too long comes back to the page's alert with its sentence", async () => {
+  it("saves the note from «Salvează punctul» and comes back to that point, open; a note in one language or too long is the form's own state (§1011)", async () => {
     const atJunction = `${planPath()}?view=points&open=${race.points.junction}#point-${race.points.junction}`;
     const boxes = { pointId: race.points.junction, coordinates: "" };
     // As a browser posts a textarea: its line breaks as \r\n.
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, volunteerNoteRo: NOTE.ro.replace("\n", "\r\n"), volunteerNoteEn: NOTE.en })))).toBe(atJunction);
+    expect(await pressed(() => editPlanPointAction(null, form({ ...boxes, volunteerNoteRo: NOTE.ro.replace("\n", "\r\n"), volunteerNoteEn: NOTE.en })))).toBe(atJunction);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);
     expect(await rowOf(race.points.junction)).toMatchObject({ volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
     expect(state.asked).toEqual(["canManageVolunteers"]);
 
-    // Refused: one language alone, a language too long — each to the alert, the point open under it, nothing written.
+    // Refused: one language alone, a language too long — each the form's own state since §1011, naming its box and keeping what
+    // was typed; nothing written, nobody sent anywhere.
     state.flashed.length = 0;
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, volunteerNoteRo: "Doar în română.", volunteerNoteEn: "" })))).toBe(alertOf("PLAN_POINT_NOTE_ONE_LANGUAGE", race.points.junction));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, volunteerNoteRo: "a".repeat(501), volunteerNoteEn: "e" })))).toBe(alertOf("PLAN_POINT_NOTE_TOO_LONG", race.points.junction));
+    state.redirected.length = 0;
+    expect(await editPlanPointAction(null, form({ ...boxes, volunteerNoteRo: "Doar în română.", volunteerNoteEn: "" }))).toMatchObject({
+      error: "PLAN_POINT_NOTE_ONE_LANGUAGE",
+      fields: ["volunteerNoteEn"],
+      values: { volunteerNoteRo: ["Doar în română."], volunteerNoteEn: [""] },
+    });
+    expect(await editPlanPointAction(null, form({ ...boxes, volunteerNoteRo: "a".repeat(501), volunteerNoteEn: "e" }))).toMatchObject({
+      error: "PLAN_POINT_NOTE_TOO_LONG",
+      fields: ["volunteerNoteRo"],
+      errorValues: { max: "500" },
+    });
+    expect(state.redirected).toEqual([]);
     expect(await rowOf(race.points.junction)).toMatchObject({ volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
     expect(toasted()).toEqual([]);
     // The page says each in words, the most it may hold filled in.
@@ -1019,20 +1051,283 @@ describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe punc
     state.locale = "ro";
 
     // A form drawn before the boxes posts neither: the note stays, the coordinates change.
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: PIATA })))).toBe(atJunction);
+    expect(await pressed(() => editPlanPointAction(null, form({ ...boxes, coordinates: PIATA })))).toBe(atJunction);
     expect(await rowOf(race.points.junction)).toMatchObject({ latitude: "45.642710", volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
     // Both emptied: no note.
-    await pressed(() => editPlanPointAction(form({ ...boxes, volunteerNoteRo: "", volunteerNoteEn: "" })));
+    await pressed(() => editPlanPointAction(null, form({ ...boxes, volunteerNoteRo: "", volunteerNoteEn: "" })));
     expect(await rowOf(race.points.junction)).toMatchObject({ volunteerNoteRo: null, volunteerNoteEn: null });
 
-    // The Tehnic role is refused at the door: the service never reached, nothing written.
+    // The Tehnic role is refused at the door: the service never reached, nothing written — the form's state says why.
     state.changed = 0;
     state.actor = staff.DEV;
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en })))).toBe(alertOf("FORBIDDEN", race.points.junction));
+    expect(await editPlanPointAction(null, form({ ...boxes, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en }))).toMatchObject({ error: "FORBIDDEN", values: { volunteerNoteRo: [NOTE.ro] } });
     expect(state.changed).toBe(0);
     expect(await rowOf(race.points.junction)).toMatchObject({ volunteerNoteRo: null });
     // Nobody was emailed, and no public cache tag was expired: no public page reads the note.
     expect(await db.select().from(emailOutbox)).toEqual([]);
     expect(revalidateTag).not.toHaveBeenCalled();
+  });
+});
+
+/*
+  §1011 (amending §1009), BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — the plan's points, four follow-ups: «Adaugă un punct» takes
+  «Notă pentru voluntari» too; «Modifică punctul» is a kept form — a refusal is the form's own state, every box as typed, the fold
+  shown —, one a point; «Pe puncte» draws a point's people like «Tabel»; and a point whose note changed after some of its people
+  were told says, under the note, how many the next «Trimite fiecăruia punctul lui» tells it again.
+*/
+describe("§1011 the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», and the note told again", () => {
+  const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
+  const MINUTE = 60_000;
+  const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE);
+  /** A textarea of a part, by its test id: its opening tag and what it holds. */
+  const textareaOf = (part: string, testid: string) => {
+    const match = new RegExp(`(<textarea[^>]*data-testid="${testid}"[^>]*>)([^<]*)</textarea>`).exec(part);
+    return { tag: match?.[1] ?? "", value: match?.[2] ?? "" };
+  };
+  /** The points as «Pe puncte» draws them, in its order: the route's group, then the start–finish's — the order of their forms. */
+  const drawnOrder = async () => {
+    const points = await listPlanPoints(db, race.raceId);
+    return [...points.filter((point) => !point.startFinish), ...points.filter((point) => point.startFinish)].map((point) => point.id);
+  };
+  /** The page as a plain POST of one point's «Salvează punctul» answers it: that form — and no other — handed the refusal. */
+  async function refusedEditPage(pointId: string, outcome: FormOutcome, keepStyles = false) {
+    state.refused = { action: editPlanPointAction, outcome, nth: (await drawnOrder()).indexOf(pointId) + 1 };
+    state.refusedCalls = 0;
+    try {
+      return await planPage(POINTS, race.raceId, keepStyles);
+    } finally {
+      state.refused = undefined;
+    }
+  }
+  const writeNote = (id: string, minutes: number, note: { ro: string; en: string } = NOTE) =>
+    changePlanPoint(db, staff.ADMIN!, { kind: "edit", eventId: race.raceId, id, place: "route", name: "", km: "", coordinates: "", volunteerNoteRo: note.ro, volunteerNoteEn: note.en }, at(minutes));
+
+  it("draws the note's two boxes in «Adaugă un punct» after the coordinates — the same labels, help and 500 — and adds the point with its note", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const words = (locale === "ro" ? ro : en).Admin.volunteers.plan.points;
+      const builder = builderOf(await planPage(POINTS));
+      const [roBox, enBox] = [textareaOf(builder, "plan-point-add-note-ro"), textareaOf(builder, "plan-point-add-note-en")];
+      expect(roBox.tag, locale).toContain('name="volunteerNoteRo"');
+      expect(enBox.tag).toContain('name="volunteerNoteEn"');
+      for (const box of [roBox, enBox]) {
+        expect(box.tag).toMatch(/maxLength="500"|maxlength="500"/);
+        expect(box.value).toBe("");
+      }
+      for (const label of [words.volunteerNoteRo, words.volunteerNoteEn, words.volunteerNoteHelper, words.volunteerNoteHelperBoth.replace("{max}", "500")]) expect(builder).toContain(escaped(label));
+      // After the coordinates, before «Adaugă punctul»; each box its own id, which a refusal's summary links to.
+      expect(builder.indexOf('data-testid="plan-point-add-coordinates"')).toBeLessThan(builder.indexOf('data-testid="plan-point-add-note-ro"'));
+      expect(builder.indexOf('data-testid="plan-point-add-note-en"')).toBeLessThan(builder.indexOf('data-testid="plan-point-add"'));
+      expect(roBox.tag).toContain('id="field-plan-point-add-volunteerNoteRo"');
+      expect(enBox.tag).toContain('id="field-plan-point-add-volunteerNoteEn"');
+    }
+    state.locale = "ro";
+
+    // The press: the point and its note in one, the line break as a browser posts it — back to its fold, the toast as ever.
+    expect(await pressed(() => addPlanPointAction(null, form({ place: "route", name: "Izvor", km: "3,4", coordinates: "", volunteerNoteRo: NOTE.ro.replace("\n", "\r\n"), volunteerNoteEn: NOTE.en })))).toBe(
+      `${planPath()}?view=table&saved=planPointAdded#plan-points`,
+    );
+    expect(toasted()).toEqual([{ kind: "success", key: "planPointAdded" }]);
+    const [spring] = await ownRows();
+    expect(spring).toMatchObject({ nameRo: "Izvor", volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en, volunteerNoteChangedAt: expect.any(Date) });
+    expect((await trail()).at(-1)!.metadataJson).toMatchObject({ pointId: spring.id, volunteerNote: { from: null, to: true } });
+    // Drawn under the point's name at once, on «Pe puncte»; the builder's boxes empty again for the next point.
+    const page = await planPage(POINTS);
+    expect(textOf(pointOf(page, spring.id), "plan-point-volunteer-note-words")).toEqual([escaped(NOTE.ro)]);
+    expect(textareaOf(builderOf(page), "plan-point-add-note-ro").value).toBe("");
+    // At the start–finish too.
+    await pressed(() => addPlanPointAction(null, form({ place: "startFinish", name: "Kituri", km: "", coordinates: "", volunteerNoteRo: "Pe masa a doua.", volunteerNoteEn: "On the second table." })));
+    expect((await ownRows()).find((row) => row.nameRo === "Kituri")).toMatchObject({ startFinish: true, volunteerNoteRo: "Pe masa a doua.", volunteerNoteEn: "On the second table." });
+  });
+
+  it("answers a refused add's note as the form's own state, every box as typed — the note's two among them — and draws it so, in both languages", async () => {
+    const typed = { place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA, volunteerNoteRo: "Doar în română.\nRândul doi.", volunteerNoteEn: "" };
+    const outcome = (await addPlanPointAction(null, form(typed))) as FormOutcome;
+    expect(outcome).toMatchObject({ error: "PLAN_POINT_NOTE_ONE_LANGUAGE", fields: ["volunteerNoteEn"], values: { volunteerNoteRo: [typed.volunteerNoteRo], volunteerNoteEn: [""], name: ["Kituri și numere"] } });
+    expect(await addPlanPointAction(null, form({ ...typed, volunteerNoteRo: "a".repeat(501), volunteerNoteEn: "e" }))).toMatchObject({ error: "PLAN_POINT_NOTE_TOO_LONG", fields: ["volunteerNoteRo"], errorValues: { max: "500" } });
+    expect(await ownRows()).toEqual([]);
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const catalogue = locale === "ro" ? ro : en;
+      state.refused = { action: addPlanPointAction, outcome };
+      const page = await planPage(POINTS);
+      state.refused = undefined;
+      const addForm = /<form[^>]*data-testid="plan-point-add-form"[\s\S]*?<\/form>/.exec(builderOf(page))![0];
+      const summary = /<div[^>]*data-testid="form-refusal"[\s\S]*?<\/ul>/.exec(addForm)![0];
+      expect(wordsOf(summary), locale).toContain(wordsOf(escaped(catalogue.Admin.errors.PLAN_POINT_NOTE_ONE_LANGUAGE)));
+      expect(summary).toMatch(new RegExp(`<a[^>]*href="#field-plan-point-add-volunteerNoteEn"[^>]*>${escaped(catalogue.Admin.volunteers.plan.points.volunteerNoteEn).replace(/[()]/g, "\\$&")}</a>`));
+      expect(radiosOf(addForm)).toEqual({ route: false, startFinish: true });
+      expect(valueOf(addForm, "plan-point-add-name")).toBe("Kituri și numere");
+      expect(valueOf(addForm, "plan-point-add-coordinates")).toBe(PIATA);
+      expect(textareaOf(addForm, "plan-point-add-note-ro").value).toBe(escaped(typed.volunteerNoteRo));
+      expect(textareaOf(addForm, "plan-point-add-note-en")).toMatchObject({ value: "" });
+      expect(textareaOf(addForm, "plan-point-add-note-en").tag).toContain('aria-invalid="true"');
+      expect(textareaOf(addForm, "plan-point-add-note-ro").tag).toContain('aria-invalid="false"');
+    }
+  });
+
+  it("answers a refused «Modifică punctul» inside that point's own form: the sentence naming its box, every box as typed, the fold shown — and no other point's form", async () => {
+    const spring = await ownPoint("route", "Izvor", "3,4");
+    await writeNote(race.points.junction, 0);
+    const typed = { view: "points", pointId: spring, place: "startFinish", name: "Izvorul rece", km: "9,9", coordinates: PIATA, volunteerNoteRo: "Doar în română.\nRândul doi.", volunteerNoteEn: "" };
+    state.redirected.length = 0;
+    const outcome = (await editPlanPointAction(null, form(typed))) as FormOutcome;
+    expect(state.redirected).toEqual([]);
+    expect(outcome).toMatchObject({ error: "PLAN_POINT_NOTE_ONE_LANGUAGE", fields: ["volunteerNoteEn"] });
+    expect(await rowOf(spring)).toMatchObject({ nameRo: "Izvor", startFinish: false, volunteerNoteRo: null });
+
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const catalogue = locale === "ro" ? ro : en;
+      const words = catalogue.Admin.volunteers.plan.points;
+      const page = await refusedEditPage(spring, outcome);
+      const pencil = foldOf(pointOf(page, spring));
+      const editForm = elementWith(pencil, 'data-testid="plan-point-edit-form"');
+      // The house's kept form, one a point.
+      expect(tagOf(editForm, 'data-testid="plan-point-edit-form"'), locale).toContain('data-action-form=""');
+      // The sentence first in the form, naming the box as a link to it — this point's box — and that what was typed is still there.
+      const summary = /<div[^>]*data-testid="form-refusal"[\s\S]*?<\/ul>/.exec(editForm)![0];
+      expect(summary).toContain(`id="form-refusal-plan-point-edit-${spring}"`);
+      expect(editForm.indexOf('data-testid="form-refusal"')).toBeLessThan(editForm.indexOf('data-testid="plan-point-edit-name"'));
+      expect(wordsOf(summary)).toContain(wordsOf(escaped(catalogue.Admin.errors.PLAN_POINT_NOTE_ONE_LANGUAGE)));
+      expect(summary).toMatch(new RegExp(`<a[^>]*href="#field-plan-point-edit-${spring}-volunteerNoteEn"[^>]*>${escaped(words.volunteerNoteEn).replace(/[()]/g, "\\$&")}</a>`));
+      expect(editForm).toContain(escaped(catalogue.Admin.forms.kept));
+      // Every box as it was typed — the kind, the name, the kilometre, the coordinates and both notes —, not as the point stands.
+      expect(radiosOf(editForm)).toEqual({ route: false, startFinish: true });
+      expect(valueOf(editForm, "plan-point-edit-name")).toBe("Izvorul rece");
+      expect(valueOf(editForm, "plan-point-edit-km")).toBe("9,9");
+      expect(valueOf(editForm, "plan-point-edit-coordinates")).toBe(PIATA);
+      expect(textareaOf(editForm, "plan-point-edit-note-ro").value).toBe(escaped(typed.volunteerNoteRo));
+      expect(textareaOf(editForm, "plan-point-edit-note-en").value).toBe("");
+      // The box the refusal names is marked; the others are not.
+      expect(textareaOf(editForm, "plan-point-edit-note-en").tag).toContain('aria-invalid="true"');
+      expect(tagOf(editForm, 'data-testid="plan-point-edit-name"')).toContain('aria-invalid="false"');
+      // One refusal in the page: the junction's form shows what the junction has, its boxes their own ids.
+      expect(page.match(/data-testid="form-refusal"/g)).toHaveLength(1);
+      const junction = elementWith(foldOf(pointOf(page, race.points.junction)), 'data-testid="plan-point-edit-form"');
+      expect(textareaOf(junction, "plan-point-edit-note-ro").value).toBe(escaped(NOTE.ro));
+      expect(textareaOf(junction, "plan-point-edit-note-ro").tag).toContain(`id="field-plan-point-edit-${race.points.junction}-volunteerNoteRo"`);
+      expect(textareaOf(editForm, "plan-point-edit-note-ro").tag).toContain(`id="field-plan-point-edit-${spring}-volunteerNoteRo"`);
+      expect(tagOf(editForm, `id="field-plan-point-edit-${spring}-place"`)).toMatch(/^<fieldset /);
+    }
+    state.locale = "ro";
+
+    // The fold is shown with scripts off as well: the pencil, the point and its group each show a closed body that holds a refusal.
+    const styled = await refusedEditPage(spring, outcome, true);
+    const unfolds = (attribute: string) =>
+      classesOf(styled, attribute).some((name) => new RegExp(`\\.${name}:not\\(\\[open\\]\\):has\\(\\[id\\^='form-refusal'\\]\\)::details-content\\{[^}]*display:block`).test(rulesOf(styled)));
+    expect(unfolds('data-testid="plan-point-edit"')).toBe(true);
+    expect(unfolds(`id="point-${spring}"`)).toBe(true);
+    expect(unfolds('data-group="route"')).toBe(true);
+    // …across the whole row, as the open pencil is.
+    expect(classesOf(styled, 'data-testid="plan-point-edit"').some((name) => new RegExp(`\\.${name}:has\\(\\[id\\^='form-refusal'\\]\\)\\{[^}]*flex-basis:100%`).test(rulesOf(styled)))).toBe(true);
+  });
+
+  it("says a refused save of an editor's point at its form too — coordinates in no shape read — keeping the note typed beside them", async () => {
+    const typed = { view: "points", pointId: race.points.water, coordinates: "pe la cabană", volunteerNoteRo: "Paharele pe masa a doua.", volunteerNoteEn: "The cups on the second table." };
+    const outcome = (await editPlanPointAction(null, form(typed))) as FormOutcome;
+    expect(outcome).toMatchObject({ error: "COORDINATES_INVALID", fields: ["coordinates"] });
+    const page = await refusedEditPage(race.points.water, outcome);
+    const editForm = elementWith(foldOf(pointOf(page, race.points.water)), 'data-testid="plan-point-edit-form"');
+    expect(editForm).toMatch(new RegExp(`<a[^>]*href="#field-plan-point-edit-${race.points.water}-coordinates"`));
+    expect(valueOf(editForm, "plan-point-edit-coordinates")).toBe("pe la cabană");
+    expect(textareaOf(editForm, "plan-point-edit-note-ro").value).toBe("Paharele pe masa a doua.");
+    expect(textareaOf(editForm, "plan-point-edit-note-en").value).toBe("The cups on the second table.");
+    expect(await rowOf(race.points.water)).toMatchObject({ latitude: null, volunteerNoteRo: null });
+  });
+
+  it("draws a point's people on «Pe puncte» like «Tabel»: numbered, the names in bold and in capitals, a one-pixel line between two — on paper too — and «Fără punct» as it was", async () => {
+    const page = await planPage(POINTS, race.raceId, true);
+    const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
+    const junction = pointOf(plain, race.points.junction);
+    expect(textOf(junction, "plan-person-number")).toEqual(["1.", "2."]);
+    expect(textOf(junction, "plan-person-name")).toEqual(["Ana Pop", "Zoe Manea"]);
+    // The name: bold, in capitals — the words as typed underneath — and still the link to the person.
+    const nameClasses = classesOf(junction, 'data-testid="plan-person-name"');
+    expect(nameClasses.some((name) => new RegExp(`\\.${name}\\{[^}]*font-weight:700`).test(rulesOf(page)))).toBe(true);
+    expect(nameClasses.some((name) => new RegExp(`\\.${name}\\{[^}]*text-transform:uppercase`).test(rulesOf(page)))).toBe(true);
+    expect(/data-testid="plan-person-name"[^>]*><a href="\/ro\/admin\/volunteers\/[^"]+">Ana Pop<\/a>/.test(junction)).toBe(true);
+    // The line: a rule of the list, `li + li`, in the divider colour, under no `@media` — the paper draws it as the screen does.
+    const list = classesOf(junction, 'data-testid="plan-point-people"');
+    const separator = list.flatMap((part) => [...rulesOf(page).matchAll(new RegExp(`\\.${part}>li\\+li\\{([^}]*)\\}`, "g"))].map((match) => match[1])).join(";");
+    expect(separator).toMatch(/border-top:1px solid/);
+    expect(separator).toMatch(/border-color:rgba\(/);
+    expect(separator).toMatch(/padding-top:/);
+    expect(list.some((part) => new RegExp(`\\.${part}>li\\{`).test(rulesOf(page)))).toBe(false);
+    expect(list.some((part) => new RegExp(`@media print\\{\\.${part}\\{[^}]*(border|display:none)`).test(rulesOf(page)))).toBe(false);
+    // The junction is the route's first point: the first list of people the page draws.
+    expect(classesOf(page, 'data-testid="plan-point-people"')).toEqual(list);
+    expect(offPaper(page, 'data-testid="plan-point-people"')).toBe(false);
+    // «Fără punct» is no point's list: Radu's name as it always was — not in capitals — and no numbers.
+    const unplaced = elementWith(plain, 'data-testid="plan-unplaced"');
+    expect(unplaced).not.toContain('data-testid="plan-person-number"');
+    const raduClasses = classesOf(unplaced, 'data-testid="plan-person-name"');
+    expect(raduClasses.some((name) => new RegExp(`\\.${name}\\{[^}]*text-transform:uppercase`).test(rulesOf(page)))).toBe(false);
+    expect(raduClasses.some((name) => new RegExp(`\\.${name}\\{[^}]*font-weight:600`).test(rulesOf(page)))).toBe(true);
+  });
+
+  it("says under a point's note how many the next press tells it again once it changed after they were told — counted, in both languages, off the paper", async () => {
+    // Ana and Radu at the junction, Zoe there with no address; Dan at the water; Ion at the bridge. All told, gone at minute 1.
+    await place(race.people.radu, race.points.junction);
+    await sendVolunteerPoints(db, staff.ADMIN!, { eventId: race.raceId }, NOW);
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(1), attemptCount: 1 }).where(eq(emailOutbox.messageType, "VOLUNTEER_POINT"));
+    expect(await planPage(POINTS)).not.toContain('data-testid="plan-point-note-changed"');
+
+    // The junction's note written at minute 2: Ana and Radu heard the point before it.
+    await writeNote(race.points.junction, 2);
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const points = (locale === "ro" ? ro : en).Admin.volunteers.plan.points;
+      const page = await planPage(POINTS, race.raceId, true);
+      const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
+      const junction = pointOf(plain, race.points.junction);
+      expect(textOf(junction, "plan-point-note-changed"), locale).toEqual([escaped(points.noteChanged.few.replace("{count}", "2"))]);
+      // Right under the note, before the rest of the point.
+      expect(junction.indexOf('data-testid="plan-point-volunteer-note"')).toBeLessThan(junction.indexOf('data-testid="plan-point-note-changed"'));
+      expect(junction.indexOf('data-testid="plan-point-note-changed"')).toBeLessThan(junction.indexOf('data-testid="plan-person"'));
+      // About emails, not the day: never on paper. And no other point says it.
+      expect(offPaper(page, 'data-testid="plan-point-note-changed"')).toBe(true);
+      expect(plain.match(/data-testid="plan-point-note-changed"/g)).toHaveLength(1);
+      // The email's fold counts them as the press does: two to write, the other two told, Zoe with no address.
+      const lines = (locale === "ro" ? ro : en).Admin.volunteers.plan.mail.lines;
+      const counted = [lines.toWrite.replace("{count}", "2"), lines.told.replace("{count}", "2"), lines.noAddress.replace("{count}", "1"), lines.unplaced.replace("{count}", "0")].join(" · ");
+      expect(wordsOf(elementWith(plain, 'data-testid="plan-mail-counts"'))).toBe(wordsOf(escaped(counted)));
+    }
+    state.locale = "ro";
+    // «Tabel» does not say it: it is a line of the point on «Pe puncte».
+    expect(await planPage({ view: "table" })).not.toContain('data-testid="plan-point-note-changed"');
+
+    // One person: the counted phrase's own form. The water's note at minute 3, Dan told before it.
+    await writeNote(race.points.water, 3);
+    expect(textOf(pointOf(await planPage(POINTS), race.points.water), "plan-point-note-changed")).toEqual([escaped(ro.Admin.volunteers.plan.points.noteChanged.one.replace("{count}", "1"))]);
+
+    // Taken off: the line says they get the point without it — where the note was, under the point's bar.
+    await writeNote(race.points.junction, 4, { ro: "", en: "" });
+    const removed = pointOf(await planPage(POINTS), race.points.junction);
+    expect(removed).not.toContain('data-testid="plan-point-volunteer-note"');
+    expect(textOf(removed, "plan-point-note-changed")).toEqual([escaped(ro.Admin.volunteers.plan.points.noteRemoved.few.replace("{count}", "2"))]);
+
+    // The press tells them; on their way, they are told, and the line is gone.
+    await sendVolunteerPoints(db, staff.ADMIN!, { eventId: race.raceId }, at(5));
+    expect(await planPage(POINTS)).not.toContain('data-testid="plan-point-note-changed"');
+  });
+
+  it("has the line's words in both catalogues in the three counted forms, each under 200 characters, naming the press by its button", () => {
+    for (const catalogue of [ro, en]) {
+      const points = catalogue.Admin.volunteers.plan.points;
+      for (const key of ["noteChanged", "noteRemoved"] as const) {
+        expect(Object.keys(points[key]).sort(), key).toEqual(["few", "one", "other"]);
+        for (const words of Object.values(points[key])) {
+          expect(words).toContain("{count}");
+          expect(words).toContain(catalogue.Admin.volunteers.plan.mail.send);
+          expect(words.length).toBeLessThanOrEqual(200);
+        }
+      }
+    }
+    expect(ro.Admin.volunteers.plan.points.noteChanged.few).toBe("Nota s-a schimbat după ultimul email: {count} voluntari vor primi nota nouă la următorul „Trimite fiecăruia punctul lui”.");
+    expect(ro.Admin.volunteers.plan.points.noteChanged.other).toContain("{count} de voluntari");
+    // A changed note is no longer a reason to write to everybody again: the line when everybody knows their point does not name it.
+    expect(ro.Admin.volunteers.plan.mail.allTold).not.toMatch(/nota/);
+    expect(en.Admin.volunteers.plan.mail.allTold).not.toMatch(/\bnote\b/);
   });
 });
