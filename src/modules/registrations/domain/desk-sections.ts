@@ -10,7 +10,7 @@ import { isUuid } from "@/shared/ids";
  * to stood between the ones already here, the ones waiting for their address and the waiting list. The list is now one fold
  * per state, **in the table's working order** — what the volunteer does first comes first — each summary its words and the
  * count of its rows («De ridicat numărul (12)»), a section with no rows not drawn at all, and inside each section the rows in the
- * order the list gives them (`listDeskRegistrations`: by the race number a confirmed row shows, then the rows without one by name):
+ * order the list gives them (`listDeskRegistrations`: the elites, then the partners' runners, then everybody else, each by the race number a confirmed row shows and the rows without one after, by name):
  *
  * 1. `toPickUp` — «De ridicat numărul»: confirmed, not yet here. Open on every arrival (`primary`): it is what the desk is for.
  * 2. `unsigned` — «Fără declarație semnată»: `PENDING_DECLARATION`, the rows the paper confirmation is pressed on. Open while it
