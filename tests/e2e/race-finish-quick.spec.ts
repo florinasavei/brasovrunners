@@ -154,11 +154,11 @@ test.describe("§986 «Cronometrare»", () => {
     const eventId = await seedRace(tag);
     const timingUrl = `/ro/admin/checkin/cronometrare?eventId=${eventId}`;
 
-    // The Organizer, at the gun — whose row of «Ziua cursei» holds all six tabs, «Jurnal» last (§996): wider than a phone, so it scrolls inside itself.
+    // The Organizer, at the gun — whose row of «Ziua cursei» holds all seven tabs, «Jurnal» (§996) then «Declarații» (§NNN) last: wider than a phone, so it scrolls inside itself.
     await signIn(page, "Dev Moderator");
     await page.goto(timingUrl);
     await hydrated(page);
-    await expect(page.getByTestId("race-day-tabs").getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/, /Jurnal/], { useInnerText: true });
+    await expect(page.getByTestId("race-day-tabs").getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/, /Jurnal/, /Declarații/], { useInnerText: true });
     await expect(page.getByTestId("race-day-tabs").locator('[aria-current="page"]')).toContainText(/Cronometrare|Sosiri/);
     await everyTabReachable(page);
     await expect(page.getByTestId("race-gun-line")).toContainText("Startul planificat:");

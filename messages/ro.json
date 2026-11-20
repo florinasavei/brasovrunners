@@ -9770,7 +9770,8 @@
               "title": "Declarațiile semnate: «Declarații»",
               "steps": [
                 "O deschid Organizatorul și Administratorii: «Ziua cursei» → «Declarații», apoi alege cursa la «Eveniment» și apasă «Caută».",
-                "Sus scrie câte declarații sunt semnate. Dedesubt, pe secțiuni după stare: «Confirmați», deschisă, apoi «Neconfirmați» și «Anulate sau expirate», închise; lângă fiecare titlu, câți sunt.",
+                "Sus scrie câte declarații sunt semnate. Dedesubt, pe secțiuni după stare, ca la «Prezența»: «Confirmați», deschisă; apoi, închise, «De semnat din nou», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare» și «Anulate sau expirate». Lângă fiecare titlu, câți sunt; o secțiune fără nimeni nu apare.",
+                "Pe un rând fără număr de concurs scrie „—”: numărul apare doar după confirmare. Numărul unei înscrieri anulate sau expirate e tăiat.",
                 "Pe fiecare rând: numărul, numele, când a semnat, semnătura (la un minor, a lui și a părintelui), versiunea și amprenta. „pe hârtie, înregistrată de …” spune cine a înregistrat la masă o declarație pe hârtie.",
                 "Cauți pe cineva? La «Nume sau număr» scrie o parte din nume sau numărul de concurs și apasă «Caută».",
                 "«Declarația (PDF)» deschide declarația semnată; fiecare descărcare rămâne în istoricul înscrierii, cu numele tău. «Pagina înscrierii» duce la înscriere.",
@@ -13373,7 +13374,10 @@
         "searchHelp": "Scrie o parte din nume sau numărul de concurs. Fără nimic: toate declarațiile evenimentului.",
         "sections": {
           "confirmed": "Confirmați ({n})",
-          "unconfirmed": "Neconfirmați ({n})",
+          "unsigned": "De semnat din nou ({n})",
+          "addressUnconfirmed": "Adresă neconfirmată ({n})",
+          "offered": "Ofertă de loc deschisă ({n})",
+          "waitlisted": "Pe lista de așteptare ({n})",
           "voided": "Anulate sau expirate ({n})"
         },
         "signedAt": "Semnată {when}",

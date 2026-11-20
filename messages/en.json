@@ -9770,7 +9770,8 @@
               "title": "The signed declarations: «Declarations»",
               "steps": [
                 "The Organizer and the Administrators open it: «Race day» → «Declarations», then pick the race under «Event» and press «Search».",
-                "At the top: how many declarations are signed. Below, in sections by state: «Confirmed», open, then «Not confirmed» and «Cancelled or expired», closed; beside each title, how many it holds.",
+                "At the top: how many declarations are signed. Below, in sections by state, as on «Attendance»: «Confirmed», open; then, closed, «To sign again», «Address not confirmed», «Place offered», «On the waiting list» and «Cancelled or expired». Beside each title, how many it holds; a section with nobody in it is not shown.",
+                "A row with no race number shows “—”: the number comes only with the confirmation. A cancelled or expired registration's number is struck through.",
                 "On each row: the number, the name, when they signed, the signature (for a minor, theirs and the parent's), the version and the fingerprint. “on paper, recorded by …” says who recorded a paper declaration at the desk.",
                 "Looking for someone? Under «Name or number» type part of the name or the race number and press «Search».",
                 "«Declaration (PDF)» opens the signed declaration; every download stays in the registration's history, with your name. «Registration page» leads to the registration.",
@@ -13373,7 +13374,10 @@
         "searchHelp": "Type part of a name or the race number. Leave it empty for every declaration of the event.",
         "sections": {
           "confirmed": "Confirmed ({n})",
-          "unconfirmed": "Not confirmed ({n})",
+          "unsigned": "To sign again ({n})",
+          "addressUnconfirmed": "Address not confirmed ({n})",
+          "offered": "Place offered ({n})",
+          "waitlisted": "On the waiting list ({n})",
           "voided": "Cancelled or expired ({n})"
         },
         "signedAt": "Signed {when}",

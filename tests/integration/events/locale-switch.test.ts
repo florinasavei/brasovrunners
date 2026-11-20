@@ -121,8 +121,9 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
   it("keeps the desk code on its page in the other language, marked as the page already open", async () => {
     expect(await resolveLocaleSwitch(db, "/ro/admin/checkin/ABCDEFGHJK", "en")).toBe("/en/admin/checkin/ABCDEFGHJK?from=language");
     expect(await resolveLocaleSwitch(db, "/en/admin/checkin/ABCDEFGHJK", "ro")).toBe("/ro/admin/checkin/ABCDEFGHJK?from=language");
-    // The organizers' log is a page of its own, not a code: it carries no mark.
+    // The organizers' log is a page of its own, not a code: it carries no mark — and nor do the race's declarations (§NNN).
     expect(await resolveLocaleSwitch(db, "/ro/admin/checkin/jurnal", "en")).toBe("/en/admin/checkin/jurnal");
+    expect(await resolveLocaleSwitch(db, "/ro/admin/checkin/declaratii", "en")).toBe("/en/admin/checkin/declaratii");
   });
 
   it("sends an unrecognised path to the listing rather than nowhere", async () => {

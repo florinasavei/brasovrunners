@@ -4,7 +4,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 
 /**
- * «Ziua cursei» → «Declarații» (§NNN), the pure half: what a row of the page is, the sections it folds into by the registration's
+ * «Ziua cursei» → «Declarații» (§NNN), the pure half: what a row of the page is, the folds it stands in by the registration's
  * state, the order inside each, the search by name or race number, and the counts. No database, no request, no words:
  * `race-day/declarations.ts` reads, the page says it. The organizers' alone (`canReadRaceDayDeclarations`).
  *
@@ -39,30 +39,43 @@ export type RaceDayDeclarationRow = {
 };
 
 /**
- * The page's folds, in order (as «Prezența» folds the desk, §1002): `confirmed` — the registrations that run — first and open on every
- * arrival; `unconfirmed` — a live registration not confirmed (a restart that must sign again, an address not confirmed, an offer, the
- * waiting list), each row wearing its state; `voided` — cancelled or expired, the declaration kept all the same. The last two folded.
+ * The page's folds, in order — «Prezența»'s own (§1002, `registrations/domain/desk-sections.ts`), one per state, with the desk's two
+ * folds of the confirmed («De ridicat numărul», «Prezenți») kept as one: who came does not change what they signed.
+ *
+ * 1. `confirmed` — the registrations that run. First, and open on every arrival (`primary`): they are what the page is for.
+ * 2. `unsigned` — `PENDING_DECLARATION`: a registration cancelled or run out after it signed, then restarted (`AGENTS.md` §10.5),
+ *    now owing a new signature; the one listed is from before.
+ * 3. `addressUnconfirmed` — `PENDING_EMAIL_CONFIRMATION`, the same kind of restart, one step earlier.
+ * 4. `offered` — `WAITLIST_OFFERED`.
+ * 5. `waitlisted` — `WAITLISTED`.
+ * 6. `voided` — `CANCELLED` or `EXPIRED`: the declaration is kept all the same (three years, §95).
+ *
+ * Every fold but the first starts closed, «Anulate sau expirate» included — the desk opens that one, for a printed bib that may
+ * have to come out of the pile; nothing on this page is handed out. A fold with no rows is not drawn.
  */
-export const DECLARATION_SECTION_KEYS = ["confirmed", "unconfirmed", "voided"] as const;
+export const DECLARATION_SECTION_KEYS = ["confirmed", "unsigned", "addressUnconfirmed", "offered", "waitlisted", "voided"] as const;
 export type DeclarationSectionKey = (typeof DECLARATION_SECTION_KEYS)[number];
 
-/** The section a row stands in, by its state alone. */
+/** The fold a row stands in, by its state alone — the desk's (`deskSectionOf`) for every state but the confirmed, which is one here. */
 export function declarationSectionOf(status: RegistrationStatus): DeclarationSectionKey {
   switch (status) {
     case "CONFIRMED":
       return "confirmed";
+    case "PENDING_DECLARATION":
+      return "unsigned";
+    case "PENDING_EMAIL_CONFIRMATION":
+      return "addressUnconfirmed";
+    case "WAITLIST_OFFERED":
+      return "offered";
+    case "WAITLISTED":
+      return "waitlisted";
     case "CANCELLED":
     case "EXPIRED":
       return "voided";
-    case "PENDING_EMAIL_CONFIRMATION":
-    case "PENDING_DECLARATION":
-    case "WAITLISTED":
-    case "WAITLIST_OFFERED":
-      return "unconfirmed";
   }
 }
 
-/** Why a section opens by itself when nothing else asks it to (`shared/ui/fold.ts`, §336): the confirmed are the page's own list. */
+/** Why a fold opens by itself when nothing else asks it to (`shared/ui/fold.ts`, §336): the confirmed are the page's own list. */
 const OPENS_BY_DEFAULT: Readonly<Partial<Record<DeclarationSectionKey, FoldOpenWhen>>> = { confirmed: { primary: true } };
 
 /** The race number the row shows, as the desk shows it (§548, §311): null while it has none to show. */
@@ -70,7 +83,10 @@ export function declarationNumberOf(row: Pick<RaceDayDeclarationRow, "status" | 
   return raceNumberOf(row);
 }
 
-/** The order inside a section: race numbers rising, then the rows without one by name, then by id — the same rows, the same order. */
+/**
+ * The order inside a fold: by the race number the row shows, lowest first; the rows without one after them, by name; then by id —
+ * the same rows, the same order, whatever order the read gave them.
+ */
 export function compareDeclarationRows(a: RaceDayDeclarationRow, b: RaceDayDeclarationRow): number {
   const numberA = declarationNumberOf(a);
   const numberB = declarationNumberOf(b);
@@ -81,9 +97,10 @@ export function compareDeclarationRows(a: RaceDayDeclarationRow, b: RaceDayDecla
 }
 
 /**
- * The search box (`?q=`), as the desk reads its own (`listDeskRegistrations`): one to five digits are a race number, matched against
- * the number the row shows; anything else is a part of the name, matched blind to case and diacritics (`foldTerm`, the fold the
- * lists use); nothing is everybody. A typed code names nobody here: the page lists declarations, not desk codes.
+ * The search box (`?q=`), read as the desk reads its own (`listDeskRegistrations`): one to five digits are a race number, matched
+ * against the number the row shows — a confirmed row's, and the retired one of a row that is over (§311); anything else is a part
+ * of the name, matched blind to case and diacritics (`foldTerm`, the fold the lists use), in every fold; nothing is everybody. A
+ * desk code names nobody here: the page lists declarations, and the desk is where a code is scanned.
  */
 export type DeclarationSearch = { kind: "none" } | { kind: "number"; number: number } | { kind: "name"; term: string };
 
@@ -100,24 +117,24 @@ export function matchesDeclarationSearch(row: RaceDayDeclarationRow, search: Dec
   return foldTerm(row.registeredName).includes(search.term);
 }
 
-/** How many of these rows are real registrations: the page's «N declarații semnate» and a section's number (§30, `AGENTS.md` §12.6). */
+/** How many of these rows are real registrations: the page's «N declarații semnate» and a fold's number (§30, `AGENTS.md` §12.6). */
 export function countRealDeclarations(rows: readonly Pick<RaceDayDeclarationRow, "kind">[]): number {
   return rows.filter((row) => row.kind === "REAL").length;
 }
 
 export type DeclarationSection = {
   key: DeclarationSectionKey;
-  /** The section's rows, in `compareDeclarationRows`' order. */
+  /** The fold's rows, in `compareDeclarationRows`' order. */
   rows: RaceDayDeclarationRow[];
   /** How many of them are real registrations: the summary's number. */
   count: number;
-  /** Why the section is drawn open, if it is. */
+  /** Why the fold is drawn open, if it is. */
   openWhen: FoldOpenWhen;
 };
 
 /**
- * The rows in their sections, in the page's order, the empty ones left out. `searching`: the box holds a name or a number — every
- * section drawn holds a match, and opens (`inUse`), as a search opens the desk's.
+ * The rows in their folds, in the page's order, the empty ones left out. `searching`: the box holds a name or a number — every
+ * fold drawn holds a match, and opens (`inUse`), as a search opens the desk's.
  */
 export function declarationSections(rows: readonly RaceDayDeclarationRow[], { searching }: { searching: boolean }): DeclarationSection[] {
   const byKey = new Map<DeclarationSectionKey, RaceDayDeclarationRow[]>(DECLARATION_SECTION_KEYS.map((key) => [key, []]));

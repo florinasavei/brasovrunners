@@ -27,8 +27,8 @@ import {
 } from "@/modules/race-day/domain/declarations";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { listEventsAcceptingRegistrations, listEventsForDesk } from "@/modules/registrations/admin-repository";
-import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
+import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import TextHashTip from "@/modules/registrations/ui/TextHashTip";
 import { canReadRaceDayDeclarations } from "@/modules/staff-identity/domain/roles";
@@ -51,10 +51,16 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-/** Each fold's picture, by name (`panel-glyphs.ts`, §521): the pen that signs, the waiting hourglass, the row that is over — as the desk's folds wear them. */
+/**
+ * Each fold's picture, by name (`panel-glyphs.ts`, §521) — the desk's own for the same state (§1002): the paper to sign again, the
+ * address, the seat, the hourglass, the row that is over; and, for the confirmed, the person with the tick of a confirmed registration.
+ */
 const SECTION_GLYPH = {
-  confirmed: { glyph: "declaration" },
-  unconfirmed: { glyph: "queue" },
+  confirmed: { glyph: "registration" },
+  unsigned: { glyph: "declaration" },
+  addressUnconfirmed: { glyph: "email" },
+  offered: { glyph: "placeOffered" },
+  waitlisted: { glyph: "queue" },
   voided: { glyph: "cancelRegistration" },
 } as const satisfies Record<DeclarationSectionKey, { glyph: PanelGlyphName }>;
 
@@ -66,12 +72,13 @@ const ROW_SX = { listStyle: "none", py: 1, borderBottom: 1, borderColor: "divide
 
 /**
  * «Declarații» — «Ziua cursei»'s list of signed declarations (§NNN), its last tab (`raceDayTabs`): for the chosen event, every
- * registration that holds a signed declaration, in folds by its state — «Confirmați» first and open, «Neconfirmați» and «Anulate sau
- * expirate» folded —, each fold with how many real registrations it holds, and «N declarații semnate» above them all. A row: the race
- * number as the desk writes it (struck on a row that is over), the name, when it was signed, the signature as the registration's page
- * draws it — the typed name in the hand; a minor's two, the minor's and the parent's, each named —, the version, «pe hârtie,
- * înregistrată de …» for one recorded at the desk, the short fingerprint with the whole in its tip, «Declarația (PDF)» — the existing
- * route, which asserts the reading right and records every download (`registration.declaration_downloaded`) — and «Pagina înscrierii».
+ * registration that holds a signed declaration, in «Prezența»'s folds by state — «Confirmați» first and open, then «De semnat din
+ * nou», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare» and «Anulate sau expirate», closed —, each fold
+ * with how many real registrations it holds, and «N declarații semnate» above them all. A row: the race number as the desk writes it
+ * (struck on a row that is over), the name, when it was signed, the signature as the registration's page draws it — the typed name in
+ * the hand; a minor's two, the minor's and the parent's, each named —, the version, «pe hârtie, înregistrată de …» for one recorded
+ * at the desk, the short fingerprint with the whole in its tip, «Declarația (PDF)» — the existing route, which asserts the reading
+ * right and records every download (`registration.declaration_downloaded`) — and «Pagina înscrierii».
  *
  * A GET form — the event (the desk's own list, and an event the address names that is not on it, so the list is read the day after
  * too), a name or a race number — works before hydration, on a phone. One query for the event's rows (`race-day/declarations.ts`);
@@ -145,8 +152,8 @@ export default async function RaceDayDeclarationsPage({ params, searchParams }: 
           <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }} data-testid="race-day-declaration-name">
             {entry.registeredName}
           </Typography>
-          {/* The state, beside the name, wherever it is not the section's own word: a row not confirmed says which state it is in. */}
-          {entry.status !== "CONFIRMED" && <RegistrationStatusChip status={entry.status} testId="race-day-declaration-status" />}
+          {/* «Anulate sau expirate» holds two states: the row says which. Every other fold is one state, its title the word. */}
+          {over && <RegistrationStatusChip status={entry.status} testId="race-day-declaration-status" />}
           {entry.kind === "TEST" && <StatusChip glyph="test" color="warning" label={t("registrations.testKind")} testId="race-day-declaration-test" />}
         </Stack>
         {/* When, and the signature as the registration's page draws it: a minor's declaration is signed by two (§330), each named. */}
@@ -199,6 +206,7 @@ export default async function RaceDayDeclarationsPage({ params, searchParams }: 
           >
             {t("raceDay.declarations.pdf")}
           </GlyphButton>
+          {/* A plain link, never prefetched: three hundred rows in view would each wake a page nobody opened. */}
           <GlyphButton icon="goTo" href={registrationHref} variant="text" size="small" sx={TAP_TARGET} data-testid="race-day-declaration-registration">
             {t("raceDay.declarations.registration")}
           </GlyphButton>

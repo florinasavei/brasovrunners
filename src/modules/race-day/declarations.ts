@@ -16,13 +16,14 @@ import type { RaceDayDeclarationRow } from "./domain/declarations";
 /*
   «Ziua cursei» → «Declarații» (§NNN), the reads: one event's registrations that hold a signed declaration, each with its newest
   acceptance — what the page draws and nothing more. The organizers' alone (`canReadRaceDayDeclarations`, asserted here as on the
-  page, BR-REQ-060-01). Reading only: nothing here writes, and the trail is written by the PDF route a row links to
-  (`registration.declaration_downloaded`), as before.
+  page, BR-REQ-060-01). Reading only: nothing here writes. The trail is written where a declaration is read whole — the PDF route
+  every row links to (`registration.declaration_downloaded`, §324) — as before.
 
-  **One query for the event's rows, whatever their number:** the event's registrations joined to their acceptances on
-  `declaration_acceptances_registration_accepted_at_idx`, `DISTINCT ON` the registration so each keeps its newest — the one its PDF
-  prints (`signed-declaration.ts#findSignedDeclaration`) —, the recording colleague's name by one join. **No identity document is
-  selected**: neither `id_document` nor `minor_id_document` leaves the database for this page, so no page built on it can print one.
+  **One query for the event's rows, whatever their number:** the event's registrations (`registrations_event_status_idx`) joined to
+  their acceptances (`declaration_acceptances_registration_accepted_at_idx`), `DISTINCT ON` the registration so each keeps its newest —
+  the one its PDF prints (`registrations/signed-declaration.ts#findSignedDeclaration`) —, and the recording colleague's name by one
+  join. **No identity document is selected**: neither `id_document` nor `minor_id_document` leaves the database for this page, so no
+  page built on it can print one.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -42,12 +43,13 @@ export async function findDeclarationsEvent<T extends Record<string, unknown>>(d
   return row ?? null;
 }
 
+/** Who recorded a paper declaration: the staff account the acceptance names, under its own name in the one statement. */
 const recordedBy = alias(staffUsers, "declaration_recorded_by");
 
 /**
  * Every registration of one event that holds a signed declaration (§NNN), with its newest acceptance, for the Organizer, the
  * Administrator and the Superadministrator (`canReadRaceDayDeclarations`); any other role is refused here as on the page. In no
- * particular order: the page sorts them into its sections (`domain/declarations.ts`).
+ * particular order: the page sorts them into its folds (`domain/declarations.ts`).
  */
 export async function readRaceDayDeclarations<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<RaceDayDeclarationRow[]> {
   if (!canReadRaceDayDeclarations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the race-day declarations`);
