@@ -638,6 +638,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canRecordListWishAtDesk: /**/ [false, true, true, true, true, true, true],
     // §996: «Ziua cursei» → «Jurnal», who scanned and who marked present — the readers of the list; the desk's other roles are named in it, never shown it.
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],
+    // §1018: «Ziua cursei» → «Declarații», every signed declaration of the race — the readers of the list; the desk's other roles see one runner at a time.
+    canReadRaceDayDeclarations: [false, false, false, true, false, true, true],
     // §1014: «Ziua cursei» → «Tombolă» — every role that works the desk, the desk Volunteer included; never a member.
     canReadRaffle: /*         */ [false, true, true, true, true, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
