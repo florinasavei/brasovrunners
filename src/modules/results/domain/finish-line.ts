@@ -35,7 +35,12 @@ import { isUuid } from "@/shared/ids";
  *   six hours after (`raceGunWindowOpen`); a second «Start» of the same organizer heard within ten seconds of their last is the
  *   same press sent twice, and changes nothing (`raceGunRepeats`).
  * - **«⏱ Finish».** Each press keeps one instant, oldest first; the next number or elite pressed takes the oldest kept
- *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`).
+ *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`). The
+ *   moment a press stands for is read at the tap (`tapMoment`) and handed to the press, which then lets go of the kept one it took
+ *   (`keptAfterPress`) — so a question asked between the two never moves it (§1010).
+ * - **A finished elite typed again** (§1010): a number the box is given that is an elite's who is already «Sosit» as this page last
+ *   heard — at its load or in the answer to any press since — or whose press waits or was saved on this phone, is asked about first
+ *   (`asksBeforeAgain`); any other number goes at once, as before.
  * - **The queue.** Every entry is one staff account's press (`staffId`) with an id of its own, which the server keeps in the
  *   trail and recognises a retry by; kept, in the order pressed, until the server answered it. The oldest one of the viewer's
  *   own waiting is sent first (`nextToSend`) — another account's, left on the same phone, is shown and never sent from this one.
@@ -419,6 +424,32 @@ export function keptAge(atMs: number, nowMs: number): { unit: "seconds" | "minut
   return elapsed < 60 * SECOND ? { unit: "seconds", value: Math.floor(elapsed / SECOND) } : { unit: "minutes", value: Math.floor(elapsed / (60 * SECOND)) };
 }
 
+/** The moment a tap stands for (§1010): `atMs`, and the kept «Finish» moment it took — the same instant — or null when it took none. */
+export type TapMoment = { atMs: number; kept: number | null };
+
+/**
+ * The moment of a tap — «Sosit», Enter in the box, an elite's button —, read as it is pressed (§1010, amending §986): the oldest kept
+ * moment still young at `nowMs` (`staleKept`, `takeOldestKept`), else `nowMs`. Nothing is taken from the kept ones yet: the press does
+ * that (`keptAfterPress`). Read at the tap and handed to the press, so a question asked first — a finished elite typed again — leaves
+ * the time as it was when the volunteer pressed, however long it stays open, and a question cancelled leaves the kept moment unused.
+ */
+export function tapMoment(kept: readonly number[], nowMs: number): TapMoment {
+  const oldest = takeOldestKept(staleKept(kept, nowMs).fresh).atMs;
+  return { atMs: oldest ?? nowMs, kept: oldest };
+}
+
+/**
+ * The kept moments once a press took the one its tap read (§1010): that one leaves — when it is still kept: the second's sweep may have
+ * dropped it for paper while a question was open —, and every other older than ten minutes at `nowMs` is dropped, its time said for
+ * paper (`staleKept`). A tap that took none leaves the young ones as they were. For a press made at its tap, the same as taking the
+ * oldest young one then (`takeOldestKept`).
+ */
+export function keptAfterPress(kept: readonly number[], taken: number | null, nowMs: number): { rest: number[]; stale: number[] } {
+  const at = taken === null ? -1 : kept.indexOf(taken);
+  const { fresh, stale } = staleKept(at < 0 ? kept : dropKept(kept, at), nowMs);
+  return { rest: fresh, stale };
+}
+
 // ---- What the server answers ----------------------------------------------------------------------------
 
 /** One of «Ultimii sosiți»: a stored «Sosit», the latest written first. */
@@ -645,6 +676,50 @@ export function entryStateOf(entry: FinishEntry, staffId: string): "waiting" | "
   if (entry.outcome === null) return entry.staffId === staffId ? "waiting" : "otherAccount";
   if (entry.outcome.kind === "recorded") return entry.undone ? "undone" : "saved";
   return entry.outcome.kind;
+}
+
+// ---- A finished elite typed again -------------------------------------------------------------------------
+
+/**
+ * What the question says of an elite already in (§1010): the elite — its label and full name —, the time the line keeps for them — the
+ * stored «Sosit», else this phone's own press —, and the line of «Ultimii sosiți» that says who entered it, while it is among them.
+ */
+export type EliteAgain = { elite: EliteButtonView; gunTimeMs: number; stored: RecentFinisherView | null };
+
+/**
+ * Whether a number typed in the box is asked about before it is pressed (§1010, amending §986; the owner, 2026-11-20: «after an elite
+ * arrives and is marked as a finisher, if somebody types that again than we need a confirmation message, this is just for elites sincer
+ * their timing is more sensitive»): the elite the number is — a registration marked «Elită» or a numbered line of the race's elite list,
+ * as the page's state holds them (`elites`) — when that elite is already «Sosit» (`finishedGunTimeMs`), or when this phone already holds
+ * the viewer's own press of the number since the gun the line counts from (`gunAtMs`), waiting to leave or saved and not undone since;
+ * else null — a number that is no elite's, an elite who has not crossed yet — and the number is pressed at once, as before.
+ *
+ * A press of this phone made before that gun — the trial before «Resetează clasamentul» (§997), a press refused as not started — is no
+ * finish of this race, and another account's press left on the phone is not the viewer's: neither asks. The elites' own buttons never
+ * ask — a finished elite's is drawn disabled —, and the server keeps the first time whatever is pressed (`pressMeets`).
+ *
+ * What the page knows is what it last heard — at its load, or in the answer to any press of its own since: nothing is asked of the
+ * server at a number typed, which would put a round trip between the box and the next runner on the line. So an elite pressed on
+ * another phone since is asked about only once this page has heard of it, and the server keeps the first time all the same.
+ */
+export function asksBeforeAgain(
+  bibNumber: number,
+  line: Pick<FinishLineState, "elites" | "recent">,
+  entries: readonly FinishEntry[],
+  staffId: string,
+  gunAtMs: number,
+): EliteAgain | null {
+  const elite = line.elites.find((candidate) => candidate.bibNumber === bibNumber);
+  if (!elite) return null;
+  if (elite.finishedGunTimeMs !== null) {
+    return { elite, gunTimeMs: elite.finishedGunTimeMs, stored: line.recent.find((row) => row.bibNumber === bibNumber) ?? null };
+  }
+  const own = entries.find(
+    (entry) =>
+      entry.staffId === staffId && entry.bibNumber === bibNumber && entry.pressedAtMs >= gunAtMs && (entry.outcome === null || (entry.outcome.kind === "recorded" && !entry.undone)),
+  );
+  if (!own) return null;
+  return { elite, gunTimeMs: own.outcome?.kind === "recorded" ? own.outcome.gunTimeMs : stampedGunTime(own.pressedAtMs, gunAtMs), stored: null };
 }
 
 // ---- The phone's storage -----------------------------------------------------------------------------------

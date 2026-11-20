@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.81-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.85-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.81-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.85-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1119,7 +1119,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) — and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) —, «Ziua cursei» → «Tombolă» read, a runner signed up there by the desk's door (`canReadRaffle` = `canWorkTheDesk`, §1014) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
 MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
@@ -1707,6 +1707,15 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
   number and never a runner's name, and the line adds the name the number belongs to today, read live. Each line of
   «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
+- **A recorded time chosen (§1012).** Under a line's «Timp», «Timpi la sosire» lists the times the line recorded for its
+  number since the last reset — the presses' `finishLine` rows, an undone press left out (`domain/recorded-times.ts`), one
+  query of the trail —, and «Folosește» (`canEnterResults`, asked first) makes one the line's «Sosit» time
+  (`results.ts#chooseRecordedFinishTime`): only a time the trail holds for that number, read in the transaction
+  (`RESULT_TIME_NOT_RECORDED` otherwise); never on a «Descalificat» line — no block drawn, `RESULT_DISQUALIFIED` on the
+  server (`mayChooseRecordedTime`), «Abandon» and «Neprezentat» keep it —; guarded by the chosen line's own fingerprint
+  (`resultLineFingerprint`, posted in the button's value): CONFLICT only when that line changed since the page was drawn,
+  never for another number's arrival or another line's save — the big save keeps the whole list's —; the chip time and the
+  note untouched, every place ranked again from the live rows, one audit row with `chosenFromHistory: true`.
 
 MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
 (the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
@@ -3532,12 +3541,18 @@ a volunteer's page and on the tab, a line of the elite list's only door. Nobody 
 
 *Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
 raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a
-volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, the Organizer's and the
-Administrators', drawn among the tabs only for an event that holds a raffle) has the settings in one line, the counts by
-group and how many of them were there, the filters «Toți», «Participă», «Nu participă», «Doar prezenții», everybody of the
-three groups in one table — number, name, group, «Participă» with the reason, how and when they signed up, «Prezent» —, the
-organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked first) and a line's «Prezent», both files, and
-prints without its controls. The draw itself is the club's, outside the site.
+volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, every desk role's since
+§1014 — `canReadRaffle` = `canWorkTheDesk`, a 404 to a member —, drawn among the tabs only for an event that holds a raffle)
+has the settings in one line, the counts by group and how many of them were there, the filters «Toți», «Participă», «Nu
+participă», «Doar prezenții», everybody of the three groups in one table — number, name, group, «Participă» with the reason,
+how and when they signed up, «Prezent» —, the organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked
+first) and a line's «Prezent», both files, and prints without its controls. A desk role that is not an organizer reads the
+same table, counts and filters with words of its own above them, but not how and when anybody signed up, nor the reason
+«scos de organizatori» (a plain «Nu», as at the desk), and gets one press: the desk's «Înscrie la tombolă» on a registration
+that may still sign up and was not taken out, the person having accepted the rules on paper or aloud (DESK, its recorder);
+the organizers' presses, the way to the editor and both files stay `canTakeRaffleList`', and the file's route refuses
+anybody else. Never an address, an email or a telephone: the roster carries none. The draw itself is the club's, outside the
+site.
 
 Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
 §983; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
@@ -3551,8 +3566,9 @@ the event's and the search's «Înscris» and «Confirmat» (a cancelled person 
 that filters the list to those people (`present=yes|no`), combined with the list's other filters as «Cu kit» is: with
 «Doar membrii» or a state chosen it lists the ones that filter keeps too, fewer than the figure. The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
 them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
-(below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
-never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
+(below), «Toate datele unei persoane» and «Ziua cursei» → «Tombolă», which says it in words beside whether the person takes
+part — every desk role's tab since §1014, the tick and its press staying the list's; never by a public page, an email, a badge,
+the desk — which checks runners in, never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
 card or the volunteers' Excel and CSV until a change of their own (`tests/unit/volunteers/presence-never-leaves.test.ts`).
 No state, role, point, number, tick or email moves, no public cache is expired, and the person is not told.
 
@@ -3810,24 +3826,42 @@ language of their own row. A point is any point of the plan (§961, `volunteers/
 one of the event's «Puncte pe traseu», one the organizers typed by hand, or one at the start–finish — counted,
 told and «already told» alike. A person at the start–finish is told the place with no number and no kilometre
 («Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
-HTML and in the text; who «already knows their point» does not change when a point's name, kilometre or
-coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent. Never by placing, moving or
-taking a person off; never by a job; never to another event's people. The payload holds ids and the telling
-(`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for the person's first message, one more for each later
-one) and the key is exactly that, `volunteer-point:<volunteer>:<point>:<round>`.
+HTML and in the text; who «already knows their point» does not change when a point's name, kilometre, kind or
+coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent — its «Notă pentru voluntari» is
+the one thing of a point that does (below, §1011). Never by placing, moving or taking a person off; never by a
+job; never to another event's people. The payload holds ids and the telling (`eventId`, `volunteerId`,
+`checkpointId`, `round`: 1 for the person's first message, one more for each later one) and the key is exactly
+that, `volunteer-point:<volunteer>:<point>:<round>`.
 
 **The outbox's own rows are the memory of who was told** — no column, no table. A person «already knows the
 point they stand at» when the newest of their rows still waits to leave (PENDING, PROCESSING) and names that
 point at the address their row holds now, or else when the newest of their rows that reached them (SENT,
-COMPLAINED) does. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox deletes; a
-row that **failed** or **bounced**; a message that named another point or went to an address corrected since. A
-press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an address,
-each with their next round. An older round still waiting when a newer one is queued — or a failed one put back
-in the queue — is withdrawn at the send, so pressing again while a message waits makes one message, not two.
-The send reads the person's rows without a lock, so this holds for a row that has not started to render: one
-the outbox was already sending when «din nou tuturor» committed the newer round is not called back, and both
+COMPLAINED) does and left (`sent_at`, else `created_at`) at or after the moment the point's «Notă pentru
+voluntari» last changed. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox
+deletes; a row that **failed** or **bounced**; a message that named another point or went to an address
+corrected since; a message that reached them before the point's note last changed, which carried the note as it
+was. A press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an
+address, each with their next round. An older round still waiting when a newer one is queued — or a failed one
+put back in the queue — is withdrawn at the send, so pressing again while a message waits makes one message, not
+two. The send reads the person's rows without a lock, so this holds for a row that has not started to render:
+one the outbox was already sending when «din nou tuturor» committed the newer round is not called back, and both
 leave — a known edge, left as it is, since each was asked for by a press. The limit of this memory is the
 outbox's retention (ninety days): a point told earlier than that is told again by the next press.
+
+**A changed note is told again** (§1011, amending §1009, and §961's rule above for this one field of a point). The
+moment is the point's own, `event_checkpoints.volunteer_note_changed_at`, stamped by
+`volunteers/plan-points.ts#changePlanPoint` in the save's own transaction when — and only when — the note's words
+change after the service's trimming: written, changed in either language, or taken off. A save that leaves them as
+they were stamps nothing, and a name, a kilometre, the kind or coordinates changed never un-tell anybody; a note
+written before the column has no moment and un-tells nobody. A message still waiting (PENDING, PROCESSING) still
+tells, whenever the note changed: it is drawn as it leaves and says the note as it is then. So the next ordinary
+press writes to the people of that point told before the change, each with their next round, and to nobody else
+for it — another point's people stay told, and «Trimite din nou tuturor» is not needed. The rule is one pure
+function, `point-mail.ts#tellingOf` (`alreadyTold` is its «told»); `readVolunteerPointMail`, the plan page's one
+reader of the question's numbers, counts per point the people to be told again, which «Pe puncte» says under the
+point's note (§17). The note's edge, known and left as it is like the one above: a message drawn a moment before
+the save and taken by the provider a moment after it says the old note and counts as told — `sent_at` is the one
+moment the outbox keeps of a send, and a column for the moment a message is drawn would close it.
 
 Everything the message says is read at the send: the event and its day, the point's number in the route's
 order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
@@ -4199,10 +4233,16 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
     (`volunteer_plan.point_added`, `point_changed`, `point_removed`: the point before and after and a count, never a
     person), a press that changes nothing writing nothing. None of it emails anybody or expires a public cache tag.
   - **The page** groups the points under «Start–finish» and «Pe traseu», on the screen and on the paper, adds them in
-    «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed), and
-    folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first; a refused edit or delete
-    lands at the page's alert with its code. A point with coordinates says them, with «Deschide pe hartă» — Google
-    Maps' own address, a link only (`mapUrlOf`; the host is listed in `scripts/docs-check.mjs`).
+    «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed) — each with
+    its «Notă pentru voluntari» in both languages when it has one, which «Modifică punctul» also gives later
+    (§1009, §1011) —, and folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first.
+    «Modifică punctul» is a kept form too (§1011, amending §953 for it), one a point (`ActionForm`, its boxes' ids
+    prefixed `plan-point-edit-<id>`): a refused edit comes back as that form's own state — its sentence first,
+    naming its box; every box as typed, the note's two included; the point's fold open, without scripts as well
+    (`shared/ui/disclosure.ts#REFUSAL_UNFOLDED_SX`, §336) — and a save that goes through comes back to the point,
+    open, in its view, with its toast. Only a refused «Șterge punctul» lands at the page's alert with its code. A
+    point with coordinates says them, with «Deschide pe hartă» — Google Maps' own address, a link only (`mapUrlOf`;
+    the host is listed in `scripts/docs-check.mjs`).
   - **The email** tells a person at the start–finish their place with no number and no kilometre, and adds the numbers
     and the map's link for a point that has coordinates; for a route point without them not a word changed (§16.3).
 
@@ -4257,12 +4297,14 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
   «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
   they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows
   remember who was told, what is withdrawn at the send — is §16.3 (`modules/volunteers/point-mail.ts`). The page states
-  the four numbers the service counts (`previewVolunteerPoints`: who is written to, who already knows their point, who
-  stands at a point with no address, who stands at none) beside the button and again in the question the button asks,
-  with the email line the one builder words. «Trimite din nou tuturor» is a box in that question while somebody
-  already knows their point (`ConfirmSpec.option`: the dialog's one optional box — unticked whenever a question opens,
-  never waited for, written `on` into the form's hidden field only when ticked and confirmed) and the button itself
-  once everybody does; with nobody to write to there is no button, and the service refuses with the reason
+  the four numbers the service counts (`readVolunteerPointMail`, its one reader of them since §1011: who is written to,
+  who already knows their point, who stands at a point with no address, who stands at none) beside the button and
+  again in the question the button asks, with the email line the one builder words; and from the same read, under a
+  point's note on «Pe puncte», never on paper, how many of its people were told it before the note last changed and
+  are written to again by the next ordinary press (§16.3). «Trimite din nou tuturor» is a box in that question while
+  somebody already knows their point (`ConfirmSpec.option`: the dialog's one optional box — unticked whenever a
+  question opens, never waited for, written `on` into the form's hidden field only when ticked and confirmed) and the
+  button itself once everybody does; with nobody to write to there is no button, and the service refuses with the reason
   (`VOLUNTEER_POINTS_NOBODY`, `VOLUNTEER_POINTS_ALL_TOLD`). `sendVolunteerPointsAction` is an email press
   (`volunteers.sendPoints`, §12.11) that asks the capability at its door; the service asks again before anything is
   read and audits one row a press, `event.volunteer_points_sent` — the counts and whether «din nou tuturor», never a

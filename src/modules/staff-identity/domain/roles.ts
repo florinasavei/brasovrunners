@@ -818,6 +818,22 @@ export function canRecordFinishes(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Tombolă» (§1014, amending §984's gate)** — an event's raffle tab: everybody of its three groups by the
+ * number, whether each takes part and whether they were there, the four filters, and the desk's «Înscrie la tombolă» for a
+ * runner who accepted the rules. The owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și organizatorii
+ * văd acest tab». So **every staff role that works the desk** (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer,
+ * Tehnic and the Administrators), written as that function so the two lines move together; never a member, who is no staff
+ * (§524). The tab shows what the desk shows — a name, a number, a group, a state — and whether each was there, never an address,
+ * an email or a telephone. What stays the organizers' (`volunteers/raffle-list.ts#canTakeRaffleList`): the two files, whose names
+ * leave the site, taking a person out or putting them back, deleting a sign-up, an elite line's ticks, signing up a volunteer or a
+ * line of the elite list, how and when each person signed up, and saying «scos de organizatori». Asserted in the tab's entry, the
+ * page, the roster's read, the desk's sign-up action and its service (BR-REQ-060-01).
+ */
+export function canReadRaffle(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
+}
+
+/**
  * **«Ziua cursei» → «Jurnal» (§996)** — who scanned a runner's code, who marked a runner present or took it back and who ticked a
  * volunteer «Prezent», for one event, newest first, with how many each staff account did. The owner, 2026-11-19: «vreau si tracing
  * pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent». Whoever reads the participant list (`canReadRegistrations`): **the
@@ -1107,6 +1123,8 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *                                             §450; a Superadministrator's row is not (canManageMember)
  *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
  *                                             `canWriteLegalTexts` (§450)
+ *     prKit          canWorkTheDesk           `admin/pr-kit/page.tsx` — «PR Kit» (§1015): the logo files, the
+ *                                             sticker sheets and the YouTube poster, every role; its routes ask again
  *     guide          every staff session      `admin/guide/page.tsx`
  *
  * **`/devs` («Configurație») is not a section of this bar (§520).** It is the last tab of «Setări»'s
@@ -1117,9 +1135,9 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *
  * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, the shop
- * (§687), then the settings, what is owed, the team, the legal texts and the guide. A role is
- * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid», and
- * «Ziua cursei», «Magazin», «Ghid» for a volunteer who runs the shop.
+ * (§687), then the settings, what is owed, the team, the legal texts, the «PR Kit» (§1015) and the
+ * guide. A role is offered the same order with its own gaps — the volunteer's bar is «Ziua cursei»,
+ * «PR Kit», «Ghid», and «Ziua cursei», «Magazin», «PR Kit», «Ghid» for a volunteer who runs the shop.
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every
  * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
@@ -1138,6 +1156,7 @@ export const ADMIN_SECTIONS = [
   "tasks",
   "staff",
   "legal",
+  "prKit",
   "guide",
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
@@ -1253,6 +1272,13 @@ export function visibleAdminSections(subject: StaffSubject): AdminSection[] {
     // The legal texts are readable by the roles that must know what the club published; only
     // the Administrator writes one (§46, §181, §203).
     legal: canReadContent(role),
+    /*
+      «PR Kit» (§1015; the owner, 2026-11-20: «so we can download it at any time, even the volunteers can do that»): the
+      club's logo files, the sticker sheets and the YouTube poster, for every backoffice role — the volunteer's bar is
+      «Ziua cursei», «PR Kit», «Ghid». The page and its routes ask the same gate again (`admin/pr-kit/page.tsx`,
+      `modules/pr-kit/http.ts`).
+    */
+    prKit: canWorkTheDesk(role),
     guide: canWorkTheDesk(role),
   };
   return ADMIN_SECTIONS.filter((section) => offered[section]);

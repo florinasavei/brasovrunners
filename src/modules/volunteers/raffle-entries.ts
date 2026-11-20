@@ -18,7 +18,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { anotherAdultOnTheLink, managedRegistration } from "@/modules/registrations/manage-family";
 import { findRegistrationById } from "@/modules/registrations/repository";
 import { looksLikeSpam } from "@/modules/registrations/service";
-import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canReadRaffle } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { type RaffleGateFacts, type RaffleKind, type RaffleSettings, raffleNumberOf, raffleSignUpClosedFor, typedNameMatches, typedNameOf } from "./domain/raffle";
@@ -45,8 +45,9 @@ import { entryColumnOf, findRaffleEntry, raffleEligible, type RafflePersonFacts,
   who acts on a link (§547, §421: another adult on the address may be taken out, never signed up). FORM — the event's public page: a
   race number and a name, matched to a confirmed real registration of a ticked group (or, with «Sunt voluntar», a confirmed
   volunteer), every typed word among the registered name's; honeypot, timing, Turnstile at the action, two throttles; a refusal is
-  one neutral answer that reveals neither half. DESK — every desk role, for a registration whose person accepted the rules on paper
-  or aloud. STAFF — the organizers (`canTakeRaffleList`), for any of the three kinds of person, a line of the elite list included.
+  one neutral answer that reveals neither half. DESK — every desk role (`canReadRaffle`, the desk's roles), for a registration whose
+  person accepted the rules on paper or aloud: on the desk's list, a scanned person's view and, since §1014, the «Tombolă» tab. STAFF —
+  the organizers (`canTakeRaffleList`), for any of the three kinds of person, a line of the elite list included.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -292,12 +293,13 @@ async function matchRafflePerson<T extends Record<string, unknown>>(db: Database
 // ---------------------------------------------------------------------------------------------
 
 /**
- * «Înscrie la tombolă» at the race-day desk (DESK), for every desk role (`canWorkTheDesk`): a registration whose person accepted the
- * rules on paper or aloud — the press's own tick says so (`accepted`). The rules' version is the one in force in the registration's
- * language; the desk member is the recorder.
+ * «Înscrie la tombolă» at the race-day desk (DESK), for every desk role (`canReadRaffle`, which is `canWorkTheDesk`, §1014): a
+ * registration whose person accepted the rules on paper or aloud — the press's own tick says so (`accepted`) —, pressed on the desk's
+ * list, a scanned person's view or the «Tombolă» tab. The rules' version is the one in force in the registration's language; the desk
+ * member is the recorder.
  */
 export async function signUpForRaffleAtDesk<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, input: { registrationId: string; accepted: boolean }, now: Date): Promise<RaffleSignUpOutcome> {
-  if (!canWorkTheDesk(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} does not work the desk`);
+  if (!canReadRaffle(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} does not work the desk`);
   const person = await readRafflePerson(db, { table: "registration", id: input.registrationId });
   if (!person) throw new DomainError("NOT_FOUND", "no such registration");
   return signUp(db, { person, method: "DESK", accepted: input.accepted, locale: person.locale, recordedBy: actor.id }, now);

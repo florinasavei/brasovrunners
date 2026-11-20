@@ -15,7 +15,7 @@ import { processOutboxBatch, OutboxMessageWithdrawn, type OutboxRow } from "@/mo
 import { createOutboxRenderer, renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { addVolunteerPlanLink, addVolunteerPlanPicture, readVolunteerPlan, removeVolunteerPlanLink, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
-import { previewVolunteerPoints, sendVolunteerPoints, volunteerPointKey } from "@/modules/volunteers/point-mail";
+import { readVolunteerPointMail, sendVolunteerPoints, volunteerPointKey } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { env } from "@/shared/config/env";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -77,7 +77,8 @@ beforeEach(async () => {
 
 const press = (actor: StaffUser, options: { again?: boolean; eventId?: string; now?: Date } = {}) =>
   sendVolunteerPoints(db, actor, { eventId: options.eventId ?? race.raceId, again: options.again }, options.now ?? NOW);
-const preview = (actor: StaffUser = staff.MODERATOR!, eventId = race.raceId) => previewVolunteerPoints(db, actor, eventId);
+/** The question's four numbers, as the page reads them (`readVolunteerPointMail`): a refusal rejects before any number is read. */
+const preview = async (actor: StaffUser = staff.MODERATOR!, eventId = race.raceId) => (await readVolunteerPointMail(db, actor, eventId)).counts;
 const place = (id: string, checkpointId: string, now = NOW) => changeVolunteer(db, staff.ADMIN!, { kind: "setCheckpoint", eventId: race.raceId, id, checkpointId }, now);
 
 type Payload = { eventId: string; volunteerId: string; checkpointId: string; round: number };
