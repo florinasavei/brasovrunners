@@ -94,7 +94,7 @@ export function seriesBounds(band: { start: number; hiddenStart: number | null }
  *
  * And the numbers of the lines of «Elită — doar numele pe BIB» (§895) — typed, or given by the line's own
  * draw since §990 (`pickEliteLineNumber`): the line's number is its runner's at the finish line, so a
- * draw — a confirmation's, the hidden list's, «Alocă numerele», a volunteer's —, the desk's box, a
+ * draw — a confirmation's, the hidden list's, «Alocă numerele» —, the desk's box, a
  * suggestion and a print of spares treat it as worn, and no runner is handed the number an elite runner
  * runs under. Only the numbers are read — never a name, and the lines are in no count. `addEliteEntry`
  * refuses the other way round, under the same event lock.
@@ -119,8 +119,9 @@ async function wornNumbers<T extends Record<string, unknown>>(
     .from(eventEliteEntries)
     .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
   for (const row of elite) if (row.number !== null) taken.add(row.number);
-  // And the numbers the event's volunteers wear (§948), whatever each one's state: one number is one person at the
-  // event, so a runner's draw, the desk's box, a suggestion and a print of spares never hand out a volunteer's.
+  // And the numbers of the volunteers' old series (§948), whatever each one's state — kept on the rows that drew one before the
+  // volunteers were numbered V001, V002, … in a series of their own (§1023, `event_volunteers.volunteer_number`, which no runner's
+  // draw reads): harmless, and a runner is never handed a number a volunteer once wore. Nothing draws into this column any more.
   const volunteers = await db
     .select({ number: eventVolunteers.bibNumber })
     .from(eventVolunteers)
@@ -260,9 +261,11 @@ async function replacedBibNumbers<T extends Record<string, unknown>>(db: Databas
 }
 
 /**
- * The numbers of volunteers deleted from this event's list (§948): the row is gone and its number with it, so the
- * delete writes the number into its own trail row (`volunteer.deleted`, about the event) and every draw reads it back —
- * a badge already handed out is never some other person's number. The number and never the person, as an erasure's.
+ * The numbers of the volunteers' old series (§948) whose rows were deleted from this event's list: the row is gone and its
+ * number with it, so the delete writes the number into its own trail row (`volunteer.deleted`, about the event, `bibNumber`) and
+ * every runner's draw reads it back. Nothing draws into the old series since §1023 — a volunteer's V number (`volunteerNumber` in
+ * the same row) is the volunteers' own draw's business (`volunteers/volunteer-numbers.ts`) — so these are only the numbers some
+ * volunteer once wore. The number and never the person, as an erasure's.
  */
 async function deletedVolunteerNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
   const rows = await db
@@ -282,59 +285,6 @@ async function deletedVolunteerNumbers<T extends Record<string, unknown>>(db: Da
 /** Every number retired at this event without a row wearing it: erased (§311), replaced by hand (§548), or a deleted volunteer's (§948). */
 export async function retiredBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
   return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId)), ...(await deletedVolunteerNumbers(db, eventId))];
-}
-
-/**
- * The next free number of the volunteers' own series (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr
- * de concurs"» — «Serie proprie»): the lowest number at or above the event's «Numerele voluntarilor încep de la» that
- * nobody at the event wears or wore — no runner (a cancelled one's included), no line of the elite list, no other
- * volunteer, none retired, none of the desk's spares. In order of confirmation, like a runner's (§173), and never
- * reissued. The caller holds the event row's lock — the one serialization point of every draw (`AGENTS.md` §10.6) — so a
- * runner confirmed and a volunteer confirmed at the same instant cannot both be handed one number.
- */
-export async function pickVolunteerNumber<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, start: number, taken: Set<number> = new Set()): Promise<number> {
-  for (const number of await wornNumbers(tx, eventId)) taken.add(number);
-  // The retired numbers after the rows, as every draw reads them (`erasedBibNumbers` says why).
-  for (const number of await retiredBibNumbers(tx, eventId)) taken.add(number);
-  const band = await bandOf(tx, eventId);
-  const ceiling = ceilingFor(start);
-  for (let candidate = start; candidate <= ceiling; candidate += 1) {
-    if (!taken.has(candidate) && !isSpareNumber(band.spare, candidate)) {
-      taken.add(candidate);
-      return candidate;
-    }
-  }
-  throw new DomainError("VALIDATION_ERROR", `every number from ${start} to ${ceiling} is taken at this event`);
-}
-
-/**
- * The highest number a runner of this event wears or may come to wear (§948) — what «Numerele voluntarilor încep de
- * la» must sit above, so the two series do not run into each other: the last number of a capped race's own series
- * (its first number and its places), and every number already on a registration, on a line of the elite list or
- * retired. The desk's spares are theirs too. Volunteers' own numbers are not counted: the start may be lowered back
- * onto them.
- */
-export async function runnersLastNumber<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const [event] = await db
-    .select({ start: events.bibStartNumber, capacity: events.capacity, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
-    .from(events)
-    .where(eq(events.id, eventId))
-    .limit(1);
-  if (!event) return 0;
-  let last = event.capacity !== null ? event.start + event.capacity - 1 : event.start - 1;
-  if (event.walkInBibStart !== null && event.walkInBibCount !== null && event.walkInBibCount > 0) last = Math.max(last, event.walkInBibStart + event.walkInBibCount - 1);
-  const worn = await db
-    .select({ number: registrations.bibNumber })
-    .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), isNotNull(registrations.bibNumber)));
-  for (const row of worn) if (row.number !== null) last = Math.max(last, row.number);
-  const elite = await db
-    .select({ number: eventEliteEntries.bibNumber })
-    .from(eventEliteEntries)
-    .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
-  for (const row of elite) if (row.number !== null) last = Math.max(last, row.number);
-  for (const number of [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId))]) last = Math.max(last, number);
-  return last;
 }
 
 /**

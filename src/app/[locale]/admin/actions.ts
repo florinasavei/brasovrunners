@@ -72,9 +72,11 @@ import {
   changeStaffRole,
   inviteMembers,
   inviteStaffUser,
+  type ReleasedInvitation,
   releaseInvitationHold,
   resendStaffInvitation,
   revokeStaffUser,
+  sendInvitationsAtTheirTurn,
   setMemberTier,
   setStaffPermission,
 } from "@/modules/staff-identity/service";
@@ -792,6 +794,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       movedTo?: string;
       movedSent?: string;
       movedSkipped?: string;
+      raffle?: string;
     };
     try {
       const actor = await requireStaff();
@@ -802,7 +805,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
       const scope = text(form, "scope");
 
-      const { appliedTo, offered, placeAnnounced, holdsMoved, notice } = await saveEventAndTranslations(getDb(), {
+      const { appliedTo, offered, placeAnnounced, holdsMoved, notice, raffleChanged } = await saveEventAndTranslations(getDb(), {
         actor,
         eventId,
         fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -852,6 +855,8 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         // the place itself — nothing typed goes in a URL. When the organizer also told the
         // participants, the notice's own banner says so, and "nobody was written to" would be false.
         announced: placeAnnounced && notice?.kind !== "update" ? "1" : undefined,
+        // The save moved the raffle's settings (§1023): the editor opens «Tombolă» and the cards around it, so what was saved is in sight.
+        raffle: raffleChanged ? "1" : undefined,
         ...(notice?.kind === "update" ? { notice: "update", queued: String(notice.queued) } : {}),
         ...(notice?.kind === "nothingToTell" ? { notice: "none" } : {}),
         ...(notice?.kind === "cancelled" ? { notice: notice.notified ? "cancelled" : "cancelledQuiet", queued: String(notice.queued) } : {}),
@@ -1580,15 +1585,17 @@ function asksZitadel(): boolean {
 }
 
 /**
- * The club's invitation let go once Zitadel answered (§1000), before the press's response, so the drain after it sends the
- * email with the steps that answer makes true. A failure here is logged, never the press's: the row is added, Zitadel was
- * asked, and the hold's minute lets the email go anyway.
+ * The club's invitation let go once Zitadel answered (§1000), before the press's response, with the steps that answer makes
+ * true: due a minute and a half after the answer when Zitadel's email is on its way — the press then sends it itself at that
+ * turn (`sendInvitationsAtTheirTurn`, §1021) — and at once otherwise, for the drain after the response. A failure here is
+ * logged, never the press's: the row is added, Zitadel was asked, and the hold's bound lets the email go anyway.
  */
-async function releaseAfterZitadel(staffUserId: string, answer: InviteOutcome): Promise<void> {
+async function releaseAfterZitadel(staffUserId: string, answer: InviteOutcome): Promise<ReleasedInvitation> {
   try {
-    await releaseInvitationHold(getDb(), staffUserId, signInStepsAfter(answer.kind));
+    return await releaseInvitationHold(getDb(), staffUserId, signInStepsAfter(answer.kind), new Date());
   } catch (error) {
     console.error("[staff] the invitation's hold could not be let go; it leaves when the hold ends", error);
+    return { ids: [], dueAt: null };
   }
 }
 
@@ -1637,8 +1644,9 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
           env.STAFF_AUTH_MODE === "provider"
             ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
             : ({ kind: "unconfigured" } as const);
-        // Zitadel answered: the club's invitation may leave, with the steps the answer makes true (§1000).
-        if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
+        // Zitadel answered: the club's invitation may leave, with the steps the answer makes true (§1000) — a minute and a half
+        // after Zitadel's own email, sent then by this press after its response (§1021).
+        if (zitadelInvite) sendInvitationsAtTheirTurn([await releaseAfterZitadel(member.id, invite)]);
         outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
         // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
         // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
@@ -1693,15 +1701,18 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         sendEmail,
         zitadelInvite,
       });
+      const released: ReleasedInvitation[] = [];
       const lines: MemberAccountLine[] =
         env.STAFF_AUTH_MODE === "provider" && sendEmail
           ? await createMemberAccounts([...added, ...existing], async (member) => {
               const invite = await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale });
               // That member's invitation leaves once Zitadel answered for them (§1000); an address already a member has none waiting.
-              if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
+              if (zitadelInvite) released.push(await releaseAfterZitadel(member.id, invite));
               return invite;
             })
           : [];
+      // The ones Zitadel emailed, a minute and a half after the last of its answers: one wait for the whole press (§1021).
+      sendInvitationsAtTheirTurn(released);
       const counts = countAccountLines(lines);
       const report = await recordAuditEvent(getDb(), {
         actorStaffUserId: actor.id,
@@ -1778,8 +1789,9 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
         env.STAFF_AUTH_MODE === "provider"
           ? await reinviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
           : ({ kind: "unconfigured" } as const);
-      // Before the response, so «Trimite acum»'s drain after it finds the row due (§540, §1000).
-      if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
+      // Before the response (§1000): a minute and a half after Zitadel's own email, sent then by this press, «Trimite acum» or
+      // «Pune la coadă» (§1021); due at once when no email of Zitadel's is coming, for «Trimite acum»'s drain or the queue's (§540).
+      if (zitadelInvite) sendInvitationsAtTheirTurn([await releaseAfterZitadel(member.id, invite)]);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),
       // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`). Without

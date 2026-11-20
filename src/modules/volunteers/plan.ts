@@ -66,7 +66,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
  * notes, newest first (`notes`, empty while there are none, and always empty for a role the notes' own gate refuses), which it
  * draws on the screen only.
  */
-export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "email" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId" | "raceDayDecision"> & {
+export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "email" | "phone" | "state" | "volunteerNumber" | "roleIds" | "checkpointId" | "raceDayDecision"> & {
   notes: VolunteerPlanNote[];
 };
 
@@ -190,13 +190,14 @@ export async function readVolunteerPlan<T extends Record<string, unknown>>(db: D
   ]);
   const people: VolunteerPlanPerson[] = everybody
     .filter((person) => person.state !== "CANCELLED")
-    .map(({ id, name, email, phone, state, bibNumber, roleIds, checkpointId, raceDayDecision }) => ({
+    .map(({ id, name, email, phone, state, volunteerNumber, roleIds, checkpointId, raceDayDecision }) => ({
       id,
       name,
       email,
       phone,
       state,
-      bibNumber,
+      // The person's V number (§1023), «V007» on the plan's chip; null while they are not confirmed.
+      volunteerNumber,
       roleIds,
       checkpointId,
       raceDayDecision,

@@ -1,4 +1,6 @@
 import { nextMidnightIn } from "@/i18n/dates";
+import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
+import { formatVolunteerNumber } from "./volunteer-number";
 
 /*
   The raffle's rules, pure (§984; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
@@ -55,6 +57,18 @@ export function raffleSettingsOf(row: RaffleSettingsRow): RaffleSettings {
     signUp: row.raffleSignUp,
     signUpOpen: row.raffleSignUpOpen,
   };
+}
+
+/** The row's raffle columns, in the editor's order: «Avem tombolă», «Cine poate participa», «Cum», «… sunt deschise». */
+const RAFFLE_SETTINGS_COLUMNS = ["hasRaffle", "raffleRunners", "raffleElites", "raffleVolunteers", "raffleSignUp", "raffleSignUpOpen"] as const satisfies readonly (keyof RaffleSettingsRow)[];
+
+/**
+ * Whether a save moved any of the raffle's settings (§1023): the editor's «Tombolă» fold opens by itself right after such a save, so
+ * what was saved is in sight — as the race numbers' card opens after a press inside it (§895). A save that wrote none of them, or
+ * wrote them as they were, moved nothing.
+ */
+export function raffleSettingsMoved(before: RaffleSettingsRow, after: RaffleSettingsRow): boolean {
+  return RAFFLE_SETTINGS_COLUMNS.some((column) => before[column] !== after[column]);
 }
 
 /**
@@ -157,7 +171,10 @@ export type RafflePerson = {
    * confirmed; a line of the elite list always (it has no state).
    */
   confirmed: boolean;
-  /** Wears a number: a registration's race number, a volunteer's own (§948). A line of the elite list takes part by name: always true. */
+  /**
+   * Wears a number: a registration's race number, a volunteer's V number (§1023, amending §948 — every confirmed volunteer has one,
+   * drawn by itself at the confirmation). A line of the elite list takes part by name: always true.
+   */
   hasNumber: boolean;
   /** «Participă la tombolă»: not taken out by the organizers (§949; a line's own tick, §984). */
   inRaffle: boolean;
@@ -181,12 +198,35 @@ export function raffleParticipation(person: RafflePerson, settings: Pick<RaffleS
   return "in";
 }
 
-/** A row of the raffle's files and tab, in the order they are read: the numbers rising, then the numberless lines by name (§984). */
+/**
+ * Which block of the raffle's order a row falls in (§1023): a race number — a registration's or an elite line's, one series — first,
+ * then a volunteer's V number — a series of its own, never compared with a race number — then whoever has no number.
+ */
+function raffleBlockOf(row: { number: number | null; kind: RaffleKind }): 0 | 1 | 2 {
+  if (row.number === null) return 2;
+  return row.kind === "VOLUNTEER" ? 1 : 0;
+}
+
+/**
+ * A row of the raffle's files and tab, in the order they are read (§1023, amending §984): the race numbers rising — runners and elites
+ * together, one series —, then the volunteers by their V number rising (V001, V002, …), then the numberless lines by name. The two
+ * series are never interleaved: a volunteer's 1 is «V001», not a race number 1.
+ */
 export function compareRaffleRows(a: { number: number | null; name: string; kind: RaffleKind }, b: { number: number | null; name: string; kind: RaffleKind }): number {
+  const block = raffleBlockOf(a) - raffleBlockOf(b);
+  if (block !== 0) return block;
   if (a.number !== null && b.number !== null) return a.number - b.number || RAFFLE_KINDS.indexOf(a.kind) - RAFFLE_KINDS.indexOf(b.kind) || a.name.localeCompare(b.name, "ro");
-  if (a.number !== null) return -1;
-  if (b.number !== null) return 1;
   return a.name.localeCompare(b.name, "ro") || RAFFLE_KINDS.indexOf(a.kind) - RAFFLE_KINDS.indexOf(b.kind);
+}
+
+/**
+ * A raffle row's number as the raffle writes it (§1023) — on the tab, in «Lista pentru tombolă» and in the file for random.org alike:
+ * a race number as the event writes it (§735: «7», or «007» under `pad3`) for a runner and an elite, the V number for a volunteer
+ * («V007», `volunteer-number.ts`), null for a line with no number.
+ */
+export function raffleNumberText(row: { number: number | null; kind: RaffleKind }, format: RaceNumberFormat | null | undefined): string | null {
+  if (row.number === null) return null;
+  return row.kind === "VOLUNTEER" ? formatVolunteerNumber(row.number) : formatRaceNumber(row.number, format);
 }
 
 // ---------------------------------------------------------------------------------------------

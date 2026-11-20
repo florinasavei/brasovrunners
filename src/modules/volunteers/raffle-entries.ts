@@ -22,6 +22,7 @@ import { canReadRaffle } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { type RaffleGateFacts, type RaffleKind, type RaffleSettings, raffleNumberOf, raffleSignUpClosedFor, typedNameMatches, typedNameOf } from "./domain/raffle";
+import { volunteerNumberFrom } from "./domain/volunteer-number";
 import { canTakeRaffleList } from "./raffle-list";
 import { entryColumnOf, findRaffleEntry, raffleEligible, type RafflePersonFacts, type RafflePersonRef, readRaffleGateFacts, readRafflePerson, readRaffleRules } from "./raffle-roster";
 
@@ -224,7 +225,7 @@ export async function withdrawFromRaffleByLink<T extends Record<string, unknown>
 export type RaffleFormInput = {
   number: string;
   name: string;
-  /** «Sunt voluntar»: the number is a volunteer's. */
+  /** «Sunt voluntar»: the number is a volunteer's V number (§1023), typed «V007» or «7». */
   volunteer: boolean;
   accepted: boolean;
   locale: Locale;
@@ -244,7 +245,8 @@ export type RaffleFormOutcome = "done" | "noMatch" | "limited";
  * half was wrong nor whether the number exists. No email is queued.
  */
 export async function signUpForRaffleByForm<T extends Record<string, unknown>>(db: Database<T>, eventId: string, input: RaffleFormInput, now: Date, trace?: SignatureTrace): Promise<RaffleFormOutcome> {
-  const number = raffleNumberOf(input.number);
+  // «Sunt voluntar» ticked: the number is a V number (§1023) — «V007», «v7», «007» or «7»; else a race number, digits alone.
+  const number = input.volunteer ? volunteerNumberFrom(input.number) : raffleNumberOf(input.number);
   const name = typedNameOf(input.name);
   const refused = [...(number === null ? ["number"] : []), ...(name === "" || name.length > RAFFLE_TYPED_NAME_MAX ? ["name"] : []), ...(input.accepted ? [] : ["accept"])];
   if (refused.length > 0 || number === null) throw new DomainError("VALIDATION_ERROR", "the raffle form is malformed", refused);
@@ -270,13 +272,16 @@ export async function signUpForRaffleByForm<T extends Record<string, unknown>>(d
   return "done";
 }
 
-/** The person a number and a name name at the event: a confirmed real registration, or a confirmed volunteer — or nobody. */
+/**
+ * The person a number and a name name at the event: a confirmed real registration by its race number, or a confirmed volunteer by
+ * their V number (§1023) — or nobody.
+ */
 async function matchRafflePerson<T extends Record<string, unknown>>(db: Database<T>, eventId: string, number: number, volunteer: boolean, typed: string): Promise<RafflePersonRef | null> {
   if (volunteer) {
     const rows = await db
       .select({ id: eventVolunteers.id, name: eventVolunteers.name })
       .from(eventVolunteers)
-      .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.bibNumber, number), eq(eventVolunteers.state, "CONFIRMED")));
+      .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.volunteerNumber, number), eq(eventVolunteers.state, "CONFIRMED")));
     const match = rows.find((row) => typedNameMatches(typed, row.name));
     return match ? { table: "volunteer", id: match.id } : null;
   }

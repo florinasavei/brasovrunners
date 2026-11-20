@@ -100,6 +100,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const volunteersMay = raffle.settings.groups.VOLUNTEER;
   const typed = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
   const refused = new Set((one(asked.fields) ?? "").split(",").filter((box): box is (typeof BOXES)[number] => (BOXES as readonly string[]).includes(box)));
+  // A volunteer's V number refused from a runner («V7», «Sunt voluntar» unticked, §1023): the box's pattern lets the V through for the
+  // volunteers, so the refusal says whose number that is — only where «Sunt voluntar» is drawn to be ticked.
+  const volunteerNumberTyped = volunteersMay && typed.volunteer !== "on" && /^\s*[Vv]/.test(typed.number ?? "");
   // The widget as the other public forms draw it (§254, §675): only while the Administrator's switch is on and its keys are set.
   const siteKey = await cachedBotCheckSiteKey();
   // A corrected form is timed from the render it corrects (§146), as the volunteers' page times it: a second press seconds after a
@@ -166,12 +169,13 @@ export default async function RafflePage({ params, searchParams }: Props) {
             <TextField
               name="number"
               label={t("raffle.number")}
-              helperText={refused.has("number") ? t("raffle.errors.number") : t("raffle.numberHelp")}
+              helperText={refused.has("number") ? t(volunteerNumberTyped ? "raffle.errors.volunteerNumber" : "raffle.errors.number") : t("raffle.numberHelp")}
               error={refused.has("number")}
               defaultValue={typed.number ?? ""}
               required
               autoComplete="off"
-              slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(RAFFLE_NUMBER_MAX).length, "data-testid": "raffle-number" } }}
+              // Digits, or a volunteer's V number as it is written («V007», §1023): the keypad stays numeric, so «7» is enough.
+              slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[Vv]?[0-9]*", maxLength: String(RAFFLE_NUMBER_MAX).length + 1, "data-testid": "raffle-number" } }}
               sx={{ maxWidth: 320 }}
             />
             <TextField
@@ -184,7 +188,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               autoComplete="name"
               slotProps={{ htmlInput: { maxLength: RAFFLE_TYPED_NAME_MAX, "data-testid": "raffle-name" } }}
             />
-            {/* «Sunt voluntar» (§984): only while the event's volunteers may take part; the number is then the volunteer's own. */}
+            {/* «Sunt voluntar» (§984): only while the event's volunteers may take part; the number is then the volunteer's V number (§1023). */}
             {volunteersMay && (
               <CheckboxField name="volunteer" defaultChecked={typed.volunteer === "on"} help={t("raffle.volunteerHelp")}>
                 {t("raffle.volunteer")}

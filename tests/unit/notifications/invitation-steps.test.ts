@@ -43,8 +43,11 @@ describe("§1000 the invitation's steps when the press asked Zitadel for the acc
       const email = render(type, "ro", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("ro"), zitadelButton: zitadelInviteButton("ro") });
       const [ro, en] = halves(email.text);
       const subject = `Invitație la ${CLUB_NAME}`;
-      // Romanian half: Zitadel's email by its subject and by its button, as the owner saw it (2026-11-19).
-      expect(ro).toContain(`Primești două emailuri: acesta, de la noi, și unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „${subject}” și butonul „Acceptare invitație” (caută-l și în Spam). Pașii, în ordine:`);
+      // Romanian half: Zitadel's email by its subject and by its button, as the owner saw it (2026-11-19), and — since §1021 —
+      // said to come first, about a minute and a half before this one, which the press makes true.
+      expect(ro).toContain(
+        `Primești două emailuri: întâi unul de la Zitadel, sistemul nostru de autentificare, cu subiectul „${subject}” și butonul „Acceptare invitație”, cam cu un minut și jumătate înaintea acestuia (caută-l și în Spam); apoi acesta, de la noi. Pașii, în ordine:`,
+      );
       const one = ro.indexOf("1. Deschide emailul de la Zitadel, apasă „Acceptare invitație” și alege-ți parola.");
       const two = ro.indexOf(`2. Apoi apasă „${BUTTON[type].ro}”, mai jos, și intră cu adresa ana@example.ro și parola aleasă.`);
       expect(one).toBeGreaterThan(-1);
@@ -52,8 +55,10 @@ describe("§1000 the invitation's steps when the press asked Zitadel for the acc
       expect(ro).toContain("Ai deja cont (ai mai intrat la noi)? Sari peste pasul 1.");
       expect(ro).toContain(`Nu încerca să intri înainte de pasul 1: până îți alegi parola, fiecare încercare — și „${ZITADEL_LOGIN_LABELS.resendCode}” de pe pagina de autentificare — îți trimite alt email de la Zitadel, cu alt cod, și îl anulează pe cel de dinainte.`);
       expect(ro).toContain("Dacă ai primit mai multe, folosește-l doar pe cel mai nou.");
-      // English half: the same steps, and Zitadel's email by the subject it really has — the account's language.
-      expect(en).toContain(`You get two emails: this one, from us, and one from Zitadel, our sign-in system, with the subject “${subject}” and the button “Acceptare invitație”`);
+      // English half: the same steps and the same order, and Zitadel's email by the subject it really has — the account's language.
+      expect(en).toContain(
+        `You get two emails: first one from Zitadel, our sign-in system, with the subject “${subject}” and the button “Acceptare invitație”, about a minute and a half before this one (look in your spam folder too); then this one, from us. The steps, in order:`,
+      );
       expect(en).toContain("1. Open the email from Zitadel, press “Acceptare invitație” and choose your password.");
       expect(en.indexOf("1. Open the email from Zitadel")).toBeLessThan(en.indexOf(`2. Then press “${BUTTON[type].en}”, below, and sign in with ana@example.ro`));
       expect(en).toContain("Already have an account (signed in with us before)? Skip step 1.");
@@ -110,11 +115,12 @@ describe("§1000 the invitation's steps when the person makes the account", () =
       expect(en).toContain("You make your sign-in account yourself, in two steps:");
       expect(en).toContain(`1. Press “${BUTTON[type].en}”, below.`);
       expect(en).toContain(`2. On the sign-in page choose “${ZITADEL_LOGIN_LABELS.register}” and create your account with exactly ana@example.ro (the account is tied to the address).`);
-      // No email from Zitadel is coming: none is announced, and no step waits for it.
+      // No email from Zitadel is coming: none is announced, no step waits for it, and no gap is said (§1021).
       for (const half of [ro, en]) {
         expect(half).not.toContain("Invitație la");
         expect(half).not.toContain("Invitation to");
         expect(half).not.toContain(ZITADEL_LOGIN_LABELS.resendCode);
+        expect(half).not.toMatch(/un minut și jumătate|a minute and a half/);
       }
       // The privacy paragraph stays.
       expect(ro).toContain("Pentru cont folosim Zitadel, cu numele și adresa ta");
@@ -187,6 +193,7 @@ describe("§1000 the invitation's steps for an account that already signs in wit
         expect(half).not.toContain("Primești două emailuri");
         expect(half).not.toContain("You get two emails");
         expect(half).not.toContain(ZITADEL_LOGIN_LABELS.register);
+        expect(half).not.toMatch(/un minut și jumătate|a minute and a half/);
       }
       // The privacy paragraph stays.
       expect(email.text).toContain("Pentru cont folosim Zitadel, cu numele și adresa ta");
