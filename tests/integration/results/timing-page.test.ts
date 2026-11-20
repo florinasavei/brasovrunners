@@ -441,13 +441,13 @@ describe("§997 «Cronometrare»: the words of a press older than the reset", ()
 });
 
 /**
- * §NNN — a finished elite's number typed again is asked first: the question the island builds from the page's own state and words
+ * §1010 — a finished elite's number typed again is asked first: the question the island builds from the page's own state and words
  * (`asksBeforeAgain`, `eliteAgainQuestion`), in Romanian and in English — the elite by label and name, the time stored and who entered
  * it, what a second press does — and its two answers as the house's dialog draws them, «Anulează» first, «Trece numărul din nou» in
  * the error colour, so Enter never answers it. The words ask of the number, never of the person, since the elites are men and women:
  * no «Îl treci», no «Trece-l». Any other number, «Sosit» or not, asks nothing.
  */
-describe("§NNN «Cronometrare»: the question a finished elite's number typed again asks", () => {
+describe("§1010 «Cronometrare»: the question a finished elite's number typed again asks", () => {
   it("is worded from the page's state and words, in Romanian and in English, its two answers drawn by the house's dialog", async () => {
     await db.insert(eventEliteEntries).values([
       { eventId: raceId, name: "Andrei Munteanu", bibNumber: 7 },

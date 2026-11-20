@@ -96,7 +96,7 @@ function resultTime(ms: number): string {
 }
 
 /**
- * Whether the box holds the focus as each tap on the question ends (§NNN): read at the window, after the page's own handler and the
+ * Whether the box holds the focus as each tap on the question ends (§1010): read at the window, after the page's own handler and the
  * render it commits, before any frame — iOS Safari raises the keyboard only for a focus a tap's own handler gives, never for one given
  * a frame later. Each read returns what was seen since the last one, a tap at a time.
  */
@@ -323,7 +323,7 @@ test.describe("§986 «Cronometrare»", () => {
   });
 
   /**
-   * §NNN — the owner, 2026-11-20: «after an elite arrives and is marked as a finisher, if somebody types that again than we need a
+   * §1010 — the owner, 2026-11-20: «after an elite arrives and is marked as a finisher, if somebody types that again than we need a
    * confirmation message, this is just for elites sincer their timing is more sensitive». The desk Volunteer presses Andrei's button as
    * he crosses; his number typed after it asks first — the question fits 320 pixels, its two answers 44 pixels and more —; a second
    * Enter and Esc cancel, nothing recorded and the «Finish» moment caught before it kept; Ioana's number, a woman's, asks in the same

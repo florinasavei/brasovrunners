@@ -415,7 +415,7 @@ describe("§986 «⏱ Finish»: kept times, oldest first, each account's own", (
   });
 });
 
-describe("§NNN the moment of the tap: read as «Sosit» is pressed, taken from the kept ones only by the press", () => {
+describe("§1010 the moment of the tap: read as «Sosit» is pressed, taken from the kept ones only by the press", () => {
   it("reads the oldest kept moment still young, else now — and takes nothing from the kept ones by reading", () => {
     const kept = [at(10), at(20, 1), at(20, 5)];
     // At 0:30:00 the moment of 0:10:00 is stale: the tap reads 0:20:01, the oldest young one.
@@ -653,12 +653,12 @@ describe("§986 the phone's storage", () => {
 });
 
 /**
- * §NNN — a finished elite's number typed again is asked first (the owner, 2026-11-20: «this is just for elites sincer their timing is
+ * §1010 — a finished elite's number typed again is asked first (the owner, 2026-11-20: «this is just for elites sincer their timing is
  * more sensitive»): only a number of the page's elites — a registration marked «Elită» or a numbered line of the elite list — already
  * «Sosit», or whose press of the viewer's own waits or was saved on this phone since the gun; never another number, an elite who has not
  * crossed, a press undone, another account's, or a press before the gun.
  */
-describe("§NNN a finished elite's number typed again: asked first, only for an elite", () => {
+describe("§1010 a finished elite's number typed again: asked first, only for an elite", () => {
   const elite = (key: string, kind: EliteButtonView["kind"], label: string, name: string, bibNumber: number | null, finishedGunTimeMs: number | null = null): EliteButtonView => ({
     key,
     kind,
