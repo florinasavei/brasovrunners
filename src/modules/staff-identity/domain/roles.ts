@@ -847,6 +847,19 @@ export function canReadRaceDayJournal(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Declarații» (§1018)** — every signed declaration of one event on one page: each registration that holds one,
+ * by state, its number, its name, when and how it was signed, the version, the fingerprint, and the links to its PDF and to the
+ * registration. Whoever reads the participant list (`canReadRegistrations`): **the Organizer, the Administrator and the
+ * Superadministrator**, written as that function so moving the line moves both — the declarations are part of the list they read
+ * already (§289), each one a link to the PDF route that asserts the same and records every download. The desk's other roles (the
+ * desk Volunteer, the Redactor, Tehnic) are drawn no tab and meet the 404 an unknown page gets (BR-REQ-060-01); a member is no staff
+ * (§524). Reading only: nothing on the page changes anything, and no identity document is on it — that stays in the PDF.
+ */
+export function canReadRaceDayDeclarations(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject);
+}
+
+/**
  * **Entering somebody at the race-day desk (§NNN, amending §67 for the desk's walk-ins)** — «Adaugă pe cineva» on «Prezența»,
  * the staff entry it opens (`admin/registrations/new`) and that entry's action and service. The owner, 2026-11-20: «Si voluntarii
  * nu pot adauga pe cineva, doar organizatorii si administratorii pot». Whoever reads the participant list (`canReadRegistrations`):
@@ -949,6 +962,22 @@ export function canManageRegistrations(subject: StaffSubject): boolean {
 export function canWorkTheDesk(subject: StaffSubject): boolean {
   const role = roleOf(subject);
   return atLeast(role, "CONTRIBUTOR");
+}
+
+/**
+ * **Recording a runner's spoken wish to appear by name, at the desk (§1017, amending §143, §910, §1004)** — the desk row's eye
+ * pressed: «Anonim» → «Cu nume» when the person standing at the table says they want their name on the public list and in the
+ * results, and «Cu nume» → «Anonim» when they ask to be taken off. The owner, 2026-11-20: «dacă cineva are semnul ăsta de
+ * „Anonim” trebuie să îl pot schimba în „Cu nume” la click, dar cu acordul lor». **Every staff role that works the desk**
+ * (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer, Tehnic and the Administrators), written as that function so
+ * the two lines move together — the volunteer is the one who hears it; never a member, who is no staff (§524).
+ *
+ * It is the person's own wish, recorded as theirs: asked first, one audit row naming who recorded it, and the person emailed at
+ * once with the one-tap way back — no staff member decides it, and nothing else of a registration changes. A name the club hid
+ * (§910) stays hidden. Asserted in the action and again in the service (BR-REQ-060-01); the row draws the press as a courtesy.
+ */
+export function canRecordListWishAtDesk(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
 }
 
 /**

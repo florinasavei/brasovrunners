@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.86-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.88-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.86-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.88-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1570,6 +1570,19 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   form of an event whose list is switched on (§85); switching a list on later means asking the
   people already registered, because a question nobody put to that person cannot be answered
   on their behalf;
+- the person may also say it at the race-day desk, and a desk role records it (`DECISIONS.md` §1017, amending
+  §143, §910 and §1004; the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot
+  schimba în „Cu nume” la click, dar cu acordul lor»). The desk row's eye — «Anonim» / «Cu nume» — is a press
+  for every role that works the desk (`canRecordListWishAtDesk`), asked first, naming the person — a minor's
+  parent or guardian answers for them — and what follows. It writes the person's own `list_opt_out`, as their
+  own doors do (`list-consent.ts#listChoiceColumns`), and, showing, on a registration under a notice older than
+  the first that described the results while §879's question is put, the results' name their own page would
+  record — one transaction, one `registration.list_consent_changed` row with the door `DESK` and the staff
+  member who recorded it as the actor, never the name. Showing tells the person at once by email
+  (`LIST_CONSENT_RECORDED`, carrying the `LIST_CONSENT` one-tap way back); hiding emails nobody. Never on a
+  row that is over, on a closed desk, or while the address was never confirmed — the email would go where
+  nobody vouched for it. A name the club hid stays hidden: the press changes the person's wish and nothing
+  else. Otherwise no staff member ticks the list for a person;
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
@@ -3298,6 +3311,20 @@ BR-REQ-037-05):
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
+   - **The person's spoken wish to appear by name** (`DECISIONS.md` §1017, amending §143, §910, §1004;
+     §10.10). The row's eye — «Anonim» / «Cu nume» — is a press for every desk role
+     (`canRecordListWishAtDesk`): «Anonim» → «Cu nume» when the person standing there says they want
+     their name on the public list and in the results, «Cu nume» → «Anonim» when they ask to be taken
+     off. Asked first, naming the person (a minor's parent or guardian answers for them) and what follows,
+     «Anulează» focused; the form posts the wish, never a flip. `desk-list-wish.ts#recordListWishAtDesk`
+     writes the person's own `list_opt_out` as their own doors do and, showing under an older notice while
+     §879's question is put, the results' name their own page would record — one transaction, the row
+     locked, one `registration.list_consent_changed` row: the door `DESK`, the staff member as the actor,
+     never the name. Showing emails the person at once (`LIST_CONSENT_RECORDED`, the `LIST_CONSENT` one-tap
+     way back, §16.3); hiding emails nobody. Refused, nothing written, on a row that is over
+     (`LIST_WISH_OVER`), an address never confirmed (`LIST_WISH_ADDRESS_UNCONFIRMED`: «Confirmă pe hârtie»
+     first) and a closed desk (`LIST_WISH_DESK_CLOSED`). A name the club hid (§910) stays hidden. It is the
+     person's wish, recorded as theirs: no staff member decides it, and nothing else of the registration moves.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
      a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
      desk included (§984, the person having accepted its rules), and the finish line «Cronometrare»
@@ -3825,7 +3852,20 @@ UNSIGNED_RELEASED
 REGISTRATION_ADDRESS_REMOVED
 REGISTRATION_ADDRESS_ADDED
 VOLUNTEER_POINT
+LIST_CONSENT_RECORDED
 ```
+
+`LIST_CONSENT_RECORDED` (§1017; the desk's eye, §10.10, §15.11 verb 5) is queued by
+`registrations/desk-list-wish.ts#recordListWishAtDesk` alone — at a desk role's press, in its transaction, once
+per recorded wish (`registration:<id>:list-consent-recorded:<audit row>`), to the registration's own address in
+its language, and only when the press recorded the wish to appear by name: «La masa de ridicare a numerelor ai
+cerut să apari cu numele pe lista participanților și în clasament» (for a minor, to the parent or guardian, naming
+the child). Its one button is the public list's own switch, a `LIST_CONSENT` link minted at the send — the
+confirmation's second token, superseding the older one (§12.8) — with the platform's sentence above it, whoever
+rewrote the words. The renderer withdraws it, and the club's copy beside it, when the name is off the list again
+by then or the registration is over or erased. Classed with the confirmations: their road, the participant's own
+mail, a club copy as every participant message has. No «Nu mai pot ajunge»: it is about the name, sent to
+somebody standing at the desk.
 
 `VOLUNTEER_POINT` (§956; «Trimite fiecăruia punctul lui» on «Planul voluntarilor», §17) is queued by
 `volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by
