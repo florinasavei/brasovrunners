@@ -1087,7 +1087,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
       // relying on these exact words, and the guardian's column is a RESTRICT foreign key too. A raffle sign-up's acceptance of
       // «Regulamentul tombolei» (§984) is one more: its column is RESTRICT as well, so the version is never deleted under it. And a
-      // colleague's acceptance of the team's undertaking — once per account under §1006, at every sign-in since §NNN — RESTRICT too.
+      // colleague's acceptance of the team's undertaking — once per account under §1006, at every sign-in since §1026 — RESTRICT too.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})

@@ -6,10 +6,10 @@ import type { DefaultJWT } from "next-auth/jwt";
  * Everything else — role, email, display name — is re-read from the database on every
  * request (`getCurrentStaffUser`), so a revoked or demoted row takes effect immediately.
  *
- * Beside it, since §NNN, the moment the session was signed in (`signedInAt`, milliseconds since
+ * Beside it, since §1026, the moment the session was signed in (`signedInAt`, milliseconds since
  * the epoch): written by the `jwt` callback at a sign-in and only then (`staffTokenAt`), kept as
  * the token is refreshed — the team's undertaking is owed once per sign-in. A token issued before
- * §NNN carries none.
+ * §1026 carries none.
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {

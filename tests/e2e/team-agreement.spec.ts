@@ -7,7 +7,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §1006, §NNN, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in, end to end, on a production build and both
+ * §1006, §1026, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in, end to end, on a production build and both
  * projects (the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă»):
  *
  * 1. an Administrator finds the template under «Pornește de la șablon» and approves a version on `/admin/legal` — the draft is
@@ -17,7 +17,7 @@ import { hydrated, signIn } from "./support/featured-event";
  *    with the way kept —, accepts with a name and lands where they were going;
  * 3. «Echipa» says who accepted, which version, when and under which name;
  * 4. an Organizer is asked too; an Administrator never;
- * 5. **at every sign-in (§NNN)**, at 320 px in both projects: a «Voluntar» signs in through the development sign-in, lands on
+ * 5. **at every sign-in (§1026)**, at 320 px in both projects: a «Voluntar» signs in through the development sign-in, lands on
  *    «Acord», accepts, reaches «Ziua cursei» and is not asked again in that session; signs out and in again and lands on «Acord»
  *    again — each acceptance kept with the sign-in it answers.
  *
@@ -74,7 +74,7 @@ async function withGateLock<T>(work: () => Promise<T>): Promise<T> {
 
 /**
  * No version of the undertaking and no acceptance of one: the seeded database's own state, where nobody is asked. Both records of
- * acceptances first — §1006's, once per account, and §NNN's, one per sign-in — since both hold their version `RESTRICT`.
+ * acceptances first — §1006's, once per account, and §1026's, one per sign-in — since both hold their version `RESTRICT`.
  */
 async function removeUndertakings(client: pg.Client): Promise<void> {
   await client.query("DELETE FROM staff_team_agreement_acceptances");
@@ -197,7 +197,7 @@ test.describe("§1006 the team's undertaking at sign-in", () => {
         await page.goto("/ro/admin/checkin");
         await expect(page).toHaveURL(/\/ro\/admin\/checkin$/);
         await expect(page.getByRole("tab", { name: "Ziua cursei" })).toBeVisible();
-        // One acceptance, at this sign-in (§NNN): the record names the sign-in it answers; §1006's table is written no more.
+        // One acceptance, at this sign-in (§1026): the record names the sign-in it answers; §1006's table is written no more.
         const stored = await withDatabase(
           async (client) => (await client.query("SELECT typed_name, document_version, locale, signed_in_at IS NOT NULL AS answers_a_sign_in FROM staff_team_agreement_sign_in_acceptances")).rows,
         );
@@ -253,7 +253,7 @@ async function acceptOnAcord(page: Page, fullName: string): Promise<void> {
   await form.getByRole("button", { name: "Accept și intru" }).click();
 }
 
-test.describe("§NNN the team's undertaking at every sign-in, at 320 px", () => {
+test.describe("§1026 the team's undertaking at every sign-in, at 320 px", () => {
   // The phone's width in both projects: the desk is worked from one.
   test.use({ viewport: { width: 320, height: 720 } });
 

@@ -4,13 +4,13 @@ import { mustAcceptTeamAgreement, type StaffSubject } from "./roles";
 
 /**
  * The team's undertaking at sign-in (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
- * platformă»), the parts that are rules rather than reads: whether this session owes it (§NNN: at every sign-in), the moment a
+ * platformă»), the parts that are rules rather than reads: whether this session owes it (§1026: at every sign-in), the moment a
  * session was signed in, which request is a page being drawn, where a refused page wanted to go, the undertaking's own address,
  * and the name typed under it. Pure: headers arrive as an object with `get`, so a unit test needs no request.
  */
 
 /**
- * Whether this session owes the version of the undertaking in force (§NNN, amending §1006 — owed once per sign-in, not once per
+ * Whether this session owes the version of the undertaking in force (§1026, amending §1006 — owed once per sign-in, not once per
  * account).
  *
  * - **The Administrators never**, as §1006 has them (`mustAcceptTeamAgreement`): nor does anybody while no version is in force.
@@ -22,9 +22,9 @@ import { mustAcceptTeamAgreement, type StaffSubject } from "./roles";
  *   read by the server that took the press, the moment of the sign-in by the one that took the sign-in, and a press whose clock
  *   ran behind would be stored before the sign-in it answers. Compared by the moments alone, the gate would ask again, and the
  *   next press would meet the unique key and write nothing — asked until sign-out. A row that names this very sign-in ends it.
- * - **A session signed in before §NNN** carries no moment (`signedInAt` null): it owes the version in force unless the account
+ * - **A session signed in before §1026** carries no moment (`signedInAt` null): it owes the version in force unless the account
  *   accepted it under this rule at all — `lastAcceptedAt` is read from the per-sign-in record, every row of which was written
- *   since §NNN shipped, so the acceptances made once per account under §1006 never answer. Such a session is asked once and not
+ *   since §1026 shipped, so the acceptances made once per account under §1006 never answer. Such a session is asked once and not
  *   again until its next sign-in, which writes the moment: no token is rewritten, nobody is signed out, nothing loops.
  *
  * `lastAcceptedAt` is the newest acceptance of the version in force by this account in that record, or null; `acceptedThisSignIn`
@@ -45,8 +45,8 @@ export function teamAgreementOwedThisSession(input: {
 }
 
 /**
- * The moment a session was signed in, as its claim carries it (§NNN): milliseconds since the epoch — a number in the token
- * Auth.js signs, digits in the development sign-in's cookie. Null for anything else: a session signed in before §NNN carries
+ * The moment a session was signed in, as its claim carries it (§1026): milliseconds since the epoch — a number in the token
+ * Auth.js signs, digits in the development sign-in's cookie. Null for anything else: a session signed in before §1026 carries
  * none, and a value that is not a whole, positive, finite number of milliseconds is no moment.
  */
 export function signInMomentOf(claim: unknown): Date | null {

@@ -86,7 +86,7 @@ describe("§1006 BR-REQ-053-01 the team's undertaking is a legal document of the
     }
   });
 
-  it("says, since §NNN, that it is accepted at every sign-in and that each acceptance is recorded with the sign-in it answers — never «once»", () => {
+  it("says, since §1026, that it is accepted at every sign-in and that each acceptance is recorded with the sign-in it answers — never «once»", () => {
     const [roData, enData] = [teamAgreementRo, teamAgreementEn].map((body) => body.sections[9].paragraphs.join("\n"));
     expect(roData).toContain("Membrul echipei acceptă angajamentul electronic, la fiecare intrare în platformă, cât timp o versiune aprobată de club este în vigoare");
     expect(enData).toContain("The team member accepts the undertaking electronically, each time they enter the platform while a version approved by the club is in force");

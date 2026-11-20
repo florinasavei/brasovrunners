@@ -23,7 +23,7 @@ function field(form: FormData, name: string): string {
 
 /**
  * «Accept și intru» on `/admin/acord` (§1006): the colleague's acceptance of the team's undertaking in force at this sign-in
- * (§NNN: the session's sign-in moment is kept with it, the sign-in it answers), then back where they were going — `returnTo`, a
+ * (§1026: the session's sign-in moment is kept with it, the sign-in it answers), then back where they were going — `returnTo`, a
  * same-site path only, or the backoffice's first page. The one action a colleague who owes the undertaking may reach
  * (`requireStaffBeforeTeamAgreement`); the service asks the role again and writes nothing for one that is not asked. A refusal —
  * the name, the tick, a version replaced while the page was open — comes back to the form with what was typed still in it (§315).

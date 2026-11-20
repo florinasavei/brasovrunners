@@ -15,13 +15,13 @@ import {
 
 /**
  * §1006 BR-REQ-060-01 — the team's undertaking at sign-in, the parts that are rules rather than reads: whether this session owes
- * it (§NNN: at every sign-in, amending §1006's once per account), the moment a session was signed in, which request is a page
+ * it (§1026: at every sign-in, amending §1006's once per account), the moment a session was signed in, which request is a page
  * being drawn (sent to the undertaking) and which is refused (a Server Action, a route handler), where a refused page wanted to
  * go — a same-site path only —, the undertaking's own address, and the full name typed under it.
  */
 const headers = (entries: Record<string, string>) => new Headers(entries);
 
-describe("§NNN the undertaking is owed once per sign-in, not once per account", () => {
+describe("§1026 the undertaking is owed once per sign-in, not once per account", () => {
   const SIGNED_IN = new Date("2026-11-21T07:00:00.000Z");
   const at = (offsetMs: number) => new Date(SIGNED_IN.getTime() + offsetMs);
   const owed = (lastAcceptedAt: Date | null, signedInAt: Date | null = SIGNED_IN, role: (typeof STAFF_ROLES)[number] = "CONTRIBUTOR", inForce = true) =>
@@ -53,8 +53,8 @@ describe("§NNN the undertaking is owed once per sign-in, not once per account",
     expect(teamAgreementOwedThisSession({ ...pressed, inForce: false, acceptedThisSignIn: false })).toBe(false);
   });
 
-  it("asks a session signed in before §NNN — it carries no moment — once: owed until an acceptance at a sign-in, then not", () => {
-    // The per-sign-in record holds only acceptances made since §NNN shipped: any one answers such a session.
+  it("asks a session signed in before §1026 — it carries no moment — once: owed until an acceptance at a sign-in, then not", () => {
+    // The per-sign-in record holds only acceptances made since §1026 shipped: any one answers such a session.
     expect(owed(null, null)).toBe(true);
     expect(owed(at(-86_400_000), null)).toBe(false);
   });
@@ -72,14 +72,14 @@ describe("§NNN the undertaking is owed once per sign-in, not once per account",
   });
 });
 
-describe("§NNN the moment a session was signed in, as its claim carries it", () => {
+describe("§1026 the moment a session was signed in, as its claim carries it", () => {
   it("reads milliseconds since the epoch — a number in Auth.js's token, digits in the development sign-in's cookie", () => {
     const ms = Date.parse("2026-11-21T07:00:00.000Z");
     expect(signInMomentOf(ms)?.toISOString()).toBe("2026-11-21T07:00:00.000Z");
     expect(signInMomentOf(String(ms))?.toISOString()).toBe("2026-11-21T07:00:00.000Z");
   });
 
-  it("is no moment for a session from before §NNN, nor for anything that is not a whole, positive number of milliseconds", () => {
+  it("is no moment for a session from before §1026, nor for anything that is not a whole, positive number of milliseconds", () => {
     for (const claim of [undefined, null, "", "abc", "12.5", "-5", " 1", "1e12", "9".repeat(16), 0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, {}, [1]]) {
       expect(signInMomentOf(claim), String(claim)).toBeNull();
     }

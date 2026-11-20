@@ -23,7 +23,7 @@ import { teamAgreementName, teamAgreementOwedThisSession } from "./domain/team-a
  * `STAFF_DATA_AGREEMENT` that is approved, not withdrawn and whose `effective_at` has passed. While there is none, nobody is
  * asked — a text the club has not approved binds nobody — and «Sarcini» carries the club's row.
  *
- * **Owed at every sign-in since §NNN** (amending §1006, which asked it once per account and version): a session owes the version in
+ * **Owed at every sign-in since §1026** (amending §1006, which asked it once per account and version): a session owes the version in
  * force unless the account accepted it at or after the moment the session was signed in, or an acceptance names that very sign-in
  * (`teamAgreementOwedThisSession`). Every acceptance is kept, with the sign-in it answers (`staff_team_agreement_sign_in_acceptances`);
  * the acceptances made once per account under §1006 (`staff_team_agreement_acceptances`) stay where they are, for «Echipa» and as
@@ -59,8 +59,8 @@ function inForce(now: Date) {
 }
 
 /**
- * The version in force this session owes, or null — the gate's one question, one query (§NNN: owed at every sign-in). `signedInAt`
- * is the moment the session was signed in, null for a session signed in before §NNN; the rule is `teamAgreementOwedThisSession`'s.
+ * The version in force this session owes, or null — the gate's one question, one query (§1026: owed at every sign-in). `signedInAt`
+ * is the moment the session was signed in, null for a session signed in before §1026; the rule is `teamAgreementOwedThisSession`'s.
  * A role that is not asked (`mustAcceptTeamAgreement`) is answered with no query: an Administrator's request reads nothing more.
  * The session asks it once per request however many doors ask (`session.ts`, React's `cache`).
  */
@@ -76,7 +76,7 @@ export async function outstandingTeamAgreement<T extends Record<string, unknown>
     A join, never a correlated `exists` in the selection: with one table in its FROM, Drizzle writes a selection's columns bare,
     and a bare `"id"` inside the subquery would be the acceptance's own. The version in force comes first and, beside it, the
     account's acceptances of it in the per-sign-in record, folded into two facts — the newest moment (null when there is none),
-    and whether one of them names this very sign-in, which answers it whatever the two servers' clocks wrote (§NNN).
+    and whether one of them names this very sign-in, which answers it whatever the two servers' clocks wrote (§1026).
   */
   const [row] = await db
     .select({
@@ -122,7 +122,7 @@ export type TeamAgreementAcceptanceInput = {
   accepted: boolean;
   /** The page's language: the text read, and the language of the hash. */
   locale: Locale;
-  /** The sign-in this acceptance answers (§NNN): the moment the press's session was signed in, null for one from before §NNN. */
+  /** The sign-in this acceptance answers (§1026): the moment the press's session was signed in, null for one from before §1026. */
   signedInAt: Date | null;
   /** The press's IP address and browser (§771). */
   trace?: SignatureTrace;
@@ -132,7 +132,7 @@ export type TeamAgreementAcceptanceInput = {
 export type TeamAgreementOutcome = "accepted" | "already" | "notRequired";
 
 /**
- * «Accept și intru» (§1006, §NNN): the acceptance of the version in force at this sign-in, **every one kept** — a row of
+ * «Accept și intru» (§1006, §1026): the acceptance of the version in force at this sign-in, **every one kept** — a row of
  * `staff_team_agreement_sign_in_acceptances` per account, version and sign-in, so the club can show the colleague accepted at each
  * sign-in — with the declarations' proof (§556, §771): the version and its own hash, the language, the name typed, the SHA-256 of
  * the exact text read in that language (`signedTextHash`, the title and every paragraph; the text has no blanks), the moment, the IP
@@ -218,7 +218,7 @@ export type TeamAgreementState =
 
 /**
  * Every colleague's state at once, for «Echipa», by account id: a role that is not asked reads «Nu e cerut»; a role that is reads
- * «Acceptat» with the version in force it accepted — its **newest** acceptance (§NNN: one at every sign-in), its moment and the
+ * «Acceptat» with the version in force it accepted — its **newest** acceptance (§1026: one at every sign-in), its moment and the
  * name typed — or, while a version is in force that they have not accepted, «Neacceptat». While nothing is in force, the newest
  * version a colleague ever accepted still says so, and a colleague who never accepted one reads «Neacceptat». The acceptances made
  * once per account under §1006 count here as well: they are acceptances, though they answer no sign-in. Two queries of the

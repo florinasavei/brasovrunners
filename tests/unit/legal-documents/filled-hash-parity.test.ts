@@ -69,7 +69,7 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     en: "df01842273e0a6c3947ce57204a4e6cc88daed90bc7bfb6a904b2a54556d9467",
     both: "882c63752ec8a9afbbf008a8f2e2274931ab2403c88c3b6e27a1a78a3a62a35b",
   },
-  // The team's undertaking (§1006): a new template, recorded as written. Edited on purpose (§NNN): the second paragraph of
+  // The team's undertaking (§1006): a new template, recorded as written. Edited on purpose (§1026): the second paragraph of
   // section 10 says it is accepted at every sign-in, each acceptance recorded with the sign-in it answers — no longer «la prima
   // intrare». A draft for the club to approve; a version in force keeps its words until then.
   STAFF_DATA_AGREEMENT: {

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.94-2026-11-20
+
+- **The team's undertaking at every sign-in** — a «Voluntar», «Redactor», «Organizator» or «Tehnic» accepts it each time they sign in, not once per account: the session carries the moment it was signed in, every acceptance is kept with the sign-in it answers, «Acord» and the guide say so, and the template's section 10 now does too — a draft for the club to approve. §1026.
 ## BR-V4.93-2026-11-20
 
 - **«Adaugă pe cineva» is the organizers', and the desk's spares explain themselves** — at «Prezența» only the Organizer and the Administrators add somebody who is not on the list (the page and the press refuse anybody else); a volunteer reads «Cheamă un organizator» in the button's place. Beside «Numere de rezervă libere», an «i» says how a spare is given, in each role's own words. §1025.

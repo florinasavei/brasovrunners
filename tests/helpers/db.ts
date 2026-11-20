@@ -116,7 +116,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   forgetCachedCalendarRsvpTo();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
-  // The team's undertaking accepted (§1006), and at every sign-in since §NNN: its version is RESTRICT, so before the legal
+  // The team's undertaking accepted (§1006), and at every sign-in since §1026: its version is RESTRICT, so before the legal
   // documents; both cascade from their staff row.
   await db.delete(staffTeamAgreementAcceptances);
   await db.delete(staffTeamAgreementSignInAcceptances);

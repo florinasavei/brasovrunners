@@ -5,7 +5,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * semneze acordul GDPR când intră în platformă» — the volunteers must sign the GDPR agreement when they enter the platform).
  *
  * One text for the club's whole team below the Administrator — the volunteer, the Redactor, the Organizer, the Tehnic — accepted
- * on `/admin/acord` at every sign-in since §NNN (once per version under §1006), before any backoffice page, action or route answers
+ * on `/admin/acord` at every sign-in since §1026 (once per version under §1006), before any backoffice page, action or route answers
  * them, and approved by the club in
  * `/admin/legal` like every other text (§29, §95, §418). Until a version is in force nobody is asked: a text the club has not
  * approved binds nobody. It is not the volunteer agreement (§758), which an event's volunteer accepts for one event and one role and
@@ -27,8 +27,8 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * sentence on liability should read; whether a colleague under eighteen with an account needs a parent's agreement too; how long the
  * club keeps the acceptance — the platform deletes it with the account, when access is taken away, which may be before a breach after
  * the role comes to light; and whether section 12 of the privacy notice should name the acceptance in its own words. The text
- * promises only what the platform does: the acceptance at every sign-in (§NNN) and again for a new version, each one recorded with
- * the sign-in it answers, the access withdrawn. Section 10 said «la prima intrare» until §NNN; a version the club approved with
+ * promises only what the platform does: the acceptance at every sign-in (§1026) and again for a new version, each one recorded with
+ * the sign-in it answers, the access withdrawn. Section 10 said «la prima intrare» until §1026; a version the club approved with
  * those words stays in force with them until the club approves the regenerated draft — the platform approves nothing (§29).
  *
  * **No hardcoded value (§357).** Nothing names a club, a place, a person or a date: the club by its four `<PLACEHOLDER>`s, the

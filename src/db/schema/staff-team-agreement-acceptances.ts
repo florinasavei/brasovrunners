@@ -12,7 +12,7 @@ export const TEAM_AGREEMENT_NAME_MAX = 200;
  * platformă»): one row per account and per version of «Angajament de confidențialitate și protecția datelor pentru echipă»
  * (`STAFF_DATA_AGREEMENT`) the account accepted on `/admin/acord`.
  *
- * **The record of §1006, kept as it was, written no more since §NNN.** The undertaking is now owed at every sign-in, and every
+ * **The record of §1006, kept as it was, written no more since §1026.** The undertaking is now owed at every sign-in, and every
  * acceptance is a row of `staff_team_agreement_sign_in_acceptances` below, which names the sign-in it answers. The rows here stay:
  * «Echipa» still reads them and each one is still a reliance on its version (`acceptanceCount`); none of them answers a sign-in,
  * so the gate reads only the table below. Expand only (AGENTS.md §7.6): this table and its unique key are not touched — a later
@@ -69,17 +69,17 @@ export const staffTeamAgreementAcceptances = pgTable(
 export type StaffTeamAgreementAcceptance = typeof staffTeamAgreementAcceptances.$inferSelect;
 
 /**
- * The team's undertaking, accepted at a sign-in (§NNN, amending §1006): **every acceptance kept**, one row per press that
+ * The team's undertaking, accepted at a sign-in (§1026, amending §1006): **every acceptance kept**, one row per press that
  * accepted — so the club can show that a colleague accepted the version in force at each sign-in, not once per account.
  *
  * Each row is the declarations' proof, as above — who (`staff_user_id`), the version (`legal_document_id`, `RESTRICT`, and its
  * number), the version's own hash, the language read, the full name typed, the SHA-256 of the exact text read, the moment
  * (`accepted_at`), the IP address and browser of the press — and **the sign-in it answers** (`signed_in_at`): the moment the
  * session was signed in, the claim the `jwt` callback writes at a sign-in (the development sign-in writes it too). It is null for
- * a session signed in before §NNN, which carries no such moment: that session is asked once and answered by this row.
+ * a session signed in before §1026, which carries no such moment: that session is asked once and answered by this row.
  *
  * **Once per account, version and sign-in** (`staff_team_agreement_sign_in_acceptances_once`, NULLS NOT DISTINCT so the sessions
- * from before §NNN count as one): a double tap on a phone finds the first row and writes nothing; the next sign-in is a new row.
+ * from before §1026 count as one): a double tap on a phone finds the first row and writes nothing; the next sign-in is a new row.
  *
  * **Gone with the account** (`ON DELETE CASCADE`), as the rows above: «Retrage accesul» removes the colleague's row and their
  * acceptances with it; switching the account off keeps both. The trail keeps `staff.team_agreement_accepted` without the name.
@@ -103,7 +103,7 @@ export const staffTeamAgreementSignInAcceptances = pgTable(
     /** The electronic acceptance's trace (§771): the IP address and browser of the press; null when the request carried none. */
     ip: text("ip"),
     userAgent: text("user_agent"),
-    /** The sign-in this acceptance answers: the moment the session was signed in; null for a session from before §NNN. */
+    /** The sign-in this acceptance answers: the moment the session was signed in; null for a session from before §1026. */
     signedInAt: timestamp("signed_in_at", { withTimezone: true }),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

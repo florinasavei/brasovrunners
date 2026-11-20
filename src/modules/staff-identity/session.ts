@@ -51,8 +51,8 @@ import { outstandingTeamAgreement, type TeamAgreementVersion } from "./team-agre
 export { DEV_STAFF_COOKIE };
 
 /**
- * The session behind a request: the account it names and the moment it was signed in (§NNN) — null for a session signed in
- * before §NNN, which carries no moment.
+ * The session behind a request: the account it names and the moment it was signed in (§1026) — null for a session signed in
+ * before §1026, which carries no moment.
  */
 type SessionFacts = { staffUserId: string; signedInAt: Date | null };
 
@@ -94,7 +94,7 @@ export async function getCurrentAccount(): Promise<StaffAccount | null> {
 }
 
 /**
- * The moment this request's session was signed in (§NNN), or null for a session signed in before §NNN: the sign-in an acceptance
+ * The moment this request's session was signed in (§1026), or null for a session signed in before §1026: the sign-in an acceptance
  * of the team's undertaking on `/admin/acord` answers, kept with it.
  */
 export async function currentSignInMoment(): Promise<Date | null> {
@@ -111,7 +111,7 @@ export async function getCurrentStaffUser(): Promise<StaffAccount | null> {
  * The staff member signing this request — and, since §1006, one who owes the team's undertaking nothing.
  *
  * **The team's undertaking (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
- * platformă»), at every sign-in since §NNN.** A colleague below the Administrator (`mustAcceptTeamAgreement`) whose session has not
+ * platformă»), at every sign-in since §1026.** A colleague below the Administrator (`mustAcceptTeamAgreement`) whose session has not
  * accepted the version of `STAFF_DATA_AGREEMENT` in force — the account accepted it before this session was signed in, or never —
  * is answered by nothing of the backoffice until they do (`teamAgreementOwedThisSession`), and it is asserted here — the one line
  * every backoffice page, action and route handler asks before anything else — never by hiding a button:
@@ -146,7 +146,7 @@ export async function assertTeamAgreementAccepted(staffUser: TeamAgreementSubjec
  * the layout's bare shell, the page's `requireStaff`, a page that asks the door again —, as `deadlinesForThisRequest` is read once
  * per backoffice render. React scopes `cache` to the render of one request; outside a render — a Server Action's body, a route
  * handler, a test — it calls through every time, so a press that has just written the acceptance is never answered from a moment
- * before it. Keyed by the account's id, its role and the session's sign-in moment in milliseconds (§NNN; `cache` compares its
+ * before it. Keyed by the account's id, its role and the session's sign-in moment in milliseconds (§1026; `cache` compares its
  * arguments by identity, so a number, never a `Date`).
  */
 const outstandingThisRequest = cache(
@@ -156,7 +156,7 @@ const outstandingThisRequest = cache(
 
 /**
  * The version this session owes: none, with no query, for a role that is not asked (`mustAcceptTeamAgreement`); else the
- * request's one read, for the moment this request's session was signed in (§NNN) — the one session the caller read its staff
+ * request's one read, for the moment this request's session was signed in (§1026) — the one session the caller read its staff
  * member from.
  */
 async function owedThisRequest(staffUser: TeamAgreementSubject): Promise<TeamAgreementVersion | null> {

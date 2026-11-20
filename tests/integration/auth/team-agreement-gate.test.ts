@@ -16,8 +16,8 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §1006, §NNN, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in (the owner, 2026-11-19: «Voluntarii trebuie să
- * semneze acordul GDPR când intră în platformă»), owed at every sign-in since §NNN, read through the real session (`session.ts`,
+ * §1006, §1026, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in (the owner, 2026-11-19: «Voluntarii trebuie să
+ * semneze acordul GDPR când intră în platformă»), owed at every sign-in since §1026, read through the real session (`session.ts`,
  * the development switcher's two cookies: the account's id and the moment the development sign-in wrote) over a real database:
  *
  * - no approved version in force, no gate: a draft, a version withdrawn or one dated tomorrow asks nobody anything;
@@ -26,8 +26,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   layouts meanwhile drawing the shell bare and never redirecting themselves; refused with FORBIDDEN, its reason saying to
  *   accept the undertaking, by a Server Action and an admin route, nothing written; the Administrators and the
  *   Superadministrators never; a member stays no staff at all;
- * - **at every sign-in (§NNN)**: accepted at one sign-in, the same session is let through and the next sign-in is asked again;
- *   every acceptance is kept with the sign-in it answers; a session from before §NNN, which carries no moment, is asked once; an
+ * - **at every sign-in (§1026)**: accepted at one sign-in, the same session is let through and the next sign-in is asked again;
+ *   every acceptance is kept with the sign-in it answers; a session from before §1026, which carries no moment, is asked once; an
  *   acceptance made once per account under §1006 answers no sign-in; the development sign-in writes the moment, sign-out drops it;
  * - `/admin/acord`: the text in force, its version line, saying it is asked at every sign-in in both languages, «Numele tău
  *   complet» empty, the tick unticked and «Accept și intru»; the acceptance with the declarations' proof and an audit row that
@@ -139,7 +139,7 @@ const route = () => {
   state.headers = new Headers();
 };
 
-describe("§1006 §NNN the team's undertaking, at every sign-in", () => {
+describe("§1006 §1026 the team's undertaking, at every sign-in", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff = {} as Record<StaffRole, StaffUser>;
@@ -180,7 +180,7 @@ describe("§1006 §NNN the team's undertaking, at every sign-in", () => {
     state.cookie = staff[role].id;
     state.signedInAt = String(signedInAt.getTime());
   };
-  /** Signed in as `role` before §NNN: the account's cookie and no moment. */
+  /** Signed in as `role` before §1026: the account's cookie and no moment. */
   const asBefore = (role: StaffRole) => {
     state.cookie = staff[role].id;
     state.signedInAt = undefined;
@@ -516,7 +516,7 @@ describe("§1006 §NNN the team's undertaking, at every sign-in", () => {
     expect(await redirectedTo(requireStaff())).toBe("/ro/admin/acord?returnTo=%2Fro%2Fadmin%2Fcheckin");
   });
 
-  it("asks a session signed in before §NNN once — it carries no moment — and §1006's acceptance answers no sign-in", async () => {
+  it("asks a session signed in before §1026 once — it carries no moment — and §1006's acceptance answers no sign-in", async () => {
     const id = await undertaking(1);
     // Accepted once per account under §1006, before this change: that row stays and answers nothing.
     await db.insert(staffTeamAgreementAcceptances).values({

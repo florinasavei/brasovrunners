@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.93-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.94-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.93-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.94-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2806,7 +2806,7 @@ An agent never approves either text.
 
 The owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă». Every colleague below the
 Administrator — a **Voluntar**, a **Redactor**, an **Organizator**, a **Tehnic** — accepts the club's «Angajament de
-confidențialitate și protecția datelor pentru echipă» **at every sign-in** (`DECISIONS.md` §NNN, amending §1006, which asked it
+confidențialitate și protecția datelor pentru echipă» **at every sign-in** (`DECISIONS.md` §1026, amending §1006, which asked it
 once per version), before any backoffice page opens to them. **Nobody is asked anything until the club approves a version**: an
 agent never approves it, the seed never puts one in force (`yarn db:seed:legal` included), and no migration brings one to
 production. So the club's steps are:
@@ -2833,7 +2833,7 @@ production. So the club's steps are:
    «Numele tău complet» (typed each time), «Am citit și accept angajamentul» and «Accept și intru», then back to the page
    they asked for, a scanned race number included. Until they accept, no backoffice page, action or file answers them, and
    «Ieși din cont» stays at the top. In the same session it is not asked again; after «Ieși din cont» the next sign-in asks
-   it again. A session signed in before §NNN shipped is asked once more and then not until its next sign-in. Administrators
+   it again. A session signed in before §1026 shipped is asked once more and then not until its next sign-in. Administrators
    and Superadministrators are never asked.
 4. **Who has accepted.** «Echipa» shows on each row the latest acceptance — «Angajamentul echipei: Acceptat — versiunea N,
    <data>, ca „<numele scris>”» —, «Neacceptat» or «Nu e cerut». Have the race-day volunteers sign in the day before (§34)
@@ -2841,10 +2841,10 @@ production. So the club's steps are:
 5. **A new version** — a corrected text, approved the same way — is asked of everybody below the Administrator at their
    next page, then at every sign-in. **Every acceptance is kept** (`staff_team_agreement_sign_in_acceptances`): the name
    typed, the version, the moment, the sign-in it answers, the text's fingerprint, the IP address and the browser, so the
-   club can show the colleague accepted at each sign-in; the acceptances made once per account before §NNN stay too. They
+   club can show the colleague accepted at each sign-in; the acceptances made once per account before §1026 stay too. They
    stay with their account and go when «Retrage accesul» removes it; the trail keeps `staff.team_agreement_accepted` with
    the version and the sign-in, without the name.
-6. **The text says it.** Section 10 of the platform's template says, since §NNN, that the undertaking is accepted at every
+6. **The text says it.** Section 10 of the platform's template says, since §1026, that the undertaking is accepted at every
    sign-in and that each acceptance is recorded with the sign-in it answers. A version the club approved before says «la
    prima intrare»: `/admin/legal` then shows the template changed and the daily email «Șabloanele textelor legale s-au
    schimbat» names the undertaking — «Regenerează din șablon» on its card, read the draft, «Aprobă și publică» on its own

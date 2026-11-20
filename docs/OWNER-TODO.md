@@ -167,7 +167,7 @@ it is the authority, this is the summary):
     `src/modules/legal-documents/templates/team-agreement.ts`), then `/admin/legal` → «Versiune nouă» → the template → the
     club's facts → «Aprobă și publică», on QA first, then on production, at least a day before the race: the moment it is
     in force, every colleague below the Administrator is stopped at their next page until they accept it — and, since
-    §NNN, again at every sign-in, each acceptance kept with the sign-in it answers. A version approved before §NNN says
+    §1026, again at every sign-in, each acceptance kept with the sign-in it answers. A version approved before §1026 says
     «la prima intrare» in section 10: regenerate it from the template and approve the new draft the same way. Neither
     «Aprobă acum textele care lipsesc…» nor «Aprobă ciornele» approves it. The steps are `SETUP.md` §48; `/admin/tasks`
     carries the row `teamAgreement` until a version is in force. **Ask the lawyer, too, whether the acceptance may go with

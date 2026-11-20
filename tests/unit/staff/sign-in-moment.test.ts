@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN BR-REQ-060-01 — the moment a session was signed in, the claim the team's undertaking is owed by (amending §1006: once per
+ * §1026 BR-REQ-060-01 — the moment a session was signed in, the claim the team's undertaking is owed by (amending §1006: once per
  * sign-in, not once per account). Auth.js's `jwt` callback (`src/auth.ts`, over `staffTokenAt`) writes it at a Zitadel sign-in —
  * the one call that hands it `account` — and only then; every other call returns the token as it came, so a refresh keeps the
  * moment and nothing a browser posts to `/api/auth/session` can write or move it. The `session` callback hands it to the server.
@@ -38,7 +38,7 @@ const session = captured.callbacks.session as SessionCallback;
 const SIGN_IN = new Date("2026-11-21T07:00:00.000Z");
 const zitadel = { provider: "zitadel", providerAccountId: "zitadel:vlad", type: "oidc" };
 
-describe("§NNN the jwt callback writes the sign-in's moment at a sign-in and only then", () => {
+describe("§1026 the jwt callback writes the sign-in's moment at a sign-in and only then", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(SIGN_IN);
@@ -66,7 +66,7 @@ describe("§NNN the jwt callback writes the sign-in's moment at a sign-in and on
     expect(updated).toEqual(signedIn);
   });
 
-  it("writes none on a refresh of a token from before §NNN: such a session is asked once by the gate, never re-signed", async () => {
+  it("writes none on a refresh of a token from before §1026: such a session is asked once by the gate, never re-signed", async () => {
     const old = { sub: "zitadel:vlad", staffUserId: STAFF_ID };
     expect(await jwt({ token: old })).toEqual(old);
   });

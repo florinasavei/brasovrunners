@@ -8,14 +8,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0226_staff_team_agreement_every_sign_in` (§NNN, amending §1006: the team's undertaking is owed at every sign-in, and
+ * Migration `0226_staff_team_agreement_every_sign_in` (§1026, amending §1006: the team's undertaking is owed at every sign-in, and
  * every acceptance is kept), proven on real PostgreSQL (PGlite) over a database migrated by the release before (BR-REQ-060-01 for
  * the gate it records, BR-REQ-053-01 for the version it relies on):
  *
  * - expand only (AGENTS.md §7.6): a new table, `staff_team_agreement_sign_in_acceptances`; §1006's table, its unique key and its
  *   rows are left exactly as they were — the acceptances made once per account stay;
  * - one row per account, version and **sign-in it answers** (`signed_in_at`), NULLS NOT DISTINCT, so the sessions signed in before
- *   §NNN — which carry no moment — count as one: a double tap writes nothing, the next sign-in is a row of its own, and
+ *   §1026 — which carry no moment — count as one: a double tap writes nothing, the next sign-in is a row of its own, and
  *   `ON CONFLICT (staff_user_id, legal_document_id, signed_in_at) DO NOTHING` — the service's own — finds the null one too;
  * - the name typed 1–200 characters, both hashes a SHA-256, a version somebody accepted never deleted under them, the rows gone
  *   with their account; nothing written by the migration.
@@ -105,7 +105,7 @@ describe("migration 0226_staff_team_agreement_every_sign_in", () => {
     expect(await count("staff_team_agreement_sign_in_acceptances")).toBe(3);
   });
 
-  it("counts the sessions from before §NNN — no moment — as one, and the service's ON CONFLICT finds that null row too", async () => {
+  it("counts the sessions from before §1026 — no moment — as one, and the service's ON CONFLICT finds that null row too", async () => {
     await client.exec(`DELETE FROM staff_team_agreement_sign_in_acceptances`);
     await client.exec(acceptance({ signed_in_at: null }));
     await expect(client.exec(acceptance({ signed_in_at: null, accepted_at: "2026-11-21T08:00:00Z" }))).rejects.toThrow(/staff_team_agreement_sign_in_acceptances_once/);
