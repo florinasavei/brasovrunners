@@ -74,9 +74,26 @@ async function fitsTheScreen(page: Page): Promise<void> {
   expect(overflow, "horizontal overflow").toBeLessThanOrEqual(0);
 }
 
-/** Opens the spares' «i» the way the device does: a tap on a phone, the pointer on a desktop. */
+/**
+ * A thumb on the «i»: touched, resting a moment, lifted. `tap()` lifts in the same instant, and the house's tooltip opens on
+ * its touch timer (`InfoTip`'s `enterTouchDelay`, 0 ms), which a lift before it runs cancels — a real thumb rests longer.
+ */
+async function thumbOn(page: Page, target: Locator): Promise<void> {
+  // On a phone the line sits below the fold: in sight first, as a thumb finds it, so the touch lands on the «i».
+  await target.scrollIntoViewIfNeeded();
+  const box = await target.boundingBox();
+  if (!box) throw new Error("the «i» has no box");
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const input = await page.context().newCDPSession(page);
+  await input.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [point] });
+  await page.waitForTimeout(300);
+  await input.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await input.detach();
+}
+
+/** Opens the spares' «i» the way the device does: a thumb on a phone, the pointer on a desktop. */
 async function openTip(page: Page, tip: Locator): Promise<Locator> {
-  if (test.info().project.use.hasTouch) await tip.tap();
+  if (test.info().project.use.hasTouch) await thumbOn(page, tip);
   else await tip.hover();
   const tooltip = page.getByRole("tooltip");
   await expect(tooltip).toBeVisible();
