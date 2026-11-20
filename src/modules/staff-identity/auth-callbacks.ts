@@ -83,3 +83,25 @@ export async function resolveStaffUserId<T extends Record<string, unknown>>(
 
   return undefined;
 }
+
+/** What this application keeps in Auth.js's token: the account's id and, since §1026, the moment the session was signed in. */
+export type StaffTokenClaims = { staffUserId?: string; signedInAt?: number };
+
+/**
+ * The `jwt` callback's answer (AGENTS.md §13.1, DECISIONS.md §26, §1026). Auth.js hands it Zitadel's `account` at a sign-in and
+ * at no other call, so `signIn` is non-null exactly then: the token gets the account's id and **the moment of this sign-in**
+ * (`signedInAt`, milliseconds since the epoch — the team's undertaking is owed once per sign-in, `teamAgreementOwedThisSession`).
+ * At every other call — the token refreshed on a session read, an update a browser posts to `/api/auth/session` — the token is
+ * returned as it came: the moment is kept, and nothing a browser sends can write or move it. A token from before §1026 keeps
+ * carrying none.
+ */
+export async function staffTokenAt<T extends Record<string, unknown>, Token extends StaffTokenClaims>(
+  db: Database<T>,
+  token: Token,
+  signIn: { subject: string; email: string | null } | null,
+  now: Date,
+): Promise<Token> {
+  if (!signIn) return token;
+  const staffUserId = await resolveStaffUserId(db, signIn);
+  return { ...token, ...(staffUserId ? { staffUserId } : {}), signedInAt: now.getTime() };
+}

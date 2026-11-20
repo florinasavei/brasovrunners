@@ -34,7 +34,7 @@ import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
-import { staffTeamAgreementAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
+import { staffTeamAgreementAcceptances, staffTeamAgreementSignInAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
 import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers, teamPageBoxes } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
@@ -116,8 +116,10 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   forgetCachedCalendarRsvpTo();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
-  // The team's undertaking accepted (§1006): its version is RESTRICT, so before the legal documents; it cascades from its staff row.
+  // The team's undertaking accepted (§1006), and at every sign-in since §1026: its version is RESTRICT, so before the legal
+  // documents; both cascade from their staff row.
   await db.delete(staffTeamAgreementAcceptances);
+  await db.delete(staffTeamAgreementSignInAcceptances);
   // A group run's self-declarations (§393) reference the event and the legal version: before both.
   await db.delete(groupRunDeclarations);
   // Another person waiting for the address's confirmation (§446): it points at a token and a registration.

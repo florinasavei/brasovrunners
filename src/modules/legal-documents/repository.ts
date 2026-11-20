@@ -11,7 +11,7 @@ import {
   type LegalDocumentKey,
 } from "@/db/schema/legal-documents";
 import { registrations } from "@/db/schema/registrations";
-import { staffTeamAgreementAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
+import { staffTeamAgreementAcceptances, staffTeamAgreementSignInAcceptances } from "@/db/schema/staff-team-agreement-acceptances";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
@@ -1087,7 +1087,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
       // relying on these exact words, and the guardian's column is a RESTRICT foreign key too. A raffle sign-up's acceptance of
       // «Regulamentul tombolei» (§984) is one more: its column is RESTRICT as well, so the version is never deleted under it. And a
-      // colleague's acceptance of the team's undertaking (§1006), RESTRICT too.
+      // colleague's acceptance of the team's undertaking — once per account under §1006, at every sign-in since §1026 — RESTRICT too.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
@@ -1095,6 +1095,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.guardianDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventRaffleEntries} where ${eventRaffleEntries.rulesDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${staffTeamAgreementAcceptances} where ${staffTeamAgreementAcceptances.legalDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${staffTeamAgreementSignInAcceptances} where ${staffTeamAgreementSignInAcceptances.legalDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference

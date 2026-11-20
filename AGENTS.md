@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.93-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.94-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.93-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.94-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2177,16 +2177,20 @@ until a version is in force in every language **and** the privacy notice in forc
 
 **«Angajament de confidențialitate și protecția datelor pentru echipă»** (`STAFF_DATA_AGREEMENT`, 2026-11-19, `DECISIONS.md`
 §1006; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
-below the Administrator accepts, once per version, before the backoffice answers them (§13.1): the platform's template in
+below the Administrator accepts — at every sign-in since §1026 (migration `0226`), and again for a new version — before the
+backoffice answers them (§13.1): the platform's template in
 both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
 tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
 access withdrawn), the club's four facts as visible `<PLACEHOLDER>`s and no merge field. Approved in `/admin/legal` **on
 its own** — never by the one press (`PLATFORM_APPROVAL_KEYS` leaves it out) nor by «Aprobă ciornele», which holds its
 draft back even when «Regenerează din șabloane» made it with the others (`draftApprovalOutcome`'s `alone`) — and **never
-seeded** on any environment (`NEVER_SEEDED_KEYS`): a version in force gates the whole team. An acceptance
-(`staff_team_agreement_acceptances`, one per account and version) keeps the version, its hash, the language, the name
-typed, `signedTextHash`, the moment, the IP address and the browser; `RESTRICT` on the version, counted on the legal
-list; `CASCADE` with the account.
+seeded** on any environment (`NEVER_SEEDED_KEYS`): a version in force gates the whole team. Every acceptance is kept
+(`staff_team_agreement_sign_in_acceptances`, one per account, version and sign-in, §1026) — the version, its hash, the
+language, the name typed, `signedTextHash`, the moment, the IP address, the browser and **the sign-in it answers**
+(`signed_in_at`); the rows of §1006's `staff_team_agreement_acceptances` (once per account and version) stay, written no more
+and answering no sign-in. Both `RESTRICT` on the version, counted on the legal list; `CASCADE` with the account. Section 10
+of the template says it is accepted at every sign-in; a version approved before §1026 keeps «la prima intrare» until the club
+approves the regenerated draft.
 
 Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
 
@@ -2716,10 +2720,21 @@ next request exactly as a changed role does; the development switcher takes the 
 `requireStaffCapability(predicate)` hands the predicate that actor, never its role alone, and an
 actor read without its grants holds none — a forgotten read refuses, it never opens.
 
-**The team's undertaking is asserted in `requireStaff` (`DECISIONS.md` §1006).** While an approved version of
-`STAFF_DATA_AGREEMENT` is in force (§12.5), a colleague `mustAcceptTeamAgreement` names — every backoffice role below
-`ADMIN` — who has not accepted *that* version is answered by nothing of the backoffice: a page being drawn (the proxy's
-`x-br-path`, no `next-action` header) is sent to `/admin/acord?returnTo=<the page>`, a same-site path only; a Server
+**The team's undertaking is asserted in `requireStaff` (`DECISIONS.md` §1006), at every sign-in (§1026).** While an approved
+version of `STAFF_DATA_AGREEMENT` is in force (§12.5), a colleague `mustAcceptTeamAgreement` names — every backoffice role
+below `ADMIN` — whose session has not accepted *that* version is answered by nothing of the backoffice. **The session carries
+the moment it was signed in**: Auth.js's `jwt` callback writes `signedInAt` (milliseconds) when Zitadel hands it `account` —
+at a sign-in, and only then (`staffTokenAt`) — and keeps it as the token is refreshed; nothing a browser posts as an update
+writes it; the development sign-in writes the same moment beside its id (`DEV_STAFF_SIGNED_IN_COOKIE`) and sign-out drops
+both. The undertaking is owed unless the account accepted the version in force at or after that moment, or a row of the
+per-sign-in record names that very sign-in (`teamAgreementOwedThisSession`, one query): the press and the sign-in read
+their moments on whichever servers took them, and a row stored a little before the sign-in it names still answers it —
+compared by the moments alone, the gate would ask again and every next press would meet the unique key, writing nothing,
+until sign-out.
+A session signed in before §1026 carries no moment: it owes the version unless the account accepted it at a sign-in at
+all — every row of that record was written since §1026, so it is asked once and not again until its next sign-in; no
+token is rewritten and nobody is signed out. A page being drawn
+(the proxy's `x-br-path`, no `next-action` header) is sent to `/admin/acord?returnTo=<the page>`, a same-site path only; a Server
 Action and a route handler are refused with `FORBIDDEN`, the reason saying to accept the undertaking. The staff preview
 asks the same through `assertTeamAgreementAccepted`. The admin and `/devs` layouts ask `teamAgreementOwedFor` and only
 draw the shell bare while it is owed: **a layout never redirects for it** — the client router keeps a layout's redirect
@@ -2727,7 +2742,9 @@ with the layout and replays it on every navigation beneath it, `/admin/acord` in
 the sign-in), and Next tells neither a layout nor the proxy whether a page is drawn for the router. The page's own
 `requireStaff` sends the reader, a page being fetched afresh on every navigation. Only `/admin/acord` and its action ask
 `requireStaffBeforeTeamAgreement()` — the staff session before the undertaking —, and sign-out asks nothing. No version in
-force, no gate; a new version is asked once more.
+force, no gate; a new version is asked at the next request, in the same session. The database is asked once per request,
+keyed by the account, its role and the session's moment (`outstandingThisRequest`); the session itself is read once per
+render (`sessionThisRequest`).
 
 ### 13.2 Email action tokens
 
