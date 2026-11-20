@@ -1,0 +1,14 @@
+{
+  "branch": "feat/desk-rows-ordered-by-race-number",
+  "decisionsTitle": "«Prezența» lists its rows by race number",
+  "decisionsSection": "**The owner, 2026-11-20, the day before the race, with a picture of «Prezența»'s «De ridicat numărul (172)» — 050 Adelina Matei, 204 Adrian Brănescu, 006 Adrian Iacob, 070 Adriana Barascu, by the name as typed:** «pe pagina asta de „Prezență” în ziua cursei, aranjează tot alfabetic» — and, asked whether by surname or by first name: «sortează după BIB». The desk hands the bibs out of a pile ordered by number; a list by first name sent the volunteer up and down the pile.\n\n**Decision.** Every section of the desk lists its rows by the race number the row shows — a confirmed registration's, as `raceNumberOf` draws it (§548) — lowest first; a row that shows none (not confirmed, or confirmed and still without a number) comes after them, by name; the id settles a tie (`admin-repository.ts#listDeskRegistrations`). The sections, their order, their counts and the search are unchanged: a search lists its matches the same way.",
+  "changelogLine": "- **«Prezența» lists the runners by race number** — in every section of the desk, lowest number first, those without a number after them by name. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-037-08",
+      "text": "Given the race-day desk, when its rows are drawn — the list, a search — then every section lists them by the race number a confirmed registration shows, lowest first, the rows that show none after them by name, then by id (2026-11-20, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Prezența» lists the runners by race number"
+}

@@ -1644,7 +1644,16 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
   }
   const rows = await deskQuery(db, input.locale)
     .where(and(...conditions))
-    .orderBy(asc(registrations.registeredName), asc(registrations.id));
+    .orderBy(
+      /*
+        By the race number the row shows (the owner, 2026-11-20, of «Prezența»: «sortează după BIB») — a confirmed row's, as
+        `raceNumberOf` draws it (§548): the desk hands out the bibs from a pile in that order. A row that shows none (not
+        confirmed, or confirmed and still without one) comes after, by name; the id settles a tie.
+      */
+      sql`CASE WHEN ${registrations.status} = 'CONFIRMED' THEN ${registrations.bibNumber} END ASC NULLS LAST`,
+      asc(registrations.registeredName),
+      asc(registrations.id),
+    );
   return rows.map(deskRowOf);
 }
 
