@@ -301,6 +301,26 @@ describe("«A reconfirmat» and «Reconfirmare» on the registrations list", () 
     // A value that is not one of the three filters nothing.
     expect(tableOf(await listPage({ eventId: race.id, reconfirm: "maybe" }))?.props.total).toBe(4);
   });
+
+  it("draws the chip on exactly the rows the filter «yes» keeps — the export's «A reconfirmat» (§NNN) — whatever the state since «Vin»", async () => {
+    const race = await createRace();
+    state.actor = await staff("MODERATOR");
+    const sendId = randomUUID();
+    const offeredYes = await register(race.id, { status: "WAITLIST_OFFERED", offerCreatedAt: new Date(), holdExpiresAt: new Date(Date.now() + 86_400_000) });
+    const cancelledYes = await register(race.id, { status: "CANCELLED", cancelledAt: new Date(), cancellationSource: "PARTICIPANT" });
+    const expiredYes = await register(race.id, { status: "EXPIRED", expiredAt: new Date(), expiryReason: "DECLARATION_HOLD_LAPSED" });
+    const confirmedYes = await register(race.id);
+    const silent = await register(race.id);
+    for (const one of [offeredYes, cancelledYes, expiredYes, confirmedYes]) await asked(race.id, one.id, sendId, new Date(Date.now() - 30_000));
+    await asked(race.id, silent.id, sendId, null);
+    const tree = await listPage({ eventId: race.id });
+    const everyone = [offeredYes, cancelledYes, expiredYes, confirmedYes, silent];
+    const withChip = everyone.filter((one) => chipOf(nameCellOf(tree, one.id))).map((one) => one.id).sort();
+    const kept = (await listRegistrationsForAdmin(db, { eventId: race.id, reconfirm: "yes" })).map((row) => row.id).sort();
+    expect(withChip).toEqual(kept);
+    // Still registered and «Vin» pressed: the offer made since and the confirmed; never the cancelled or the expired who had pressed it.
+    expect(withChip).toEqual([offeredYes.id, confirmedYes.id].sort());
+  });
 });
 
 describe("the registration's page", () => {

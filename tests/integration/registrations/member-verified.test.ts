@@ -313,7 +313,8 @@ describe("§662: a member is declared or verified (BR-REQ-037-03)", () => {
       const csv = await (await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${race.id}${query}`))).text();
       const [header, ...lines] = csv.split("\r\n").filter((line) => line !== "");
       const at = header.split(",").indexOf("Club member");
-      expect(at).toBe(7);
+      // After «Status» and the reconfirmation's two, «Reconfirmare» and «Reconfirmat» (§NNN).
+      expect(at).toBe(9);
       return new Map(lines.map((line) => [line.split(",")[1], line.split(",")[at]]));
     };
     expect(await cells("")).toEqual(new Map([["Verified", "verified"], ["Declared", "declared"], ["Neither", ""]]));
