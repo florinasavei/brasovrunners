@@ -49,9 +49,15 @@ import { isUuid } from "@/shared/ids";
   point — the editor's and the plan's own alike — may carry what everybody standing there has to know («Direcționați spre
   stânga la intersecție; vestă reflectorizantă»), in Romanian and in English, both or neither, at most `PLAN_POINT_NOTE_MAX`
   characters each, its line breaks kept (`volunteer_note_ro`, `volunteer_note_en`). It is the plan's side of
-  a point as the coordinates are: written here, in the point's own «Salvează punctul», read through `listPlanPoints` by the
-  plan's page and the point's email, and never by the public side — which has its own short note, `note_ro` / `note_en`, the
-  event's page shows.
+  a point as the coordinates are: written here — in «Adaugă punctul» with the point (§1011) or later in the point's own «Salvează
+  punctul» —, read through `listPlanPoints` by the plan's page and the point's email, and never by the public side — which has
+  its own short note, `note_ro` / `note_en`, the event's page shows.
+
+  **A changed note is told again (§1011, amending §1009).** The save that changes the note's words — written, changed in either
+  language, or taken off — stamps the moment on the point (`volunteer_note_changed_at`), in its own transaction; a save that
+  leaves the words as they were, or changes only the name, the kilometre or the coordinates, stamps nothing. «Trimite fiecăruia
+  punctul lui» reads the moment (`point-mail.ts#alreadyTold`): whoever was told this point by a message that left before it is
+  not told any more, and the next ordinary press writes to them.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -88,6 +94,11 @@ export type PlanPoint = {
    */
   volunteerNoteRo: string | null;
   volunteerNoteEn: string | null;
+  /**
+   * When the note last changed (§1011): written, changed or taken off — null for a note never written. A person told this point
+   * by a message that left before it is told again by the next «Trimite fiecăruia punctul lui» (`point-mail.ts#alreadyTold`).
+   */
+  volunteerNoteChangedAt: Date | null;
   /** The point's place in the route's order, 1 for the first — the number the picture's points follow; null at the start–finish. */
   number: number | null;
 };
@@ -127,6 +138,7 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
       longitude: eventCheckpoints.longitude,
       volunteerNoteRo: eventCheckpoints.volunteerNoteRo,
       volunteerNoteEn: eventCheckpoints.volunteerNoteEn,
+      volunteerNoteChangedAt: eventCheckpoints.volunteerNoteChangedAt,
     })
     .from(eventCheckpoints)
     .where(eq(eventCheckpoints.eventId, eventId))
@@ -154,6 +166,7 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
     longitude: row.latitude === null || row.longitude === null ? null : Number(row.longitude),
     volunteerNoteRo: row.volunteerNoteRo,
     volunteerNoteEn: row.volunteerNoteEn,
+    volunteerNoteChangedAt: row.volunteerNoteChangedAt,
     number: row.startFinish ? null : (onRoute += 1),
   }));
 }
@@ -162,7 +175,7 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
 // The verbs: «Adaugă punctul», «Salvează punctul», «Șterge punctul»
 // ---------------------------------------------------------------------------------------------
 
-/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§1009) in «Modifică punctul» alone. */
+/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§1009) in both forms since §1011. */
 export const PLAN_POINT_BOXES = {
   place: "place",
   name: "name",
@@ -229,8 +242,11 @@ export class PlanPointGone extends DomainError {
 
 /** What a form posts, before it is a change: this service validates, the action only reads boxes. */
 export type PlanPointRequest =
-  /** «Adaugă punctul»: a new point of the plan's own. */
-  | { kind: "add"; eventId: string; place: unknown; name: unknown; km: unknown; coordinates: unknown }
+  /**
+   * «Adaugă punctul»: a new point of the plan's own — and, since §1011, its «Notă pentru voluntari», held to the rules an edit
+   * holds it to. A request that names neither of the note's boxes adds the point with none.
+   */
+  | { kind: "add"; eventId: string; place: unknown; name: unknown; km: unknown; coordinates: unknown; volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }
   /**
    * «Salvează punctul»: all of a plan's own point, the kind included — or the coordinates alone of an editor's point —, and of
    * either its «Notă pentru voluntari» (§1009). A request that names neither of the note's boxes (`undefined`, a form drawn
@@ -308,6 +324,16 @@ const namesTheNote = (request: { volunteerNoteRo?: unknown; volunteerNoteEn?: un
 
 const sameNote = (a: VolunteerNote, b: VolunteerNote): boolean => a.ro === b.ro && a.en === b.en;
 
+/** The columns a note is stored in (§1009): both languages, or null in both. */
+const noteColumns = (note: VolunteerNote) => ({ volunteerNoteRo: note.ro, volunteerNoteEn: note.en });
+
+/**
+ * The moment a note's words changed (§1011, amending §1009), for the save that changes them — written, changed in either language,
+ * taken off: «Trimite fiecăruia punctul lui» then writes again to whoever was told the point before it. A save that leaves the
+ * words as they were (`sameNote`, after `volunteerNoteOf`'s trimming) keeps the moment the point has.
+ */
+const noteMoment = (before: VolunteerNote, after: VolunteerNote, now: Date): { volunteerNoteChangedAt?: Date } => (sameNote(before, after) ? {} : { volunteerNoteChangedAt: now });
+
 /**
  * What the trail says of a note that changed (§1009): only whether there was one before and is one after — never its words, which
  * may well name a person («Ana aduce steagurile»). Nothing for a note that did not change.
@@ -325,14 +351,19 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  *   its inner spaces folded, 1 to 60 characters; on the route the kilometre is required — a comma or a point, two decimals,
  *   0 to 9999.99, not held to the route's length — and at the start–finish it is not read and 0 is stored; the coordinates
  *   optional for both (`parseCoordinates`). At most `PLAN_POINTS_MAX` of the plan's own on an event, both kinds together,
- *   counted under the event row's lock.
+ *   counted under the event row's lock. Its «Notă pentru voluntari» (§1011, amending §1009) is held to the rules an edit holds it
+ *   to (`volunteerNoteOf`), read after the point's other boxes and before anything is locked, and stored in the point's own
+ *   insert — with the moment it was written; a request with no note, or both boxes empty, adds the point with none.
  * - **`edit`:** of a plan's own point, all of it, the kind included: moved to the start–finish it loses its kilometre, moved
  *   to the route it needs one. Of an editor's point, ONLY the coordinates: a posted name, kilometre or place for it is never
  *   read and never written — those are changed in the event's editor, where they are public. A point of another event, or
  *   one that is not there, is NOT_FOUND (`PlanPointGone`, said on the page as a point no longer on the plan).
  * - **«Notă pentru voluntari» (§1009), on `edit` of either kind:** both languages or neither, each at most
  *   `PLAN_POINT_NOTE_MAX` characters, line breaks kept (`volunteerNoteOf`), read after the point's other boxes; both empty
- *   takes the note off. A request that names neither box keeps the note as it is.
+ *   takes the note off. A request that names neither box keeps the note as it is. When the note's words change — written,
+ *   changed in either language, taken off — the same update stamps the moment (`volunteer_note_changed_at`, §1011), which tells
+ *   «Trimite fiecăruia punctul lui» to write again to whoever was told the point before; a save that leaves the words as they
+ *   were (after the trimming above) stamps nothing, and neither does a name, a kilometre or coordinates changed.
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
  *   stand at no point again — the reference's own `ON DELETE SET NULL` — and the result says how many.
  * - **How:** in one transaction under the event row's lock (`FOR NO KEY UPDATE`, as the presses of «Poze și hărți» (`plan.ts`) and «Pune
@@ -340,8 +371,8 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  *   the plan's points. A press that changes nothing writes nothing and audits nothing.
  * - **The trail:** one row a change — `volunteer_plan.point_added`, `.point_changed`, `.point_removed` — with the point's id,
  *   whether it is the plan's own, and its place, name, kilometre and coordinates before and after; a removal also says how
- *   many people it freed, and a change of the note whether there was one before and is one after (`volunteerNote`), never its
- *   words. A count, never a person.
+ *   many people it freed, a change of the note whether there was one before and is one after (`volunteerNote`), and an add
+ *   whether the point came with one (`volunteerNote: { from: null, to }`, §1011) — never its words. A count, never a person.
  *
  * Nobody is emailed, no state or number of a person moves, and no public cache tag is expired: no public page reads these rows.
  */
@@ -351,8 +382,10 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
   if (!isUuid(request.eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
   const pointId = request.kind === "add" ? null : text(request.id).trim().toLowerCase();
   if (pointId !== null && !isUuid(pointId)) throw new PlanPointGone();
-  // What an «Adaugă punctul» typed is held to the rules before anything is locked: it needs no row to be read.
+  // What an «Adaugă punctul» typed is held to the rules before anything is locked: it needs no row to be read — the point's
+  // boxes first, then its «Notă pentru voluntari» (§1011), in the order of the form's boxes.
   const added = request.kind === "add" ? wordsOf(request) : null;
+  const addedNote = request.kind === "add" ? volunteerNoteOf(request) : null;
 
   return db.transaction(async (tx): Promise<PlanPointResult> => {
     // NO KEY UPDATE: a sign-up's foreign-key check is not made to wait, and the editor's save (FOR UPDATE) still takes its turn.
@@ -361,7 +394,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
     const audit = (action: "volunteer_plan.point_added" | "volunteer_plan.point_changed" | "volunteer_plan.point_removed", metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata, now });
 
-    if (added) {
+    if (added && addedNote) {
       const [own] = await tx
         .select({ count: sql<number>`count(*)::int`, last: sql<number | null>`max(${eventCheckpoints.position})` })
         .from(eventCheckpoints)
@@ -381,10 +414,14 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
           noteRo: null,
           noteEn: null,
           onProfile: false,
+          // The volunteers' own note (§1011), when the add carries one — and the moment it was written: nobody stands at a point
+          // that did not exist, so nobody is told again for it.
+          ...noteColumns(addedNote),
+          volunteerNoteChangedAt: addedNote.ro === null ? null : now,
           createdAt: now,
         })
         .returning({ id: eventCheckpoints.id });
-      await audit("volunteer_plan.point_added", { pointId: row.id, planOnly: true, from: null, to: added });
+      await audit("volunteer_plan.point_added", { pointId: row.id, planOnly: true, from: null, to: added, volunteerNote: { from: null, to: addedNote.ro !== null } });
       return { changed: true, outcome: "added", id: row.id };
     }
 
@@ -432,7 +469,6 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
     // point's other boxes, so the first thing wrong is refused first; a request that names neither box keeps it.
     const noteBefore: VolunteerNote = { ro: current.volunteerNoteRo, en: current.volunteerNoteEn };
     const noteAfter = (): VolunteerNote => (request.kind === "edit" && namesTheNote(request) ? volunteerNoteOf(request) : noteBefore);
-    const noteColumns = (note: VolunteerNote) => ({ volunteerNoteRo: note.ro, volunteerNoteEn: note.en });
 
     if (current.planOnly) {
       const after = wordsOf(request);
@@ -440,7 +476,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
       if (sameWords(before, after) && sameNote(noteBefore, note)) return { changed: false, id: current.id };
       await tx
         .update(eventCheckpoints)
-        .set({ ...columnsOf(after), ...noteColumns(note) })
+        .set({ ...columnsOf(after), ...noteColumns(note), ...noteMoment(noteBefore, note, now) })
         .where(and(eq(eventCheckpoints.id, current.id), eq(eventCheckpoints.eventId, event.id), eq(eventCheckpoints.planOnly, true)));
       await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: true, from: before, to: after, ...noteTrail(noteBefore, note) });
       return { changed: true, outcome: "edited", id: current.id };
@@ -454,7 +490,12 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
     if (sameWords(before, after) && sameNote(noteBefore, note)) return { changed: false, id: current.id };
     await tx
       .update(eventCheckpoints)
-      .set({ latitude: after.latitude === null ? null : after.latitude.toFixed(6), longitude: after.longitude === null ? null : after.longitude.toFixed(6), ...noteColumns(note) })
+      .set({
+        latitude: after.latitude === null ? null : after.latitude.toFixed(6),
+        longitude: after.longitude === null ? null : after.longitude.toFixed(6),
+        ...noteColumns(note),
+        ...noteMoment(noteBefore, note, now),
+      })
       .where(and(eq(eventCheckpoints.id, current.id), eq(eventCheckpoints.eventId, event.id)));
     await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: false, from: before, to: after, ...noteTrail(noteBefore, note) });
     return { changed: true, outcome: "edited", id: current.id };
