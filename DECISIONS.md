@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.94-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.94-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31834,3 +31834,21 @@ Baseline `BR-V4.93-2026-11-20`.
 **For the lawyer, not decided here.** Whether an acceptance at every sign-in is proportionate (art. 5(1)(c) GDPR), and how long each one is kept — they now accumulate, one per sign-in, and still go with the account (`docs/OWNER-TODO.md` item 26).
 
 Baseline `BR-V4.94-2026-11-20`.
+
+## 1027. «Cronometrare»'s «Finish» with a number typed records it, and a short toast says every press that did something (amending §986 and §1008)
+
+**The owner, 2026-11-20, the day before the race, with a picture of «Cronometrare»:** «si duoa ce apas aici "Finish" trebuie sa se golasca inoutul si a am un mic toast». A volunteer at the line had typed a number and pressed «Finish», the button under the box's row, and the number stayed in the box: «Finish» kept a moment for a bunch (§986, named so in §1008) and recorded nothing, and nothing a phone held at arm's length shows said that a press had worked — only the line under the box.
+
+**Decision.**
+
+1. **«Finish» with a number typed records it, exactly as «Sosit» does** (`domain/finish-line.ts#finishPress`, over `readBox`): it is the box's own press (the island's `sendBox`) — the same queue, the moment read at the tap (`tapMoment`: the oldest kept «Finish» moment still young, else that instant on the server's clock), a finished elite's number asked first (§1010), something that is no number answered by the hint — and it keeps no moment. The box is empty at once and keeps the focus, given inside the press's own tap so a phone's keyboard stays up, as «Sosit» does.
+2. **«Finish» with the box empty keeps a moment, as before** — spaces alone are empty —, the focus left where it was.
+3. **A short toast after every press that did something**, the house's (`useToast`, §384), at the top under the header (§496): a number the server answered recorded, however it was pressed — the box, «Finish», an elite's button, a press that waited for the signal — «Nr. 205 — sosit la 0:23:41», at the time the press's line shows, an elite's with its label, «Nr. 7 (Andrei) — sosit la 0:31:05» — words of the number, never of the person (§1010) —; and a moment kept, «Timp prins la 0:23:41 — scrie numărul», as its chip says it: the time since the gun, or the clock's hour before the gun. In English «No. 205 — finished at 0:23:41» and «Time caught at 0:23:41 — type the number» (`Admin.timing.toast.*`, under 200 characters; a label longer than 80 characters is cut). It stays two and a half seconds (`FINISH_TOAST_MS`), is polite for a screen reader (the house's live region), never takes the focus, and is shown after the next paint, never inside the press (§371). **The house's toast learns two things for it**, each an opt-in of a notice made in the browser and never carried by a flash (`shared/feedback/notice.ts`): a **lane** — a bunch's presses come a second apart, and a toast waiting its turn behind the last one would say a number seconds late: the newest of a lane takes the place of its lane's toast on screen, and of one waiting (`toastQueueReducer`) —; and **pass-through** — no close button and every tap through it (`ToastRegion`), so a tap meant for the box, «Sosit», «Finish» or an elite's button under the toast always reaches it. A press refused, a number already stored, a press still waiting and a question cancelled toast nothing: the press's own line under the box says what became of it, as before. A press answered after the island left the page — another race chosen — toasts nothing.
+4. **The line under the box says it**, once the page has its scripts: «Cu un număr scris, «Finish» sau «Sosit» îl trece; fără număr, «Finish» prinde doar timpul, pentru un grup.» — “With a number typed, «Finish» or «Finished» enters it; with no number, «Finish» catches the time alone, for a bunch.” (`Admin.timing.boxHelp`). «Vin mulți deodată?» says «Cu căsuța goală, apasă «Finish»…», and the guide's two «Cronometrare» tasks, the runbook, `SETUP.md` and `AGENTS.md` say the same.
+5. **With scripts off nothing changes**: the box's form posts the number as before and the page comes back with its sentence; «Finish» and the line that names it are not drawn.
+
+**Refused.** «Finish» keeping a moment and leaving the number in the box: the owner's picture is that press, and a number left in the box reads as nothing done. One press keeping a moment and recording the number too: one press is one finish. A toast at the tap, before the server answers: it would say «sosit» of a press then refused or still waiting, and the line under the box already says «se salvează…» at once. A toast for a number already stored: its warning line says who had it and when, and a green toast beside it would read as saved. The house's toast as it was: queued, a bunch's tenth toast would be read twenty seconds late, and its close button at the top of the page would take a tap meant for an elite's button.
+
+**Not in this change.** The server, the queue and the stamp; «Clasament». A number half typed when «Finish» is pressed is recorded as typed, as «Sosit» records it — the box says what goes, and a wrong press is undone with «Anulează» for ten minutes, as any.
+
+Baseline `BR-V4.95-2026-11-20`.

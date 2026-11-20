@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.95-2026-11-20
+
+- **«Finish» with a number typed records it, and a toast says each press** — on «Cronometrare» a number in the box then «Finish» is entered as «Sosit» enters it, the box emptied and keeping the focus; with the box empty «Finish» still catches a time for a bunch. A two-and-a-half-second toast says «Nr. 205 — sosit la 0:23:41» once the site has the press, or the time caught — nothing for a press refused, already in or still waiting. §1027.
 ## BR-V4.94-2026-11-20
 
 - **The team's undertaking at every sign-in** — a «Voluntar», «Redactor», «Organizator» or «Tehnic» accepts it each time they sign in, not once per account: the session carries the moment it was signed in, every acceptance is kept with the sign-in it answers, «Acord» and the guide say so, and the template's section 10 now does too — a draft for the club to approve. §1026.

@@ -7,8 +7,11 @@ import Snackbar from "@mui/material/Snackbar";
 import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 import { type NoticeKind, TOAST_AUTO_HIDE_MS } from "./notice";
 
-/** One toast as drawn: its sentence already in the reader's language, and an id that changes with every toast. */
-export type DrawnToast = { id: number; kind: NoticeKind; sentence: string; autoHideMs?: number };
+/**
+ * One toast as drawn: its sentence already in the reader's language, and an id that changes with every toast — and, for a toast no
+ * tap may land on (`passThrough`, §1027), no close button and every tap through to the page under it.
+ */
+export type DrawnToast = { id: number; kind: NoticeKind; sentence: string; autoHideMs?: number; passThrough?: boolean };
 
 /** Where every toast is anchored: top centre, just under the sticky site header (`HEADER_CLEARANCE_PX`). */
 export const TOAST_ANCHOR = { vertical: "top", horizontal: "center" } as const;
@@ -61,7 +64,8 @@ export default function ToastRegion({
           // At the top (§496), just under the sticky site header — the one pair the theme's
           // `scroll-padding-top` also reads (`HEADER_CLEARANCE_PX`) — so it never covers the
           // header's way out, nor the footer's bar or the editor's sticky save row at the bottom.
-          sx={{ top: { xs: TOAST_TOP_PX.xs, sm: TOAST_TOP_PX.sm } }}
+          // A pass-through toast (§1027) takes no tap: each goes to the button under it.
+          sx={{ top: { xs: TOAST_TOP_PX.xs, sm: TOAST_TOP_PX.sm }, ...(toast.passThrough ? { pointerEvents: "none" } : {}) }}
           data-testid="toast"
         >
           <Alert
@@ -70,11 +74,14 @@ export default function ToastRegion({
             severity={toast.kind}
             variant="filled"
             // The close button drawn here rather than through `onClose`: MUI's own is 28 px, and a
-            // thumb's target is 44 (BR-REQ-041-01 criterion 6).
+            // thumb's target is 44 (BR-REQ-041-01 criterion 6). None on a pass-through toast,
+            // which goes by itself in a few seconds and has nothing to tap.
             action={
-              <IconButton aria-label={closeLabel} color="inherit" onClick={onDismiss} sx={{ minWidth: 44, minHeight: 44 }}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
+              toast.passThrough ? undefined : (
+                <IconButton aria-label={closeLabel} color="inherit" onClick={onDismiss} sx={{ minWidth: 44, minHeight: 44 }}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )
             }
             sx={{ width: "100%", alignItems: "center", boxShadow: 6, "& .MuiAlert-action": { pt: 0, alignSelf: "center" } }}
           >
