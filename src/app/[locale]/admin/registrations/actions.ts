@@ -423,7 +423,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     // The row the entry wrote or restarted: the desk comes back to it, in the section its state put it in (§1002).
     let createdId: string | null = null;
     try {
-      // The organizers' (§NNN): a walk-in on race morning is entered by the Organizer or an
+      // The organizers' (§1025): a walk-in on race morning is entered by the Organizer or an
       // Administrator (BR-REQ-037-07), the desk's other roles call one of them — refused here
       // (FORBIDDEN, the boxes kept) and again in the service.
       const actor = await requireStaffCapability(canEnterAtDesk);

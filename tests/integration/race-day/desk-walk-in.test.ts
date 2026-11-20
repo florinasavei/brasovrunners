@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §67 for the desk's walk-ins), BR-REQ-037-07, BR-REQ-037-08, BR-REQ-060-01 — the owner, 2026-11-20: «Si voluntarii
+ * §1025 (amending §67 for the desk's walk-ins), BR-REQ-037-07, BR-REQ-037-08, BR-REQ-060-01 — the owner, 2026-11-20: «Si voluntarii
  * nu pot adauga pe cineva, doar organizatorii si administratorii pot», and of the desk's free spares: «scrie aici și ceva tooltip
  * cum se dau aceste numere de rezervă libere».
  *
@@ -196,7 +196,7 @@ async function redirectOf(run: Promise<unknown>): Promise<string> {
   throw new Error("expected a redirect");
 }
 
-describe("§NNN BR-REQ-037-08 «Adaugă pe cineva» on the desk", () => {
+describe("§1025 BR-REQ-037-08 «Adaugă pe cineva» on the desk", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: is drawn for the Organizer, the Administrator and the Superadministrator, and no line in its place`, async () => {
       state.locale = locale;
@@ -238,7 +238,7 @@ describe("§NNN BR-REQ-037-08 «Adaugă pe cineva» on the desk", () => {
   });
 });
 
-describe("§NNN BR-REQ-037-07 BR-REQ-060-01 the staff entry", () => {
+describe("§1025 BR-REQ-037-07 BR-REQ-060-01 the staff entry", () => {
   it("is the 404 of an unknown page for the Voluntar, the Redactor, Tehnic and a member, from the desk and from the list", async () => {
     for (const role of [...CALLS, "MEMBER"] as const) {
       state.actor = staff[role];
@@ -283,7 +283,7 @@ describe("§NNN BR-REQ-037-07 BR-REQ-060-01 the staff entry", () => {
   });
 });
 
-describe("§NNN the spares' «i» beside «Numere de rezervă libere (N): …»", () => {
+describe("§1025 the spares' «i» beside «Numere de rezervă libere (N): …»", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: stands beside the line for every desk role and says that role's words`, async () => {
       state.locale = locale;

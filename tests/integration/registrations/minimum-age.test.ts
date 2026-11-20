@@ -49,7 +49,7 @@ let admin: StaffUser;
 /*
   The staff form's action, for the one thing only the action decides: what the refusal says.
   Getters, resolved when the action calls them (`signature-name.test.ts` does the same): the
-  database under test, and the Organizer at the desk as the signed-in staff member (the walk-in is theirs since §NNN).
+  database under test, and the Organizer at the desk as the signed-in staff member (the walk-in is theirs since §1025).
 */
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("@/modules/staff-identity/session", () => ({
@@ -89,7 +89,7 @@ beforeEach(async () => {
   }
   [organizer] = await db
     .insert(staffUsers)
-    // The Organizer: who enters a walk-in on race morning since §NNN (the desk's volunteer calls one).
+    // The Organizer: who enters a walk-in on race morning since §1025 (the desk's volunteer calls one).
     .values({ email: "organizator@dev.test", displayName: "Organizator", role: "MODERATOR" })
     .returning();
   [admin] = await db

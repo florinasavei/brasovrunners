@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-037-08, BR-REQ-060-01, BR-REQ-041-01 criterion 6 — «Adaugă pe cineva» is the organizers' (the owner, 2026-11-20:
+ * §1025, BR-REQ-037-08, BR-REQ-060-01, BR-REQ-041-01 criterion 6 — «Adaugă pe cineva» is the organizers' (the owner, 2026-11-20:
  * «Si voluntarii nu pot adauga pe cineva, doar organizatorii si administratorii pot»), and the desk's line of free spares carries
  * an «i» that says how a spare is given («scrie aici și ceva tooltip cum se dau aceste numere de rezervă libere»), walked on a
  * production build at 320 pixels and on a desktop:
@@ -100,7 +100,7 @@ async function openTip(page: Page, tip: Locator): Promise<Locator> {
   return tooltip;
 }
 
-test.describe("§NNN the desk: «Adaugă pe cineva» for the organizers, and the spares explained", () => {
+test.describe("§1025 the desk: «Adaugă pe cineva» for the organizers, and the spares explained", () => {
   test.describe.configure({ timeout: 120_000 });
 
   test("a «Voluntar» sees no «Adaugă pe cineva», reads who adds a walk-in, and opens the spares' «i»", async ({ page }) => {

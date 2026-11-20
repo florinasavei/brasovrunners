@@ -50,7 +50,7 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
-/** Who enters a walk-in since §NNN: the Organizer (and the Administrators), never the desk's volunteer. */
+/** Who enters a walk-in since §1025: the Organizer (and the Administrators), never the desk's volunteer. */
 let organizer: StaffUser;
 
 beforeAll(async () => {
@@ -208,7 +208,7 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     expect(trail.every((row) => row.actorStaffUserId === organizer.id)).toBe(true);
   });
 
-  it("refuses the walk-in to the desk's volunteer, before anything is written (§NNN)", async () => {
+  it("refuses the walk-in to the desk's volunteer, before anything is written (§1025)", async () => {
     const event = await createInternalEvent(10);
     expect(await codeOf(enter(event, "walkin@example.org", { fastTrack: true, actor: volunteer }))).toBe("FORBIDDEN");
     expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toEqual([]);

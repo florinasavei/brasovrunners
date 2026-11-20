@@ -57,7 +57,7 @@ export const dynamic = "force-dynamic";
 /**
  * Enter a registration for somebody who asked in person (BR-REQ-037-05).
  *
- * The Organizer, the Administrator and the Superadministrator (`canEnterAtDesk`, §NNN, amending
+ * The Organizer, the Administrator and the Superadministrator (`canEnterAtDesk`, §1025, amending
  * §67, which opened it to every desk role): from the desk's «Adaugă pe cineva» and from the
  * registrations list alike. Any other role gets the 404 an unknown page gets — asserted here and
  * again in the action and once more in the service. The form is short on purpose: the club is
@@ -135,7 +135,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   return (
     <Stack spacing={3}>
       <Typography variant="body2">
-        {/* Back where they came from: the desk, or the list — every role that enters reads it (§289, §NNN). */}
+        {/* Back where they came from: the desk, or the list — every role that enters reads it (§289, §1025). */}
         {fromDesk ? (
           <Link href="/admin/checkin">{t("desk.backToDesk")}</Link>
         ) : (

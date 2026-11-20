@@ -14,7 +14,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, BR-REQ-060-01, BR-REQ-037-07, BR-REQ-037-08 — «Adaugă pe cineva» is the organizers' (the owner, 2026-11-20: «Si
+ * §1025, BR-REQ-060-01, BR-REQ-037-07, BR-REQ-037-08 — «Adaugă pe cineva» is the organizers' (the owner, 2026-11-20: «Si
  * voluntarii nu pot adauga pe cineva, doar organizatorii si administratorii pot»), and the desk's spares line explains itself
  * («scrie aici și ceva tooltip cum se dau aceste numere de rezervă libere»).
  *
@@ -27,7 +27,7 @@ import ro from "../../../messages/ro.json";
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 const catalogues = { ro, en } as const;
 
-describe("§NNN BR-REQ-060-01 who enters somebody at the desk", () => {
+describe("§1025 BR-REQ-060-01 who enters somebody at the desk", () => {
   it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s enter exactly when it reads the registrations, by role or as an actor", (role) => {
     expect(canEnterAtDesk(role)).toBe(canReadRegistrations(role));
     // A grant neither gives the entry nor takes it away.
@@ -62,7 +62,7 @@ describe("§NNN BR-REQ-060-01 who enters somebody at the desk", () => {
   });
 });
 
-describe("§NNN the spares' «i»: words by role", () => {
+describe("§1025 the spares' «i»: words by role", () => {
   const keysFor = (role: StaffRole) => sparesTipText((key) => key, role).split("\n");
 
   it("tells a desk role that cannot enter to call an organizer, and nothing it cannot press", () => {

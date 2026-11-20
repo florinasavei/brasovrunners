@@ -342,7 +342,7 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
   });
 
   /**
-   * Since `DECISIONS.md` §67 the entry form is a desk verb, and since §NNN the organizers' one: a
+   * Since `DECISIONS.md` §67 the entry form is a desk verb, and since §1025 the organizers' one: a
    * walk-in on race morning is typed in by the Organizer or an Administrator, and the desk's
    * volunteer — the lowest role — calls one of them and is refused here. What the Organizer still
    * cannot do is anything past the entry: cancel, erase, rename, resend.

@@ -8,7 +8,7 @@ import { openFold } from "./support/fold";
  * BR-REQ-037-07, BR-REQ-037-08 — race morning, end to end, as a volunteer would live it.
  *
  * The Organizer enters a walk-in who never registered at the desk — «Adaugă pe cineva» is the
- * organizers' since §NNN — and a Contributor — the lowest role, which is what a volunteer at the
+ * organizers' since §1025 — and a Contributor — the lowest role, which is what a volunteer at the
  * pickup table is given — opens the desk, finds no «Adaugă pe cineva» but the line that says who
  * adds a walk-in, finds the walk-in confirmed on the spot, marks them here, and then opens the page
  * their QR would have opened and takes the check-in back. The QR image itself is fetched as the
@@ -24,7 +24,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
   test.describe.configure({ timeout: 90_000 });
 
   test("an organizer enters a walk-in; a volunteer finds them, checks them in, and opens their QR page", async ({ page }) => {
-    // Three sign-ins in one story since §NNN: the Administrator, the Organizer, the volunteer.
+    // Three sign-ins in one story since §1025: the Administrator, the Organizer, the volunteer.
     test.setTimeout(150_000);
     // An organizer opens registration on the featured event (the seed configures none).
     await signIn(page, "Dev Administrator");
@@ -35,7 +35,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // organizer's own session instead of the buttons.
     await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
 
-    // The Organizer at the desk: the walk-in is theirs to enter (§NNN).
+    // The Organizer at the desk: the walk-in is theirs to enter (§1025).
     await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/checkin");
     // The desk works the featured event. A native select, so this needs no hydration.
@@ -72,7 +72,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(page.getByText("Cum merge ziua cursei, pas cu pas")).toBeVisible();
     await page.selectOption('select[name="eventId"]', eventId);
     await page.getByRole("button", { name: "Caută" }).click();
-    // Somebody not on the list is the organizers' to add (§NNN): no press, the line in its place.
+    // Somebody not on the list is the organizers' to add (§1025): no press, the line in its place.
     await expect(page.getByRole("link", { name: "Adaugă pe cineva" })).toHaveCount(0);
     await expect(page.getByTestId("desk-walk-in-call")).toBeVisible();
     await hydrated(page);

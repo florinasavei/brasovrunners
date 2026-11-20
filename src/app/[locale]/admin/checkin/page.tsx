@@ -162,7 +162,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
   });
   // The chosen event's free desk spares (§444), in one line beside the counts (§979): what «Adaugă pe cineva» picks from.
   const spareLine = eventId ? await spareLineWords((await readSpareLines(db, [eventId]))[eventId] ?? { kind: "none" }, locale) : null;
-  // «Adaugă pe cineva» is the organizers' (§NNN, `canEnterAtDesk`): every other desk role reads, in its place, that an organizer adds them.
+  // «Adaugă pe cineva» is the organizers' (§1025, `canEnterAtDesk`): every other desk role reads, in its place, that an organizer adds them.
   const mayEnter = canEnterAtDesk(actor);
   const walkInHref = eventId && mayEnter
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
@@ -301,7 +301,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
         </Stack>
       )}
       {/* The free spares (§979, §444): the blank bibs a walk-in is handed, as ranges — or why there are none — and beside them an
-          «i» that says how a spare is given, in the words of the reader's role (§NNN). */}
+          «i» that says how a spare is given, in the words of the reader's role (§1025). */}
       {counts && spareLine && (
         <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
           <Typography variant="body2" color="text.secondary" data-testid="desk-spares">

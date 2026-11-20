@@ -48,7 +48,7 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
-/** Who enters a walk-in since §NNN: the Organizer; the volunteer keeps the paper confirmation and the number by hand. */
+/** Who enters a walk-in since §1025: the Organizer; the volunteer keeps the paper confirmation and the number by hand. */
 let organizer: StaffUser;
 
 beforeAll(async () => {

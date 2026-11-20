@@ -109,7 +109,7 @@ function assertDesk(actor: Pick<StaffUser, "role">): void {
   }
 }
 
-/** Entering somebody (BR-REQ-037-05, -07): the Organizer's and the Administrators' since §NNN, never a desk role's alone. */
+/** Entering somebody (BR-REQ-037-05, -07): the Organizer's and the Administrators' since §1025, never a desk role's alone. */
 function assertDeskEntry(actor: Pick<StaffUser, "role">): void {
   if (!canEnterAtDesk(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter a registration; an organizer enters a walk-in`);
@@ -596,7 +596,7 @@ function assertHandedBibNumber(bibNumber: number | undefined): void {
  * `fastTrack` says they are standing at the desk, in which case `confirmRegistrationByStaff`
  * takes it from there (BR-REQ-037-07).
  *
- * A desk verb since `DECISIONS.md` §67, the organizers' since §NNN: a walk-in on race morning is
+ * A desk verb since `DECISIONS.md` §67, the organizers' since §1025: a walk-in on race morning is
  * entered by the Organizer, the Administrator or the Superadministrator (`canEnterAtDesk`); the
  * desk's other roles call one of them, and a post of theirs is refused here (FORBIDDEN) before
  * anything is read or written.

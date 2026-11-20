@@ -47,7 +47,7 @@ describe("§444 BR-REQ-037-07 two organizers at the desk handing one spare, on t
     noticeIds.push(...(await approveNotices(db, ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"], NOW)));
     const [staff] = await db
       .insert(staffUsers)
-      // The Organizer at the desk: a walk-in is the organizers' to enter since §NNN.
+      // The Organizer at the desk: a walk-in is the organizers' to enter since §1025.
       .values({ email: `spare.race.${Date.now()}@example.ro`, displayName: "Desk", role: "MODERATOR" })
       .returning();
     staffId = staff.id;

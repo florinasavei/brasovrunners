@@ -693,7 +693,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],
-    // §NNN: «Adaugă pe cineva» at the desk and the staff entry — the readers of the list; the desk's Volunteer, the Redactor and Tehnic call one of them.
+    // §1025: «Adaugă pe cineva» at the desk and the staff entry — the readers of the list; the desk's Volunteer, the Redactor and Tehnic call one of them.
     canEnterAtDesk: /*        */ [false, false, false, true, false, true, true],
     canManageTestRegistrations: [false, false, false, false, false, true, true],
     canSeeDiagnostics: /*     */ [false, false, false, false, true, true, true],

@@ -890,7 +890,7 @@ export function canReadRaceDayDeclarations(subject: StaffSubject): boolean {
 }
 
 /**
- * **Entering somebody at the race-day desk (§NNN, amending §67 for the desk's walk-ins)** — «Adaugă pe cineva» on «Prezența»,
+ * **Entering somebody at the race-day desk (§1025, amending §67 for the desk's walk-ins)** — «Adaugă pe cineva» on «Prezența»,
  * the staff entry it opens (`admin/registrations/new`) and that entry's action and service. The owner, 2026-11-20: «Si voluntarii
  * nu pot adauga pe cineva, doar organizatorii si administratorii pot». Whoever reads the participant list (`canReadRegistrations`):
  * **the Organizer, the Administrator and the Superadministrator**, written as that function so moving the line moves both (§953) —
@@ -977,7 +977,7 @@ export function canManageRegistrations(subject: StaffSubject): boolean {
 /**
  * The race-day desk (BR-REQ-037-07, BR-REQ-037-08; `DECISIONS.md` §67): every staff session.
  *
- * Entering somebody who is not on the list — «Adaugă pe cineva» — is narrower since §NNN: the
+ * Entering somebody who is not on the list — «Adaugă pe cineva» — is narrower since §1025: the
  * Organizer's and the Administrators' (`canEnterAtDesk`); every other desk role calls one of them.
  *
  * A volunteer handing out numbers is the lowest staff role — CONTRIBUTOR; a member is no staff
@@ -1182,7 +1182,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *     volunteers     canManageVolunteers      `admin/volunteers/(list)/layout.tsx` — the events'
  *                                             volunteers as one list (§839); the verbs ask again
  *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose; its
- *                                             «Adaugă pe cineva» asks `canEnterAtDesk` (§NNN)
+ *                                             «Adaugă pe cineva» asks `canEnterAtDesk` (§1025)
  *     gallery        canReadContent           `admin/gallery/page.tsx`
  *     pages          isEditorial              `admin/pages/page.tsx`
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the

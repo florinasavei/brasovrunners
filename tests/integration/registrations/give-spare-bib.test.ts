@@ -49,7 +49,7 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
-/** Who enters the walk-ins this file sets up since §NNN: the Organizer, never the desk's volunteer. */
+/** Who enters the walk-ins this file sets up since §1025: the Organizer, never the desk's volunteer. */
 let organizer: StaffUser;
 
 beforeAll(async () => {

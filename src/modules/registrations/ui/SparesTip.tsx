@@ -14,7 +14,7 @@ type SparesTipKey =
   | "desk.sparesTip.given";
 
 /**
- * The «i» beside the desk's «Numere de rezervă libere (N): …» (§NNN; the owner, 2026-11-20: «scrie aici și ceva tooltip cum se dau
+ * The «i» beside the desk's «Numere de rezervă libere (N): …» (§1025; the owner, 2026-11-20: «scrie aici și ceva tooltip cum se dau
  * aceste numere de rezervă libere»): what the spares are and how one is given, a line a fact, each true of the code — and in the
  * words of the reader's role, so a desk role is never told to press what it cannot press:
  *
