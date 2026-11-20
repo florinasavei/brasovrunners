@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.92-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.93-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.93-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31788,3 +31788,19 @@ Baseline `BR-V4.92-2026-11-20`.
 **Proof.** `tests/unit/content/raffle-fold-render.test.ts` (the fold, its bar in both languages, its names, open after its save and around a refused box, which save opens it, nothing about the volunteers' numbers in it or in either catalogue), `tests/integration/volunteers/raffle-fold.test.ts` (the editor page's flag, the save's `raffle=1`, «Schimbă în editor» on `#box-raffle`, the tab counting V001 and V002 with nothing about setting numbers, a straggler's row alone, no page giving a number), `tests/integration/volunteers/raffle-public-screens.test.ts` (the words for «V7» unticked, and the plain ones elsewhere), `tests/e2e/raffle-fold-and-volunteer-numbers.spec.ts` (at 320 pixels and on a desktop).
 
 Baseline `BR-V4.92-2026-11-20`.
+
+## 1025. «Adaugă pe cineva» at the desk is the organizers', and the desk's free spares say how one is given
+
+**The owner, 2026-11-20**, looking at the desk's «Numere de rezervă libere»: «scrie aici și ceva tooltip cum se dau aceste numere de rezervă libere», and «Si voluntarii nu pot adauga pe cineva, doar organizatorii si administratorii pot».
+
+**Decision, amending §67 for the desk's walk-ins.**
+
+1. **Entering somebody at the desk is the organizers'.** «Adaugă pe cineva» on «Prezența», the staff entry it opens (`/admin/registrations/new`) and that entry's action and service answer to one predicate of their own, `canEnterAtDesk`, written as `canReadRegistrations` (§953): the Organizer, the Administrator and the Superadministrator — the readers of the list the entry writes onto. For the desk's Volunteer, the Redactor and Tehnic the button is not drawn and one line stands in its place, «Cineva care nu e pe listă? Cheamă un organizator: doar el îl poate adăuga.»; the page is the 404 an unknown page gets; the action refuses FORBIDDEN with the boxes kept, and `createRegistrationByStaff` asserts the same first, before anything is read or written (BR-REQ-060-01). §67 had made the entry a desk verb for every staff role; every other desk verb stays every desk role's — the paper confirmation and the spare it hands, a number by hand, «Marchează prezent», the raffle sign-up and taking a runner off the raffle or back (§1020), the person's spoken wish to appear by name (§1017) — and the entry from the registrations list, the same page, is unchanged for the Organizer and the Administrators.
+
+2. **The spares line explains itself.** Beside «Numere de rezervă libere (N): …» an «i» (`SparesTip`, through the house's `InfoTip`: hover, keyboard focus or a tap, 44 pixels) says what the spares are and how one is given, a line a fact of the code, chosen by the reader's role so nobody is told to press what they cannot press: bibs printed ahead with an empty name line, for people who come on the day, never handed by the ordinary number allocation (§444); on a row with no number, «Confirmă pe hârtie» and «Salvează nr.» already hold the lowest free spare; somebody not on the list — «Adaugă pe cineva», its «Numărul dat acum» on the lowest free spare, or, for the other desk roles, call an organizer; for whoever opens the registration's page, «Dă-i un BIB gol» on a confirmed runner with no number (§989) — and, for the Administrators, in place of a number, which is retired — and an invitation sent with «La confirmare primește un BIB gol», which takes the lowest free one at the confirmation (§992); a number given leaves the list and is never given again; an Administrator prints them in the event's editor, under «Alocare și tipărire». Each line is at most 200 characters, in Romanian and English.
+
+3. **The rule texts say it**: CLAUDE.md's staff row, AGENTS.md §15.11 (the fast track and «Who»), BUSINESS.md's «Race day has a desk» paragraph and its Volunteer and Organizer rows, the predicates' docs in `roles.ts`, and the desk's steps and the guide in both languages — a volunteer calls an organizer for somebody who is not on the list.
+
+**Refused.** Gating only the button and the page while the service still took a volunteer's post — a hidden button is not a permission. A new role or a per-person grant for the entry: the people the owner named are exactly the readers of the list, so the line moves with theirs. One tip for every role: it would tell a volunteer to press «Adaugă pe cineva» and «Dă-i un BIB gol», which they cannot.
+
+Baseline `BR-V4.93-2026-11-20`.

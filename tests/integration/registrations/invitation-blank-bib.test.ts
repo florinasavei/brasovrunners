@@ -216,12 +216,12 @@ async function sign(event: EventInput, registration: Registration, when: Date): 
   return signDeclaration(db, event, registration.id, await signingInput(db, when, registration.registeredName), when);
 }
 
-/** A walk-in at the desk, confirmed on paper with the spare in the volunteer's hand (§444). */
+/** A walk-in at the desk, confirmed on paper with the spare in hand (§444) — entered by the Organizer since §1025. */
 function walkIn(event: EventInput, firstName: string, bibNumber: number, when: Date) {
   serial += 1;
   return createRegistrationByStaff(
     db,
-    desk,
+    organizer,
     { eventId: event.id, firstName, lastName: "Pop", email: `walk-in-${serial}@example.invalid`, locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true, bibNumber },
     when,
   );

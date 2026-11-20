@@ -8010,7 +8010,7 @@
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
         "Fiecare om de la masă intră cu contul lui, nu cu al altcuiva: „Jurnal” arată cine a scanat fiecare cod și cine a marcat prezent pe fiecare.",
-        "Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Nu văd adrese de email, nu pot anula pe nimeni și nu pot adăuga pe cineva care nu e pe listă: pentru asta cheamă un organizator.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
         "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
@@ -8020,7 +8020,7 @@
         "Lângă nume scrie „Cu nume” sau „Anonim”; butonul „Afișează numele în clasament” / „Ascunde numele din clasament” îl apeși doar când persoana îți spune ce vrea.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
+        "Nu s-a înscris deloc: un organizator sau un administrator apasă „Adaugă pe cineva” — nume și email. Voluntarul îl cheamă pe unul dintre ei.",
         "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii și în „Jurnal”, cu numele tău.",
@@ -8045,6 +8045,7 @@
       },
       "closed": "Evenimentul s-a încheiat. Masa este închisă: lista se mai poate citi, dar nu se mai marchează nimeni prezent.",
       "walkIn": "Adaugă pe cineva",
+      "walkInCall": "Cineva care nu e pe listă? Cheamă un organizator: doar el îl poate adăuga.",
       "foundByCode": "Găsit după cod.",
       "unknownCode": "Nu există niciun participant cu acest cod. Verifică literele sau caută după nume.",
       "nobody": "Nimeni nu se potrivește.",
@@ -8152,6 +8153,16 @@
           "other": "Numere de rezervă libere ({count}): {numbers}"
         },
         "none": "Nu sunt numere de rezervă pentru această cursă: un Administrator le tipărește din „Alocare și tipărire”."
+      },
+      "sparesTip": {
+        "what": "Rezervele sunt BIB-uri tipărite dinainte, cu linia pentru nume goală, pentru cine vine în ziua cursei. Alocarea obișnuită a numerelor nu le dă niciodată.",
+        "desk": "Pe un rând fără număr, «Confirmă pe hârtie» și «Salvează nr.» au deja în căsuță cea mai mică rezervă liberă: dai BIB-ul acela și îi scrii numele.",
+        "callOrganizer": "Cineva care nu e pe listă: cheamă un organizator. El îl adaugă, cu cea mai mică rezervă liberă deja aleasă.",
+        "walkIn": "La «Adaugă pe cineva», «Numărul dat acum» are deja aleasă cea mai mică rezervă liberă; poți alege alta.",
+        "blankBib": "Pe pagina înscrierii, «Dă-i un BIB gol» dă o rezervă unui alergător confirmat care nu are încă număr.",
+        "blankBibReplace": "Pe pagina înscrierii, «Dă-i un BIB gol» dă o rezervă unui alergător confirmat, și în locul numărului lui (BIB pierdut sau greșit); acela se retrage.",
+        "invitation": "O invitație trimisă cu «La confirmare primește un BIB gol» îi dă persoanei cea mai mică rezervă liberă când e confirmată.",
+        "given": "Un număr dat iese din listă și nu se mai dă nimănui. Rezervele le tipărește un Administrator, în editorul evenimentului, la «Alocare și tipărire»."
       },
       "handedBibPickHelp": "Alege BIB-ul de rezervă pe care i-l dai (cel mai mic e deja ales). „Alt număr…” dacă dai alt număr din cutie; „Fără număr acum” și site-ul alege singur unul.",
       "handedBibOther": "Alt număr…",
@@ -9680,9 +9691,9 @@
             {
               "title": "Ce poate fiecare rol",
               "steps": [
-                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența — și tabul «Tombolă», când cursa are tombolă. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența — și tabul «Tombolă», când cursa are tombolă. Vede nume, stare și număr, niciodată o adresă de email. Pe cine nu e pe listă nu-l adaugă: cheamă un organizator.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
-                "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă; lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
+                "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă, unde adaugă și pe cine nu e pe listă («Adaugă pe cineva»); lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
                 "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
                 "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus evenimentele («Eveniment nou», «Editează», «Creează și publică»), corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
                 "Superadministratorul: tot ce face Administratorul, plus setările tehnice care pot opri serviciul — «Cât de des verifică site-ul», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
@@ -9778,7 +9789,8 @@
             {
               "title": "Nu s-a înscris deloc",
               "steps": [
-                "Apasă «Adaugă pe cineva».",
+                "Ești Voluntar, Redactor sau Tehnic? Nu ai «Adaugă pe cineva»: cheamă un organizator sau un administrator — doar ei adaugă pe cineva care nu e pe listă.",
+                "Organizatorul sau administratorul apasă «Adaugă pe cineva».",
                 "Completează numele, prenumele, data nașterii, telefonul și «Adresa de e-mail a participantului».",
                 "Bifa «Persoana este la masă…» e deja pusă — las-o așa.",
                 "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
@@ -9801,7 +9813,7 @@
                 "Căutat după numărul de concurs, rândul apare în secțiunea «Anulate sau expirate», deschisă.",
                 "Persoana nu mai are loc, chiar dacă are emailul în mână: nu-i da număr și nu o marca prezentă.",
                 "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc.",
-                "Cheamă un organizator. Dacă mai sunt locuri, o înscrieți din nou cu «Adaugă pe cineva»."
+                "Cheamă un organizator. Dacă mai sunt locuri, el o înscrie din nou cu «Adaugă pe cineva»."
               ]
             },
             {

@@ -599,6 +599,8 @@ describe("§1002 BR-REQ-037-08 the way back: each press comes back to its row, i
 
   it("the walk-in's «Adaugă înscrierea» from the desk: back on the new row, in the section its state put it in, opened", async () => {
     await saturday();
+    // The walk-in is the organizers' since §1025: the Organizer presses it at the desk.
+    state.actor = await staff("MODERATOR");
     const to = await redirectedTo(
       createRegistrationAction(
         null,

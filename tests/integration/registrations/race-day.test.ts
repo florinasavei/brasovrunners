@@ -50,6 +50,8 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 let volunteer: StaffUser;
+/** Who enters a walk-in since §1025: the Organizer (and the Administrators), never the desk's volunteer. */
+let organizer: StaffUser;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -89,6 +91,10 @@ beforeEach(async () => {
   [volunteer] = await db
     .insert(staffUsers)
     .values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+    .returning();
+  [organizer] = await db
+    .insert(staffUsers)
+    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" })
     .returning();
 });
 
@@ -130,7 +136,7 @@ async function enter(
 ) {
   await createRegistrationByStaff(
     db,
-    options.actor ?? volunteer,
+    options.actor ?? organizer,
     {
       eventId: event.id,
       firstName: "Desk",
@@ -165,7 +171,7 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
 }
 
 describe("BR-REQ-037-07 the desk confirms a registration", () => {
-  it("fast-tracks a walk-in to CONFIRMED on a paper declaration, under the volunteer's id", async () => {
+  it("fast-tracks a walk-in to CONFIRMED on a paper declaration, under the organizer's id", async () => {
     const event = await createInternalEvent(10);
     const { participant, registration } = await enter(event, "walkin@example.org", { fastTrack: true });
 
@@ -174,7 +180,7 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     // The address was vouched for by a person, not clicked: the row says who, and the
     // participant's own verification is deliberately left unset (criterion 2).
     expect(registration.emailConfirmedAt).toEqual(NOW);
-    expect(registration.emailConfirmedByStaffUserId).toBe(volunteer.id);
+    expect(registration.emailConfirmedByStaffUserId).toBe(organizer.id);
     expect(participant.emailVerifiedAt).toBeNull();
     // A desk code, minted at confirmation (BR-REQ-037-08).
     expect(registration.checkinCode).not.toBeNull();
@@ -185,7 +191,7 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
       .from(declarationAcceptances)
       .where(eq(declarationAcceptances.registrationId, registration.id));
     expect(acceptance.method).toBe("PAPER");
-    expect(acceptance.attestedByStaffUserId).toBe(volunteer.id);
+    expect(acceptance.attestedByStaffUserId).toBe(organizer.id);
     expect(acceptance.typedName).toBe(registration.registeredName);
     expect(acceptance.declarationVersion).toBe(1);
 
@@ -199,7 +205,15 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
       "registration.created_by_staff",
       "registration.confirmed_by_staff",
     ]);
-    expect(trail.every((row) => row.actorStaffUserId === volunteer.id)).toBe(true);
+    expect(trail.every((row) => row.actorStaffUserId === organizer.id)).toBe(true);
+  });
+
+  it("refuses the walk-in to the desk's volunteer, before anything is written (§1025)", async () => {
+    const event = await createInternalEvent(10);
+    expect(await codeOf(enter(event, "walkin@example.org", { fastTrack: true, actor: volunteer }))).toBe("FORBIDDEN");
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toEqual([]);
+    expect(await db.select().from(participants)).toEqual([]);
+    expect((await db.select().from(auditLogs)).filter((row) => row.action.startsWith("registration."))).toEqual([]);
   });
 
   it("puts a fast-tracked walk-in on the waiting list when the event is full, and refuses to promote past capacity", async () => {
@@ -289,9 +303,9 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
   it("refuses without an approved declaration, exactly as the email path does", async () => {
     await resetTables(db);
     await approveDocuments(["PRIVACY_NOTICE"]);
-    [volunteer] = await db
+    [organizer] = await db
       .insert(staffUsers)
-      .values({ email: "v2@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+      .values({ email: "o2@dev.test", displayName: "Organizer", role: "MODERATOR" })
       .returning();
     const event = await createInternalEvent(10);
 
