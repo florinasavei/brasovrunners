@@ -116,6 +116,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // «În afara locurilor» (§643): moves a place, and seats a waiting runner with an email — asked first, saying which.
   setOutsideCapacityAction: [],
   setBibNumberAction: [],
+  // The desk's eye (§1017): the person's spoken wish to appear by name, or no longer — asked first on the row, naming the person and the email.
+  recordListWishAtDeskAction: [],
   createRegistrationAction: [],
   // «Adaugă pe lista de așteptare» (§872): an entry that emails the person, asked first on the queue panel and the registrations list.
   addToWaitlistAction: ["waitlistAddAction"],
@@ -176,6 +178,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   removeRaceDayItemAction: [],
   // «Șterge înscrierea» on a row of «Ziua cursei» → «Tombolă» (§984): a person's raffle sign-up taken off — asked first, naming the person.
   raffleDeleteEntryAction: [],
+  // «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle line (§1020, `checkin/raffle-actions.ts`): every desk role,
+  // asked first naming the person and the number; handed to the line as `exclusionAction`.
+  raffleDeskExclusionAction: ["props.exclusionAction"],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.

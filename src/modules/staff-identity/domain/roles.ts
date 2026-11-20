@@ -40,7 +40,9 @@
  * defending in the same way the old one was: each of those verbs asserts itself in its own
  * service, never in the interface that hides its button. One mark crossed it since, on the owner's
  * word: the raffle tick (§949), which the Organizer presses too and which moves nothing a
- * registration owns — a predicate of its own, `canSetRaffleMark`, never the reading one.
+ * registration owns — a predicate of its own, `canSetRaffleMark`, never the reading one — and, at
+ * the race-day desk, every desk role presses the same mark, asked first and audited with who
+ * (§1020, `canSetRaffleMarkAtDesk`).
  */
 
 /**
@@ -719,9 +721,37 @@ export function canKeepRegistrationNotes(subject: StaffSubject): boolean {
  * as `canKeepRegistrationNotes` keeps the notes apart. Written as `canReadRegistrations` rather than as a list
  * of roles, so moving who reads the list moves who ticks with it, and nobody ever ticks a registration they may
  * not read. The volunteers' own tick is `canManageVolunteers`: the same people, by the same function.
+ *
+ * **The tick on the registrations' list and page, not the desk's press (§1020).** At the race-day desk the same mark
+ * has a door of its own for every desk role, asked first and audited with who — `canSetRaffleMarkAtDesk` below. This
+ * predicate still answers the organizers' tick alone (`setRegistrationRaffleAction`, `raffle-mark.ts#setRegistrationInRaffle`),
+ * and the desk's press never asks it.
  */
 export function canSetRaffleMark(subject: StaffSubject): boolean {
   return canReadRegistrations(subject);
+}
+
+/**
+ * **«Scoate de la tombolă» / «Pune înapoi la tombolă» at the race-day desk (§1020, amending §949 and §953 for the desk).**
+ *
+ * The owner, 2026-11-20: «La fel cum pot marca pe cineva să apară public ar trebui să pot să-l scot de la tombolă ca și
+ * voluntar dar să fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă,
+ * spre exemplu e posibil că unele elite să nu participe la tombolă». So **every staff role that works the desk**
+ * (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer, Tehnic and the Administrators) takes a registration off
+ * the event's raffle, or puts it back, on the desk's raffle line — under a row of the desk's list and on the scanned
+ * person's view — written as that function so the two lines move together; never a member, who is no staff (§524).
+ *
+ * The same mark as the organizers' tick («Participă la tombolă»), so it moves nothing else either: no state, place,
+ * number, count, email or public page, and the person is not told. What the desk adds is the question and the record:
+ * the line asks first, naming the person and the number, and the one audit row carries the staff member and
+ * `door: "desk"`, which «Ziua cursei» → «Jurnal» and the registration's own timeline read back. A predicate of its own —
+ * never `canSetRaffleMark`, which stays the organizers' tick on the lists, nor `canWorkTheDesk` asked by name — so «may
+ * work the desk» and «may take a runner off the raffle there» are two questions a page, an action and a service ask apart
+ * (BR-REQ-060-01). Asserted by `checkin/raffle-actions.ts#raffleDeskExclusionAction` and again by
+ * `raffle-mark.ts#setRegistrationInRaffleAtDesk`; a hidden button is not a permission.
+ */
+export function canSetRaffleMarkAtDesk(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
 }
 
 /**
@@ -847,6 +877,19 @@ export function canReadRaceDayJournal(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Declarații» (§1018)** — every signed declaration of one event on one page: each registration that holds one,
+ * by state, its number, its name, when and how it was signed, the version, the fingerprint, and the links to its PDF and to the
+ * registration. Whoever reads the participant list (`canReadRegistrations`): **the Organizer, the Administrator and the
+ * Superadministrator**, written as that function so moving the line moves both — the declarations are part of the list they read
+ * already (§289), each one a link to the PDF route that asserts the same and records every download. The desk's other roles (the
+ * desk Volunteer, the Redactor, Tehnic) are drawn no tab and meet the 404 an unknown page gets (BR-REQ-060-01); a member is no staff
+ * (§524). Reading only: nothing on the page changes anything, and no identity document is on it — that stays in the PDF.
+ */
+export function canReadRaceDayDeclarations(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject);
+}
+
+/**
  * **Publishing a race's results (§808)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
  * like the public participant list's switch (§201) and unlike the entering. **The Administrator and the
  * Superadministrator** alone (`canManageRegistrations`: whoever decides what the club tells the public about the
@@ -904,7 +947,8 @@ export function canTranslateTexts(subject: StaffSubject): boolean {
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`. The one
- * change to a registration that is not here is the raffle tick (§949, `canSetRaffleMark`).
+ * change to a registration that is not here is the raffle tick (§949, `canSetRaffleMark`), and its
+ * door at the desk (§1020, `canSetRaffleMarkAtDesk`).
  *
  * Split out from `canManageStaff`, which every one of these screens used to call. They are two
  * different powers, and they are kept apart although both are the Administrator's since §450:
@@ -926,11 +970,28 @@ export function canManageRegistrations(subject: StaffSubject): boolean {
  * is everything that gets that one runner their number when the normal path failed — no
  * email arrived, no QR to show, never registered at all: enter them, confirm them on a paper
  * declaration, give them a number by hand, check them in. Each of those is audited under the
- * volunteer's own id.
+ * volunteer's own id. So is taking a runner off the event's raffle or putting them back, asked
+ * first (§1020) — a predicate of its own, `canSetRaffleMarkAtDesk`, written as this one.
  */
 export function canWorkTheDesk(subject: StaffSubject): boolean {
   const role = roleOf(subject);
   return atLeast(role, "CONTRIBUTOR");
+}
+
+/**
+ * **Recording a runner's spoken wish to appear by name, at the desk (§1017, amending §143, §910, §1004)** — the desk row's eye
+ * pressed: «Anonim» → «Cu nume» when the person standing at the table says they want their name on the public list and in the
+ * results, and «Cu nume» → «Anonim» when they ask to be taken off. The owner, 2026-11-20: «dacă cineva are semnul ăsta de
+ * „Anonim” trebuie să îl pot schimba în „Cu nume” la click, dar cu acordul lor». **Every staff role that works the desk**
+ * (`canWorkTheDesk`: the desk Volunteer, the Redactor, the Organizer, Tehnic and the Administrators), written as that function so
+ * the two lines move together — the volunteer is the one who hears it; never a member, who is no staff (§524).
+ *
+ * It is the person's own wish, recorded as theirs: asked first, one audit row naming who recorded it, and the person emailed at
+ * once with the one-tap way back — no staff member decides it, and nothing else of a registration changes. A name the club hid
+ * (§910) stays hidden. Asserted in the action and again in the service (BR-REQ-060-01); the row draws the press as a courtesy.
+ */
+export function canRecordListWishAtDesk(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
 }
 
 /**

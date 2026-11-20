@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.89-2026-11-20
+
+- **«Reconfirmare» in the registrations' Excel and CSV** — right after «Status», each runner's answer to «Cere reconfirmarea» in the reader's words («A reconfirmat», «A anulat după cerere», «N-a răspuns», empty when nobody asked), with «Reconfirmat», the moment of «Vin», moved beside it; the same answers the list's filter and its chip give. §1019.
+- **The desk takes a runner off the raffle, asked first** — under a runner's row on «Prezența» and on the scanned view, every desk role presses «Scoate de la tombolă» or «Pune înapoi la tombolă»; the question names the person and the number, the line then says «nu participă — scos de la tombolă», and «Jurnal» and the registration's history say who decided. §1020.
+## BR-V4.88-2026-11-20
+
+- **«Ziua cursei» → «Declarații»** — the Organizer and the Administrators see every signed declaration of the race on one page, in the desk's folds by state with their counts: the number, the name, when, the signature (a minor's two), the version, who recorded a paper one and the fingerprint, each a tap from its PDF and its registration, searchable by name or number; no identity document on the page. §1018.
+## BR-V4.87-2026-11-20
+
+- **«Anonim» → «Cu nume» at the desk, on the runner's word** — the desk row's eye is a button for every desk role: it asks first whether the person just said they want their name on the participant list and in the results, records it as theirs with who recorded it, and emails them at once with a one-tap way back; «Cu nume» → «Anonim» the same way, with no email; a name the club hid stays hidden. §1017.
 ## BR-V4.86-2026-11-20
 
 - **The public-list choice stands out** — on «Gestionează înscrierea» (every person of a family's page too) and «Înscrierile mele», «Lista publică și clasamentul» is a tinted box of its own right under the QR: the state in bold beside the eye, «Participant (nume ascuns)» named where the public list draws the row so, and one full-width button that looks the same whichever way it goes. §1016.

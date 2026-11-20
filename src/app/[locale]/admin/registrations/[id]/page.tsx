@@ -160,6 +160,19 @@ function spareBibOf(action: string, metadata: unknown): { from: number | null; t
 }
 
 /**
+ * A trail row the desk's eye wrote (§1017, `desk-list-wish.ts`): `registration.list_consent_changed` through the door `DESK` —
+ * the person's wish to appear by name (with the results' name where it was recorded beside it), or no longer. Null for any other
+ * row, the person's own doors included, which keep their words.
+ */
+function listWishAtDeskOf(action: string, metadata: unknown): "named" | "namedResults" | "anonymous" | null {
+  if (action !== "registration.list_consent_changed") return null;
+  const { via, to, resultsNameConsent } = (metadata ?? {}) as { via?: unknown; to?: unknown; resultsNameConsent?: unknown };
+  if (via !== "DESK") return null;
+  if (to === "NOT_LISTED") return "anonymous";
+  return resultsNameConsent === true ? "namedResults" : "named";
+}
+
+/**
  * One registration's full timeline (AGENTS.md §15.8). The same gate as the list: whoever may
  * read the registrations, which since §289 includes the Organizer. The verbs on it — resend,
  * correct the name, cancel, erase — ask `canManageRegistrations` one at a time below, and each
@@ -429,6 +442,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         to: written(blankBib.to),
       });
     }
+    // The desk's eye (§1017): the person's wish, said at the table and written down by the colleague the line names after it.
+    const deskWish = listWishAtDeskOf(action, metadata);
+    if (deskWish) return tr(deskWish === "named" ? "registrations.auditListWish.named" : deskWish === "namedResults" ? "registrations.auditListWish.namedResults" : "registrations.auditListWish.anonymous");
     // «Completează-ți datele» (§905): the person's own completion names its fields in words, never a value.
     if (action === "registration.answers_completed") {
       const fields = (metadata as { fields?: unknown } | null)?.fields;
@@ -441,8 +457,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   };
   const trailMetadata = (action: string, metadata: unknown): Record<string, unknown> => {
     const shown = { ...((metadata ?? {}) as Record<string, unknown>) };
-    // A blank bib's label already says both numbers (§989): no second «— → 154» under it.
-    if (spareBibOf(action, metadata)) {
+    // A blank bib's label already says both numbers (§989): no second «— → 154» under it. The desk's recorded wish (§1017) says its way in words.
+    if (spareBibOf(action, metadata) || listWishAtDeskOf(action, metadata)) {
       delete shown.from;
       delete shown.to;
     }
@@ -474,6 +490,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     }
     if (typeof shown.reason === "string" && shown.reason.trim() !== "") parts.push(tr("registrations.auditDetail.reason", { reason: shown.reason.trim() }));
     if (Number.isInteger(shown.bibNumber)) parts.push(tr("registrations.auditDetail.bib", { number: written(Number(shown.bibNumber)) }));
+    // The raffle mark pressed at the race-day desk (§1020): «· la masă» beside who did it, the organizers' tick saying nothing more.
+    if (shown.door === "desk") parts.push(tr("registrations.auditDetail.atDesk"));
     return parts;
   };
 

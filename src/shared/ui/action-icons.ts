@@ -92,6 +92,8 @@ import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import IncognitoIcon from "./IncognitoIcon";
@@ -190,6 +192,10 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
+  // The desk's eye made a press (§1017, amending §1004): the chip «Cu nume» / «Anonim» as a button, wearing the state it says —
+  // the outlined eye, open or struck through, never `preview`'s filled one, which is looking at something.
+  | "siteNamed"
+  | "siteAnonymous"
   // The bib designer's two choices for the route's profile (§759): drawn from the GPX (the route) or
   // a picture («picture», above); and its orientation, read the right way up or turned for the runner.
   | "route"
@@ -346,6 +352,8 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   checkIn: HowToRegIcon,
   undo: UndoIcon,
   number: ConfirmationNumberIcon,
+  siteNamed: VisibilityOutlinedIcon,
+  siteAnonymous: VisibilityOffOutlinedIcon,
   route: RouteIcon,
   upright: TextRotationNoneIcon,
   turned: ScreenRotationAltIcon,

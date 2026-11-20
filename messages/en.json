@@ -1772,6 +1772,11 @@
         "bandOpen": "{from}+"
       },
       "auditActorParticipant": "the participant, from their own link",
+      "auditListWish": {
+        "named": "The wish said at the desk, recorded by the team: appears by name on the site",
+        "namedResults": "The wish said at the desk, recorded by the team: appears by name on the site and in the results",
+        "anonymous": "The wish said at the desk, recorded by the team: no longer appears by name on the site"
+      },
       "audit": {
         "registration": {
           "created_by_staff": "Registration entered by staff",
@@ -2261,6 +2266,7 @@
         "to": "now “{to}”",
         "reason": "reason: {reason}",
         "bib": "no. {number}",
+        "atDesk": "at the desk",
         "empty": "empty"
       },
       "bibsElite": {
@@ -2903,6 +2909,7 @@
       "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
       "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner».",
       "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add.",
+      "RAFFLE_NOT_HELD": "The event no longer holds a raffle: “We hold a raffle” is not ticked. Nothing was written.",
       "RAFFLE_SIGN_UP_CLOSED": "Raffle sign-ups are closed now — or the rules or the privacy notice are not approved. Nothing was written.",
       "RAFFLE_NOT_ELIGIBLE": "The person cannot take part in the raffle: they must be confirmed, with a number, in a ticked group. Nothing was written.",
       "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written.",
@@ -2911,6 +2918,9 @@
       "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
       "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is.",
       "RESULTS_RESET_AFTER_START": "The results can only be reset before the start.",
+      "LIST_WISH_OVER": "The registration is cancelled or expired: the desk records nothing on it any more.",
+      "LIST_WISH_ADDRESS_UNCONFIRMED": "The email address is not confirmed: confirm the registration here first («Confirm on paper»), then press the eye again.",
+      "LIST_WISH_DESK_CLOSED": "The event is over or was cancelled: the desk is closed and records nothing.",
       "RESULT_TIME_NOT_RECORDED": "Nothing changed: that time is not among those recorded on «Timing» for this number since the last reset.",
       "RESULT_DISQUALIFIED": "Nothing changed: the runner is disqualified. A disqualification is changed by hand, in «Status», then «Save all the results»."
     },
@@ -7983,7 +7993,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Tabs at the top: “Attendance” (this desk), “Timing” and “Things to bring”; organizers also get “Results”, “Raffle” and “Log” (who scanned, who marked present).",
+        "Tabs at the top: “Attendance” (this desk), “Timing”, “Raffle” and “Things to bring”; organizers also get “Results”, “Log” (who scanned, who marked present) and “Declarations”.",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
@@ -7996,12 +8006,14 @@
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
         "A search opens only the sections with a match. After a press you are back on the person's row, its section open: whoever is marked present moves to “Present”.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
+        "The eye beside the name says how they appear on the site: “By name” or “Anonymous”. Press it only when the person tells you what they want; asking for their name, they get an email to take it back.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
         "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history and in “Log”, with your name on it.",
+        "The race holds a raffle? Under the row it says whether the person takes part. “Take out of the raffle” and “Put back in the raffle” ask first, and the press is kept with your name.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in.",
         "If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -8063,8 +8075,15 @@
         "eliteMarked": "Marked as elite: their bib prints the label where the number goes.",
         "eliteUnmarked": "No longer elite: their bib prints the number again.",
         "eliteLabelSaved": "The bib label was saved.",
+        "raffleTakenOut": "Taken out of the raffle: the number no longer goes into the draw.",
+        "rafflePutBack": "Put back in the raffle: the number goes into the draw again.",
+        "raffleUnchanged": "It was already so; nothing to change.",
         "raffleSignedUp": "Done: the person is signed up for the raffle.",
-        "raffleAlready": "The person was signed up for the raffle already."
+        "raffleAlready": "The person was signed up for the raffle already.",
+        "listWishNamed": "Recorded: the name appears on the site. The person now gets an email with the button to take it back.",
+        "listWishNamedHidden": "Recorded as the person's wish; the club still hides the name. The person gets an email.",
+        "listWishAnonymous": "Recorded: the name no longer appears on the site.",
+        "listWishUnchanged": "It was already so: nothing changed."
       },
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
       "guardian": "Minor — parent/guardian: {name}",
@@ -8085,6 +8104,24 @@
       "eliteLabel": "On the bib: {label}",
       "siteNamed": "By name",
       "siteAnonymous": "Anonymous",
+      "siteWish": {
+        "showTitle": "Did {name} just tell you they want to appear by name on the participant list and in the results?",
+        "showTitleMinor": "Did {guardian}, the parent or guardian, just tell you that {name} may appear by name on the participant list and in the results?",
+        "showBody": "The name appears on the site; the person gets an email and can take it back at any time.",
+        "showBodyHidden": "The club hides this name («On the site» unticked): the wish is recorded and the name stays hidden. The person gets an email and can take it back at any time.",
+        "showConfirm": "Yes, they said so — show on the site",
+        "showConfirmHidden": "Yes, they said so — record it",
+        "hideTitle": "Did {name} ask to no longer appear by name?",
+        "hideTitleMinor": "Did {guardian}, the parent or guardian, ask for {name} to no longer appear by name?",
+        "hideBody": "The name no longer appears on the participant list and in the results.",
+        "hideBodyHidden": "The club hides this name anyway; only the person's wish is recorded.",
+        "hideConfirm": "Yes — hide the name",
+        "cancel": "Cancel",
+        "showAria": "{state}: press if the person tells you they want to appear by name",
+        "hideAria": "{state}: press if the person asks to no longer appear by name",
+        "clubHiddenNamed": "Hidden by the club («On the site» unticked). The person wants their name shown.",
+        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous."
+      },
       "eliteFold": "Elite and bib",
       "sections": {
         "toPickUp": "To pick up ({n})",
@@ -8133,6 +8170,7 @@
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "REGISTRATION_ADDRESS_REMOVED": "The email address was changed",
         "REGISTRATION_ADDRESS_ADDED": "You receive the registration's emails",
+        "LIST_CONSENT_RECORDED": "By name on the list, asked at the desk",
         "EVENT_REMINDER": "The reminder before the start",
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
@@ -8185,6 +8223,7 @@
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "REGISTRATION_ADDRESS_REMOVED": "Address changed",
         "REGISTRATION_ADDRESS_ADDED": "New address",
+        "LIST_CONSENT_RECORDED": "Named at the desk",
         "EVENT_REMINDER": "The reminder",
         "EVENT_THANKS": "The thank-you",
         "DECLARATION_SIGNED": "Signed declaration",
@@ -8212,6 +8251,7 @@
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
         "REGISTRATION_ADDRESS_REMOVED": "When an administrator changes a registration's address: to the old address, without the new one, with the contact page.",
         "REGISTRATION_ADDRESS_ADDED": "When an administrator changes a registration's address: to the new address. The next step comes in an email of its own.",
+        "LIST_CONSENT_RECORDED": "When someone at the race-number desk records that the person wants to appear by name: it tells them at once, with the button to take it back.",
         "EVENT_REMINDER": "Automatic, {reminder} before the start (or as the event chooses), to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
@@ -8264,6 +8304,7 @@
         "REGISTRATION_STATE_NOTICE": "resent by an organizer",
         "REGISTRATION_ADDRESS_REMOVED": "when the address changes, to the old one",
         "REGISTRATION_ADDRESS_ADDED": "when the address changes, to the new one",
+        "LIST_CONSENT_RECORDED": "when the desk sets them «By name»",
         "EVENT_REMINDER": "{reminder} before the start",
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
@@ -8515,6 +8556,7 @@
           "confirmPaper": "Confirm on paper",
           "givePlace": "Give a place",
           "setBib": "A race number given by hand",
+          "deskListWish": "By name / Anonymous, at the desk",
           "specialGuests": "The special guests list",
           "cancel": "Cancel the registration",
           "bulkCancel": "Cancel the ticked registrations",
@@ -9262,7 +9304,8 @@
         "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
         "UNSIGNED_RELEASED": "The deadline, the places released, the free ones, the capacity and the waiting list are added by themselves, however you write the text. One email per deadline.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
-        "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped."
+        "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped.",
+        "LIST_CONSENT_RECORDED": "The button opens the list's page, where one press hides the name. It does not leave if the name was hidden again meanwhile or the registration ended."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -9709,6 +9752,17 @@
               ]
             },
             {
+              "title": "They want to appear by name, or no longer",
+              "steps": [
+                "Beside the name, the eye says how the person appears on the site and in the results: «By name» or «Anonymous».",
+                "They tell you they want to appear by name? Press «Anonymous», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
+                "The person gets an email at once with the button «I do not want to appear on the participants & results list». The registration's history keeps that you recorded it.",
+                "They ask to no longer appear by name? Press «By name», then «Yes — hide the name». No email leaves.",
+                "Under the name it says «Hidden by the club…»? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
+                "On a row whose address is not confirmed the eye is not a button: first «Confirm on paper». Never press it without the person's spoken agreement."
+              ]
+            },
+            {
               "title": "Never registered",
               "steps": [
                 "Press «Add somebody».",
@@ -9738,6 +9792,17 @@
               ]
             },
             {
+              "title": "Take somebody out of the raffle, or put them back",
+              "steps": [
+                "When the race holds a raffle, under every row it says «Raffle: taking part» or «Raffle: not taking part», and why.",
+                "Somebody is not taking part in the raffle — an elite who asked, for instance? On their row press «Take out of the raffle».",
+                "A question opens with the person's name and number. «Cancel» leaves everything as it was; «Yes, take out of the raffle» takes them out.",
+                "The row then says «Raffle: not taking part» — “taken out of the raffle”. The number no longer goes into the file for the draw.",
+                "Pressed by mistake, or the person changed their mind? On the same row press «Put back in the raffle», then «Yes, put back in the raffle».",
+                "The person gets no email. Every press stays in «Log» and in the registration's history, with your name."
+              ]
+            },
+            {
               "title": "At the finish line: «Timing»",
               "steps": [
                 "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
@@ -9753,7 +9818,8 @@
                 "When the race holds a raffle, every desk role opens «Race day» → «Raffle»: the Volunteer, the Redactor, the Organizer, the Tehnic role and the Administrators. Pick the race under «Event» and press «Show».",
                 "You see everybody by number: the name, the group, «Taking part» and «Present». The filters above the table choose whom you see: everybody, those taking part, those not, or only those present.",
                 "With a separate sign-up, a runner who has not signed up has «Accepted the rules» and «Sign up» on their row. Tick it only once the person has accepted the raffle rules, on paper or aloud, then press «Sign up».",
-                "The files for the draw, taking somebody out of the raffle, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them."
+                "The files for the draw, deleting a sign-up and signing up a volunteer or a line of the elite list stay with the Organizer and the Administrators: call them.",
+                "You take a runner out of the raffle, or put them back, from their row on «Attendance»: «Take out of the raffle» asks first."
               ]
             },
             {
@@ -9761,10 +9827,23 @@
               "steps": [
                 "The Organizer and the Administrators open it: «Race day» → «Log», then pick the race under «Event» and press «Show».",
                 "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid and how many volunteers it ticked.",
+                "There too, how many runners it took out of the raffle and how many it put back; in the list, «took out of the raffle» says who decided.",
                 "Below, newest first: the time, who, what they did and to whom. The name leads to the registration or to the volunteer's page.",
                 "“the participant” means the runner pressed «I have arrived — mark me as here» from their own link themselves; “deleted account”, an account removed from «Staff» since.",
                 "«Account» and «What was done» choose what you see; then «Show». The newest 300 lines show, and under them how many more there are.",
                 "For the log to name the person, everyone at the desk has their own Volunteer account: do not use one account on several phones."
+              ]
+            },
+            {
+              "title": "The signed declarations: «Declarations»",
+              "steps": [
+                "The Organizer and the Administrators open it: «Race day» → «Declarations», then pick the race under «Event» and press «Search».",
+                "At the top: how many declarations are signed. Below, in sections by state, as on «Attendance»: «Confirmed», open; then, closed, «To sign again», «Address not confirmed», «Place offered», «On the waiting list» and «Cancelled or expired». Beside each title, how many it holds; a section with nobody in it is not shown.",
+                "A row with no race number shows “—”: the number comes only with the confirmation. A cancelled or expired registration's number is struck through.",
+                "On each row: the number, the name, when they signed, the signature (for a minor, theirs and the parent's), the version and the fingerprint. “on paper, recorded by …” says who recorded a paper declaration at the desk.",
+                "Looking for someone? Under «Name or number» type part of the name (the parent who signed for a minor works too) or the race number and press «Search».",
+                "«Declaration (PDF)» opens the signed declaration; every download stays in the registration's history, with your name. «Registration page» leads to the registration.",
+                "The identity document is not on the page, so nobody standing in front of the table sees it: it is only in the PDF and on the registration's page."
               ]
             },
             {
@@ -9898,6 +9977,7 @@
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
                 "In Excel, a row takes the colour of its state, the member cells are blue when the Member tick (declared) column says Yes, and lavender for another club runner. A special guest's number and names are peach and italic. The numbers in «Statistics» are formulas: change something offline and they recount by themselves.",
+                "Beside the Status column, in Excel and in the CSV, «Reconfirmation» says how each person answered «Ask them to reconfirm»: «Reconfirmed», «Cancelled after the ask» or «No answer»; it is empty for anyone never asked. Beside it, «Reconfirmed» says when they pressed “I'm coming”.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },
@@ -13228,6 +13308,10 @@
       "filterHelp": "Only for messages sent with “Ask them to reconfirm”. Whoever does not answer stays registered.",
       "detail": "Pressed “I'm coming” on {date}.",
       "column": "Reconfirmed",
+      "answerColumn": "Reconfirmation",
+      "answerYes": "Reconfirmed",
+      "answerCancelled": "Cancelled after the ask",
+      "answerNone": "No answer",
       "personAsked": "Reconfirmation asked on {asked}",
       "personAnswered": "pressed “I'm coming” on {at}"
     },
@@ -13241,7 +13325,8 @@
         "raffle": "Raffle",
         "timing": "Timing",
         "timingShort": "Timing",
-        "journal": "Log"
+        "journal": "Log",
+        "declarations": "Declarations"
       },
       "items": {
         "title": "Things to bring",
@@ -13284,7 +13369,7 @@
       },
       "journal": {
         "title": "Race-day log",
-        "intro": "Who scanned the codes, who marked runners present and who ticked volunteers, newest first.",
+        "intro": "Who scanned the codes, who marked runners present, who ticked volunteers and who took somebody out of the raffle or put them back, newest first.",
         "ownAccount": "For the log to name the person, everyone works the desk under their own account.",
         "account": "Account",
         "accounts": {
@@ -13298,6 +13383,8 @@
           "scanned": "Codes scanned",
           "checkedIn": "Marked present",
           "undone": "Check-ins undone",
+          "raffleOut": "Taken out of the raffle",
+          "raffleIn": "Put back in the raffle",
           "volunteerPresent": "Volunteers ticked present",
           "volunteerAbsent": "Volunteers unticked"
         },
@@ -13319,6 +13406,16 @@
             "few": "{count} check-ins undone",
             "other": "{count} check-ins undone"
           },
+          "raffleOut": {
+            "one": "{count} taken out of the raffle",
+            "few": "{count} taken out of the raffle",
+            "other": "{count} taken out of the raffle"
+          },
+          "raffleIn": {
+            "one": "{count} put back in the raffle",
+            "few": "{count} put back in the raffle",
+            "other": "{count} put back in the raffle"
+          },
           "volunteerTicks": {
             "one": "{count} volunteer tick",
             "few": "{count} volunteer ticks",
@@ -13330,6 +13427,8 @@
           "scanned": "scanned",
           "checkedIn": "marked present",
           "undone": "undid the check-in of",
+          "raffleOut": "took out of the raffle",
+          "raffleIn": "put back in the raffle",
           "volunteerPresent": "ticked present",
           "volunteerAbsent": "unticked present"
         },
@@ -13349,6 +13448,30 @@
         },
         "empty": "Nothing yet at this event: no code scanned, nobody marked present, no volunteer ticked.",
         "emptyFiltered": "Nothing for this choice. Pick “Every account” and “Everything”."
+      },
+      "declarations": {
+        "title": "Signed declarations",
+        "intro": "Every signed declaration of the chosen event: who, when, how, the version and the fingerprint. The identity document is only in the PDF.",
+        "count": {
+          "one": "{count} signed declaration",
+          "few": "{count} signed declarations",
+          "other": "{count} signed declarations"
+        },
+        "search": "Name or number",
+        "searchHelp": "Type part of a name or the race number. Leave it empty for every declaration of the event.",
+        "sections": {
+          "confirmed": "Confirmed ({n})",
+          "unsigned": "To sign again ({n})",
+          "addressUnconfirmed": "Address not confirmed ({n})",
+          "offered": "Place offered ({n})",
+          "waitlisted": "On the waiting list ({n})",
+          "voided": "Cancelled or expired ({n})"
+        },
+        "signedAt": "Signed {when}",
+        "version": "version {version}",
+        "pdf": "Declaration (PDF)",
+        "registration": "Registration page",
+        "empty": "No signed declaration at this event yet."
       }
     },
     "raffle": {
@@ -13440,6 +13563,18 @@
       "putBack": "Put back",
       "takeOutFor": "Take out of the raffle: {name}",
       "putBackFor": "Put back in the raffle: {name}",
+      "desk": {
+        "takeOut": "Take out of the raffle",
+        "putBack": "Put back in the raffle",
+        "takenOut": "— taken out of the raffle",
+        "takeOutTitle": "Take {name} (no. {number}) out of the raffle?",
+        "takeOutBody": "Their number no longer goes into the draw. Who decided stays on record.",
+        "takeOutConfirm": "Yes, take out of the raffle",
+        "putBackTitle": "Put {name} (no. {number}) back in the raffle?",
+        "putBackBody": "Their number goes into the draw again. Who decided stays on record.",
+        "putBackConfirm": "Yes, put back in the raffle",
+        "cancel": "Cancel"
+      },
       "present": "Present",
       "presentFor": "Present: {name}",
       "delete": "Delete the sign-up",
@@ -15373,6 +15508,10 @@
       "bibSet": "Number saved.",
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
+      "listWishNamed": "By name, recorded. The person gets an email.",
+      "listWishNamedHidden": "Wish recorded; the club still hides the name.",
+      "listWishAnonymous": "Anonymous, recorded.",
+      "listWishUnchanged": "It was already so.",
       "registrationCreated": "The person was added.",
       "registrationCancelled": "The registration was cancelled.",
       "consentWithdrawn": "The ticked data was erased.",

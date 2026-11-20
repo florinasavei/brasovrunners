@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.86-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.89-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.86-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1570,6 +1570,19 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   form of an event whose list is switched on (§85); switching a list on later means asking the
   people already registered, because a question nobody put to that person cannot be answered
   on their behalf;
+- the person may also say it at the race-day desk, and a desk role records it (`DECISIONS.md` §1017, amending
+  §143, §910 and §1004; the owner, 2026-11-20: «dacă cineva are semnul ăsta de „Anonim” trebuie să îl pot
+  schimba în „Cu nume” la click, dar cu acordul lor»). The desk row's eye — «Anonim» / «Cu nume» — is a press
+  for every role that works the desk (`canRecordListWishAtDesk`), asked first, naming the person — a minor's
+  parent or guardian answers for them — and what follows. It writes the person's own `list_opt_out`, as their
+  own doors do (`list-consent.ts#listChoiceColumns`), and, showing, on a registration under a notice older than
+  the first that described the results while §879's question is put, the results' name their own page would
+  record — one transaction, one `registration.list_consent_changed` row with the door `DESK` and the staff
+  member who recorded it as the actor, never the name. Showing tells the person at once by email
+  (`LIST_CONSENT_RECORDED`, carrying the `LIST_CONSENT` one-tap way back); hiding emails nobody. Never on a
+  row that is over, on a closed desk, or while the address was never confirmed — the email would go where
+  nobody vouched for it. A name the club hid stays hidden: the press changes the person's wish and nothing
+  else. Otherwise no staff member ticks the list for a person;
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
@@ -2164,7 +2177,7 @@ until a version is in force in every language **and** the privacy notice in forc
 
 **«Angajament de confidențialitate și protecția datelor pentru echipă»** (`STAFF_DATA_AGREEMENT`, 2026-11-19, `DECISIONS.md`
 §1006; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
-below the Administrator accepts — at every sign-in since §NNN (migration `0224`), and again for a new version — before the
+below the Administrator accepts — at every sign-in since §NNN (migration `0225`), and again for a new version — before the
 backoffice answers them (§13.1): the platform's template in
 both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
 tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
@@ -3303,9 +3316,24 @@ BR-REQ-037-05):
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
+   - **The person's spoken wish to appear by name** (`DECISIONS.md` §1017, amending §143, §910, §1004;
+     §10.10). The row's eye — «Anonim» / «Cu nume» — is a press for every desk role
+     (`canRecordListWishAtDesk`): «Anonim» → «Cu nume» when the person standing there says they want
+     their name on the public list and in the results, «Cu nume» → «Anonim» when they ask to be taken
+     off. Asked first, naming the person (a minor's parent or guardian answers for them) and what follows,
+     «Anulează» focused; the form posts the wish, never a flip. `desk-list-wish.ts#recordListWishAtDesk`
+     writes the person's own `list_opt_out` as their own doors do and, showing under an older notice while
+     §879's question is put, the results' name their own page would record — one transaction, the row
+     locked, one `registration.list_consent_changed` row: the door `DESK`, the staff member as the actor,
+     never the name. Showing emails the person at once (`LIST_CONSENT_RECORDED`, the `LIST_CONSENT` one-tap
+     way back, §16.3); hiding emails nobody. Refused, nothing written, on a row that is over
+     (`LIST_WISH_OVER`), an address never confirmed (`LIST_WISH_ADDRESS_UNCONFIRMED`: «Confirmă pe hârtie»
+     first) and a closed desk (`LIST_WISH_DESK_CLOSED`). A name the club hid (§910) stays hidden. It is the
+     person's wish, recorded as theirs: no staff member decides it, and nothing else of the registration moves.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
      a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
-     desk included (§984, the person having accepted its rules), and the finish line «Cronometrare»
+     desk included (§984, the person having accepted its rules), and taking a runner off the raffle or
+     putting them back there, asked first and audited with who (§1020), and the finish line «Cronometrare»
      beside it (`canRecordFinishes`, §10.11). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§948) stay
@@ -3494,6 +3522,8 @@ readers' set, written as `canReadRegistrations` so the two move together, and na
 authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.ts#setRegistrationInRaffle`; the owner:
 «doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
+At the race-day desk the same mark has a door of its own since §1020, every desk role's, asked first and audited with the
+desk's door beside the new value (DESK, below).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. Beside it the
 raffle's own rows, not the registration's: the sign-ups the Organizer records, «Șterge înscrierea» and an elite line's
@@ -3544,10 +3574,19 @@ volunteer) whose registered name holds every word typed — both folded: case, d
 words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
 wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — inside every row of the
 desk's list (where a search by name or number, or a typed code, lands; one read for the rows shown) and on the view of a
-scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — but the organizers' own
-exclusion, «scos de organizatori», only to the Organizer and the Administrators (`canTakeRaffleList`), every other desk role
-reading «nu participă» alone there — and «Înscrie la tombolă» in
-the open sign-up mode for a person the organizers did not take out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
+scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — a person taken out reading
+«nu participă — scos de la tombolă» to every desk role since §1020, the desk taking people out too — and «Înscrie la tombolă» in
+the open sign-up mode for a person not taken out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed.
+Under the same line, since §1020 (amending §949 and §953 for the desk), every desk role (`roles.ts#canSetRaffleMarkAtDesk`, written
+as `canWorkTheDesk`; never a member) takes a registration that takes part off the raffle — «Scoate de la tombolă» — or puts one
+taken out back — «Pune înapoi la tombolă» —, asked first (the question names the person and the race number, «Anulează» focused,
+nobody emailed), through `raffle-mark.ts#setRegistrationInRaffleAtDesk`: the same mark in one statement, only for a real
+registration of an event that holds a raffle (else `RAFFLE_NOT_ELIGIBLE` / `RAFFLE_NOT_HELD`, nothing written), a second press
+writing nothing, otherwise one audit row with the staff member and `door: "desk"` — read back by «Ziua cursei» → «Jurnal» («a
+scos de la tombolă» / «a pus înapoi la tombolă», filtered and counted per account) and by the registration's timeline («· la
+masă»). A registration marked «Elită» is a desk row like any other; a line of the elite list and a volunteer are not at the desk
+and keep the organizers' ticks; «Cine poate participa» still takes a whole group out; a row the desk draws read-only (§82) offers
+no press. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
@@ -3561,7 +3600,7 @@ participă», «Doar prezenții», everybody of the three groups in one table �
 how and when they signed up, «Prezent» —, the organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked
 first) and a line's «Prezent», both files, and prints without its controls. A desk role that is not an organizer reads the
 same table, counts and filters with words of its own above them, but not how and when anybody signed up, nor the reason
-«scos de organizatori» (a plain «Nu», as at the desk), and gets one press: the desk's «Înscrie la tombolă» on a registration
+«scos de organizatori» (a plain «Nu»; the desk's own line says «scos de la tombolă» since §1020, with its press), and gets one press: the desk's «Înscrie la tombolă» on a registration
 that may still sign up and was not taken out, the person having accepted the rules on paper or aloud (DESK, its recorder);
 the organizers' presses, the way to the editor and both files stay `canTakeRaffleList`', and the file's route refuses
 anybody else. Never an address, an email or a telephone: the roster carries none. The draw itself is the club's, outside the
@@ -3829,7 +3868,20 @@ UNSIGNED_RELEASED
 REGISTRATION_ADDRESS_REMOVED
 REGISTRATION_ADDRESS_ADDED
 VOLUNTEER_POINT
+LIST_CONSENT_RECORDED
 ```
+
+`LIST_CONSENT_RECORDED` (§1017; the desk's eye, §10.10, §15.11 verb 5) is queued by
+`registrations/desk-list-wish.ts#recordListWishAtDesk` alone — at a desk role's press, in its transaction, once
+per recorded wish (`registration:<id>:list-consent-recorded:<audit row>`), to the registration's own address in
+its language, and only when the press recorded the wish to appear by name: «La masa de ridicare a numerelor ai
+cerut să apari cu numele pe lista participanților și în clasament» (for a minor, to the parent or guardian, naming
+the child). Its one button is the public list's own switch, a `LIST_CONSENT` link minted at the send — the
+confirmation's second token, superseding the older one (§12.8) — with the platform's sentence above it, whoever
+rewrote the words. The renderer withdraws it, and the club's copy beside it, when the name is off the list again
+by then or the registration is over or erased. Classed with the confirmations: their road, the participant's own
+mail, a club copy as every participant message has. No «Nu mai pot ajunge»: it is about the name, sent to
+somebody standing at the desk.
 
 `VOLUNTEER_POINT` (§956; «Trimite fiecăruia punctul lui» on «Planul voluntarilor», §17) is queued by
 `volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by

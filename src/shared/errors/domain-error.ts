@@ -144,11 +144,20 @@ export type DomainErrorCode =
   // staff press sends», slice 4; its question offers no «… fără email», §976): the terms promise the person is told the ground,
   // so the refusal never goes without its email.
   | "REFUSAL_NEEDS_EMAIL"
+  // «Scoate de la tombolă» / «Pune înapoi la tombolă» at the desk (§1020) for a registration of an event that holds no raffle —
+  // «Avem tombolă» unticked since the page was drawn: the desk's line is drawn for none, and nothing is written.
+  | "RAFFLE_NOT_HELD"
   // The raffle's sign-up (§984): the gate is shut (`raffleSignUpClosedFor`); the person is not one the raffle takes — not
   // confirmed, no number, a test registration, a group not ticked; the rules' acceptance missing. Each writes nothing.
   | "RAFFLE_SIGN_UP_CLOSED"
   | "RAFFLE_NOT_ELIGIBLE"
-  | "RAFFLE_RULES_NOT_ACCEPTED";
+  | "RAFFLE_RULES_NOT_ACCEPTED"
+  // The desk's eye pressed (§1017, `desk-list-wish.ts`): on a registration that is over (cancelled or expired); on one whose address
+  // was never confirmed — the email that tells the person would go where nobody vouched for it, so confirm it first («Confirmă
+  // pe hârtie»); at an event completed or cancelled, whose desk is closed. Each writes nothing.
+  | "LIST_WISH_OVER"
+  | "LIST_WISH_ADDRESS_UNCONFIRMED"
+  | "LIST_WISH_DESK_CLOSED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

@@ -343,6 +343,11 @@ export const routing = defineRouting({
      * in both locales, like `lucruri`; a static segment, so it wins over `[code]` (a desk code is ten characters, never «jurnal»).
      */
     "/admin/checkin/jurnal": "/admin/checkin/jurnal",
+    /**
+     * «Declarații» (§1018): «Ziua cursei»'s list of the chosen event's signed declarations — the organizers'. One spelling in both
+     * locales, like `jurnal`; a static segment, so it wins over `[code]` (and «DECLARATII» holds an I, which no desk code does).
+     */
+    "/admin/checkin/declaratii": "/admin/checkin/declaratii",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",

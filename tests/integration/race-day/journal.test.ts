@@ -12,6 +12,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { findJournalEvent, readRaceDayJournal } from "@/modules/race-day/journal";
 import { checkInByStaff, deleteRegistrationByStaff, recordCodeScan } from "@/modules/registrations/admin-service";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
+import { setRegistrationInRaffle, setRegistrationInRaffleAtDesk } from "@/modules/registrations/raffle-mark";
 import { checkIn } from "@/modules/registrations/service";
 import { type StaffRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
@@ -266,14 +267,15 @@ describe("§996 «Jurnal» — who may read it", () => {
     }
   });
 
-  it("is the last tab of «Ziua cursei» for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
+  it("is the tab of «Ziua cursei» before «Declarații» (§1018), the last, for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
     state.actor = staff.ADMIN;
     const own = tabsOf(await page());
-    expect(own.at(-1)).toEqual({ label: "Jurnal", current: true, href: `/ro/admin/checkin/jurnal?eventId=${eventId}` });
+    expect(own.at(-2)).toEqual({ label: "Jurnal", current: true, href: `/ro/admin/checkin/jurnal?eventId=${eventId}` });
+    expect(own.at(-1)).toEqual({ label: "Declarații", current: false, href: `/ro/admin/checkin/declaratii?eventId=${eventId}` });
     const deskTabs = async () => tabsOf(await html(await atTheClock(MORNING, () => DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId }) }))));
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       state.actor = staff[role];
-      expect((await deskTabs()).map((tab) => tab.label).at(-1), role).toBe("Jurnal");
+      expect((await deskTabs()).map((tab) => tab.label).slice(-2), role).toEqual(["Jurnal", "Declarații"]);
     }
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
@@ -281,7 +283,7 @@ describe("§996 «Jurnal» — who may read it", () => {
     }
     state.actor = staff.MODERATOR;
     state.locale = "en";
-    expect((await deskTabs()).map((tab) => tab.label).at(-1)).toBe("Log");
+    expect((await deskTabs()).map((tab) => tab.label).slice(-2)).toEqual(["Log", "Declarations"]);
   });
 });
 
@@ -323,7 +325,7 @@ describe("§996 «Jurnal» — the lines and the summary", () => {
       "Conturi șterse",
       "Participanții, prin „Am ajuns”",
     ]);
-    expect(optionsOf(markup, "kind").map((option) => option.value)).toEqual(["", "scanned", "checkedIn", "undone", "volunteerPresent", "volunteerAbsent"]);
+    expect(optionsOf(markup, "kind").map((option) => option.value)).toEqual(["", "scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"]);
   });
 
   it("says it in English", async () => {
@@ -366,6 +368,56 @@ describe("§996 «Jurnal» — the lines and the summary", () => {
     const markup = await page();
     expect(linesOf(markup)).toHaveLength(ALL_LINES.length + 1);
     expect(optionsOf(markup, "eventId").find((option) => option.selected)?.value).toBe(eventId);
+  });
+});
+
+describe("§1020 «Jurnal» — who took a runner off the raffle, and who put them back", () => {
+  /** The race holds a raffle; Ana taken out at the desk by QR1 and put back by QR2, Ion by the organizers' tick, a test row too. */
+  async function raffleMorning() {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
+    people.ana = await runner("Ana Pop", 27);
+    people.ion = await runner("Ion Lupu", 28);
+    people.test = await runner("Test Pop", null, { kind: "TEST" });
+    await setRegistrationInRaffleAtDesk(db, desk.qr1, people.ana, false, at("08:40:00"));
+    await setRegistrationInRaffleAtDesk(db, desk.qr2, people.ana, true, at("08:41:30"));
+    await setRegistrationInRaffle(db, desk.org1, people.ion, false, at("08:45:00"));
+    await setRegistrationInRaffle(db, desk.org1, people.test, false, at("08:46:00"));
+  }
+
+  it("lists both kinds with the staff member, the person and the time — the desk's press and the organizers' tick alike", async () => {
+    await raffleMorning();
+    const markup = await page();
+    expect(linesOf(markup)).toEqual([
+      "08:46:00 Org1 a scos de la tombolă Test Pop (test)",
+      "08:45:00 Org1 a scos de la tombolă Ion Lupu (nr. 28)",
+      "08:41:30 QR2 a pus înapoi la tombolă Ana Pop (nr. 27)",
+      "08:40:00 QR1 a scos de la tombolă Ana Pop (nr. 27)",
+    ]);
+    const kinds = [...markup.matchAll(/data-testid="race-day-journal-line" data-kind="([^"]*)"/g)].map((match) => match[1]);
+    expect(kinds).toEqual(["raffleOut", "raffleOut", "raffleIn", "raffleOut"]);
+    // Each name a link to the registration, where the timeline names who too.
+    expect(markup).toContain(`href="/ro/admin/registrations/${people.ana}"`);
+    // English.
+    state.locale = "en";
+    expect(linesOf(await page()).slice(2)).toEqual(["08:41:30 QR2 put back in the raffle Ana Pop (no. 27)", "08:40:00 QR1 took out of the raffle Ana Pop (no. 27)"]);
+  });
+
+  it("filters by the two kinds like the others, alone and with an account", async () => {
+    await raffleMorning();
+    expect(linesOf(await page({ kind: "raffleOut" })).map((line) => line.slice(0, 8))).toEqual(["08:46:00", "08:45:00", "08:40:00"]);
+    expect(linesOf(await page({ kind: "raffleIn" }))).toEqual(["08:41:30 QR2 a pus înapoi la tombolă Ana Pop (nr. 27)"]);
+    expect(linesOf(await page({ kind: "raffleOut", account: desk.qr1.id }))).toEqual(["08:40:00 QR1 a scos de la tombolă Ana Pop (nr. 27)"]);
+    expect(linesOf(await page({ kind: "raffleIn", account: desk.org1.id }))).toEqual([]);
+    expect(optionsOf(await page({ kind: "raffleIn" }), "kind").find((option) => option.selected)?.label).toBe("Puși înapoi la tombolă");
+  });
+
+  it("counts them per account — a test registration never — and offers each account to the filter", async () => {
+    await raffleMorning();
+    const markup = await page();
+    expect(summaryOf(markup)).toEqual(["Org1 : 1 scos de la tombolă", "QR1 : 1 scos de la tombolă", "QR2 : 1 pus înapoi la tombolă"]);
+    expect(optionsOf(markup, "account").map((option) => option.label)).toEqual(["Toate conturile", "Org1", "QR1", "QR2"]);
+    state.locale = "en";
+    expect(summaryOf(await page())).toEqual(["Org1 : 1 taken out of the raffle", "QR1 : 1 taken out of the raffle", "QR2 : 1 put back in the raffle"]);
   });
 });
 

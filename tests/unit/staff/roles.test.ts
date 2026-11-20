@@ -20,6 +20,7 @@ import {
   canReadRaffle,
   canReadRegistrations,
   canSetRaffleMark,
+  canSetRaffleMarkAtDesk,
   canWorkTheDesk,
   canWriteLegalTexts,
   canTransition,
@@ -411,6 +412,47 @@ describe("BR-REQ-060-01 «Tombolă» is every desk role's (§1014)", () => {
 });
 
 /**
+ * BR-REQ-060-01, §1020 (amending §949 and §953 for the desk) — «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle
+ * line, for every role that works the desk. The owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să
+ * fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă». A predicate of its own,
+ * written as the desk's so the two lines move together; never a member (§524); the organizers' tick on the lists keeps its own.
+ */
+describe("BR-REQ-060-01 the desk's raffle press is every desk role's (§1020)", () => {
+  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s take a runner off the raffle at the desk exactly when it works the desk (§1020)", (role) => {
+    expect(canSetRaffleMarkAtDesk(role)).toBe(canWorkTheDesk(role));
+    // A grant neither gives the press nor takes it away: the desk's line is a rung.
+    expect(canSetRaffleMarkAtDesk({ role, permissions: new Set(["shop.manage"] as const) })).toBe(canWorkTheDesk(role));
+    expect(canSetRaffleMarkAtDesk({ role })).toBe(canWorkTheDesk(role));
+  });
+
+  it("is the Voluntar's, the Redactor's, the Organizer's, Tehnic's and the Administrators' — never a member's", () => {
+    expect(STAFF_ROLES.filter((role) => canSetRaffleMarkAtDesk(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
+    expect(canSetRaffleMarkAtDesk("MEMBER")).toBe(false);
+    expect(canSetRaffleMarkAtDesk({ role: "MEMBER", permissions: new Set(["shop.manage"] as const) })).toBe(false);
+    // The organizers' tick on the lists is untouched: Tehnic and the desk Volunteer still have none of it.
+    expect(STAFF_ROLES.filter((role) => canSetRaffleMarkAtDesk(role) && !canSetRaffleMark(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "DEV"]);
+    for (const role of STAFF_ROLES) if (canSetRaffleMark(role)) expect(canSetRaffleMarkAtDesk(role), role).toBe(true);
+  });
+
+  it("is what the desk's press asks at its door and its writer asks again — and the organizers' tick never asks it (§1020)", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+    const press = read("src/app/[locale]/admin/checkin/raffle-actions.ts");
+    expect(press).toContain("requireStaffCapability(canSetRaffleMarkAtDesk)");
+    expect(press).not.toMatch(/\bcanSetRaffleMark\b|canWorkTheDesk|canTakeRaffleList/);
+    const service = read("src/modules/registrations/raffle-mark.ts");
+    const atDesk = service.slice(service.indexOf("export async function setRegistrationInRaffleAtDesk"));
+    expect(atDesk).toContain('if (!canSetRaffleMarkAtDesk(actor.role)) throw new DomainError("FORBIDDEN"');
+    // The organizers' writer, from its signature to its closing brace: its own predicate, never the desk's.
+    const start = service.indexOf("export async function setRegistrationInRaffle<");
+    const organizers = service.slice(start, service.indexOf("\n}\n", start) + 2);
+    expect(organizers).toContain('if (!canSetRaffleMark(actor.role)) throw new DomainError("FORBIDDEN"');
+    expect(organizers).not.toContain("canSetRaffleMarkAtDesk");
+    // The organizers' list press still asks its own predicate, never the desk's.
+    expect(read("src/app/[locale]/admin/registrations/actions.ts")).not.toContain("canSetRaffleMarkAtDesk");
+  });
+});
+
+/**
  * BR-REQ-060-01 — the backoffice offers a role exactly the sections it may open.
  *
  * These exist because the layout did not consult any of the capabilities above. It tested
@@ -634,14 +676,20 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canResetResults: /*       */ [false, false, false, false, false, true, true],
     // §986: a finish recorded at the line («Cronometrare») — every role that works the desk, the desk Volunteer included; never a member.
     canRecordFinishes: /*     */ [false, true, true, true, true, true, true],
+    // §1017: the desk's eye pressed — a runner's spoken wish to appear by name recorded — every role that works the desk; never a member.
+    canRecordListWishAtDesk: /**/ [false, true, true, true, true, true, true],
     // §996: «Ziua cursei» → «Jurnal», who scanned and who marked present — the readers of the list; the desk's other roles are named in it, never shown it.
     canReadRaceDayJournal: /* */ [false, false, false, true, false, true, true],
+    // §1018: «Ziua cursei» → «Declarații», every signed declaration of the race — the readers of the list; the desk's other roles see one runner at a time.
+    canReadRaceDayDeclarations: [false, false, false, true, false, true, true],
     // §1014: «Ziua cursei» → «Tombolă» — every role that works the desk, the desk Volunteer included; never a member.
     canReadRaffle: /*         */ [false, true, true, true, true, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
     // §949: «Participă la tombolă» on a registration — the Organizer and the Administrators, the readers of the list; never Tehnic, the volunteer or a member.
     canSetRaffleMark: /*      */ [false, false, false, true, false, true, true],
+    // §1020: the same mark at the race-day desk, asked first and audited with who — every role that works the desk; never a member.
+    canSetRaffleMarkAtDesk: /**/ [false, true, true, true, true, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],

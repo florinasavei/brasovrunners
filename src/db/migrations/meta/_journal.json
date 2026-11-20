@@ -1503,8 +1503,15 @@
     {
       "idx": 214,
       "version": "7",
-      "when": 1795155683615,
-      "tag": "0224_staff_team_agreement_every_sign_in",
+      "when": 1795144722801,
+      "tag": "0224_list_consent_recorded_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 215,
+      "version": "7",
+      "when": 1795160238138,
+      "tag": "0225_staff_team_agreement_every_sign_in",
       "breakpoints": true
     }
   ]
