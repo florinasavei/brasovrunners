@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.84-2026-11-20
+
+- **«Clasament» offers every time «Cronometrare» recorded for a number** — under a line's «Timp», «Timpi la sosire» lists each time its number was pressed, with who pressed it and when, and «Folosește» makes one of them the line's time after a question, with no reload while other runners keep arriving; a disqualified runner is left as decided, the places follow and «Istoricul sosirilor» says who chose it. §1012.
+- **«Prezența» in the desk's order** — in every section the elites first, then the partners' runners with «Partener: {name}» on their row, then everybody else, each group by race number, those without a number after them by name. §1013.
+- **«Tombolă» for the desk's volunteers** — every desk role, the «Voluntar» included, now opens «Ziua cursei» → «Tombolă» on an event that holds a raffle: everybody by number with whether they take part and were there, the counts and the four filters, and «Înscrie» on a runner's row once the person accepted the rules; the two files, «Scoate» / «Pune înapoi», «Șterge înscrierea», how and when each signed up and «scos de organizatori» stay the Organizer's and the Administrators'. §1014.
 ## BR-V4.83-2026-11-20
 
 - **«Planul voluntarilor»: the note given with a new point, «Modifică punctul» keeping what was typed, «Pe puncte» like «Tabel», a changed note told again** — «Adaugă un punct» takes «Notă pentru voluntari» in Romanian and English; a refused «Modifică punctul» comes back with every box as typed and its sentence at the form, the point still open; on «Pe puncte» each point's volunteers are numbered, their names in bold capitals with a thin line between two, on paper too; and when a point's note changes after its volunteers were emailed, the point says how many will get the new one, and the next «Trimite fiecăruia punctul lui» writes to them — and only them. §1011.

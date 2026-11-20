@@ -11,9 +11,10 @@
  * - **What.** A press at the line (`finishLine: true` on `event_result.created` / `.updated`); a press of a number already «Sosit»
  *   (`event_result.finish_duplicate`, both times) — or of a runner «Clasament» wrote off, whose decision stays (the same row, its
  *   `storedStatus` the decision; a row without one is a «Sosit»'s); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
- *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); «Start» set or taken off; and «Resetează
+ *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); «Start» set or taken off; «Resetează
  *   clasamentul» (§997, `event.results_reset`: how many results went and whether a gun went with them), the line that says why
- *   every press and save older than it has no row any more.
+ *   every press and save older than it has no row any more; and «Folosește» (§1012, `chosenFromHistory: true` on
+ *   `event_result.updated` / `.created`): a time recorded at the line made a runner's, said as the choice it was.
  * - **Where.** «Cronometrare» for a press at the line and for «Start» — the old «Sosire» wrote `finishLine` too —, «Clasament» for
  *   the rest.
  * - **Who.** The staff member's display name; «cont șters» for an account removed since (`ON DELETE SET NULL`). The trail stores a
@@ -48,6 +49,8 @@ export type FinishHistoryWhat =
   | { kind: "undo"; bibNumber: number | null; gunTimeMs: number | null }
   | { kind: "created"; bibNumber: number | null; status: string | null; gunTimeMs: number | null }
   | { kind: "updated"; bibNumber: number | null; status: string | null; gunTimeMs: number | null; boxes: HistoryBox[] }
+  /** «Folosește» (§1012): one of the times recorded at the line made the runner's — «Sosit» at that time. */
+  | { kind: "chosen"; bibNumber: number | null; gunTimeMs: number | null }
   | { kind: "deleted"; bibNumber: number | null; status: string | null }
   | { kind: "gunSet"; at: Date | null; previous: Date | null }
   | { kind: "gunCleared"; previous: Date | null }
@@ -80,12 +83,16 @@ export function finishHistoryLine(row: FinishHistoryRow): FinishHistoryLine | nu
   const bibNumber = whole(metadata.bibNumber);
   const gunTimeMs = whole(metadata.gunTimeMs);
   const base = { id: row.id, at: row.at, who: row.actorName };
+  // «Folosește» (§1012): a «Clasament» row that made a recorded time the runner's — a change, or a result made again.
+  const chosen = !finishLine && metadata.chosenFromHistory === true;
   switch (row.action) {
     case "event_result.created":
+      if (chosen) return { ...base, where: "results", what: { kind: "chosen", bibNumber, gunTimeMs } };
       return finishLine
         ? { ...base, where: "timing", what: { kind: "finish", bibNumber, gunTimeMs, turned: false } }
         : { ...base, where: "results", what: { kind: "created", bibNumber, status: text(metadata.status), gunTimeMs } };
     case "event_result.updated":
+      if (chosen) return { ...base, where: "results", what: { kind: "chosen", bibNumber, gunTimeMs } };
       return finishLine
         ? { ...base, where: "timing", what: { kind: "finish", bibNumber, gunTimeMs, turned: true } }
         : { ...base, where: "results", what: { kind: "updated", bibNumber, status: text(metadata.status), gunTimeMs, boxes: boxesOf(metadata.changed) } };
