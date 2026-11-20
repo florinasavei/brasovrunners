@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.94` | the team's undertaking at every sign-in, every acceptance kept with the sign-in it answers (§1026) |
 | `BR-V4.93` | «Adaugă pe cineva» for the organizers alone, and the desk's free spares explained (§1025) |
 | `BR-V4.92` | volunteers numbered V001, V002, … by themselves, and «Descarcă pentru random.org» (§1023) · «Tombolă» folded in the editor, and a runner's «V7» told whose number it is (§1024) |
 | `BR-V4.91` | The desk's eye: the state as a chip, the action as the button (§1022) |

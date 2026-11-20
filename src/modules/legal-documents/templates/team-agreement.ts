@@ -5,7 +5,8 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * semneze acordul GDPR când intră în platformă» — the volunteers must sign the GDPR agreement when they enter the platform).
  *
  * One text for the club's whole team below the Administrator — the volunteer, the Redactor, the Organizer, the Tehnic — accepted
- * once per version on `/admin/acord`, before any backoffice page, action or route answers them, and approved by the club in
+ * on `/admin/acord` at every sign-in since §1026 (once per version under §1006), before any backoffice page, action or route answers
+ * them, and approved by the club in
  * `/admin/legal` like every other text (§29, §95, §418). Until a version is in force nobody is asked: a text the club has not
  * approved binds nobody. It is not the volunteer agreement (§758), which an event's volunteer accepts for one event and one role and
  * which keeps its own confidentiality clause for the desk; this one is for an account in the backoffice, whatever the role.
@@ -26,7 +27,9 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * sentence on liability should read; whether a colleague under eighteen with an account needs a parent's agreement too; how long the
  * club keeps the acceptance — the platform deletes it with the account, when access is taken away, which may be before a breach after
  * the role comes to light; and whether section 12 of the privacy notice should name the acceptance in its own words. The text
- * promises only what the platform does: the acceptance once per version, its record, the access withdrawn.
+ * promises only what the platform does: the acceptance at every sign-in (§1026) and again for a new version, each one recorded with
+ * the sign-in it answers, the access withdrawn. Section 10 said «la prima intrare» until §1026; a version the club approved with
+ * those words stays in force with them until the club approves the regenerated draft — the platform approves nothing (§29).
  *
  * **No hardcoded value (§357).** Nothing names a club, a place, a person or a date: the club by its four `<PLACEHOLDER>`s, the
  * colleague by the name typed at the acceptance, which the text does not repeat. The laws cited and the regulation stay written in,
@@ -131,13 +134,13 @@ const endEn = [
 
 const dataRo = [
   "Clubul prelucrează datele membrului echipei — numele, adresa de e-mail, rolul și acceptarea acestui angajament — așa cum spune nota de confidențialitate a clubului, publicată pe site-ul clubului, care spune și cât timp le păstrează și ce drepturi are membrul echipei. Pentru ele, membrul echipei scrie la <EMAIL DE CONTACT>.",
-  "Membrul echipei acceptă angajamentul electronic, la prima intrare în platformă după ce clubul l-a aprobat: numele complet scris, bifa de acceptare, momentul acceptării, versiunea și amprenta textului citit, adresa IP și browserul din care a acceptat sunt înregistrate împreună de platforma clubului. O versiune nouă a angajamentului se acceptă din nou, la următoarea intrare.",
+  "Membrul echipei acceptă angajamentul electronic, la fiecare intrare în platformă, cât timp o versiune aprobată de club este în vigoare: la fiecare acceptare, numele complet scris, bifa de acceptare, momentul acceptării, intrarea în platformă la care răspunde, versiunea și amprenta textului citit, adresa IP și browserul din care a acceptat sunt înregistrate împreună de platforma clubului. O versiune nouă a angajamentului se acceptă din nou, înainte de a lucra mai departe.",
   "Angajamentul se completează cu prevederile Regulamentului (UE) 2016/679, ale Legii nr. 190/2018 privind măsuri de punere în aplicare a acestuia și ale Codului civil. O neînțelegere care nu se rezolvă pe cale amiabilă se judecă de instanțele competente din România.",
 ];
 
 const dataEn = [
   "The club processes the team member's data — their name, email address, role and acceptance of this undertaking — as the club's privacy notice says, published on the club's website, which also says how long it is kept and what rights the team member has. For them, the team member writes to <CONTACT EMAIL>.",
-  "The team member accepts the undertaking electronically, the first time they enter the platform after the club has approved it: the full name typed, the acceptance tick, the moment of acceptance, the version and the fingerprint of the text read, the IP address and the browser it was accepted from are recorded together by the club's platform. A new version of the undertaking is accepted again, at the next entry.",
+  "The team member accepts the undertaking electronically, each time they enter the platform while a version approved by the club is in force: at every acceptance, the full name typed, the acceptance tick, the moment of acceptance, the entry into the platform it answers, the version and the fingerprint of the text read, the IP address and the browser it was accepted from are recorded together by the club's platform. A new version of the undertaking is accepted again, before working on.",
   "The undertaking is completed by Regulation (EU) 2016/679, by Romanian Law no. 190/2018 implementing it and by the Romanian Civil Code. A disagreement not settled amicably is decided by the competent courts of Romania.",
 ];
 

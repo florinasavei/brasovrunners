@@ -7,7 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import { teamAgreementReturnTo } from "@/modules/staff-identity/domain/team-agreement";
-import { requireStaffBeforeTeamAgreement } from "@/modules/staff-identity/session";
+import { currentSignInMoment, requireStaffBeforeTeamAgreement } from "@/modules/staff-identity/session";
 import { acceptTeamAgreement } from "@/modules/staff-identity/team-agreement";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -22,11 +22,11 @@ function field(form: FormData, name: string): string {
 }
 
 /**
- * «Accept și intru» on `/admin/acord` (§1006): the colleague's acceptance of the team's undertaking in force, then back where they
- * were going — `returnTo`, a same-site path only, or the backoffice's first page. The one action a colleague who owes the
- * undertaking may reach (`requireStaffBeforeTeamAgreement`); the service asks the role again and writes nothing for one that is
- * not asked. A refusal — the name, the tick, a version replaced while the page was open — comes back to the form with what was
- * typed still in it (§315).
+ * «Accept și intru» on `/admin/acord` (§1006): the colleague's acceptance of the team's undertaking in force at this sign-in
+ * (§1026: the session's sign-in moment is kept with it, the sign-in it answers), then back where they were going — `returnTo`, a
+ * same-site path only, or the backoffice's first page. The one action a colleague who owes the undertaking may reach
+ * (`requireStaffBeforeTeamAgreement`); the service asks the role again and writes nothing for one that is not asked. A refusal —
+ * the name, the tick, a version replaced while the page was open — comes back to the form with what was typed still in it (§315).
  */
 export async function acceptTeamAgreementAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
@@ -42,6 +42,7 @@ export async function acceptTeamAgreementAction(_previous: FormOutcome | null, f
         fullName: field(form, "fullName"),
         accepted: form.get("accepted") === "on",
         locale,
+        signedInAt: await currentSignInMoment(),
         trace: readSignatureTrace(await headers()),
       },
       new Date(),

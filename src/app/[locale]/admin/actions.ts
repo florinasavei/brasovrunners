@@ -58,6 +58,7 @@ import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { inEmailPress } from "@/modules/notifications/press";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
+import { DEV_STAFF_SIGNED_IN_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
 import {
   type InviteOutcome,
   inviteZitadelUser,
@@ -1961,7 +1962,15 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
     assertDevStaffSwitcherEnabled();
     const staffUser = await ensureDevStaffUser(getDb(), text(form, "identity") as DevIdentityKey);
 
-    (await cookies()).set(DEV_STAFF_COOKIE, staffUser.id, {
+    const jar = await cookies();
+    jar.set(DEV_STAFF_COOKIE, staffUser.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+    // The moment of this sign-in (§1026), as Auth.js's `jwt` callback writes it at a Zitadel sign-in: the team's undertaking is
+    // owed once per sign-in, so the end-to-end suite and `yarn dev` meet it at every sign-in exactly as a colleague does.
+    jar.set(DEV_STAFF_SIGNED_IN_COOKIE, String(Date.now()), {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
@@ -1992,7 +2001,10 @@ export async function signOutAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   // Signing out of the members' zone lands on the members' page, not the team's door (§524).
   const after = signInTargetOf(text(form, "from")) === "members" ? "/members" : "/sign-in";
-  (await cookies()).delete(DEV_STAFF_COOKIE);
+  const jar = await cookies();
+  jar.delete(DEV_STAFF_COOKIE);
+  // The development sign-in's moment goes with it (§1026): the next sign-in writes its own.
+  jar.delete(DEV_STAFF_SIGNED_IN_COOKIE);
 
   if (env.STAFF_AUTH_MODE === "provider") {
     // `signOut` performs the redirect itself.
