@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.90-2026-11-20
+
+- **The team's and the members' invitation leaves a minute and a half after Zitadel's** — the press that asked Zitadel for the account sends the club's email itself, ninety seconds after Zitadel answered, whatever «Când pleacă emailurile» says; the email, «Echipa»'s lines, the dialog and the toast say Zitadel's comes first, and nothing waits when no email of Zitadel's is coming. §1021.
 ## BR-V4.89-2026-11-20
 
 - **«Reconfirmare» in the registrations' Excel and CSV** — right after «Status», each runner's answer to «Cere reconfirmarea» in the reader's words («A reconfirmat», «A anulat după cerere», «N-a răspuns», empty when nobody asked), with «Reconfirmat», the moment of «Vin», moved beside it; the same answers the list's filter and its chip give. §1019.

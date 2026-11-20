@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.90-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -163,9 +163,12 @@ shared with nothing.
 Invitations, password resets and verification codes are sent by Zitadel, not by the site, and
 from whatever SMTP provider is active on the instance. Since 2026-09-18 that is the club's
 Mailgun domain (`SETUP.md` §26 has the values), so a colleague invited from Zitadel gets a mail
-from `noreply@mail.<domain>` with the club's reply address. If a new colleague reports "no
-invitation arrived": Default Settings → SMTP Provider → the Mailgun provider must be the
-**active** one, and Mailgun → Reporting → Logs shows the attempt. Deactivate rather than delete
+from `noreply@mail.<domain>` with the club's reply address. The club's own invitation, with the
+numbered steps, follows it about a minute and a half later: the press that asked Zitadel sends
+it that gap after Zitadel's answer (`DECISIONS.md` §1021), so "only Zitadel's arrived" a minute
+after the press is the order working. If a new colleague reports "no invitation arrived": Default
+Settings → SMTP Provider → the Mailgun provider must be the **active** one, and Mailgun →
+Reporting → Logs shows the attempt. Deactivate rather than delete
 an old provider; the delete confirmation wants the sender name character for character.
 
 ### The first administrator

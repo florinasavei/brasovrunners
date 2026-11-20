@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.89-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.90-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.90-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -4100,9 +4100,18 @@ nothing is queued — nor is Zitadel asked; «Retrimite invitația» later sends
 makes the Zitadel account when it is missing (`DECISIONS.md` §912). Its body, and
 `MEMBER_INVITATION`'s, says the sign-in as numbered steps by `signInSteps` in the payload —
 Zitadel's email first when the press asks Zitadel for the account, the person's own account
-otherwise — and when the press asks Zitadel the row waits (`next_attempt_at` a minute ahead)
+otherwise — and when the press asks Zitadel the row waits (`next_attempt_at` held ahead)
 until the action has Zitadel's answer and lets it go, so it never leaves before Zitadel was
-asked (`DECISIONS.md` §1000).
+asked (`DECISIONS.md` §1000). When that answer means Zitadel's own email is on its way (an
+account made, or found without a password), the row is due a fixed gap after the answer,
+`INVITATION_GAP_MS` — ninety seconds — and the press sends it itself: its drain after the
+response waits once, inside the same `after()`, until the rows it let go are due, then sends
+exactly those, whatever «Când pleacă emailurile» says (a members' press waits once, for the
+last). Every claim honours `next_attempt_at`, so no other drain, «Trimite acum» or the pinger
+sends it earlier; a function stopped mid-wait leaves it PENDING and due, for the outbox job's
+next pass. The hold — the bound for a press that never reached the release — is the staff
+page's `maxDuration` plus the gap, so it never lets a row go before its gap would have. A
+refusal, `ready` or no key waits for nothing (`DECISIONS.md` §1021).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on
