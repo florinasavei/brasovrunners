@@ -63,7 +63,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    */
   legacyNumbersKept: number;
   /**
-   * Volunteers' V numbers given this run (§NNN): to confirmed volunteers who had none — those the code serving during migration `0224`
+   * Volunteers' V numbers given this run (§NNN): to confirmed volunteers who had none — those the code serving during migration `0225`
    * confirmed — zero on every run after the one that found them.
    */
   volunteerNumbersGiven: number;
@@ -247,7 +247,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   /*
     The volunteers' V numbers (§NNN): every confirmed volunteer who has none is given the next of their event's own series, event by
     event under the event row's lock (`volunteers/volunteer-numbers.ts#numberWaitingVolunteers`) — a volunteer the code still serving
-    while migration `0224` ran confirmed, which knew no such column; the migration numbered everybody confirmed before it. Idempotent
+    while migration `0225` ran confirmed, which knew no such column; the migration numbered everybody confirmed before it. Idempotent
     and cheap, like the data step above: one read of a small table that finds nobody once the stragglers are numbered. A failure is
     retryable: the confirmation stands, only the number waits for the next ping.
   */

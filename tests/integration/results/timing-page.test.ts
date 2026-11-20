@@ -142,8 +142,9 @@ describe("§986 «Cronometrare»: the page", () => {
       { href: `/ro/admin/events/${raceId}/results`, label: "Clasament", current: false },
       { href: `/ro/admin/checkin/cronometrare?eventId=${raceId}`, label: "Cronometrare Sosiri", current: true },
       { href: `/ro/admin/checkin/lucruri?eventId=${raceId}`, label: "Lucruri de adus Lucruri", current: false },
-      // «Jurnal» (§996), the organizers' last.
+      // «Jurnal» (§996) and «Declarații» (§1018), the organizers' last two.
       { href: `/ro/admin/checkin/jurnal?eventId=${raceId}`, label: "Jurnal", current: false },
+      { href: `/ro/admin/checkin/declaratii?eventId=${raceId}`, label: "Declarații", current: false },
     ]);
     expect(text(html)).toContain("Cronometrare");
   });

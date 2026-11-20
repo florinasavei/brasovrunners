@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0224_volunteer_v_numbers` (§NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la
+ * Migration `0225_volunteer_v_numbers` (§NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la
  * toti voluntarii automat!»), proven on real PostgreSQL (PGlite): one nullable integer on the event's volunteers, `volunteer_number`,
  * unique per event and positive — and the confirmed volunteers already there numbered by the migration itself, event by event, in
  * the order they were first confirmed (the trail's `volunteer.state_changed` row that made them CONFIRMED), then added, then by id;
@@ -16,24 +16,24 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
  * file only expands — a backfill of its own new column is an expansion (AGENTS.md §7.6) — and the backfill run again changes nothing.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0224_volunteer_v_numbers";
+const TAG = "0225_volunteer_v_numbers";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
-const CROSS = "aaaaaaaa-0000-4000-8000-000000000224";
-const TRAIL = "bbbbbbbb-0000-4000-8000-000000000224";
-const ADMIN = "99999999-0000-4000-8000-000000000224";
+const CROSS = "aaaaaaaa-0000-4000-8000-000000000225";
+const TRAIL = "bbbbbbbb-0000-4000-8000-000000000225";
+const ADMIN = "99999999-0000-4000-8000-000000000225";
 // The cross: Ana added first but confirmed last; Dan confirmed first; Eva confirmed with no trail row; Ion confirmed twice (his first
 // counts); Vlad waiting; Zoe cancelled — after a confirmation — holding a number of the old series; Mara confirmed with an old number.
-const ANA = "a0000000-0000-4000-8000-000000000224";
-const DAN = "d0000000-0000-4000-8000-000000000224";
-const EVA = "e0000000-0000-4000-8000-000000000224";
-const ION = "10000000-0000-4000-8000-000000000224";
-const VLAD = "20000000-0000-4000-8000-000000000224";
-const ZOE = "30000000-0000-4000-8000-000000000224";
-const MARA = "40000000-0000-4000-8000-000000000224";
+const ANA = "a0000000-0000-4000-8000-000000000225";
+const DAN = "d0000000-0000-4000-8000-000000000225";
+const EVA = "e0000000-0000-4000-8000-000000000225";
+const ION = "10000000-0000-4000-8000-000000000225";
+const VLAD = "20000000-0000-4000-8000-000000000225";
+const ZOE = "30000000-0000-4000-8000-000000000225";
+const MARA = "40000000-0000-4000-8000-000000000225";
 // The trail run: one confirmed volunteer, its own series.
-const OANA = "50000000-0000-4000-8000-000000000224";
+const OANA = "50000000-0000-4000-8000-000000000225";
 
 let client: PGlite;
 let folder: string;
@@ -58,7 +58,7 @@ beforeAll(async () => {
   await migrate(db, { migrationsFolder: folder });
   // Two races and their volunteers as the release before wrote them, with the trail of their confirmations, and no such column.
   await client.exec(`
-    INSERT INTO staff_users (id, email, display_name, role) VALUES ('${ADMIN}', 'admin-0224@dev.test', 'Admin', 'ADMIN');
+    INSERT INTO staff_users (id, email, display_name, role) VALUES ('${ADMIN}', 'admin-0225@dev.test', 'Admin', 'ADMIN');
     INSERT INTO events (id, type, starts_at, editorial_status, volunteer_bib_start) VALUES ('${CROSS}', 'RACE', '2026-11-21T08:00:00Z', 'DRAFT', 500);
     INSERT INTO events (id, type, starts_at, editorial_status) VALUES ('${TRAIL}', 'RACE', '2026-11-22T08:00:00Z', 'DRAFT');
     INSERT INTO event_volunteers (id, event_id, name, state, source, created_at) VALUES ('${ANA}', '${CROSS}', 'Ana', 'CONFIRMED', 'STAFF', '2026-11-01T08:00:00Z');
@@ -91,7 +91,7 @@ afterAll(async () => {
 const numbers = async () =>
   Object.fromEntries((await client.query<{ name: string; volunteer_number: number | null }>(`SELECT name, volunteer_number FROM event_volunteers ORDER BY name`)).rows.map((row) => [row.name, row.volunteer_number]));
 
-describe("migration 0224_volunteer_v_numbers", () => {
+describe("migration 0225_volunteer_v_numbers", () => {
   it("numbers every confirmed volunteer, event by event, in the order they were first confirmed — a row with no trail row last — and nobody waiting or cancelled", async () => {
     expect(await numbers()).toEqual({
       // The cross: Dan (first confirmed), Ion (his first confirmation), Mara, Ana (confirmed last), then Eva, who has no trail row.

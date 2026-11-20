@@ -51,7 +51,8 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canKeepRegistrationNotes, canManageRegistrations, canSetRaffleMark } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations, canRecordListWishAtDesk, canSetRaffleMark } from "@/modules/staff-identity/domain/roles";
+import { recordListWishAtDesk } from "@/modules/registrations/desk-list-wish";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
 import { type RunnerToVolunteerResult, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, type VolunteerToRunnerResult } from "@/modules/volunteers/transform";
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
@@ -367,6 +368,34 @@ export async function checkInAction(_previous: FormOutcome | null, form: FormDat
     outcome = outcomeOf(error);
   }
   return backToDesk(form, locale, registrationId, outcome);
+}
+
+/**
+ * The desk's eye pressed (§1017): «Anonim» → «Cu nume» on the person's spoken wish to appear by name, or «Cu nume» → «Anonim»
+ * when they ask to be taken off — asked first on the row, posting the wish it records (`listed`: «1» shows, «0» hides), never a
+ * flip. Every desk role (`canRecordListWishAtDesk`), asserted here and again in the service (BR-REQ-060-01). An email press:
+ * showing tells the person at once (`LIST_CONSENT_RECORDED`), and the toast says so. Back to the row, as every desk verb.
+ */
+export async function recordListWishAtDeskAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
+  return inEmailPress("registrations.deskListWish", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    const listed = text(form, "listed") === "1";
+
+    let outcome: { error?: string; saved?: string };
+    try {
+      const actor = await requireStaffCapability(canRecordListWishAtDesk);
+      press.by(actor.id);
+      const recorded = await recordListWishAtDesk(getDb(), actor, registrationId, listed, new Date());
+      outcome = {
+        saved: !recorded.changed ? "listWishUnchanged" : !listed ? "listWishAnonymous" : recorded.hiddenByClub ? "listWishNamedHidden" : "listWishNamed",
+      };
+    } catch (error) {
+      outcome = outcomeOf(error);
+    }
+    return backToDesk(form, locale, registrationId, outcome);
+  });
 }
 
 /** An unanswered field on the staff form is absent, not empty (BR-REQ-031-04 criterion 5). */

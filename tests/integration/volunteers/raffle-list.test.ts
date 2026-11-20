@@ -172,7 +172,7 @@ async function everybody() {
   await volunteer("Ion Voluntar", 1);
   await volunteer("Vlad Offered", null, "REGISTERED");
   await volunteer("Zoe Cancelled", 3, "CANCELLED");
-  // A volunteer confirmed with no V number (as the code serving during migration 0224 could leave one): not in the draw until the job numbers them.
+  // A volunteer confirmed with no V number (as the code serving during migration 0225 could leave one): not in the draw until the job numbers them.
   await volunteer("Confirmed Nonumber Volunteer", null);
   // A line of the race's elite list: in the draw since §984, «Elită» by its number — «Elitele» is ticked by default.
   await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 777 });

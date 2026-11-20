@@ -1,5 +1,5 @@
 {
-  "id": "97316c64-a475-4356-99f5-25a9571e5b47",
+  "id": "a0658bb7-ef57-4c28-bd06-f3bb10ee0ecb",
   "prevId": "5e4e2b99-16a5-4564-98ce-0ee7a3754a4f",
   "version": "7",
   "dialect": "postgresql",
@@ -4412,12 +4412,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "volunteer_number": {
-          "name": "volunteer_number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "checkpoint_id": {
           "name": "checkpoint_id",
           "type": "uuid",
@@ -4647,28 +4641,6 @@
           "method": "btree",
           "with": {}
         },
-        "event_volunteers_event_volunteer_number_unique": {
-          "name": "event_volunteers_event_volunteer_number_unique",
-          "columns": [
-            {
-              "expression": "event_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "volunteer_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"event_volunteers\".\"volunteer_number\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "event_volunteers_role_idx": {
           "name": "event_volunteers_role_idx",
           "columns": [
@@ -4884,10 +4856,6 @@
         "event_volunteers_bib_number_positive": {
           "name": "event_volunteers_bib_number_positive",
           "value": "\"event_volunteers\".\"bib_number\" IS NULL OR \"event_volunteers\".\"bib_number\" > 0"
-        },
-        "event_volunteers_volunteer_number_positive": {
-          "name": "event_volunteers_volunteer_number_positive",
-          "value": "\"event_volunteers\".\"volunteer_number\" IS NULL OR \"event_volunteers\".\"volunteer_number\" > 0"
         },
         "event_volunteers_address_whole": {
           "name": "event_volunteers_address_whole",
@@ -12804,7 +12772,8 @@
         "UNSIGNED_RELEASED",
         "REGISTRATION_ADDRESS_REMOVED",
         "REGISTRATION_ADDRESS_ADDED",
-        "VOLUNTEER_POINT"
+        "VOLUNTEER_POINT",
+        "LIST_CONSENT_RECORDED"
       ]
     },
     "public.email_outbox_status": {
