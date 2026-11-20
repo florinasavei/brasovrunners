@@ -11,8 +11,8 @@ import { hydrated } from "./support/featured-event";
  * against the production build:
  *
  * - a confirmed runner who did not tick the list opens their manage link and finds the block above the fold, right under the QR:
- *   a heading, the state in bold — off the list, as the public list prints them, «Participant (nume ascuns)» — and one contained
- *   button at least 48 pixels tall, the full width of a phone;
+ *   a heading, the state in bold — off the list, as the event's shown list prints them, «Participant (nume ascuns)» — and one
+ *   contained button at least 48 pixels tall, the full width of a phone, in the tick's own words both ways (§570);
  * - one press puts the name on («Am reținut alegerea ta.», the state now says the list and the results), a second takes it off,
  *   the same button in the same colour each way, the link read and never spent, and nothing ever scrolls sideways;
  * - «Înscrierile mele» draws the same block for the registration, and its press does the same.
@@ -43,9 +43,9 @@ const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const deskCode = () => Array.from({ length: 10 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
 
 /**
- * A published race a week away and one confirmed runner with a number and a desk code, OFF the public list, registered under the
- * privacy notice in force — the seed's sample from the template, which describes the results — so the name, once on the list,
- * is in the results too.
+ * A published race a week away whose public list is shown (`NAMES`), and one confirmed runner with a number and a desk code, OFF
+ * the public list, registered under the privacy notice in force — the seed's sample from the template, which describes the results
+ * — so off the list they are its «Participant (nume ascuns)» row, and the name, once on the list, is in the results too.
  */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
@@ -54,8 +54,8 @@ async function seed(tag: string): Promise<Seeded> {
     );
     if (!notice.rows[0]) throw new Error("no privacy notice in force: seed the database (yarn db:seed:legal)");
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number)
-       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1) RETURNING id`,
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, editorial_status, published_at, bib_start_number, participant_list_visibility)
+       VALUES ('RACE', now() + interval '7 days', 'INTERNAL', 20, 'Parcul Tractorul', 'PUBLISHED', now() - interval '1 day', 1, 'NAMES') RETURNING id`,
     );
     const eventId = rows[0].id;
     await client.query(`INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES ($1, 'ro', $2, $3, 'O cursă.'), ($1, 'en', $4, $5, 'A race.')`, [
@@ -107,8 +107,9 @@ const trail = (registrationId: string) =>
 
 const OFF = "Numele tău nu apare pe lista publică a participanților și nici în clasament: pe listă apari ca „Participant (nume ascuns)”.";
 const ON = "Numele tău apare pe lista publică a participanților și în clasament.";
+// The tick's own words both ways (§570): the same the confirmation email's page and the club's messages to the runners name.
 const OPT_IN = "Vreau să apar pe lista de participanți & rezultate";
-const OPT_OUT = "Nu vreau să apar pe listă și în clasament";
+const OPT_OUT = "Nu vreau să apar pe lista de participanți & rezultate";
 
 async function fitsTheScreen(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -134,7 +135,8 @@ async function firstScreenEnd(page: Page): Promise<number> {
  * phone, contained in the primary colour — and the classes that draw it, so the two states can be held to the same look.
  */
 async function prominent(block: Locator, name: string): Promise<string> {
-  const button = block.getByRole("button", { name });
+  // Exact: «Vreau să apar…» is inside «Nu vreau să apar…», so a substring match would take either answer's button for the other.
+  const button = block.getByRole("button", { name, exact: true });
   await expect(button).toBeVisible();
   const box = await button.boundingBox();
   const frame = await block.boundingBox();
@@ -188,7 +190,7 @@ test.describe("§NNN the public-list choice stands out: its own block, under the
       });
 
       await test.step("one press puts the name on: «Am reținut alegerea ta.», the list and the results — the same button", async () => {
-        await block.getByRole("button", { name: OPT_IN }).click();
+        await block.getByRole("button", { name: OPT_IN, exact: true }).click();
         await expect(page.getByTestId("manage-list-choice-changed")).toHaveText("Am reținut alegerea ta.", { timeout: 30_000 });
         await expect(page).toHaveURL(/[?&]list=1/);
         await hydrated(page);
@@ -204,7 +206,7 @@ test.describe("§NNN the public-list choice stands out: its own block, under the
       });
 
       await test.step("a second press takes it off, back where it started", async () => {
-        await block.getByRole("button", { name: OPT_OUT }).click();
+        await block.getByRole("button", { name: OPT_OUT, exact: true }).click();
         await expect(block).toHaveAttribute("data-listed", "false", { timeout: 30_000 });
         await expect(page.getByTestId("manage-list-choice-changed")).toHaveText("Am reținut alegerea ta.");
         await expect(block.getByTestId("manage-list-choice-state")).toHaveText(OFF);
@@ -248,7 +250,7 @@ test.describe("§NNN the public-list choice stands out: its own block, under the
       await block.scrollIntoViewIfNeeded();
       await page.screenshot({ path: test.info().outputPath("mine-off-the-list.png") });
 
-      await block.getByRole("button", { name: OPT_IN }).click();
+      await block.getByRole("button", { name: OPT_IN, exact: true }).click();
       await expect(page.getByTestId("my-list-choice-changed")).toHaveText("Am reținut alegerea ta.", { timeout: 30_000 });
       await hydrated(page);
       await expect(block.getByTestId("my-list-choice-state")).toHaveText(ON);
@@ -256,7 +258,7 @@ test.describe("§NNN the public-list choice stands out: its own block, under the
       expect(await listed(seeded.registrationId)).toBe(true);
       await fitsTheScreen(page);
 
-      await block.getByRole("button", { name: OPT_OUT }).click();
+      await block.getByRole("button", { name: OPT_OUT, exact: true }).click();
       await expect(block).toHaveAttribute("data-listed", "false", { timeout: 30_000 });
       await expect(block.getByTestId("my-list-choice-state")).toHaveText(OFF);
       expect(await listed(seeded.registrationId)).toBe(false);

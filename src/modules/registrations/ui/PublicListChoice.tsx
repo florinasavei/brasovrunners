@@ -7,13 +7,13 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 
 type ServerAction = (form: FormData) => Promise<void>;
 
-/** The block's words, already in the page's language: the page reads them (`Registrations.list.*`, `Event.startList.anonymous`). */
+/** The block's words, already in the page's language: `public-list-choice-words.ts` reads them (`Registrations.list.*`, `Event.startList.anonymous`). */
 export type PublicListChoiceWords = {
-  /** «Lista publică și clasamentul». */
+  /** «Lista publică și clasamentul» on a race; the list's own title, «Lista publică de participanți», on an event without results. */
   title: string;
   /** Where the name stands now, from `listChoiceState`: drawn bold, after the eye. */
   state: string;
-  /** The other answer, the button's words: «Vreau să apar pe lista de participanți & rezultate» or «Nu vreau să apar pe listă și în clasament». */
+  /** The other answer, the button's words — the tick's own (§570): «Vreau să apar pe lista de participanți & rezultate» or «Nu vreau să apar pe lista de participanți & rezultate». */
   press: string;
   /** What the button says while the request is in flight. */
   pressing: string;

@@ -53,8 +53,9 @@ import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName"
 import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
 import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
 import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
-import { listChoiceState } from "@/modules/registrations/domain/list-choice";
-import PublicListChoice, { type PublicListChoiceWords } from "@/modules/registrations/ui/PublicListChoice";
+import type { ListChoiceFacts } from "@/modules/registrations/domain/list-choice";
+import PublicListChoice from "@/modules/registrations/ui/PublicListChoice";
+import { publicListChoiceWords } from "@/modules/registrations/ui/public-list-choice-words";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -217,37 +218,25 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   /*
     «Lista publică și clasamentul» (§NNN): the registration's own page's block, per registration — its sentence by the one rule
     (`listChoiceState`), from the event's type and the notices that describe the results (cached, read only while the page lists
-    somebody), and, off the list, the label the public list prints instead of a name, read from the list's own words.
+    somebody), and off the list «Participant (nume ascuns)» only for a confirmed registration inside the places on a list its event
+    shows now (`item.listShown`) — in the words both pages share (`publicListChoiceWords`).
   */
   const listing = context.ok && context.items.length > 0;
   const firstResults = listing ? await cachedFirstResultsNoticeVersion() : null;
   const resultsAskLine = context.ok && context.items.some((item) => item.resultsNameConsent) ? await cachedFirstResultsNameAskNoticeVersion() : null;
-  const tEvent = listing ? await getTranslations("Event") : null;
-  const listChoiceWords = (item: MyRegistration): PublicListChoiceWords => {
-    const state = listChoiceState({
-      listed: item.listed,
-      eventType: item.eventType,
-      privacyNoticeVersion: item.privacyNoticeVersion,
-      resultsNameConsent: item.resultsNameConsent,
-      resultsConsentVersion: item.resultsConsentVersion,
-      firstResultsNoticeVersion: firstResults,
-      firstResultsNameAskNoticeVersion: resultsAskLine,
-    });
-    return {
-      title: t("list.choice.title"),
-      state:
-        state === "listedWithResults"
-          ? t("list.choice.listedWithResults")
-          : state === "listed"
-            ? t("list.choice.listed")
-            : t("list.choice.notListed", { anonymous: tEvent ? tEvent("startList.anonymous") : "" }),
-      press: item.listed ? t("list.choice.optOut") : t("list.optIn"),
-      pressing: t("list.choice.saving"),
-      help: t("list.choice.helpMine"),
-      changed: t("list.changed"),
-      failed: t("list.failed"),
-    };
-  };
+  const listChoiceWords = listing ? await publicListChoiceWords("mine") : null;
+  const listChoiceFacts = (item: MyRegistration): ListChoiceFacts => ({
+    listed: item.listed,
+    confirmed: item.status === "CONFIRMED",
+    outsideCapacity: item.outsideCapacity,
+    listShown: item.listShown,
+    eventType: item.eventType,
+    privacyNoticeVersion: item.privacyNoticeVersion,
+    resultsNameConsent: item.resultsNameConsent,
+    resultsConsentVersion: item.resultsConsentVersion,
+    firstResultsNoticeVersion: firstResults,
+    firstResultsNameAskNoticeVersion: resultsAskLine,
+  });
 
   /** The declaration's line under one person (§519), or null where there is nothing to say (cancelled). */
   const declarationLine = (item: { status: Parameters<typeof declarationStateKey>[0]; declarationSignedAt: Date | null; eventTimezone: string }) => {
@@ -503,16 +492,18 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 block as the registration's own page since §NNN: under the state and the QR, before the cancel and the offers.
                 The link is read, never spent — as "I am here" above — so cancel stays.
               */}
-              <PublicListChoice
-                registrationId={item.id}
-                listed={item.listed}
-                level={3}
-                outcome={list === item.id ? "changed" : listFailed === item.id ? "failed" : null}
-                words={listChoiceWords(item)}
-                action={setListConsentFromMyRegistrationsAction}
-                fields={{ locale, token, registrationId: item.id }}
-                data-testid="my-list-choice"
-              />
+              {listChoiceWords && (
+                <PublicListChoice
+                  registrationId={item.id}
+                  listed={item.listed}
+                  level={3}
+                  outcome={list === item.id ? "changed" : listFailed === item.id ? "failed" : null}
+                  words={listChoiceWords(listChoiceFacts(item))}
+                  action={setListConsentFromMyRegistrationsAction}
+                  fields={{ locale, token, registrationId: item.id }}
+                  data-testid="my-list-choice"
+                />
+              )}
 
               {/* The cancel with its reason (§558), on a line of its own under the race-day buttons. */}
               <Box component="form" action={cancelFromMyRegistrationsAction} data-testid="mine-cancel">

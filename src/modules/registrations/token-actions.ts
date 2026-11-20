@@ -16,7 +16,7 @@ import {
 } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
+import { publicListStillOpen, selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { findEventForRegistrationById, findEventNotificationDetails } from "@/modules/events/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -755,7 +755,9 @@ export async function readRaceDayContext(secret: string, now: Date) {
 
   const registration = await findRegistrationById(db, context.token.registrationId ?? "");
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
-  const event = await loadEventForRegistration(db, registration.eventId);
+  // The event's own row, one read: race day's start, state and zone, and the public list the list's block speaks of (§NNN).
+  const event = await findEventForRegistrationById(db, registration.eventId);
+  if (!event) throw new DomainError("NOT_FOUND", "no such event");
   // How long before the start a participant may say "I am here" from their own link: the club's
   // hours (§377), a day unless changed.
   const deadlines = await currentDeadlines(db);
@@ -779,6 +781,12 @@ export async function readRaceDayContext(secret: string, now: Date) {
     selfCheckinHours: deadlines.selfCheckinHours,
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
+    /**
+     * The event's public participant list is drawn now (§NNN): switched on (`NAMES`) and inside the club's days after the event
+     * (§421) — the only list a confirmed person off it is a «Participant (nume ascuns)» row of, which the list's block says. Display
+     * only: nothing here or behind the page's presses reads it.
+     */
+    listShown: event.participantListVisibility === "NAMES" && publicListStillOpen(event, now, deadlines),
     /**
      * The family marker (§543): the other people on this address at the event, names only — behind the
      * address's own link, the one place the names on it may be read (§389).

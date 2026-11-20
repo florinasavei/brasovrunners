@@ -77,8 +77,9 @@ import {
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
-import { listChoiceState } from "@/modules/registrations/domain/list-choice";
-import PublicListChoice, { type PublicListChoiceWords } from "@/modules/registrations/ui/PublicListChoice";
+import type { ListChoiceFacts } from "@/modules/registrations/domain/list-choice";
+import PublicListChoice from "@/modules/registrations/ui/PublicListChoice";
+import { publicListChoiceWords } from "@/modules/registrations/ui/public-list-choice-words";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -236,34 +237,22 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   /*
     «Lista publică și clasamentul» (§NNN): each person's block says where their name stands by the one rule (`listChoiceState`) —
     «și în clasament» only where the published results would print it, from the event's type `details` already carries and the
-    notices read above — and, off the list, the label the public list prints instead of a name, read from the list's own words.
+    notices read above; off the list, «Participant (nume ascuns)» only for a confirmed person inside the places on a list the event
+    shows now (`live.listShown`, read with the event's row) — in the words both pages share (`publicListChoiceWords`).
   */
-  const tEvent = live ? await getTranslations("Event") : null;
-  const listChoiceWords = (one: (typeof people)[number]): PublicListChoiceWords => {
-    const state = listChoiceState({
-      listed: !one.listOptOut,
-      eventType: details?.type ?? null,
-      privacyNoticeVersion: one.privacyNoticeVersion,
-      resultsNameConsent: one.resultsNameConsent,
-      resultsConsentVersion: one.resultsConsentVersion,
-      firstResultsNoticeVersion: firstResults,
-      firstResultsNameAskNoticeVersion: resultsAskLine,
-    });
-    return {
-      title: t("list.choice.title"),
-      state:
-        state === "listedWithResults"
-          ? t("list.choice.listedWithResults")
-          : state === "listed"
-            ? t("list.choice.listed")
-            : t("list.choice.notListed", { anonymous: tEvent ? tEvent("startList.anonymous") : "" }),
-      press: one.listOptOut ? t("list.optIn") : t("list.choice.optOut"),
-      pressing: t("list.choice.saving"),
-      help: t("list.choice.help"),
-      changed: t("list.changed"),
-      failed: t("list.failed"),
-    };
-  };
+  const listChoiceWords = live ? await publicListChoiceWords("manage") : null;
+  const listChoiceFacts = (one: (typeof people)[number]): ListChoiceFacts => ({
+    listed: !one.listOptOut,
+    confirmed: one.status === "CONFIRMED",
+    outsideCapacity: one.outsideCapacity,
+    listShown: live?.listShown === true,
+    eventType: details?.type ?? null,
+    privacyNoticeVersion: one.privacyNoticeVersion,
+    resultsNameConsent: one.resultsNameConsent,
+    resultsConsentVersion: one.resultsConsentVersion,
+    firstResultsNoticeVersion: firstResults,
+    firstResultsNameAskNoticeVersion: resultsAskLine,
+  });
   /*
     «Completează-ți datele» (§905): for each person still registered whose registration lacks an answer the public
     form requires, a card with only those boxes and a save button — a confirmed one too, its declaration untouched.
@@ -493,16 +482,16 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                   own since §NNN: right under the state, the number and the QR — before the declaration line, the offers and the
                   rest — with a heading on every person, a family's too. The manage token is read, never spent — the same page
                   must still be able to cancel — and the sentence reads the row as it stands now. `#list` is the link's own
-                  person's, where the confirmation email's list link and every press land.
+                  person's, where every press lands (the confirmation email's list link opens its own page, `/inregistrari/lista/…`).
                 */}
-                {active && (
+                {active && listChoiceWords && (
                   <PublicListChoice
                     id={one.own ? "list" : undefined}
                     registrationId={one.id}
                     listed={!one.listOptOut}
                     level={family ? 4 : 2}
                     outcome={answered && list === "1" ? "changed" : answered && list === "0" ? "failed" : null}
-                    words={listChoiceWords(one)}
+                    words={listChoiceWords(listChoiceFacts(one))}
                     action={setListConsentFromManageAction}
                     fields={{ locale, token, registrationId: one.id }}
                     data-testid="manage-list-choice"

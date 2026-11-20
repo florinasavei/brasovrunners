@@ -488,7 +488,12 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
   const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   const words = (locale: Locale) => catalogueOf(locale).Registrations.list;
   /** The sentence off the list, the public list's own label in it — never typed here or in the page. */
-  const offTheList = (locale: Locale) => words(locale).choice.notListed.replace("{anonymous}", catalogueOf(locale).Event.startList.anonymous);
+  const offTheList = (locale: Locale) => words(locale).choice.notListedCountedWithResults.replace("{anonymous}", catalogueOf(locale).Event.startList.anonymous);
+
+  /** The event's public list switched on (`NAMES`): only there is a confirmed person off it a «Participant (nume ascuns)» row (§186). */
+  async function showList(eventId: string, shown = true) {
+    await db.update(events).set({ participantListVisibility: shown ? "NAMES" : "HIDDEN" }).where(eq(events.id, eventId));
+  }
 
   /** A privacy notice that describes the results, in force from before the registrations: the results print a listed name. */
   async function approveResultsNotice() {
@@ -579,6 +584,7 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
   it("draws a one-person page's block right under the QR and the check-in, before the declaration line and the cancel, in both languages, listed and not", async () => {
     await approveResultsNotice();
     const { alone, secret } = await singleConfirmed();
+    await showList(alone.eventId);
     for (const locale of LOCALES) {
       const list = words(locale);
       const states: ReturnType<typeof read>[] = [];
@@ -599,7 +605,8 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
         // The button sets the other answer.
         expect(block.posts).toBe(listOptOut ? "1" : "0");
         expect(block.press.type).toBe("submit");
-        expect(block.press.text).toContain(escaped(listOptOut ? list.optIn : list.choice.optOut));
+        // The tick's own words both ways (§570), as the confirmation email's page and the club's messages name them.
+        expect(block.press.text).toContain(escaped(listOptOut ? list.optIn : list.optOut));
         // Order on the page: the QR and «Sunt aici»'s line → the block → the declaration line → the cancel.
         const qr = page.indexOf('data-testid="qr-with-name"');
         const checkIn = page.indexOf(escaped(catalogueOf(locale).Registrations.manage.selfCheckInClosed.split("{")[0]));
@@ -629,9 +636,88 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
     }
   });
 
+  it("off the list on an event that publishes no list (the default), names no «Participant (nume ascuns)» row — there is none", async () => {
+    await approveResultsNotice();
+    const { alone, secret } = await singleConfirmed();
+    await db.update(registrations).set({ listOptOut: true }).where(eq(registrations.id, alone.id));
+    const mine = await issueActionToken(db, { participantId: alone.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(60 * 24 * 7), now: at(23) });
+    vi.setSystemTime(at(24));
+    for (const locale of LOCALES) {
+      // No row to name; on a race the results print no name either — on the registration's page and on «Înscrierile mele».
+      const [hidden] = blocks(await managePage(secret, locale), "manage-list-choice");
+      expect(read(hidden).state).toBe(escaped(words(locale).choice.notListedWithResults));
+      const [own] = blocks(await minePage(mine.secret, locale), "my-list-choice");
+      expect(read(own).state).toBe(escaped(words(locale).choice.notListedWithResults));
+    }
+  });
+
+  it("off the list on «Lista de invitați speciali», names no «Participant (nume ascuns)» row on either page — the shown list draws none for them (§743)", async () => {
+    await approveResultsNotice();
+    const { alone, secret } = await singleConfirmed();
+    await showList(alone.eventId);
+    // Seated outside the places by an Administrator (§643), unticked: not even an anonymous row (BR-REQ-039-01 criteria 30, 37).
+    await db.update(registrations).set({ listOptOut: true, outsideCapacity: true }).where(eq(registrations.id, alone.id));
+    const mine = await issueActionToken(db, { participantId: alone.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(60 * 24 * 7), now: at(23) });
+    vi.setSystemTime(at(24));
+    for (const locale of LOCALES) {
+      const [manage] = blocks(await managePage(secret, locale), "manage-list-choice");
+      expect(read(manage).state).toBe(escaped(words(locale).choice.notListedWithResults));
+      const [own] = blocks(await minePage(mine.secret, locale), "my-list-choice");
+      expect(read(own).state).toBe(escaped(words(locale).choice.notListedWithResults));
+    }
+    // Back inside the places, the same person off the same shown list is its «Participant (nume ascuns)» row again, on both pages.
+    await db.update(registrations).set({ outsideCapacity: false }).where(eq(registrations.id, alone.id));
+    const [manage] = blocks(await managePage(secret, "ro"), "manage-list-choice");
+    expect(read(manage).state).toBe(escaped(offTheList("ro")));
+    const [own] = blocks(await minePage(mine.secret, "ro"), "my-list-choice");
+    expect(read(own).state).toBe(escaped(offTheList("ro")));
+  });
+
+  it("off the list while still to sign, names no «Participant (nume ascuns)» row either — the shown list draws none for a pending registration", async () => {
+    await approveResultsNotice();
+    // Ana, Maria and Ion, each still to sign; Ana ticked the list, the two other adults did not (§421).
+    const people = await family();
+    await showList(people.event.id);
+    vi.setSystemTime(at(20));
+    const manage = await issueActionToken(db, { participantId: people.ana.participantId, registrationId: people.ana.id, purpose: "MANAGE_REGISTRATION", expiresAt: at(60 * 24 * 7), now: at(20) });
+    vi.setSystemTime(at(21));
+    for (const locale of LOCALES) {
+      const found = blocks(await managePage(manage.secret, locale), "manage-list-choice").map(read);
+      expect(found.map((block) => [block.listed, block.state])).toEqual([
+        ["true", escaped(words(locale).choice.listedWithResults)],
+        ["false", escaped(words(locale).choice.notListedWithResults)],
+        ["false", escaped(words(locale).choice.notListedWithResults)],
+      ]);
+    }
+  });
+
+  it("names neither the results nor «clasament» on an event that takes none — a group run: the list's own title, the list alone", async () => {
+    await approveResultsNotice();
+    const { alone, secret } = await singleConfirmed();
+    await db.update(events).set({ type: "GROUP_RUN" }).where(eq(events.id, alone.eventId));
+    await showList(alone.eventId);
+    for (const locale of LOCALES) {
+      const list = words(locale);
+      const anonymous = catalogueOf(locale).Event.startList.anonymous;
+      for (const [listOptOut, shown, sentence] of [
+        [false, true, list.choice.listed],
+        [true, true, list.choice.notListedCounted.replace("{anonymous}", anonymous)],
+        [true, false, list.choice.notListed],
+      ] as const) {
+        await db.update(registrations).set({ listOptOut }).where(eq(registrations.id, alone.id));
+        await showList(alone.eventId, shown);
+        const [block] = blocks(await managePage(secret, locale), "manage-list-choice");
+        expect(read(block).heading).toEqual(["h2", escaped(list.title)]);
+        expect(read(block).state).toBe(escaped(sentence));
+        expect(block).not.toContain(escaped(list.choice.title));
+      }
+    }
+  });
+
   it("draws the block for every person of a family's page, each with its heading, its state and the same button, the anchor on the link's own", async () => {
     await approveResultsNotice();
-    const { ana, maria, ion, secret } = await confirmedFamily();
+    const { event, ana, maria, ion, secret } = await confirmedFamily();
+    await showList(event.id);
     for (const locale of LOCALES) {
       const list = words(locale);
       const page = await managePage(secret, locale);
@@ -648,7 +734,7 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
       expect(found[0].state).toBe(escaped(list.choice.listedWithResults));
       expect(found[1].state).toBe(escaped(offTheList(locale)));
       expect(found[2].state).toBe(escaped(offTheList(locale)));
-      expect(found[0].press.text).toContain(escaped(list.choice.optOut));
+      expect(found[0].press.text).toContain(escaped(list.optOut));
       expect(found[1].press.text).toContain(escaped(list.optIn));
       for (const block of found) expect(block.press.classes).toEqual(found[0].press.classes);
       expect(found[0].press.classes).toContain("MuiButton-contained");
@@ -678,7 +764,8 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
 
   it("draws the same block on «Înscrierile mele», per registration, under the QR and before the cancel, in both languages", async () => {
     await approveResultsNotice();
-    const { mineSecret } = await confirmedFamily();
+    const { event, mineSecret } = await confirmedFamily();
+    await showList(event.id);
     for (const locale of LOCALES) {
       const list = words(locale);
       const page = await minePage(mineSecret, locale);
@@ -697,6 +784,9 @@ describe("§NNN «Lista publică și clasamentul», a block of its own on every 
       ]);
       expect(found[0].state).toBe(escaped(list.choice.listedWithResults));
       expect(found[1].state).toBe(escaped(offTheList(locale)));
+      // The tick's own words both ways (§570), as on the registration's own page.
+      expect(found[0].press.text).toContain(escaped(list.optOut));
+      expect(found[1].press.text).toContain(escaped(list.optIn));
       expect(page).toContain(escaped(list.choice.helpMine));
       const items = page.split('data-testid="my-registration"').slice(1);
       expect(items).toHaveLength(3);

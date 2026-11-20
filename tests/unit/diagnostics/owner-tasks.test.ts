@@ -443,8 +443,7 @@ describe("owner tasks", () => {
       const messageStep = item.how.findIndex((step) => step.includes(catalogue.Admin.participantMessages.link));
       expect(messageStep).toBeGreaterThanOrEqual(0);
       expect(messageStep).toBeLessThan(approveStep);
-      // The way out as «Înscrierile mele» and the registration's own page name it since §NNN («Lista publică și clasamentul»).
-      expect(item.how.join("\n")).toContain(catalogue.Registrations.list.choice.optOut);
+      expect(item.how.join("\n")).toContain(catalogue.Registrations.list.optOut);
       expect(item.how.join("\n")).not.toContain("„—”");
       expect(item.how.join("\n")).not.toContain("“—”");
       expect(item.how.every((step) => step.length <= 200)).toBe(true);

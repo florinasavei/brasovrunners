@@ -5315,7 +5315,7 @@
           "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „BIB” pentru toți cei confirmați care au număr; cei fără număr au „—”.",
           "how": [
             "Înainte de aprobare, scrie celor deja înscriși: /admin/events → evenimentul → „Trimite un mesaj participanților”. Spune că numărul lor apare lângă nume la „Cine vine” și cum renunță (următorul pas).",
-            "Renunțarea: din „Înscrierile mele” sau din pagina înscrierii (linkul din emailul ei) apasă „Nu vreau să apar pe listă și în clasament”; numărul dispare odată cu numele.",
+            "Renunțarea: din „Înscrierile mele” (sau linkul din email) apasă „Nu vreau să apar pe lista de participanți & rezultate”; numărul dispare odată cu numele.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie numărul de concurs de lângă numele celor confirmați.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "De atunci încolo, lista arată coloana „BIB” pentru toți cei confirmați care au număr, indiferent de nota sub care s-au înscris.",
@@ -9906,7 +9906,7 @@
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
                 "Numărul membrilor: fiecare înscriere care a bifat «Sunt membru al grupului» primește banda și eticheta membrilor (o elită, niciodată); numărul e același. O bifă greșită o corectezi în înscriere, cu «Modifică datele».",
                 "Numerele membrilor se tipăresc primele, pe foi separate. Pe pagina numerelor, «Doar numerele membrilor (PDF)» și «Fără numerele membrilor (PDF)» le despart, ca să le tipărești pe alt carton.",
-                "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe listă și în clasament» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
+                "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },
             {
@@ -10520,7 +10520,7 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații; după aceea, lista de așteptare apare doar la evenimentele cu «Lista de așteptare e publică» bifat.",
-                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe listă și în clasament» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Alergări» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
@@ -14127,8 +14127,10 @@
         "title": "Lista publică și clasamentul",
         "listedWithResults": "Numele tău apare pe lista publică a participanților și în clasament.",
         "listed": "Numele tău apare pe lista publică a participanților.",
-        "notListed": "Numele tău nu apare pe lista publică a participanților și nici în clasament: pe listă apari ca „{anonymous}”.",
-        "optOut": "Nu vreau să apar pe listă și în clasament",
+        "notListedCountedWithResults": "Numele tău nu apare pe lista publică a participanților și nici în clasament: pe listă apari ca „{anonymous}”.",
+        "notListedCounted": "Numele tău nu apare pe lista publică a participanților: pe listă apari ca „{anonymous}”.",
+        "notListedWithResults": "Numele tău nu apare pe lista publică a participanților și nici în clasament.",
+        "notListed": "Numele tău nu apare pe lista publică a participanților.",
         "saving": "Salvăm alegerea…",
         "help": "Poți schimba oricând, de aici sau din „Înscrierile mele”.",
         "helpMine": "Poți schimba oricând, de aici sau din pagina înscrierii."

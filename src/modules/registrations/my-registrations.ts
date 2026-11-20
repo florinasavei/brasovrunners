@@ -21,7 +21,7 @@ import { findRegistrationById, readWaitlistPosition } from "./repository";
 import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from "./service";
 import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
+import { publicListStillOpen, selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { RaceNumberFormat } from "./domain/race-number";
 
@@ -125,6 +125,16 @@ export type MyRegistration = {
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
   /**
+   * The event's public participant list is drawn now (§NNN): switched on (`NAMES`) and inside the club's days after the event (§421)
+   * — where a confirmed person off it is a «Participant (nume ascuns)» row, which the list's block says. Display only.
+   */
+  listShown: boolean;
+  /**
+   * On «Lista de invitați speciali» (§643): such a person off the list is no row of it at all (§743), so the block never names the
+   * «Participant (nume ascuns)» row for them. Display only.
+   */
+  outsideCapacity: boolean;
+  /**
    * Whether there is a health note, or a Strava link or Instagram username, to withdraw (§322).
    * Booleans and never the values: the page offers the button and does not print the note.
    */
@@ -175,6 +185,9 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventTimezone: events.timezone,
       eventStatus: events.eventStatus,
       eventType: events.type,
+      // Whether the event's public list is drawn now (§NNN): its switch, and its end for the club's days after it (§421).
+      participantListVisibility: events.participantListVisibility,
+      eventEndsAt: events.endsAt,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
@@ -223,8 +236,10 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
   const standings = new Map<string, WaitlistStanding | null>(
     await Promise.all(rows.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
   );
-  return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, ...row }) => ({
+  return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, participantListVisibility, eventEndsAt, ...row }) => ({
     ...row,
+    listShown: participantListVisibility === "NAMES" && deadlines !== null && publicListStillOpen({ startsAt: row.eventStartsAt, endsAt: eventEndsAt }, now, deadlines),
+    outsideCapacity,
     releaseDeadline:
       row.status !== "PENDING_DECLARATION"
         ? null
