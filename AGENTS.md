@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.94-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.95-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.94-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.95-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1696,7 +1696,7 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   its own, each chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
   (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
   line says its time, to be written on paper. With anything typed in the box, «Finish» is the box's own press,
-  exactly «Sosit»'s, and keeps no moment (`domain/finish-line.ts#finishPress`, §NNN). A press the server answers
+  exactly «Sosit»'s, and keeps no moment (`domain/finish-line.ts#finishPress`, §1027). A press the server answers
   recorded, and a moment kept, are said in the house's toast (`useToast`) for two and a half seconds — after the
   paint, polite, the newest in the place of the one shown (`FormNotice.lane`) and no tap landing on it
   (`passThrough`); a refusal, a duplicate, a press still waiting and a cancelled question toast nothing.

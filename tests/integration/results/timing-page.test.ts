@@ -512,12 +512,12 @@ describe("§1010 «Cronometrare»: the question a finished elite's number typed 
 });
 
 /**
- * §NNN — «Finish» with a number typed records it, and a short toast says every press that did something (the owner, 2026-11-20: the
+ * §1027 — «Finish» with a number typed records it, and a short toast says every press that did something (the owner, 2026-11-20: the
  * box emptied after «Finish», and a small toast): the line under the box and the toast's words the page hands its island, in Romanian
  * and in English — an elite's of the number, never of the person (§1010), every sentence a toast's, under 200 characters —; and with
  * scripts off nothing new: the box's form posts the number as before, and neither «Finish» nor the line that names it is drawn.
  */
-describe("§NNN «Cronometrare»: «Finish» with a number, the line under the box and the toast", () => {
+describe("§1027 «Cronometrare»: «Finish» with a number, the line under the box and the toast", () => {
   it("hands the island the line under the box and the toast's words, in Romanian and in English, each sentence under 200 characters", async () => {
     for (const [locale, help, recorded, elite, kept] of [
       [

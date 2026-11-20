@@ -71,7 +71,7 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   elite's number. A line with no number is drawn disabled with what to do — or, for a viewer who writes the elite list
  *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
- * - **The box**: the numeric keypad, Enter, «Sosit» — or «⏱ Finish» with something typed (§NNN) — records, and the box is empty at
+ * - **The box**: the numeric keypad, Enter, «Sosit» — or «⏱ Finish» with something typed (§1027) — records, and the box is empty at
  *   once, keeping the focus for the next number, given inside the press's own tap so a phone's keyboard stays up (`sendBox`).
  *   **A finished elite's number typed again is asked first** (§1010): an elite already «Sosit» as this page last heard — at its load or
  *   in the answer to any press since — or whose press waits or was saved on this phone (`asksBeforeAgain`) gets the house's one dialog
@@ -84,10 +84,10 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  * - **«⏱ Finish»** for a bunch: with the box empty, each press keeps one moment (oldest first, each with its age and its ✕); the
  *   next number or elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it
  *   is dropped when the line is read or pressed, and a line says its time, for paper (`staleKept`). **With something typed in the
- *   box, «Finish» is the box's own press** (§NNN, amending §1008; `finishPress`): exactly «Sosit»'s — the same queue, a finished
+ *   box, «Finish» is the box's own press** (§1027, amending §1008; `finishPress`): exactly «Sosit»'s — the same queue, a finished
  *   elite's number asked first, the oldest kept moment taken —, keeping no moment; the box is empty and keeps the focus. The line
  *   under the box says so in one sentence (`boxHelp`).
- * - **A toast after every press that did something** (§NNN; `finishToastSentence`): a number the server answered recorded — the
+ * - **A toast after every press that did something** (§1027; `finishToastSentence`): a number the server answered recorded — the
  *   box's, «Finish»'s or an elite's button — «Nr. 205 — sosit la 0:23:41», at the time the line shows for it, and a moment «Finish»
  *   kept, «Timp prins la 0:23:41 — scrie numărul», as its chip says it. The house's toast (`useToast`), shown after the next paint,
  *   never inside the press (§371), for two and a half seconds (`FINISH_TOAST_MS`): polite for a screen reader, never taking the
@@ -149,11 +149,11 @@ export type FinishLineWords = {
   eliteAgain: { title: string; body: string; bodyBy: string; second: string; cancel: string; confirm: string };
   boxLabel: string;
   bibHint: string;
-  /** The one line under the box (§NNN): a number, then «Finish» or «Sosit», records it; «Finish» with no number catches a time. */
+  /** The one line under the box (§1027): a number, then «Finish» or «Sosit», records it; «Finish» with no number catches a time. */
   boxHelp: string;
   record: string;
   /**
-   * The toast after a press (§NNN), templates the island fills: a number recorded — «Nr. {bib} — sosit la {time}», an elite's
+   * The toast after a press (§1027), templates the island fills: a number recorded — «Nr. {bib} — sosit la {time}», an elite's
    * «Nr. {bib} ({label}) — sosit la {time}», words of the number, never of the person (§1010) — and a moment kept by «Finish»,
    * «Timp prins la {time} — scrie numărul».
    */
@@ -269,7 +269,7 @@ export function eliteAgainQuestion(words: FinishLineWords, again: EliteAgain): C
 }
 
 /**
- * What the toast after a press says (§NNN): a number the server answered recorded, with its elite's label when it is one, at its time
+ * What the toast after a press says (§1027): a number the server answered recorded, with its elite's label when it is one, at its time
  * since the gun — the line's own —; or a moment «Finish» kept, as its chip says it (`time`: the time since the gun, or the clock's
  * hour before the gun).
  */
@@ -279,7 +279,7 @@ export type FinishToast = { kind: "recorded"; bibNumber: number; label: string |
 const TOAST_LABEL_MAX = 80;
 
 /**
- * The toast's sentence in the page's words (§NNN): «Nr. 205 — sosit la 0:23:41», «Nr. 7 (Andrei) — sosit la 0:31:05» for an elite —
+ * The toast's sentence in the page's words (§1027): «Nr. 205 — sosit la 0:23:41», «Nr. 7 (Andrei) — sosit la 0:31:05» for an elite —
  * of the number, never of the person (§1010) —, «Timp prins la 0:23:41 — scrie numărul» for a kept moment; a label longer than
  * `TOAST_LABEL_MAX` cut, so the sentence stays a toast's, under 200 characters. Apart from the island so a Node render reads it.
  */
@@ -362,7 +362,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   const toast = useToast();
 
   /**
-   * The toast after a press that did something (§NNN): the house's, after the next paint — never inside the press (§371) —, two and
+   * The toast after a press that did something (§1027): the house's, after the next paint — never inside the press (§371) —, two and
    * a half seconds, the newest of the line's in the place of the one on screen (`lane`) and no tap landing on it (`passThrough`), so
    * the box keeps the focus and a button under it its press.
    */
@@ -491,7 +491,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
         if (answer.state) adopt(answer.state);
         const outcome: FinishEntryOutcome = answer.outcome;
         commitEntries((current) => settleEntry(current, next.id, outcome));
-        // Recorded — the server had it, or has it now: the toast says the number and its time (§NNN). A number already stored and a
+        // Recorded — the server had it, or has it now: the toast says the number and its time (§1027). A number already stored and a
         // refusal toast nothing: the press's own line says what became of it.
         if (outcome.kind === "recorded") say({ kind: "recorded", bibNumber: outcome.bibNumber, label: outcome.label, gunTimeMs: outcome.gunTimeMs });
       }
@@ -586,7 +586,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   );
 
   /**
-   * The box sent — by Enter, «Sosit», or «⏱ Finish» with something typed (§NNN): emptied at once and given the focus, inside the
+   * The box sent — by Enter, «Sosit», or «⏱ Finish» with something typed (§1027): emptied at once and given the focus, inside the
    * press's own tap, so a phone's keyboard stays up for the next number; what is no number says the hint (`readBox`).
    */
   const sendBox = () => {
@@ -621,7 +621,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   };
 
   /**
-   * «⏱ Finish» (§NNN, amending §986 and §1008; `finishPress`): with something typed in the box it is the box's own press — exactly
+   * «⏱ Finish» (§1027, amending §986 and §1008; `finishPress`): with something typed in the box it is the box's own press — exactly
    * «Sosit»'s, the box emptied and focused inside this tap —; with the box empty it keeps one moment for a bunch, as before, and the
    * toast says it as its chip does — unless «Finish» already holds the most it keeps (`KEPT_TIMES_MAX`), which keeps nothing.
    */
@@ -867,7 +867,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
         </Box>
       )}
 
-      {/* The box: the numeric keypad, Enter, «Sosit» or «Finish» with a number (§NNN), empty at once for the next number. */}
+      {/* The box: the numeric keypad, Enter, «Sosit» or «Finish» with a number (§1027), empty at once for the next number. */}
       <Box component="form" action={recordForm} onSubmit={onBox} autoComplete="off" data-testid="finish-form">
         {hidden}
         <Stack direction="row" sx={{ gap: 1, alignItems: "stretch", flexWrap: "wrap" }}>
@@ -911,7 +911,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
             {words.bibHint}
           </Typography>
         )}
-        {/* The one line of help under the box (§NNN): it names «Finish», which only the page draws — none with scripts off. */}
+        {/* The one line of help under the box (§1027): it names «Finish», which only the page draws — none with scripts off. */}
         {hydrated && (
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="finish-box-help">
             {words.boxHelp}
@@ -923,7 +923,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
       <ConfirmDialog spec={asked?.question ?? null} open={askOpen} onCancel={() => answerAgain(false)} onConfirm={() => answerAgain(true)} />
 
       {/* «⏱ Finish» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. With a number in
-          the box it is the box's press (§NNN); with the box empty it keeps a moment. */}
+          the box it is the box's press (§1027); with the box empty it keeps a moment. */}
       {hydrated && (
         <Box data-testid="finish-keep">
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>

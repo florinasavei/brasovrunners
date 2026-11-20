@@ -464,12 +464,12 @@ describe("§1010 the moment of the tap: read as «Sosit» is pressed, taken from
 });
 
 /**
- * §NNN — «Finish» with a number typed records it (the owner, 2026-11-20: after pressing «Finish» the box must empty, and a small
+ * §1027 — «Finish» with a number typed records it (the owner, 2026-11-20: after pressing «Finish» the box must empty, and a small
  * toast): the box read as it is sent, and the rule that decides what «Finish» does — the box's own press, exactly «Sosit»'s, with
  * anything typed; one kept moment with the box empty —; the number taking the oldest kept moment still young, as any number does, and
  * keeping none; and the toast's few seconds.
  */
-describe("§NNN «Finish»: with a number typed, the box's own press; with the box empty, one moment kept", () => {
+describe("§1027 «Finish»: with a number typed, the box's own press; with the box empty, one moment kept", () => {
   it("reads the box as it is sent: nothing, a race number, or something that is none", () => {
     expect(readBox("")).toEqual({ kind: "empty" });
     expect(readBox("   ")).toEqual({ kind: "empty" });

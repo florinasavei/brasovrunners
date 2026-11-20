@@ -54,7 +54,7 @@ describe("§384 the toast queue", () => {
     expect(TOAST_AUTO_HIDE_MS).toBeLessThanOrEqual(6000);
   });
 
-  // §NNN — «Cronometrare»'s presses come a second apart in a bunch: each says the newest, never one read seconds late behind the others.
+  // §1027 — «Cronometrare»'s presses come a second apart in a bunch: each says the newest, never one read seconds late behind the others.
   it("puts a lane's newest toast in the place of its lane's own, shown or waiting, with a new id; any other waits its turn as before", () => {
     const press = (bib: string) => ({ kind: "success" as const, key: "finishLine", sentence: `Nr. ${bib}`, lane: "finishLine", passThrough: true });
     let queue = toastQueueReducer(EMPTY_TOAST_QUEUE, { type: "show", notice: press("205") });

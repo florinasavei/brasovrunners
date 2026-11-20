@@ -54,13 +54,13 @@ export type FormNotice = {
   /** How long this toast stays, in milliseconds, when not `TOAST_AUTO_HIDE_MS`. */
   autoHideMs?: number;
   /**
-   * The toasts of one run of quick presses share a lane (§NNN: «Cronometrare»'s finish line, a press a second in a bunch): the
+   * The toasts of one run of quick presses share a lane (§1027: «Cronometrare»'s finish line, a press a second in a bunch): the
    * newest takes the place of its lane's toast on screen, and of one waiting its turn, rather than being read seconds late behind
    * them. A notice with no lane waits its turn as every toast does. Set in the browser only, never carried by a flash.
    */
   lane?: string;
   /**
-   * A toast no tap lands on (§NNN): no close button, and every tap goes through it to the page under it — for a short toast over a
+   * A toast no tap lands on (§1027): no close button, and every tap goes through it to the page under it — for a short toast over a
    * page pressed fast, where a button under the toast must never miss its press. It goes by itself. Set in the browser only.
    */
   passThrough?: boolean;
@@ -295,7 +295,7 @@ export function decodeFlash(raw: string | undefined | null): FormNotice | null {
 
 /**
  * One toast at a time (the provider's rule): the one showing, and the ones waiting their turn —
- * a lane's newest in the place of its lane's own (`FormNotice.lane`, §NNN). A reducer, so the
+ * a lane's newest in the place of its lane's own (`FormNotice.lane`, §1027). A reducer, so the
  * order — show, dismiss, the next one up — is a pure function the unit suite can drive without
  * a DOM; the provider owns the timer and the `Snackbar`.
  */
@@ -314,7 +314,7 @@ export function toastQueueReducer(state: ToastQueue, action: ToastQueueAction): 
   switch (action.type) {
     case "show": {
       const { lane } = action.notice;
-      // The newest of a lane in the place of its lane's toast (§NNN): a new id, so the Snackbar enters again and its clock starts over.
+      // The newest of a lane in the place of its lane's toast (§1027): a new id, so the Snackbar enters again and its clock starts over.
       if (state.current === null || (lane !== undefined && state.current.lane === lane)) {
         return { ...state, current: { ...action.notice, id: state.nextId }, nextId: state.nextId + 1 };
       }

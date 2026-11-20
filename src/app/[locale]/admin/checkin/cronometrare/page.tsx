@@ -289,7 +289,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     },
     boxLabel: t("timing.boxLabel"),
     bibHint: t("timing.bibHint"),
-    // The line under the box, and the toast after a press (§NNN): templates the island fills with the number, the label and the time.
+    // The line under the box, and the toast after a press (§1027): templates the island fills with the number, the label and the time.
     boxHelp: t("timing.boxHelp"),
     record: t("timing.record"),
     toast: {

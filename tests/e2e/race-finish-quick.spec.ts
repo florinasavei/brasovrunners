@@ -93,7 +93,7 @@ function resultTime(ms: number): string {
 }
 
 /**
- * Whether the box holds the focus as each tap on the question — or on what `within` names, «Finish» (§NNN) — ends (§1010): read at
+ * Whether the box holds the focus as each tap on the question — or on what `within` names, «Finish» (§1027) — ends (§1010): read at
  * the window, after the page's own handler and the render it commits, before any frame — iOS Safari raises the keyboard only for a
  * focus a tap's own handler gives, never for one given a frame later. Each read returns what was seen since the last one, a tap at a
  * time.
@@ -491,7 +491,7 @@ test.describe("§986 «Cronometrare»", () => {
   });
 
   /**
-   * §NNN — the owner, 2026-11-20, of «Finish» pressed with a number in the box: «si duoa ce apas aici "Finish" trebuie sa se golasca
+   * §1027 — the owner, 2026-11-20, of «Finish» pressed with a number in the box: «si duoa ce apas aici "Finish" trebuie sa se golasca
    * inoutul si a am un mic toast». The desk Volunteer types 205 and presses «Finish»: recorded as «Sosit» records it — the box empty
    * and focused as the tap ends, no moment kept, the line under «Ultimii sosiți» — and a short toast says «Nr. 205 — sosit la …», the
    * line's time: polite, no tap landing on it, clear of the box and its two buttons, gone in a few seconds. «Finish» with the box empty

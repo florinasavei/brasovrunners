@@ -9,7 +9,7 @@ import { type NoticeKind, TOAST_AUTO_HIDE_MS } from "./notice";
 
 /**
  * One toast as drawn: its sentence already in the reader's language, and an id that changes with every toast — and, for a toast no
- * tap may land on (`passThrough`, §NNN), no close button and every tap through to the page under it.
+ * tap may land on (`passThrough`, §1027), no close button and every tap through to the page under it.
  */
 export type DrawnToast = { id: number; kind: NoticeKind; sentence: string; autoHideMs?: number; passThrough?: boolean };
 
@@ -64,7 +64,7 @@ export default function ToastRegion({
           // At the top (§496), just under the sticky site header — the one pair the theme's
           // `scroll-padding-top` also reads (`HEADER_CLEARANCE_PX`) — so it never covers the
           // header's way out, nor the footer's bar or the editor's sticky save row at the bottom.
-          // A pass-through toast (§NNN) takes no tap: each goes to the button under it.
+          // A pass-through toast (§1027) takes no tap: each goes to the button under it.
           sx={{ top: { xs: TOAST_TOP_PX.xs, sm: TOAST_TOP_PX.sm }, ...(toast.passThrough ? { pointerEvents: "none" } : {}) }}
           data-testid="toast"
         >
