@@ -1707,6 +1707,15 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
   number and never a runner's name, and the line adds the name the number belongs to today, read live. Each line of
   «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
+- **A recorded time chosen (§NNN).** Under a line's «Timp», «Timpi la sosire» lists the times the line recorded for its
+  number since the last reset — the presses' `finishLine` rows, an undone press left out (`domain/recorded-times.ts`), one
+  query of the trail —, and «Folosește» (`canEnterResults`, asked first) makes one the line's «Sosit» time
+  (`results.ts#chooseRecordedFinishTime`): only a time the trail holds for that number, read in the transaction
+  (`RESULT_TIME_NOT_RECORDED` otherwise); never on a «Descalificat» line — no block drawn, `RESULT_DISQUALIFIED` on the
+  server (`mayChooseRecordedTime`), «Abandon» and «Neprezentat» keep it —; guarded by the chosen line's own fingerprint
+  (`resultLineFingerprint`, posted in the button's value): CONFLICT only when that line changed since the page was drawn,
+  never for another number's arrival or another line's save — the big save keeps the whole list's —; the chip time and the
+  note untouched, every place ranked again from the live rows, one audit row with `chosenFromHistory: true`.
 
 MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
 (the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves

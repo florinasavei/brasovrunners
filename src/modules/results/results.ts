@@ -42,13 +42,15 @@ import {
   undoOpenUntil,
   undoTrailOf,
 } from "./domain/finish-line";
-import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
+import { type FingerprintedResult, resultLineFingerprint, resultsFingerprint } from "./domain/fingerprint";
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
 import { publicResultName } from "./domain/public-name";
 import { type PublicNameReason, publicNameVerdict } from "./domain/public-name-reason";
 import { isResultStatus, type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
+import { isRecordedTime, mayChooseRecordedTime, recordedTimesOf } from "./domain/recorded-times";
 import { type ReadRow, type ResultRowProblem, readResultRow } from "./domain/row-input";
+import { loadRecordedTimesTrail } from "./recorded-times";
 import { type PostedResultRow, resultBox } from "./rows";
 
 /**
@@ -476,6 +478,11 @@ export type ResultRunner = {
      */
     writtenBy: { name: string | null; changed: boolean };
   } | null;
+  /**
+   * What this line stored when it was read (§NNN, `resultLineFingerprint`): its one row's own columns, or none for a line with no
+   * result. «Folosește» posts it back and is refused with CONFLICT only when THIS line changed since — never for another line's write.
+   */
+  lineFingerprint: string;
 };
 
 export type EventResultsView = {
@@ -584,6 +591,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       birthDate: null,
       ageOnRaceDay: ageOnRaceDay(runner.birthDate, event.startsAt, event.timezone),
       result: row ? resultOf(row, rankedOf(row), staffNames) : null,
+      lineFingerprint: resultLineFingerprint(row),
     });
   }
   // The elites first — the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
@@ -622,6 +630,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       birthDate: row.birthDate,
       ageOnRaceDay: ageOnRaceDay(row.birthDate, event.startsAt, event.timezone),
       result: resultOf(row, rankedOf(row), staffNames),
+      lineFingerprint: resultLineFingerprint(row),
     }));
 
   const counts: Record<ResultStatus, number> = { FINISHED: 0, DNF: 0, DNS: 0, DSQ: 0 };
@@ -858,6 +867,107 @@ export async function deleteEventResult<T extends Record<string, unknown>>(db: D
     await writeRanking(tx, event, runners, stored.filter((row) => row.id !== target.id));
   });
   revalidatePublicContent("events", "places");
+}
+
+/** What «Folosește» posts (§NNN): the event, the number of the line, the time chosen among the recorded ones, and that line's own fingerprint. */
+export type ChooseRecordedTimeRequest = {
+  eventId: string;
+  bibNumber: number;
+  gunTimeMs: number;
+  /**
+   * What the chosen line stored when the page was drawn (`ResultRunner.lineFingerprint`, `resultLineFingerprint`) — that line's alone,
+   * never the whole list's; null for a caller that does not guard (a script, a test).
+   */
+  lineFingerprint?: string | null;
+};
+
+/** What a «Folosește» did: whether the line's result changed — a time already the line's «Sosit» time changes nothing — and the line's number. */
+export type ChooseRecordedTimeOutcome = { changed: boolean; bibNumber: number };
+
+/**
+ * «Folosește» under a line's «Timpi la sosire» (§NNN, amending §986's «Choosing a duplicate's time with one press on «Clasament»» left
+ * undone; the owner, 2026-11-20: «For regular runners, if we submit a big [bib] multiple times we track history and in the end we can choose
+ * what time to display»): one of the times «Cronometrare» recorded for a number becomes that line's time.
+ *
+ * **Its own function, not `saveEventResults` with one row**: the save is the whole list — a row left out is a result deleted — and
+ * reads every box as typed, while this verb changes two columns of one row and must check something the save never reads, the
+ * trail. A one-row save would delete every other result, or need the whole page's boxes posted with it, unsaved edits and all.
+ *
+ * **Who** — whoever enters results (`canEnterResults`, FORBIDDEN otherwise); a race only (`RESULTS_NOT_OPEN`). The line is the one
+ * the page draws for the number: a registered runner's — its own row, or a typed row at its number it took over — else a typed row.
+ * **Never over «Descalificat»** (`mayChooseRecordedTime`): a disqualification stands whatever the page showed, changed by hand in
+ * «Stare» — `RESULT_DISQUALIFIED`; the page draws no «Folosește» there. **Nobody writes over what they did not see — of this line**:
+ * the button posts the chosen line's own fingerprint (`resultLineFingerprint`), and a line changed since the page was drawn — saved,
+ * chosen, deleted or made by another session — is refused with CONFLICT; a press at «Cronometrare» of another number, or a save of
+ * another line, refuses nothing, so on race day a choice needs no reload while the line is still recording. (The big save keeps the
+ * whole list's fingerprint: it writes the whole list.) A number with no line is NOT_FOUND. **Only a recorded time**: the race's trail
+ * is read inside the transaction, under the event row's lock every press takes (`recorded-times.ts#loadRecordedTimesTrail`), and a
+ * time that is not one recorded for that number since the last reset is refused (`RESULT_TIME_NOT_RECORDED`), so a forged or stale
+ * post never puts a made-up time in the ranking.
+ *
+ * Then the row's gun time is the time chosen and its state «Sosit» — the chip time and the note untouched; a runner whose result was
+ * deleted on «Clasament» gets it again, «Sosit» at that time —, every place is ranked again from the live rows and answers, as a save
+ * ranks them (`writeRanking`), and one audit row says it: `event_result.updated` (or `.created` for a result made again) with
+ * `{ bibNumber, status, gunTimeMs, chipTimeMs, changed, chosenFromHistory: true }` — the boxes `time`, and `status` when it moved —
+ * never a name, which «Istoricul sosirilor» says as «a ales pentru #102 … timpul … dintre cele înregistrate». The public cache is told
+ * once, after the commit. A time that is the line's «Sosit» time already writes and records nothing.
+ */
+export async function chooseRecordedFinishTime<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: ChooseRecordedTimeRequest, now: Date): Promise<ChooseRecordedTimeOutcome> {
+  assertMayEnter(actor);
+  assertIds(request.eventId);
+  const { bibNumber, gunTimeMs } = request;
+  if (!Number.isInteger(bibNumber) || bibNumber <= 0 || !Number.isInteger(gunTimeMs) || gunTimeMs <= 0) {
+    throw new DomainError("RESULT_TIME_NOT_RECORDED", "the time chosen is not one recorded at the line for that number");
+  }
+  const outcome = await db.transaction(async (tx): Promise<ChooseRecordedTimeOutcome> => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    // One after another: a transaction is one connection, and a query sent while another runs is one `pg` warns about.
+    const runners = await loadRegisteredRunners(tx, event.id);
+    const stored = await loadStored(tx, event.id, true);
+    const trail = await loadRecordedTimesTrail(tx, event.id);
+
+    // The line the page draws for the number (`readEventResults`): a registered runner's that is on the page, else a typed row's.
+    const index = indexStored(stored, runners);
+    const runner = runners.byBib.get(bibNumber);
+    const claim = runner ? claimOf(runner, index) : undefined;
+    const line = runner && claim?.attached ? { row: claim.row, registrationId: runner.registrationId } : index.freeByBib.has(bibNumber) ? { row: index.freeByBib.get(bibNumber), registrationId: null } : null;
+    const before = line?.row;
+    // A disqualification stands, whatever the page drew: it is changed by hand in «Stare», never by a recorded time.
+    if (!mayChooseRecordedTime(before ?? null)) throw new DomainError("RESULT_DISQUALIFIED", "the result is a disqualification: «Folosește» does not change it");
+    // What the page drew of THIS line against what it stores now — another line's write, or another number's arrival, refuses nothing.
+    if (request.lineFingerprint != null && request.lineFingerprint !== resultLineFingerprint(before)) {
+      throw new DomainError("CONFLICT", "another session changed this line since the page was drawn");
+    }
+    if (!line) throw new DomainError("NOT_FOUND", "there is no line for that number");
+    if (!isRecordedTime(recordedTimesOf(trail, bibNumber), gunTimeMs)) throw new DomainError("RESULT_TIME_NOT_RECORDED", "the time chosen is not one recorded at the line for that number");
+    if (before && before.status === "FINISHED" && before.gunTimeMs === gunTimeMs) return { changed: false, bibNumber };
+
+    const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
+      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata: { ...metadata, chosenFromHistory: true }, now });
+    let rows: EventResultRow[];
+    if (before) {
+      // The time and «Sosit»; the chip time and the note stay — a state but «Sosit» has neither time, so «Sosit» is all it gains.
+      const changed = before.status === "FINISHED" ? ["time"] : ["status", "time"];
+      const [updated] = await tx.update(eventResults).set({ status: "FINISHED", gunTimeMs, updatedAt: now, updatedByStaffUserId: actor.id }).where(eq(eventResults.id, before.id)).returning();
+      rows = stored.map((row) => (row.id === before.id ? updated : row));
+      await audit("event_result.updated", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: updated.chipTimeMs, changed });
+    } else {
+      // A registered runner whose result was deleted on «Clasament»: the time chosen makes it again. A row another registration left at
+      // the number — its runner's number changed since — is the big save's to move first.
+      if (stored.some((row) => row.bibNumber === bibNumber)) throw new DomainError("CONFLICT", "another result is stored under that number");
+      const [inserted] = await tx
+        .insert(eventResults)
+        .values({ eventId: event.id, registrationId: line.registrationId, bibNumber, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id })
+        .returning();
+      rows = [...stored, inserted];
+      await audit("event_result.created", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: null, changed: ["status", "time"] });
+    }
+    await writeRanking(tx, event, runners, rows);
+    return { changed: true, bibNumber };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
 }
 
 /** Writes the rankings of `rows` where they differ from what is stored; returns how many rows were rewritten. */
