@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  asksBeforeAgain,
   betterSample,
   CLOCK_SAMPLE_KEPT_MS,
   type ClockSample,
   clockReading,
   dropKept,
+  type EliteButtonView,
   ENTRIES_KEPT,
   entryStateOf,
   eventIdOfStorageKey,
@@ -21,6 +23,7 @@ import {
   holdAfterFailure,
   isInstant,
   keepTime,
+  keptAfterPress,
   keptAge,
   keptOf,
   KEPT_TIME_MAX_AGE_MS,
@@ -41,6 +44,7 @@ import {
   raceGunWindowOpen,
   readStoredClockSample,
   readStoredFinishLine,
+  type RecentFinisherView,
   sampleOfPage,
   sampleOfRoundTrip,
   savedPressOf,
@@ -51,6 +55,7 @@ import {
   storedClockSample,
   storedFinishLine,
   takeOldestKept,
+  tapMoment,
   undoClosedBy,
   undoOpenUntil,
   undoTrailOf,
@@ -410,6 +415,51 @@ describe("§986 «⏱ Finish»: kept times, oldest first, each account's own", (
   });
 });
 
+describe("§NNN the moment of the tap: read as «Sosit» is pressed, taken from the kept ones only by the press", () => {
+  it("reads the oldest kept moment still young, else now — and takes nothing from the kept ones by reading", () => {
+    const kept = [at(10), at(20, 1), at(20, 5)];
+    // At 0:30:00 the moment of 0:10:00 is stale: the tap reads 0:20:01, the oldest young one.
+    expect(tapMoment(kept, at(30))).toEqual({ atMs: at(20, 1), kept: at(20, 1) });
+    expect(kept).toEqual([at(10), at(20, 1), at(20, 5)]);
+    // Nothing kept, or nothing young: the tap is now.
+    expect(tapMoment([], at(30))).toEqual({ atMs: at(30), kept: null });
+    expect(tapMoment([at(10)], at(30))).toEqual({ atMs: at(30), kept: null });
+  });
+
+  it("is, for a press made at its tap, what taking the oldest young kept moment was: the same moment, the same kept left, the same said for paper", () => {
+    const kept = [at(10), at(20, 1), at(20, 5)];
+    const tap = tapMoment(kept, at(30));
+    const { fresh, stale } = staleKept(kept, at(30));
+    const taken = takeOldestKept(fresh);
+    expect(tap.atMs).toBe(taken.atMs);
+    expect(keptAfterPress(kept, tap.kept, at(30))).toEqual({ rest: taken.rest, stale });
+    // A tap that took none: the young ones stay, the stale go for paper.
+    expect(keptAfterPress([at(10), at(25)], null, at(30))).toEqual({ rest: [at(25)], stale: [at(10)] });
+  });
+
+  it("keeps the tap's moment however long a question stays open, and lets go of exactly the kept moment it read, not the oldest at the answer", () => {
+    // «Sosit» at 0:30:00 with two kept moments: the tap reads 0:29:50.
+    const kept = [at(29, 50), at(29, 55)];
+    const tap = tapMoment(kept, at(30));
+    expect(tap).toEqual({ atMs: at(29, 50), kept: at(29, 50) });
+    // «Trece-l din nou» eight seconds later: the press still stands for 0:29:50, and 0:29:55 is left for the next number.
+    expect(keptAfterPress(kept, tap.kept, at(30, 8))).toEqual({ rest: [at(29, 55)], stale: [] });
+    // With no kept moment, the moment is the instant «Sosit» was pressed — never the answer's.
+    expect(tapMoment([], at(30)).atMs).toBe(at(30));
+    // «Anulează»: nothing is pressed, so nothing is taken — the kept moments are as they were (the press alone takes one).
+    expect(tapMoment(kept, at(30, 8))).toEqual({ atMs: at(29, 50), kept: at(29, 50) });
+  });
+
+  it("records the tap's kept moment though the sweep dropped it while the question was open, and drops every other stale one at the answer", () => {
+    // Read at 0:39:59, 9:59 old; the answer comes at 0:40:05, after the second's sweep took it for paper.
+    const tap = tapMoment([at(30), at(39, 30)], at(39, 59));
+    expect(tap.kept).toBe(at(30));
+    expect(keptAfterPress([at(39, 30)], tap.kept, at(40, 5))).toEqual({ rest: [at(39, 30)], stale: [] });
+    // Another moment gone stale meanwhile goes for paper; the tap's, still kept, is taken whatever its age now.
+    expect(keptAfterPress([at(30), at(30, 1)], at(30), at(40, 5))).toEqual({ rest: [], stale: [at(30, 1)] });
+  });
+});
+
 describe("§986 the queue: in the order pressed, answered once, the waiting ones never dropped, each account sending its own", () => {
   const entry = (id: string, bibNumber: number, pressedAtMs: number, staffId = "vlad") => ({ id, staffId, bibNumber, label: null, pressedAtMs });
   const stateOf = (one: FinishEntry) => entryStateOf(one, "vlad");
@@ -599,5 +649,79 @@ describe("§986 the phone's storage", () => {
     expect(readStoredFinishLine(JSON.stringify({ entries: [], kept: [at(2)] })).kept).toEqual({});
     expect(isInstant(at(1))).toBe(true);
     expect(isInstant(0)).toBe(false);
+  });
+});
+
+/**
+ * §NNN — a finished elite's number typed again is asked first (the owner, 2026-11-20: «this is just for elites sincer their timing is
+ * more sensitive»): only a number of the page's elites — a registration marked «Elită» or a numbered line of the elite list — already
+ * «Sosit», or whose press of the viewer's own waits or was saved on this phone since the gun; never another number, an elite who has not
+ * crossed, a press undone, another account's, or a press before the gun.
+ */
+describe("§NNN a finished elite's number typed again: asked first, only for an elite", () => {
+  const elite = (key: string, kind: EliteButtonView["kind"], label: string, name: string, bibNumber: number | null, finishedGunTimeMs: number | null = null): EliteButtonView => ({
+    key,
+    kind,
+    label,
+    name,
+    bibNumber,
+    entryId: kind === "line" ? key.slice(2) : null,
+    finishedGunTimeMs,
+  });
+  const recentRow = (bibNumber: number, gunTimeMs: number, by: string | null, label: string | null = null): RecentFinisherView => ({
+    resultId: `row-${bibNumber}`,
+    bibNumber,
+    label,
+    name: null,
+    gunTimeMs,
+    positionOverall: 1,
+    outOfRanking: false,
+    by,
+    changed: false,
+    undoUntilMs: null,
+    pressedAgain: null,
+  });
+  const press = (id: string, bibNumber: number, pressedAtMs: number, staffId = "vlad"): FinishEntry => ({ id, staffId, bibNumber, label: null, pressedAtMs, outcome: null });
+  const recorded = (bibNumber: number, gunTimeMs: number) => ({ kind: "recorded" as const, bibNumber, name: null, label: null, gunTimeMs, positionOverall: 1, outOfRanking: false, again: false });
+  const silviu = elite("r:silviu", "registration", "Silviu", "Silviu Dobre", 110, 31 * 60_000 + 5_000);
+  const andrei = elite("l:andrei", "line", "Andrei", "Andrei Munteanu", 7, 30 * 60_000);
+  const ioana = elite("l:ioana", "line", "Ioana", "Ioana Pop", 8);
+  const ingrid = elite("l:ingrid", "line", "Ingrid", "Ingrid Pop", null);
+  const line = { elites: [andrei, ioana, ingrid, silviu], recent: [recentRow(110, 31 * 60_000 + 5_000, "Vlad Voluntar", "Silviu"), recentRow(101, 29 * 60_000, "Radu Redactor")] };
+
+  it("asks for an elite already «Sosit» — a registration marked «Elită» and a line of the elite list —, with the time stored and who entered it while «Ultimii sosiți» holds it", () => {
+    expect(asksBeforeAgain(110, line, [], "vlad", GUN)).toEqual({ elite: silviu, gunTimeMs: 31 * 60_000 + 5_000, stored: line.recent[0] });
+    // Andrei's «Sosit» is older than the twenty «Ultimii sosiți» hold: asked all the same, without who entered it.
+    expect(asksBeforeAgain(7, line, [], "vlad", GUN)).toEqual({ elite: andrei, gunTimeMs: 30 * 60_000, stored: null });
+  });
+
+  it("asks for an elite whose press of the viewer's waits on this phone, or was saved there while the page's state had not heard — with that press's time", () => {
+    const waiting = [press("a", 8, at(32, 7, 450))];
+    expect(asksBeforeAgain(8, line, waiting, "vlad", GUN)).toEqual({ elite: ioana, gunTimeMs: 32 * 60_000 + 7_000, stored: null });
+    const saved = settleEntry(waiting, "a", recorded(8, 32 * 60_000 + 7_000));
+    expect(asksBeforeAgain(8, line, saved, "vlad", GUN)).toEqual({ elite: ioana, gunTimeMs: 32 * 60_000 + 7_000, stored: null });
+  });
+
+  it("asks nothing for an elite who has not crossed: no stored «Sosit», no press of theirs on this phone", () => {
+    expect(asksBeforeAgain(8, line, [], "vlad", GUN)).toBeNull();
+    // A press of another number, a press of theirs refused or answered a duplicate of nobody's «Sosit»: not crossed, as far as the phone knows.
+    expect(asksBeforeAgain(8, line, [press("b", 9, at(33))], "vlad", GUN)).toBeNull();
+    expect(asksBeforeAgain(8, line, settleEntry([press("c", 8, at(33))], "c", { kind: "refused", code: "RESULT_FINISH_CLOSED", bibNumber: 8, gunTimeMs: null }), "vlad", GUN)).toBeNull();
+  });
+
+  it("asks nothing for a press undone since, another account's press left on the phone, or a press before the gun — the trial before «Resetează clasamentul»", () => {
+    const undone = markUndone(settleEntry([press("d", 8, at(33))], "d", recorded(8, 33 * 60_000)), "vlad", 8);
+    expect(asksBeforeAgain(8, line, undone, "vlad", GUN)).toBeNull();
+    expect(asksBeforeAgain(8, line, [press("e", 8, at(33), "radu")], "vlad", GUN)).toBeNull();
+    const trial = settleEntry([press("f", 8, at(-50))], "f", recorded(8, 4_000));
+    expect(asksBeforeAgain(8, line, trial, "vlad", GUN)).toBeNull();
+    expect(asksBeforeAgain(8, line, [press("g", 8, at(0, 0, -1))], "vlad", GUN)).toBeNull();
+  });
+
+  it("asks nothing for a number that is no elite's, finished and saved on this phone or not", () => {
+    // 101 is «Sosit», in «Ultimii sosiți», and saved on this phone: any other number typed again goes at once, as before.
+    const saved = settleEntry([press("h", 101, at(29))], "h", recorded(101, 29 * 60_000));
+    expect(asksBeforeAgain(101, line, saved, "vlad", GUN)).toBeNull();
+    expect(asksBeforeAgain(555, line, [], "vlad", GUN)).toBeNull();
   });
 });

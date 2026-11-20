@@ -9,10 +9,14 @@ import { unstable_isUnrecognizedActionError } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
+import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
+  asksBeforeAgain,
   clockReading,
   dropKept,
+  type EliteAgain,
   type EliteButtonView,
   entryStateOf,
   FINISH_GUN_ASK_MS,
@@ -28,6 +32,7 @@ import {
   type HeardGun,
   holdAfterFailure,
   keepTime,
+  keptAfterPress,
   keptAge,
   keptOf,
   lineGun,
@@ -39,7 +44,8 @@ import {
   settleEntry,
   stampedGunTime,
   staleKept,
-  takeOldestKept,
+  type TapMoment,
+  tapMoment,
   waitingCount,
   withoutSettled,
   withKept,
@@ -60,6 +66,11 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
+ *   **A finished elite's number typed again is asked first** (§NNN): an elite already «Sosit» — or whose press waits or was saved on
+ *   this phone (`asksBeforeAgain`) — gets the house's one dialog (`ConfirmDialog`), «Anulează» focused, so a second Enter or Esc
+ *   cancels: nothing is recorded and no kept moment is used. «Trece-l din nou» records the press at the moment of the tap — read as
+ *   «Sosit» was pressed (`tapMoment`), never at the answer — and the server keeps the first time as for any number pressed twice. The
+ *   box is empty and focused either way. Any other number, and an elite who has not crossed yet, go at once as before.
  * - **«⏱ Finish»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
  *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
  *   the line is read or pressed, and a line says its time, for paper (`staleKept`).
@@ -109,6 +120,12 @@ export type FinishLineWords = {
   /** «Dă-i un număr» on a line drawn without a number, for a viewer who writes the elite list (§990), and its name for a reader: «… {label} — {name}». */
   eliteGiveNumber: string;
   eliteGiveNumberAria: string;
+  /**
+   * A finished elite's number typed again, asked first (§NNN): the question's title; its body — «{label} ({name}) a sosit deja la
+   * {time}. Îl treci din nou?», and with who entered the time, `bodyBy`'s «… la {time} — {by}. …», `{by}` being `enteredBy` or
+   * `changedBy` filled —; what a second press does; and its two answers.
+   */
+  eliteAgain: { title: string; body: string; bodyBy: string; second: string; cancel: string; confirm: string };
   boxLabel: string;
   bibHint: string;
   record: string;
@@ -201,6 +218,27 @@ function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => values[name] ?? placeholder);
 }
 
+/**
+ * The question a finished elite's number typed again asks first (§NNN), in the page's words: «{label} ({name}) a sosit deja la {time}
+ * — introdus de {by}. Îl treci din nou?» — who entered it said as «Ultimii sosiți» says it, «modificat de» once «Clasament» changed it,
+ * and left out while the elite is not among them —, what a second press does, and its two answers. `destructive`, so Enter never
+ * answers «Trece-l din nou»: it reaches the focused «Anulează», as Esc does, and only that button's own press records. Apart from the
+ * island so a Node render reads it in both languages.
+ */
+export function eliteAgainQuestion(words: FinishLineWords, again: EliteAgain): ConfirmSpec {
+  const stored = again.stored;
+  const by = stored ? fill(stored.changed ? words.changedBy : words.enteredBy, { name: stored.by ?? words.accountGone }) : null;
+  const values = { label: again.elite.label, name: again.elite.name, time: formatResultTime(again.gunTimeMs), by: by ?? "" };
+  return {
+    title: words.eliteAgain.title,
+    body: fill(by === null ? words.eliteAgain.body : words.eliteAgain.bodyBy, values),
+    also: [{ text: words.eliteAgain.second }],
+    confirmLabel: words.eliteAgain.confirm,
+    cancelLabel: words.eliteAgain.cancel,
+    destructive: true,
+  };
+}
+
 /** The phone's wall clock, which keeps time while the screen is locked: the round trips are measured on it (`server-clock.ts`). */
 const wallNow = () => Date.now();
 
@@ -251,6 +289,10 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   const [heardGun, setHeardGun] = useState<HeardGun | null>(null);
   // The kept moments dropped for being older than ten minutes: their times, said on the line for paper until the volunteer clears it.
   const [staleTimes, setStaleTimes] = useState<number[]>([]);
+  // A finished elite's number typed again (§NNN): the question, the number and the moment its tap read — kept while the dialog closes,
+  // so its words fade with it — and whether it is open: only an open question's first answer counts, so a double tap answers once.
+  const [asked, setAsked] = useState<{ bibNumber: number; tap: TapMoment; question: ConfirmSpec } | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
 
   const pumping = useRef(false);
   const failures = useRef(0);
@@ -431,18 +473,31 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
   }, [askClock, noFinisherYet]);
 
   /**
-   * One press: the moment — the oldest kept one still young (ten minutes), else now on the server's clock — a line at once, and the
-   * queue on its way; a kept moment older than that is dropped and said on the line, for paper.
+   * The moment a tap reads as it is pressed (`tapMoment`, §NNN): the oldest kept one still young (ten minutes), else now on the server's
+   * clock — handed to `press`, at once or after the question a finished elite's number asks.
+   */
+  const tapNow = useCallback(() => tapMoment(keptOf(finishLineSnapshot(storageKey), staffId), serverClockNow()), [staffId, storageKey]);
+
+  /**
+   * One press, at the moment its tap read: a line at once, and the queue on its way. The kept moment the tap took leaves the kept ones;
+   * any other older than ten minutes is dropped and said on the line, for paper (`keptAfterPress`).
    */
   const press = useCallback(
-    (bibNumber: number, label: string | null) => {
-      const nowServerMs = serverClockNow();
-      const { fresh, stale } = staleKept(keptOf(finishLineSnapshot(storageKey), staffId), nowServerMs);
+    (bibNumber: number, label: string | null, tap: TapMoment) => {
+      const kept = keptOf(finishLineSnapshot(storageKey), staffId);
+      const { rest, stale } = keptAfterPress(kept, tap.kept, serverClockNow());
+      const taken = tap.kept;
+      // A question left open past the ten minutes of the moment its tap took: the sweep said that moment for paper, yet it went to this
+      // number — off the paper line, then.
+      if (taken !== null && !kept.includes(taken)) {
+        setStaleTimes((current) => {
+          const at = current.indexOf(taken);
+          return at < 0 ? current : current.filter((_, index) => index !== at);
+        });
+      }
       if (stale.length > 0) setStaleTimes((current) => [...current, ...stale]);
-      const taken = takeOldestKept(fresh);
-      if (taken.atMs !== null || stale.length > 0) commitKept(() => taken.rest);
-      const pressedAtMs = taken.atMs ?? nowServerMs;
-      commitEntries((current) => pressEntry(current, { id: entryId(), staffId, bibNumber, label, pressedAtMs }));
+      if (rest.length !== kept.length) commitKept(() => rest);
+      commitEntries((current) => pressEntry(current, { id: entryId(), staffId, bibNumber, label, pressedAtMs: tap.atMs }));
       void pump();
     },
     [commitEntries, commitKept, pump, staffId, storageKey],
@@ -462,7 +517,31 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
       return;
     }
     setHint(false);
-    press(Number(typed), null);
+    const bibNumber = Number(typed);
+    // The moment is the tap's, read now — whether the number goes at once or after the question below (§NNN).
+    const tap = tapNow();
+    // An elite already «Sosit», or whose press waits or was saved on this phone: asked first, nothing pressed yet (§NNN).
+    const again = asksBeforeAgain(bibNumber, state, finishLineSnapshot(storageKey).entries, staffId, gun.atMs);
+    if (again) {
+      setAsked({ bibNumber, tap, question: eliteAgainQuestion(words, again) });
+      setAskOpen(true);
+      return;
+    }
+    press(bibNumber, null, tap);
+  };
+
+  /**
+   * The question answered (§NNN): «Trece-l din nou» records the number at the moment its tap read; «Anulează», Esc and the backdrop
+   * record nothing and use no kept moment. Only the open question's first answer counts — a second tap on it as it fades answers
+   * nothing — and the box has the focus again for the next number: MUI gives it back as the question closes, and a tap on the
+   * closing question would take it away.
+   */
+  const answerAgain = (confirmed: boolean) => {
+    if (askOpen && asked) {
+      setAskOpen(false);
+      if (confirmed) press(asked.bibNumber, null, asked.tap);
+    }
+    requestAnimationFrame(() => box.current?.focus());
   };
 
   // The elite button behind the form's submit: the event's own `submitter`, or — a browser without it — the button last clicked.
@@ -474,8 +553,9 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     lastElite.current = null;
     if (!Number.isInteger(bibNumber) || bibNumber <= 0) return;
     const elite = state.elites.find((candidate) => candidate.bibNumber === bibNumber);
-    // A finished elite's button is drawn disabled; a press from a page that had not heard yet is the server's to call a duplicate.
-    press(bibNumber, elite?.label ?? null);
+    // A finished elite's button is drawn disabled; a press from a page that had not heard yet is the server's to call a duplicate —
+    // never asked here (§NNN): the question is the box's.
+    press(bibNumber, elite?.label ?? null, tapNow());
   };
 
   const onUndo = async (event: FormEvent<HTMLFormElement>, line: RecentFinisherView) => {
@@ -724,6 +804,9 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
           </Typography>
         )}
       </Box>
+
+      {/* A finished elite's number typed again, asked first (§NNN): the house's one dialog, «Anulează» focused — Enter and Esc cancel. */}
+      <ConfirmDialog spec={asked?.question ?? null} open={askOpen} onCancel={() => answerAgain(false)} onConfirm={() => answerAgain(true)} />
 
       {/* «⏱ Finish» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. */}
       {hydrated && (

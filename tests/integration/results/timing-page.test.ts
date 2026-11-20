@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { createTranslator } from "next-intl";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
@@ -8,7 +9,10 @@ import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
+import { asksBeforeAgain, type FinishLineState } from "@/modules/results/domain/finish-line";
+import type { FinishLineWords } from "@/modules/results/ui/FinishLine";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import { ConfirmDialogActions } from "@/shared/feedback/ConfirmDialog";
 import { withClientWords } from "../../helpers/client-words";
 import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -77,6 +81,7 @@ const { default: TimingPage } = await import("@/app/[locale]/admin/checkin/crono
 const { default: FinishPage } = await import("@/app/[locale]/admin/events/[id]/results/sosire/page");
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
 const { recordFinish, saveEventResults, setRaceGun } = await import("@/modules/results/results");
+const { eliteAgainQuestion } = await import("@/modules/results/ui/FinishLine");
 const { giveEliteLineNumber } = await import("@/modules/registrations/elite-list");
 
 let db: TestDatabase;
@@ -408,19 +413,20 @@ describe("§986 «Clasament»: who wrote each line, «Istoricul sosirilor», and
   });
 });
 
+/** The page's element tree, walked: every element in it, so a test reads the props the page hands its island. */
+type Element = { props: Record<string, unknown> };
+const elementsOf = (node: unknown): Element[] => {
+  if (Array.isArray(node)) return node.flatMap(elementsOf);
+  if (!node || typeof node !== "object" || !("props" in node)) return [];
+  const element = node as Element;
+  return [element, ...elementsOf(element.props.children)];
+};
+
 /**
  * §997 — a press this phone kept from before «Resetează clasamentul», refused after it: the island has the reason's words in both
  * languages, so the press's line says why it no longer counts instead of «nu s-a salvat — notează pe hârtie».
  */
 describe("§997 «Cronometrare»: the words of a press older than the reset", () => {
-  type Element = { props: Record<string, unknown> };
-  const elementsOf = (node: unknown): Element[] => {
-    if (Array.isArray(node)) return node.flatMap(elementsOf);
-    if (!node || typeof node !== "object" || !("props" in node)) return [];
-    const element = node as Element;
-    return [element, ...elementsOf(element.props.children)];
-  };
-
   it("hands the island the refusal's sentence, in Romanian and in English", async () => {
     for (const [locale, sentence] of [
       ["ro", "apăsat înainte de resetarea clasamentului — nu mai contează"],
@@ -431,5 +437,72 @@ describe("§997 «Cronometrare»: the words of a press older than the reset", ()
       const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "refused" in (element.props.words as object));
       expect((island?.props.words as { refused: Record<string, string> } | undefined)?.refused.RESULT_PRESS_BEFORE_RESET, locale).toBe(sentence);
     }
+  });
+});
+
+/**
+ * §NNN — a finished elite's number typed again is asked first: the question the island builds from the page's own state and words
+ * (`asksBeforeAgain`, `eliteAgainQuestion`), in Romanian and in English — the elite by label and name, the time stored and who entered
+ * it, what a second press does — and its two answers as the house's dialog draws them, «Anulează» first, «Trece-l din nou» in the
+ * error colour, so Enter never answers it. Any other number, «Sosit» or not, asks nothing.
+ */
+describe("§NNN «Cronometrare»: the question a finished elite's number typed again asks", () => {
+  it("is worded from the page's state and words, in Romanian and in English, its two answers drawn by the house's dialog", async () => {
+    await db.insert(eventEliteEntries).values([
+      { eventId: raceId, name: "Andrei Munteanu", bibNumber: 7 },
+      { eventId: raceId, name: "Ioana Pop", bibNumber: 8 },
+    ]);
+    await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 7 }, at(31, 5));
+    await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 101 }, at(31, 30));
+    state.actor = staff.MODERATOR;
+    for (const [locale, title, body, second, answers] of [
+      [
+        "ro",
+        "A sosit deja",
+        "Andrei (Andrei Munteanu) a sosit deja la 0:31:05 — introdus de Vlad Voluntar. Îl treci din nou?",
+        "Al doilea timp nu-l schimbă pe primul: apare doar în «Istoricul sosirilor», la «Clasament».",
+        ["Anulează", "Trece-l din nou"],
+      ],
+      [
+        "en",
+        "Already finished",
+        "Andrei (Andrei Munteanu) already finished at 0:31:05 — entered by Vlad Voluntar. Enter them again?",
+        "A second time does not change the first: it only shows in «Finish history», under «Results».",
+        ["Cancel", "Enter again"],
+      ],
+    ] as const) {
+      language = locale;
+      const tree = await atTheClock(at(32), () => TimingPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ eventId: raceId }) }));
+      const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "eliteAgain" in (element.props.words as object));
+      const words = island?.props.words as FinishLineWords;
+      const initial = island?.props.initial as FinishLineState;
+      const again = asksBeforeAgain(7, initial, [], staff.MODERATOR!.id, initial.gunAtMs);
+      expect(again?.elite.label, locale).toBe("Andrei");
+      const question = eliteAgainQuestion(words, again!);
+      expect(question.title, locale).toBe(title);
+      expect(question.body, locale).toBe(body);
+      expect(question.also, locale).toEqual([{ text: second }]);
+      expect(question.destructive, locale).toBe(true);
+      // The dialog itself is a portal, which a Node render draws nothing of; its row of answers is drawn apart, in order.
+      const row = renderToStaticMarkup(createElement(ConfirmDialogActions, { spec: question, mayConfirm: true, onCancel: () => {}, confirm: () => {}, confirmWithoutEmail: () => {} })).replace(
+        /<style[\s\S]*?<\/style>/g,
+        "",
+      );
+      const buttons = [...row.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/g)].map((match) => ({ testId: /data-testid="([^"]+)"/.exec(match[1])?.[1], label: text(match[2]).trim(), error: match[1].includes("MuiButton-colorError") }));
+      expect(buttons, locale).toEqual([
+        { testId: "confirm-dialog-cancel", label: answers[0], error: false },
+        { testId: "confirm-dialog-confirm", label: answers[1], error: true },
+      ]);
+      // An elite who has not crossed, and a runner «Sosit» who is no elite: nothing asked, pressed at once as before.
+      expect(asksBeforeAgain(8, initial, [], staff.MODERATOR!.id, initial.gunAtMs), locale).toBeNull();
+      expect(asksBeforeAgain(101, initial, [], staff.MODERATOR!.id, initial.gunAtMs), locale).toBeNull();
+    }
+    // Who entered it is left out once the elite is not among «Ultimii sosiți»: the time alone.
+    language = "ro";
+    const tree = await atTheClock(at(32), () => TimingPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: raceId }) }));
+    const island = elementsOf(tree).find((element) => typeof element.props.words === "object" && element.props.words !== null && "eliteAgain" in (element.props.words as object));
+    const initial = island?.props.initial as FinishLineState;
+    const again = asksBeforeAgain(7, { ...initial, recent: [] }, [], staff.MODERATOR!.id, initial.gunAtMs);
+    expect(eliteAgainQuestion(island?.props.words as FinishLineWords, again!).body).toBe("Andrei (Andrei Munteanu) a sosit deja la 0:31:05. Îl treci din nou?");
   });
 });

@@ -278,6 +278,15 @@ export default async function TimingPage({ params, searchParams }: Props) {
     eliteNoNumberRegistration: t("timing.elites.noNumberRegistration"),
     eliteGiveNumber: t("timing.elites.giveNumber"),
     eliteGiveNumberAria: t.raw("timing.elites.giveNumberAria") as string,
+    // A finished elite's number typed again, asked first (§NNN): templates the island fills with the elite, the time and who entered it.
+    eliteAgain: {
+      title: t("timing.eliteAgain.title"),
+      body: t.raw("timing.eliteAgain.body") as string,
+      bodyBy: t.raw("timing.eliteAgain.bodyBy") as string,
+      second: t("timing.eliteAgain.second"),
+      cancel: t("timing.eliteAgain.cancel"),
+      confirm: t("timing.eliteAgain.confirm"),
+    },
     boxLabel: t("timing.boxLabel"),
     bibHint: t("timing.bibHint"),
     record: t("timing.record"),

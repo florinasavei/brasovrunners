@@ -9997,7 +9997,7 @@
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
                 "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
-                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». If you type again the number of an elite who already finished, the page asks first: «Cancel» enters nothing, «Enter again» enters it at the moment you pressed «Finished». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -13363,6 +13363,14 @@
         "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper.",
         "giveNumber": "Give a number",
         "giveNumberAria": "Give a number: {label} — {name}"
+      },
+      "eliteAgain": {
+        "title": "Already finished",
+        "body": "{label} ({name}) already finished at {time}. Enter them again?",
+        "bodyBy": "{label} ({name}) already finished at {time} — {by}. Enter them again?",
+        "second": "A second time does not change the first: it only shows in «Finish history», under «Results».",
+        "cancel": "Cancel",
+        "confirm": "Enter again"
       },
       "keep": {
         "button": "Finish",

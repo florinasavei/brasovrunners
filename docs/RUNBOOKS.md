@@ -998,7 +998,9 @@ gun and a clock since it.
    ones go; a press sent twice is recognised by its own id and kept once. «Site-ul a fost actualizat» (a deploy during
    the race): reload the page, the presses wait.
 3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
-   the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. A number no confirmed
+   the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. An elite already «Sosit»
+   whose number is typed again is asked first: «Anulează» (focused, so Enter or Esc) records nothing and uses no caught
+   moment; «Trece-l din nou» records it at the moment «Sosit» was pressed, the first time staying. A number no confirmed
    registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»
    later under «Alergători neînscriși»). Before the start, or more than a day after it: refused — and a press arriving
    more than a day and three hours after the start is refused whatever moment it carries. A runner saved as «Abandon»
