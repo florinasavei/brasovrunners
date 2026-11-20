@@ -1772,6 +1772,11 @@
         "bandOpen": "{from}+"
       },
       "auditActorParticipant": "the participant, from their own link",
+      "auditListWish": {
+        "named": "The wish said at the desk, recorded by the team: appears by name on the site",
+        "namedResults": "The wish said at the desk, recorded by the team: appears by name on the site and in the results",
+        "anonymous": "The wish said at the desk, recorded by the team: no longer appears by name on the site"
+      },
       "audit": {
         "registration": {
           "created_by_staff": "Registration entered by staff",
@@ -2911,6 +2916,9 @@
       "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
       "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is.",
       "RESULTS_RESET_AFTER_START": "The results can only be reset before the start.",
+      "LIST_WISH_OVER": "The registration is cancelled or expired: the desk records nothing on it any more.",
+      "LIST_WISH_ADDRESS_UNCONFIRMED": "The email address is not confirmed: confirm the registration here first («Confirm on paper»), then press the eye again.",
+      "LIST_WISH_DESK_CLOSED": "The event is over or was cancelled: the desk is closed and records nothing.",
       "RESULT_TIME_NOT_RECORDED": "Nothing changed: that time is not among those recorded on «Timing» for this number since the last reset.",
       "RESULT_DISQUALIFIED": "Nothing changed: the runner is disqualified. A disqualification is changed by hand, in «Status», then «Save all the results»."
     },
@@ -7996,6 +8004,7 @@
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
         "A search opens only the sections with a match. After a press you are back on the person's row, its section open: whoever is marked present moves to “Present”.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
+        "The eye beside the name says how they appear on the site: “By name” or “Anonymous”. Press it only when the person tells you what they want; asking for their name, they get an email to take it back.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
@@ -8064,7 +8073,11 @@
         "eliteUnmarked": "No longer elite: their bib prints the number again.",
         "eliteLabelSaved": "The bib label was saved.",
         "raffleSignedUp": "Done: the person is signed up for the raffle.",
-        "raffleAlready": "The person was signed up for the raffle already."
+        "raffleAlready": "The person was signed up for the raffle already.",
+        "listWishNamed": "Recorded: the name appears on the site. The person now gets an email with the button to take it back.",
+        "listWishNamedHidden": "Recorded as the person's wish; the club still hides the name. The person gets an email.",
+        "listWishAnonymous": "Recorded: the name no longer appears on the site.",
+        "listWishUnchanged": "It was already so: nothing changed."
       },
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
       "guardian": "Minor — parent/guardian: {name}",
@@ -8085,6 +8098,24 @@
       "eliteLabel": "On the bib: {label}",
       "siteNamed": "By name",
       "siteAnonymous": "Anonymous",
+      "siteWish": {
+        "showTitle": "Did {name} just tell you they want to appear by name on the participant list and in the results?",
+        "showTitleMinor": "Did {guardian}, the parent or guardian, just tell you that {name} may appear by name on the participant list and in the results?",
+        "showBody": "The name appears on the site; the person gets an email and can take it back at any time.",
+        "showBodyHidden": "The club hides this name («On the site» unticked): the wish is recorded and the name stays hidden. The person gets an email and can take it back at any time.",
+        "showConfirm": "Yes, they said so — show on the site",
+        "showConfirmHidden": "Yes, they said so — record it",
+        "hideTitle": "Did {name} ask to no longer appear by name?",
+        "hideTitleMinor": "Did {guardian}, the parent or guardian, ask for {name} to no longer appear by name?",
+        "hideBody": "The name no longer appears on the participant list and in the results.",
+        "hideBodyHidden": "The club hides this name anyway; only the person's wish is recorded.",
+        "hideConfirm": "Yes — hide the name",
+        "cancel": "Cancel",
+        "showAria": "{state}: press if the person tells you they want to appear by name",
+        "hideAria": "{state}: press if the person asks to no longer appear by name",
+        "clubHiddenNamed": "Hidden by the club («On the site» unticked). The person wants their name shown.",
+        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous."
+      },
       "eliteFold": "Elite and bib",
       "sections": {
         "toPickUp": "To pick up ({n})",
@@ -8133,6 +8164,7 @@
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "REGISTRATION_ADDRESS_REMOVED": "The email address was changed",
         "REGISTRATION_ADDRESS_ADDED": "You receive the registration's emails",
+        "LIST_CONSENT_RECORDED": "By name on the list, asked at the desk",
         "EVENT_REMINDER": "The reminder before the start",
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
@@ -8185,6 +8217,7 @@
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "REGISTRATION_ADDRESS_REMOVED": "Address changed",
         "REGISTRATION_ADDRESS_ADDED": "New address",
+        "LIST_CONSENT_RECORDED": "Named at the desk",
         "EVENT_REMINDER": "The reminder",
         "EVENT_THANKS": "The thank-you",
         "DECLARATION_SIGNED": "Signed declaration",
@@ -8212,6 +8245,7 @@
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
         "REGISTRATION_ADDRESS_REMOVED": "When an administrator changes a registration's address: to the old address, without the new one, with the contact page.",
         "REGISTRATION_ADDRESS_ADDED": "When an administrator changes a registration's address: to the new address. The next step comes in an email of its own.",
+        "LIST_CONSENT_RECORDED": "When someone at the race-number desk records that the person wants to appear by name: it tells them at once, with the button to take it back.",
         "EVENT_REMINDER": "Automatic, {reminder} before the start (or as the event chooses), to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
@@ -8264,6 +8298,7 @@
         "REGISTRATION_STATE_NOTICE": "resent by an organizer",
         "REGISTRATION_ADDRESS_REMOVED": "when the address changes, to the old one",
         "REGISTRATION_ADDRESS_ADDED": "when the address changes, to the new one",
+        "LIST_CONSENT_RECORDED": "when the desk sets them «By name»",
         "EVENT_REMINDER": "{reminder} before the start",
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
@@ -8515,6 +8550,7 @@
           "confirmPaper": "Confirm on paper",
           "givePlace": "Give a place",
           "setBib": "A race number given by hand",
+          "deskListWish": "By name / Anonymous, at the desk",
           "specialGuests": "The special guests list",
           "cancel": "Cancel the registration",
           "bulkCancel": "Cancel the ticked registrations",
@@ -9262,7 +9298,8 @@
         "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
         "UNSIGNED_RELEASED": "The deadline, the places released, the free ones, the capacity and the waiting list are added by themselves, however you write the text. One email per deadline.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
-        "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped."
+        "RSVP_ASK": "Once per event, unless unticked in the editor. Ticked after the window opened, it goes on the next run; ticked only on its own day, it does not. What has not left by the midnight before is dropped.",
+        "LIST_CONSENT_RECORDED": "The button opens the list's page, where one press hides the name. It does not leave if the name was hidden again meanwhile or the registration ended."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -9705,6 +9742,17 @@
               "steps": [
                 "In the «Race number (BIB)» box on their row type a free number.",
                 "Press «Save no.» and confirm in the window. A number somebody else already has is refused — pick another."
+              ]
+            },
+            {
+              "title": "They want to appear by name, or no longer",
+              "steps": [
+                "Beside the name, the eye says how the person appears on the site and in the results: «By name» or «Anonymous».",
+                "They tell you they want to appear by name? Press «Anonymous», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
+                "The person gets an email at once with the button «I do not want to appear on the participants & results list». The registration's history keeps that you recorded it.",
+                "They ask to no longer appear by name? Press «By name», then «Yes — hide the name». No email leaves.",
+                "Under the name it says «Hidden by the club…»? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
+                "On a row whose address is not confirmed the eye is not a button: first «Confirm on paper». Never press it without the person's spoken agreement."
               ]
             },
             {
@@ -15377,6 +15425,10 @@
       "bibSet": "Number saved.",
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
+      "listWishNamed": "By name, recorded. The person gets an email.",
+      "listWishNamedHidden": "Wish recorded; the club still hides the name.",
+      "listWishAnonymous": "Anonymous, recorded.",
+      "listWishUnchanged": "It was already so.",
       "registrationCreated": "The person was added.",
       "registrationCancelled": "The registration was cancelled.",
       "consentWithdrawn": "The ticked data was erased.",

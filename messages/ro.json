@@ -1772,6 +1772,11 @@
         "bandOpen": "{from}+ ani"
       },
       "auditActorParticipant": "participantul, din linkul propriu",
+      "auditListWish": {
+        "named": "Dorința spusă la masă, înregistrată de echipă: apare cu numele pe site",
+        "namedResults": "Dorința spusă la masă, înregistrată de echipă: apare cu numele pe site și în clasament",
+        "anonymous": "Dorința spusă la masă, înregistrată de echipă: nu mai apare cu numele pe site"
+      },
       "audit": {
         "registration": {
           "created_by_staff": "Înscriere adăugată de echipă",
@@ -2911,6 +2916,9 @@
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
       "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
       "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start.",
+      "LIST_WISH_OVER": "Înscrierea e anulată sau expirată: la masă nu se mai înregistrează nimic pe ea.",
+      "LIST_WISH_ADDRESS_UNCONFIRMED": "Adresa de email nu e confirmată: confirmă întâi înscrierea aici („Confirmă pe hârtie”), apoi apasă din nou pe ochi.",
+      "LIST_WISH_DESK_CLOSED": "Evenimentul s-a încheiat sau a fost anulat: masa e închisă și nu mai înregistrează nimic.",
       "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
       "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
     },
@@ -7996,6 +8004,7 @@
         "Lista e împărțită pe stări, cu câți sunt în fiecare. „De ridicat numărul” și „Fără declarație semnată” stau deschise; „Prezenți”, „Pe lista de așteptare” și celelalte se deschid din titlu.",
         "O căutare deschide doar secțiunile cu potriviri. După o apăsare revii la rândul persoanei, cu secțiunea lui deschisă: cine e marcat prezent trece la „Prezenți”.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
+        "Ochiul de lângă nume spune cum apare pe site: „Cu nume” sau „Anonim”. Îl apeși doar când persoana îți spune ce vrea; dacă vrea cu numele, primește un email prin care poate retrage.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
         "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
@@ -8064,7 +8073,11 @@
         "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
         "eliteLabelSaved": "Eticheta pe BIB a fost salvată.",
         "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
-        "raffleAlready": "Persoana era deja înscrisă la tombolă."
+        "raffleAlready": "Persoana era deja înscrisă la tombolă.",
+        "listWishNamed": "Înregistrat: apare cu numele pe site. Persoana primește acum un email cu butonul prin care poate retrage.",
+        "listWishNamedHidden": "Înregistrat ca dorința persoanei; numele rămâne ascuns de club. Persoana primește un email.",
+        "listWishAnonymous": "Înregistrat: numele nu mai apare pe site.",
+        "listWishUnchanged": "Era deja așa: nu s-a schimbat nimic."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
       "guardian": "Minor — părinte/tutore: {name}",
@@ -8085,6 +8098,24 @@
       "eliteLabel": "Pe BIB: {label}",
       "siteNamed": "Cu nume",
       "siteAnonymous": "Anonim",
+      "siteWish": {
+        "showTitle": "{name} ți-a spus acum că vrea să apară cu numele pe lista participanților și în clasament?",
+        "showTitleMinor": "{guardian}, părintele sau tutorele, ți-a spus acum că {name} poate apărea cu numele pe lista participanților și în clasament?",
+        "showBody": "Numele apare pe site; persoana primește un email și poate retrage oricând.",
+        "showBodyHidden": "Clubul îi ascunde numele („Apare pe site” debifat): dorința se înregistrează, numele rămâne ascuns. Persoana primește un email și poate retrage oricând.",
+        "showConfirm": "Da, a spus — afișează pe site",
+        "showConfirmHidden": "Da, a spus — înregistrează",
+        "hideTitle": "{name} a cerut să nu mai apară cu numele?",
+        "hideTitleMinor": "{guardian}, părintele sau tutorele, a cerut ca {name} să nu mai apară cu numele?",
+        "hideBody": "Numele nu mai apare pe lista participanților și în clasament.",
+        "hideBodyHidden": "Clubul îi ascunde oricum numele; se înregistrează doar dorința persoanei.",
+        "hideConfirm": "Da — ascunde numele",
+        "cancel": "Anulează",
+        "showAria": "{state}: apasă dacă persoana îți spune că vrea să apară cu numele",
+        "hideAria": "{state}: apasă dacă persoana cere să nu mai apară cu numele",
+        "clubHiddenNamed": "Ascuns de club („Apare pe site” debifat). Persoana vrea cu nume.",
+        "clubHiddenAnonymous": "Ascuns de club („Apare pe site” debifat). Persoana vrea anonim."
+      },
       "eliteFold": "Elită și BIB",
       "sections": {
         "toPickUp": "De ridicat numărul ({n})",
@@ -8133,6 +8164,7 @@
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
         "REGISTRATION_ADDRESS_REMOVED": "Adresa de email a fost schimbată",
         "REGISTRATION_ADDRESS_ADDED": "Primești emailurile înscrierii",
+        "LIST_CONSENT_RECORDED": "Cu nume pe listă, cerut la masă",
         "EVENT_REMINDER": "Reminderul dinaintea startului",
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
@@ -8185,6 +8217,7 @@
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
         "REGISTRATION_ADDRESS_REMOVED": "Adresa schimbată",
         "REGISTRATION_ADDRESS_ADDED": "Adresa nouă",
+        "LIST_CONSENT_RECORDED": "Cu nume, la masă",
         "EVENT_REMINDER": "Reminderul",
         "EVENT_THANKS": "Mulțumirile",
         "DECLARATION_SIGNED": "Declarația semnată",
@@ -8212,6 +8245,7 @@
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
         "REGISTRATION_ADDRESS_REMOVED": "Când un administrator schimbă adresa unei înscrieri: la adresa veche, fără adresa nouă, cu pagina de contact.",
         "REGISTRATION_ADDRESS_ADDED": "Când un administrator schimbă adresa unei înscrieri: la adresa nouă. Pasul următor vine într-un email separat.",
+        "LIST_CONSENT_RECORDED": "Când cineva de la masa de ridicare a numerelor înregistrează că persoana vrea să apară cu numele: i-o spune pe loc, cu butonul prin care retrage.",
         "EVENT_REMINDER": "Automat, cu {reminder} înainte de start (sau cât e ales pe eveniment), tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
@@ -8264,6 +8298,7 @@
         "REGISTRATION_STATE_NOTICE": "retrimis de un organizator",
         "REGISTRATION_ADDRESS_REMOVED": "când se schimbă adresa, la cea veche",
         "REGISTRATION_ADDRESS_ADDED": "când se schimbă adresa, la cea nouă",
+        "LIST_CONSENT_RECORDED": "când masa o trece „Cu nume”",
         "EVENT_REMINDER": "cu {reminder} înainte de start",
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
@@ -8515,6 +8550,7 @@
           "confirmPaper": "Confirmă pe hârtie",
           "givePlace": "Dă-i un loc",
           "setBib": "Numărul de concurs dat de mână",
+          "deskListWish": "Cu nume / Anonim, la masă",
           "specialGuests": "Lista de invitați speciali",
           "cancel": "Anulează înscrierea",
           "bulkCancel": "Anulează înscrierile bifate",
@@ -9262,7 +9298,8 @@
         "PLACES_ALERT": "Locurile libere, capacitatea și pragul se adaugă singure, oricum ai scrie textul. Un email pe prag; altul vine doar după ce locurile urcă din nou peste prag.",
         "UNSIGNED_RELEASED": "Termenul, locurile eliberate, cele libere, capacitatea și lista de așteptare se adaugă singure, oricum ai scrie textul. Un singur email pe termen.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
-        "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschidere, se întreabă la prima trecere; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează."
+        "RSVP_ASK": "O dată pe eveniment, dacă nu l-ai debifat în editor. Bifat după deschidere, se întreabă la prima trecere; bifat abia în ziua lui, nu. Ce n-a plecat până la miezul nopții dinainte se anulează.",
+        "LIST_CONSENT_RECORDED": "Butonul duce la pagina listei, unde o apăsare ascunde numele. Nu pleacă dacă între timp numele a fost ascuns din nou sau înscrierea s-a încheiat."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
@@ -9705,6 +9742,17 @@
               "steps": [
                 "În căsuța «Număr de concurs (BIB)» de pe rândul lui scrie un număr liber.",
                 "Apasă «Salvează nr.» și confirmă în fereastră. Un număr pe care îl are deja altcineva e refuzat — alege altul."
+              ]
+            },
+            {
+              "title": "Vrea să apară cu numele, sau nu mai vrea",
+              "steps": [
+                "Lângă nume, ochiul spune cum apare persoana pe site și în clasament: «Cu nume» sau «Anonim».",
+                "Îți spune că vrea să apară cu numele? Apasă «Anonim», citește întrebarea și apasă «Da, a spus — afișează pe site». Pentru un minor răspunde părintele sau tutorele.",
+                "Persoana primește pe loc un email cu butonul «Nu vreau să apar pe lista de participanți & rezultate». În istoricul înscrierii rămâne că ai notat-o tu.",
+                "Cere să nu mai apară cu numele? Apasă «Cu nume», apoi «Da — ascunde numele». Nu pleacă niciun email.",
+                "Sub nume scrie «Ascuns de club…»? Un administrator i-a ascuns numele: apăsarea schimbă doar dorința persoanei, numele rămâne ascuns.",
+                "Pe un rând cu adresa neconfirmată ochiul nu se apasă: întâi «Confirmă pe hârtie». Fără acordul spus al persoanei nu apeși niciodată."
               ]
             },
             {
@@ -15377,6 +15425,10 @@
       "bibSet": "Număr salvat.",
       "checkedIn": "Prezent la masă.",
       "checkinUndone": "Nu mai e marcat prezent.",
+      "listWishNamed": "Cu nume, înregistrat. Persoana primește un email.",
+      "listWishNamedHidden": "Dorința înregistrată; numele rămâne ascuns de club.",
+      "listWishAnonymous": "Anonim, înregistrat.",
+      "listWishUnchanged": "Era deja așa.",
       "registrationCreated": "Persoana a fost adăugată.",
       "registrationCancelled": "Înscrierea a fost anulată.",
       "consentWithdrawn": "Datele bifate au fost șterse.",

@@ -70,6 +70,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   // The registration's own page (§635's timeline).
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
+  recordListWishAtDeskAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   // «Datele înscrierii» (§645), folding «Corectează numele».
   editRegistrationAnswersAction: vi.fn(),

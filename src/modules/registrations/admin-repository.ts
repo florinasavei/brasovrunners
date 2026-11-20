@@ -1556,6 +1556,17 @@ export type DeskRegistration = {
    */
   namedOnSite: boolean;
   /**
+   * The person's own wish alone (§1017): `list_opt_out` — true when they did not tick «Vreau să apar pe lista de participanți &
+   * rezultate», or asked since to be taken off. What the eye's press records the other way (`desk-list-wish.ts`): «Anonim» →
+   * «Cu nume» sets it false, «Cu nume» → «Anonim» true.
+   */
+  listOptOut: boolean;
+  /**
+   * An Administrator's «Apare pe site» unticked on an elite or an ambassador (§910, §948): the name stays hidden whatever the
+   * person's wish — the row says so under the eye, and the press records the wish only. The other half of `namedOnSite`.
+   */
+  hiddenByClub: boolean;
+  /**
    * «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the elite bib in the volunteer's hand says where the
    * number goes — the label the Administrator typed, else the first name. Said on the row only while `elite`; a name the row
    * already shows, never an address (`AGENTS.md` §15.11). Part of the picture's address as a fingerprint (`bibPictureSrc`'s `l=`).
@@ -1598,6 +1609,23 @@ export type DeskRegistration = {
   minorIdDocument: string | null;
 };
 
+/**
+ * The club's half of the public list's one condition (`repository.ts#namedOnPublicList`, §910, §948): an Administrator's «Apare pe
+ * site» unticked on a registration marked «Elită» or «Ambasador». The desk reads it as one fact — the club hides this name — and
+ * never the mark it comes from (`ambassador-never-leaves.test.ts`): the eye's line (§1017) and the press's outcome.
+ */
+const HIDDEN_BY_CLUB = sql`((${registrations.elite} or ${registrations.ambassador}) and ${registrations.eliteHiddenFromSite})`;
+
+/** Whether the club hides this registration's name on the site (`HIDDEN_BY_CLUB`), as the desk's eye reads it; false for none. */
+export async function isNameHiddenByClub<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ hidden: sql<boolean>`${HIDDEN_BY_CLUB}`.mapWith(Boolean) })
+    .from(registrations)
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  return row?.hidden ?? false;
+}
+
 const DESK_COLUMNS = {
   id: registrations.id,
   participantId: registrations.participantId,
@@ -1619,6 +1647,9 @@ const DESK_COLUMNS = {
   partnerName: registrations.partnerName,
   // «Cu nume» / «Anonim» (§1004): the public list's own condition, so the desk's eye and the list never disagree.
   namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),
+  // Its two halves (§1017): the person's own wish, which the eye's press records, and the club's hide, which it never touches.
+  listOptOut: registrations.listOptOut,
+  hiddenByClub: sql<boolean>`${HIDDEN_BY_CLUB}`.mapWith(Boolean),
   // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
   deskFirstName: registrations.firstName,
   deskStoredLabel: registrations.eliteBibLabel,

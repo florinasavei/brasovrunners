@@ -88,6 +88,8 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "VOLUNTEER_ROLE_ASSIGNED",
   // The point given (§956): the same — «Trimite fiecăruia punctul lui» is an organizer's press, and its readers are on no page.
   "VOLUNTEER_POINT",
+  // The wish recorded at the desk (§1017): a desk role's press, to somebody standing at the table, on no page waiting for it.
+  "LIST_CONSENT_RECORDED",
   // The guardian's link (§768): the sign-up's page says the parent is emailed, but the volunteer's own offer is already kept — nobody on a page waits to act.
   "VOLUNTEER_GUARDIAN_REQUEST",
   // The club's invitation to volunteer (§820): it leaves at an Organizer's or an Administrator's press, to somebody on no page waiting for it.
