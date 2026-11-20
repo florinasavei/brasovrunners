@@ -1,12 +1,19 @@
 import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { registrationStatus } from "@/db/schema/registrations";
-import { buildRegistrationsCsv, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, type RegistrationCsvRow } from "@/modules/registrations/csv";
+import {
+  buildRegistrationsCsv,
+  PARTNER_HEADER_DEFAULT,
+  RECONFIRM_ANSWER_HEADER_DEFAULT,
+  RECONFIRM_ANSWER_WORDS_DEFAULT,
+  RECONFIRMED_HEADER_DEFAULT,
+  type RegistrationCsvRow,
+} from "@/modules/registrations/csv";
 import { YES_CELL, clubRunnerCell, isClubRunner, memberTickCell } from "@/modules/registrations/domain/club-runner";
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
 import { statisticsCells, statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
-import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, writeSheet, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, STAMP_FORMAT, writeSheet, type RegistrationSheetRow } from "@/modules/registrations/workbook";
 import { contrastRatio } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, SHEET_TINT } from "@/theme/brand";
 import en from "../../../messages/en.json";
@@ -200,10 +207,10 @@ function rulesOf(buffer: Buffer): Rule[] {
 }
 
 /**
- * The fixed columns, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea»), every file's:
- * the sheet's header row without the notes.
+ * The fixed columns — «Reconfirmare» and «Reconfirmat» (the decision «Cere reconfirmarea») among them, right after «Status»
+ * (§NNN) — then «Partener» («De la parteneri»), every file's: the sheet's header row without the notes.
  */
-const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT];
+const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT];
 const LAST_COLUMN = columnLetter(SHEET_HEADER.length - 1);
 const STATUS = columnLetter(headerAt("Status"));
 const CLUB_RUNNER = columnLetter(headerAt("Club runner"));
@@ -282,19 +289,19 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     };
     const [header, club, other] = buildRegistrationsCsv([{ ...base, clubRunner: true }, base]).split("\r\n");
     const columns = header.split(",");
-    // After «Member bib», as a script that reads by position expects: every earlier column keeps its index. «Partener» («De la
-    // parteneri») came after it, then «Reconfirmat» (the decision «Cere reconfirmarea»), the last fixed column.
-    expect(columns.at(-3)).toBe("Club runner");
-    expect(columns.at(-4)).toBe("Member bib");
-    expect(columns.at(-2)).toBe(PARTNER_HEADER_DEFAULT);
-    expect(columns.at(-1)).toBe(RECONFIRMED_HEADER_DEFAULT);
+    // After «Member bib», as a script that reads by position expects. «Partener» («De la parteneri») came after it, the last
+    // fixed column; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» since §NNN.
+    expect(columns.at(-2)).toBe("Club runner");
+    expect(columns.at(-3)).toBe("Member bib");
+    expect(columns.at(-1)).toBe(PARTNER_HEADER_DEFAULT);
+    expect(columns[columns.indexOf("Status") + 2]).toBe(RECONFIRMED_HEADER_DEFAULT);
     expect(columns.indexOf("Club member") + 1).toBe(columns.indexOf("Medically fit (declared)"));
     const at = columns.indexOf("Club runner");
     expect(club.split(",")[at]).toBe("Yes");
     expect(other.split(",")[at]).toBe("");
     // With «Note interne» the notes stay the very last column.
     const withNotes = buildRegistrationsCsv([base], { notesHeader: "Note interne" }).split("\r\n")[0].split(",");
-    expect(withNotes.slice(-4)).toEqual(["Club runner", PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, "Note interne"]);
+    expect(withNotes.slice(-3)).toEqual(["Club runner", PARTNER_HEADER_DEFAULT, "Note interne"]);
     // The same rows, no styling and no footer: the legend and the statistics are the spreadsheet's alone.
     expect(buildRegistrationsCsv([base]).split("\r\n")).toHaveLength(2);
     expect(buildRegistrationsCsv([base])).not.toMatch(/Culori|Colours|Statistici|COUNTIF/);
@@ -338,9 +345,9 @@ describe("§796 the «Member tick (declared)» column: the tick alone, in the sp
     };
     const [header, line] = buildRegistrationsCsv([base]).split("\r\n");
     expect(header).toBe(
-      // The old header, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea») appended:
-      // every earlier column keeps its position.
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner,Reconfirmed",
+      // The old header with «Reconfirmare» and «Reconfirmat» right after «Status» (§NNN), and «Partener» («De la parteneri»)
+      // appended: no «Member tick (declared)».
+      "Event,Name,First name,Last name,Identity document,Email,Status,Reconfirmation,Reconfirmed,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
     expect(header).not.toContain("Member tick");
     expect(line.split(",")[header.split(",").indexOf("Club member")]).toBe("declared");
@@ -1130,10 +1137,13 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
 
   it("puts «Status» third, after «Race number (BIB)» and before «Name»; every other column keeps its relative order", async () => {
     const { rows } = readSheet(await buildPick(mixed()));
-    expect((rows[0] as string[]).slice(0, 4)).toEqual(["ID", "Race number (BIB)", "Status", "Name"]);
-    expect(REGISTRATION_SHEET_HEADERS.slice(0, 4)).toEqual(["ID", "Race number (BIB)", "Status", "Name"]);
-    // Taking «Status» out leaves the columns in the order they had before it moved (§172, §510, §650, §662, §787).
-    expect(REGISTRATION_SHEET_HEADERS.filter((header) => header !== "Status").slice(0, 14)).toEqual([
+    // «Reconfirmare» and «Reconfirmat» (§NNN) right after it, before «Name».
+    const lead = ["ID", "Race number (BIB)", "Status", RECONFIRM_ANSWER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, "Name"];
+    expect((rows[0] as string[]).slice(0, 6)).toEqual(lead);
+    expect(REGISTRATION_SHEET_HEADERS.slice(0, 6)).toEqual(lead);
+    // Taking «Status» and the two out leaves the columns in the order they had before it moved (§172, §510, §650, §662, §787).
+    const moved = ["Status", RECONFIRM_ANSWER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT];
+    expect(REGISTRATION_SHEET_HEADERS.filter((header) => !moved.includes(header)).slice(0, 14)).toEqual([
       "ID", "Race number (BIB)", "Name", "First name", "Last name", "Club", "Sex", "Age on race day", "Nationality", "Country", "City", "T-shirt size", "Until when", "Waiting on",
     ]);
     // The cells say what they said: the state's word, in the new column.
@@ -1141,15 +1151,15 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
     expect(rows[0]?.filter((header) => header === "Status")).toHaveLength(1);
   });
 
-  it("leaves the CSV's header exactly as it was: scripts read it by position", () => {
+  it("leaves the CSV's «Status» where it was, the reconfirmation's two right after it (§NNN): scripts read it by position", () => {
     const base: RegistrationCsvRow = {
       eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: false,
       memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
     };
     expect(buildRegistrationsCsv([base]).split("\r\n")[0]).toBe(
-      // The old header, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea») appended:
-      // every earlier column keeps its position.
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner,Reconfirmed",
+      // The old header with «Reconfirmare» and «Reconfirmat» (the decision «Cere reconfirmarea», §NNN) right after «Status»,
+      // where the state is read, then «Partener» («De la parteneri») appended.
+      "Event,Name,First name,Last name,Identity document,Email,Status,Reconfirmation,Reconfirmed,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
   });
 
@@ -1264,6 +1274,131 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
     edited[1][headerAt("Status")] = "CANCELLED";
     const confirmed = evaluated(buffer, edited).get(`B${rows.findIndex((line) => line?.[0] === RO.confirmed) + 1}`);
     expect(confirmed).toBe(2);
+  });
+});
+
+/** The number format a cell's style shows its value in, as the format code the styles part gives it (`dd.mm.yyyy hh:mm`). */
+function formatCodeOf(buffer: Buffer, style: number | undefined): string | undefined {
+  if (style === undefined) return undefined;
+  const styles = unzip(buffer).get("xl/styles.xml") ?? "";
+  const codes = new Map([...styles.matchAll(/<numFmt numFmtId="(\d+)" formatCode="([^"]*)"/g)].map((format) => [format[1], unescapeXml(format[2])]));
+  const formats = [...(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(styles)?.[1] ?? "").matchAll(/<xf\b([^>]*?)(?:\/>|>[\s\S]*?<\/xf>)/g)];
+  return codes.get(/\bnumFmtId="(\d+)"/.exec(formats[style]?.[1] ?? "")?.[1] ?? "");
+}
+
+describe("§NNN «Reconfirmare» and «Reconfirmat» right after «Status»: the drop-down, the colours and the footer keep their columns", () => {
+  const CATALOGUES = { ro, en } as const;
+  /** What the route hands the writer in one language: the footer's words, the drop-down's box, the two headers and the three words. */
+  const routeOptions = (locale: "ro" | "en") => {
+    const catalogue = CATALOGUES[locale].Admin;
+    return {
+      statistics: locale === "ro" ? RO : EN,
+      statusPick: { title: catalogue.registrations.sheetpick.title, error: catalogue.registrations.sheetpick.error },
+      reconfirmAnswerHeader: catalogue.reconfirm.answerColumn,
+      reconfirmedHeader: catalogue.reconfirm.column,
+      reconfirmWords: { yes: catalogue.reconfirm.answerYes, cancelled: catalogue.reconfirm.answerCancelled, none: catalogue.reconfirm.answerNone },
+    };
+  };
+  const SAID_VIN = new Date("2026-11-19T17:30:00.000Z");
+  /** One answer per row of `mixed()`, as the list's filter gives them for those states: two said «Vin», one cancelled after the ask. */
+  const ANSWERS = ["yes", "none", null, null, "none", "yes", null, "cancelled", null] as const;
+  const answered = () =>
+    mixed().map((data, at) => ({ ...data, reconfirmAnswer: ANSWERS[at], reconfirmedAt: ANSWERS[at] === "yes" || ANSWERS[at] === "cancelled" ? SAID_VIN : null, submittedAt: SAID_VIN }));
+
+  it.each(["ro", "en"] as const)("heads the two in the reader's language beside «Status» and writes the answer in its words (%s)", async (locale) => {
+    const { reconfirmWords, reconfirmAnswerHeader, reconfirmedHeader } = routeOptions(locale);
+    const buffer = await buildRegistrationsWorkbook(answered(), "Crosul Tâmpei", routeOptions(locale));
+    const { rows } = readSheet(buffer);
+    const header = rows[0] as string[];
+    expect(header.slice(0, 6)).toEqual(["ID", "Race number (BIB)", "Status", reconfirmAnswerHeader, reconfirmedHeader, "Name"]);
+    // The answer as text, one of the filter's three in the reader's words, or nothing for a registration nobody asked.
+    expect(startListRows(rows).slice(1).map((line) => line?.[3] ?? "")).toEqual(ANSWERS.map((answer) => (answer ? reconfirmWords[answer] : "")));
+    const cells = rawCells(buffer);
+    for (const [at, answer] of ANSWERS.entries()) {
+      const answerCell = cells.get(`D${at + 2}`);
+      const moment = cells.get(`E${at + 2}`);
+      if (answer) expect(answerCell?.type, `row ${at}`).not.toBeUndefined();
+      // The moment: a date on the club's clock in the sheet's one stamp format — the very cell «Submitted» writes for it.
+      const submitted = cells.get(`${columnLetter(header.indexOf("Submitted"))}${at + 2}`);
+      if (answer === "yes" || answer === "cancelled") {
+        expect(moment?.type, `row ${at}`).toBeUndefined();
+        expect(moment?.value, `row ${at}`).toBe(submitted?.value);
+        expect(formatCodeOf(buffer, moment?.style), `row ${at}`).toBe(STAMP_FORMAT);
+      } else {
+        expect(moment?.value, `row ${at}`).toBeUndefined();
+      }
+    }
+    expect(formatCodeOf(buffer, cells.get(`${columnLetter(header.indexOf("Submitted"))}2`)?.style)).toBe(STAMP_FORMAT);
+  });
+
+  it.each(["ro", "en"] as const)("keeps the drop-down, every colour rule and every footer formula on the columns their headers name (%s)", async (locale) => {
+    const data = answered();
+    const buffer = await buildRegistrationsWorkbook(data, "Crosul Tâmpei", routeOptions(locale));
+    const header = readSheet(buffer).rows[0] as string[];
+    const letter = (name: string) => columnLetter(header.indexOf(name));
+    const last = data.length + 1;
+    // The drop-down sits over «Status»'s data rows, still the third column.
+    expect(letter("Status")).toBe("C");
+    expect(validationsOf(buffer).rules[0].attributes.sqref).toBe(`C2:C${last}`);
+    // A status tint reads `$C2` and colours the whole row, the two new cells with it.
+    const rules = rulesOf(buffer);
+    const tints = rules.filter((rule) => rule.sqref.startsWith("A2:"));
+    expect(tints).toHaveLength(ROW_TINTS.length);
+    for (const rule of tints) {
+      expect(rule.sqref).toBe(`A2:${columnLetter(header.length - 1)}${last}`);
+      for (const [, reference] of rule.formula.matchAll(/(\$[A-Z]+)2="[A-Z_]+"/g)) expect(reference, rule.formula).toBe("$C");
+    }
+    // The member cells and their two rules, two columns later than before the move, read the tick and the club runner by header.
+    const memberRange = `${letter("Club member")}2:${letter("Member bib")}${last}`;
+    expect(rules.filter((rule) => rule.sqref === memberRange).map((rule) => rule.formula)).toEqual([
+      `$${letter("Member tick (declared)")}2="${YES_CELL}"`,
+      `AND($${letter("Club runner")}2="${YES_CELL}",$${letter("Member tick (declared)")}2<>"${YES_CELL}")`,
+    ]);
+    const guests = rules.filter((rule) => rule.formula.endsWith("=TRUE"));
+    expect(guests.map((rule) => rule.sqref)).toEqual([
+      `${letter("Race number (BIB)")}2:${letter("Race number (BIB)")}${last}`,
+      `${letter("Name")}2:${letter("Last name")}${last}`,
+      `${letter("Special guest")}2:${letter("Special guest")}${last}`,
+    ]);
+    for (const rule of guests) expect(rule.formula).toBe(`$${letter("Special guest")}2=TRUE`);
+    // Every footer formula counts over the columns it names — never the two new ones — and comes to the number cached beside it.
+    const counted = new Set(["ID", "Status", "Club runner", "Member tick (declared)", "Special guest", "Sex", "Age on race day"].map(letter));
+    const { reconfirmAnswerHeader, reconfirmedHeader } = routeOptions(locale);
+    expect([letter(reconfirmAnswerHeader), letter(reconfirmedHeader)]).toEqual(["D", "E"]);
+    const formulas = formulasOf(buffer);
+    expect(formulas.size).toBeGreaterThan(0);
+    for (const { formula } of formulas.values()) {
+      for (const [, column] of formula.matchAll(/\$([A-Z]+)\$\d+/g)) expect(counted.has(column), formula).toBe(true);
+      for (const moved of [reconfirmAnswerHeader, reconfirmedHeader]) expect(formula, moved).not.toContain(`$${letter(moved)}$`);
+    }
+    const values = evaluated(buffer);
+    for (const [reference, { cached }] of formulas) expect(values.get(reference), reference).toBe(Number(cached));
+  });
+
+  it("keeps the footer live after an offline edit with the two in place: a status picked again moves the counts, an answer edited moves none", async () => {
+    const buffer = await buildRegistrationsWorkbook(answered(), "Crosul Tâmpei", routeOptions("ro"));
+    const rows = readSheet(buffer).rows;
+    const confirmedAt = `B${rows.findIndex((line) => line?.[0] === RO.confirmed) + 1}`;
+    expect(evaluated(buffer).get(confirmedAt)).toBe(3);
+    const edited = gridOf(buffer).map((line) => (line ? [...line] : line)) as Grid;
+    edited[1][2] = "CANCELLED";
+    edited[2][3] = "A reconfirmat";
+    edited[3][4] = "46000";
+    expect(evaluated(buffer, edited).get(confirmedAt)).toBe(2);
+  });
+
+  it("is headed in both languages by words that are none of the fixed headers, so a lookup by header finds its own column", () => {
+    // Without a language the file speaks the English catalogue's words, never a third spelling of its own.
+    expect([RECONFIRM_ANSWER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT]).toEqual([en.Admin.reconfirm.answerColumn, en.Admin.reconfirm.column]);
+    expect(RECONFIRM_ANSWER_WORDS_DEFAULT).toEqual({ yes: en.Admin.reconfirm.answerYes, cancelled: en.Admin.reconfirm.answerCancelled, none: en.Admin.reconfirm.answerNone });
+    const fixed = REGISTRATION_SHEET_HEADERS.filter((header) => header !== RECONFIRM_ANSWER_HEADER_DEFAULT && header !== RECONFIRMED_HEADER_DEFAULT);
+    for (const catalogue of [ro, en]) {
+      const { answerColumn, column, answerYes, answerCancelled, answerNone } = catalogue.Admin.reconfirm;
+      for (const word of [answerColumn, column]) expect(fixed, word).not.toContain(word);
+      expect(new Set([answerColumn, column]).size).toBe(2);
+      // The longest of the three words fits the column's width (24 characters), so no answer is cut on screen.
+      for (const word of [answerYes, answerCancelled, answerNone]) expect(word.length, word).toBeLessThanOrEqual(24);
+    }
   });
 });
 

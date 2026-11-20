@@ -9863,6 +9863,7 @@
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
                 "În Excel, rândul are culoarea stării, celulele de membru sunt albastre când coloana Member tick (declared) spune Yes, și lila pentru alt alergător al clubului. Numărul și numele unui invitat special sunt piersică și cursiv. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
+                "Lângă coloana Status, în Excel și în CSV, «Reconfirmare» spune ce a răspuns fiecare la «Cere reconfirmarea»: «A reconfirmat», «A anulat după cerere» sau «N-a răspuns»; e goală pentru cine nu a fost întrebat. Alături, «Reconfirmat» spune când a apăsat „Vin”.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },
@@ -13109,6 +13110,10 @@
       "filterHelp": "Doar pentru mesajele trimise cu „Cere reconfirmarea”. Cine nu răspunde rămâne înscris.",
       "detail": "A apăsat „Vin” {date}.",
       "column": "Reconfirmat",
+      "answerColumn": "Reconfirmare",
+      "answerYes": "A reconfirmat",
+      "answerCancelled": "A anulat după cerere",
+      "answerNone": "N-a răspuns",
       "personAsked": "Reconfirmare cerută {asked}",
       "personAnswered": "a apăsat „Vin” {at}"
     },

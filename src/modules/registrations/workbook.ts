@@ -10,7 +10,16 @@ import { ageOnRaceDay } from "./domain/age";
 import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-deadline";
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
-import { memberBibExportCell, membershipCell, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT } from "./csv";
+import {
+  memberBibExportCell,
+  membershipCell,
+  PARTNER_HEADER_DEFAULT,
+  RECONFIRM_ANSWER_HEADER_DEFAULT,
+  RECONFIRM_ANSWER_WORDS_DEFAULT,
+  RECONFIRMED_HEADER_DEFAULT,
+  reconfirmAnswerCell,
+  type ReconfirmAnswerWords,
+} from "./csv";
 import { clubRunnerCell, memberTickCell } from "./domain/club-runner";
 import { sexCell } from "./domain/sex";
 import { colourRules, columnLetters, type ColourRule } from "./sheet-colours";
@@ -265,8 +274,9 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   /*
     «Status» (§790, amended; the owner, 2026-10-16: «the status should come right after BIB and it should be a select, not
     free text»): right after the race number, where the eye goes on race morning, and a pick from the list — the drop-down
-    `buildRegistrationsWorkbook` puts over this column's data rows (`STATUS_WORDS`). In the spreadsheet only: the CSV keeps its
-    order, which scripts read by position. The formulas and the colour rules find the column by this header, never by a letter.
+    `buildRegistrationsWorkbook` puts over this column's data rows (`STATUS_WORDS`). In the spreadsheet only: the CSV keeps
+    «Status» where it was. The formulas and the colour rules find the column by this header, never by a letter. Right after
+    it `registrationColumns` puts «Reconfirmare» and «Reconfirmat» (§NNN), as the CSV does after its own «Status».
   */
   { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
@@ -348,8 +358,45 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Special guest", width: 12, cell: (row) => ({ value: row.outsideCapacity ?? false, type: Boolean }) },
 ];
 
-/** The header row, exactly as the export writes it — what a re-import matches its columns by. */
-export const REGISTRATION_SHEET_HEADERS = COLUMNS.map((column) => column.header);
+/**
+ * «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
+ * re-confirmat un alergător»): what the person answered an organizer's message that asked «Cere reconfirmarea», in the list
+ * filter's own words — «A reconfirmat», «A anulat după cerere», «N-a răspuns» — or empty when no send asked them. Text-typed
+ * like every word cell, wide enough for the longest of the three in either language.
+ */
+function reconfirmAnswerColumn(header: string, words: ReconfirmAnswerWords): SheetColumn<RegistrationSheetRow> {
+  return { header, width: 24, cell: (row) => ({ value: reconfirmAnswerCell(row.reconfirmAnswer, words), type: String }) };
+}
+
+/**
+ * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», on the club's clock like every moment
+ * of the sheet, empty when not — right after «Reconfirmare», which says the answer (§NNN).
+ */
+function reconfirmedColumn(header: string): SheetColumn<RegistrationSheetRow> {
+  return { header, width: 18, cell: (row) => ({ value: onClubClock(row.reconfirmedAt ?? null), type: Date, format: STAMP_FORMAT }) };
+}
+
+/**
+ * The fixed columns with «Reconfirmare» and «Reconfirmat» (§NNN) right after «Status», where the state is read: the two
+ * together near the front, headed as the caller says. Every column after «Status» sits two later than it did; the drop-down,
+ * the colour rules and the statistics find theirs by header (`buildRegistrationsWorkbook`'s `at`), never by a letter.
+ */
+function registrationColumns(reconfirm: { answerHeader: string; words: ReconfirmAnswerWords; momentHeader: string }): Array<SheetColumn<RegistrationSheetRow>> {
+  const columns = [...COLUMNS];
+  const afterStatus = columns.findIndex((column) => column.header === "Status") + 1;
+  columns.splice(afterStatus, 0, reconfirmAnswerColumn(reconfirm.answerHeader, reconfirm.words), reconfirmedColumn(reconfirm.momentHeader));
+  return columns;
+}
+
+/**
+ * The header row as a caller that names no language writes it — what a re-import matches its columns by. The route heads
+ * «Reconfirmare» and «Reconfirmat» (here their English defaults), «Partener» and «Note interne» in the reader's language.
+ */
+export const REGISTRATION_SHEET_HEADERS = registrationColumns({
+  answerHeader: RECONFIRM_ANSWER_HEADER_DEFAULT,
+  words: RECONFIRM_ANSWER_WORDS_DEFAULT,
+  momentHeader: RECONFIRMED_HEADER_DEFAULT,
+}).map((column) => column.header);
 
 /**
  * «Event» (§787, amended), the column a file of several events gets after «Name»: the event's label as the footer's blocks
@@ -364,14 +411,6 @@ const EVENT_COLUMN: SheetColumn<RegistrationSheetRow> = { header: "Event", width
  */
 function partnerColumn(header: string): SheetColumn<RegistrationSheetRow> {
   return { header, width: 24, cell: (row) => ({ value: row.partnerName ?? "", type: String }) };
-}
-
-/**
- * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», on the club's clock like every moment
- * of the sheet, empty when not — after «Partener», before «Note interne», which stays last.
- */
-function reconfirmedColumn(header: string): SheetColumn<RegistrationSheetRow> {
-  return { header, width: 18, cell: (row) => ({ value: onClubClock(row.reconfirmedAt ?? null), type: Date, format: STAMP_FORMAT }) };
 }
 
 /**
@@ -395,7 +434,9 @@ const STATUS_WORDS: readonly string[] = registrationStatus.enumValues;
 export type StatusPickWords = { title: string; error: string };
 
 /**
- * The workbook. «Partener» (the decision «De la parteneri») follows the fixed columns in every file, headed `partnerHeader`.
+ * The workbook. «Reconfirmare» and «Reconfirmat» (§NNN) sit right after «Status» in every file, headed `reconfirmAnswerHeader`
+ * and `reconfirmedHeader`, the answer in `reconfirmWords` (all three the reader's language, from the route; English without).
+ * «Partener» (the decision «De la parteneri») follows the fixed columns in every file, headed `partnerHeader`.
  * `notesHeader` adds the «Note interne» column (§785) after it, the last — passed by the route only for a role that
  * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
  * `statistics` adds the footer under the rows (`statistics.ts`). `statusPick` makes «Status» a drop-down over the data
@@ -410,16 +451,27 @@ export type StatusPickWords = { title: string; error: string };
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
-  options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string; statistics?: StatisticsWords; statusPick?: StatusPickWords } = {},
+  options: {
+    notesHeader?: string;
+    partnerHeader?: string;
+    reconfirmedHeader?: string;
+    reconfirmAnswerHeader?: string;
+    reconfirmWords?: ReconfirmAnswerWords;
+    statistics?: StatisticsWords;
+    statusPick?: StatusPickWords;
+  } = {},
 ): Promise<Buffer> {
   const several = options.statistics !== undefined && hasSeveralEvents(rows);
   // What each row's event is called, one string to one event, for the column and for the footer's blocks alike.
   const labels = several ? eventLabelsOf(rows) : [];
   const sheetRows = several ? rows.map((row, at) => ({ ...row, eventLabel: labels[at] })) : rows;
-  const columns = [...COLUMNS];
+  const columns = registrationColumns({
+    answerHeader: options.reconfirmAnswerHeader ?? RECONFIRM_ANSWER_HEADER_DEFAULT,
+    words: options.reconfirmWords ?? RECONFIRM_ANSWER_WORDS_DEFAULT,
+    momentHeader: options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT,
+  });
   if (several) columns.splice(columns.findIndex((column) => column.header === "Name") + 1, 0, EVENT_COLUMN);
   columns.push(partnerColumn(options.partnerHeader ?? PARTNER_HEADER_DEFAULT));
-  columns.push(reconfirmedColumn(options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT));
   if (options.notesHeader) columns.push(notesColumn(options.notesHeader));
   const at = (header: string) => columns.findIndex((column) => column.header === header);
 

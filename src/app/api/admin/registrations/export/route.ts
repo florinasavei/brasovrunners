@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { routing, type Locale } from "@/i18n/routing";
-import { buildRegistrationsCsv } from "@/modules/registrations/csv";
+import { buildRegistrationsCsv, type ReconfirmAnswerWords } from "@/modules/registrations/csv";
 import { cancelReasonCell } from "@/modules/registrations/domain/cancel-reason";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
@@ -16,6 +16,7 @@ import {
   isReconfirmFilter,
   listEventsWithRegistrations,
   listLatestDeclarationAcceptances,
+  listReconfirmAnswers,
   listRegistrationsForAdmin,
   listWorkbookDetails,
 } from "@/modules/registrations/admin-repository";
@@ -160,6 +161,12 @@ export async function GET(request: Request): Promise<Response> {
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
   /*
+    «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
+    re-confirmat un alergător»): what each row answered, both formats — one grouped read of the exported rows' asks, never
+    one per row, by the very definition the list's filter `reconfirm` and its chip read, so the file never disagrees with them.
+  */
+  const reconfirmAnswers = await listReconfirmAnswers(db, rows.map((row) => row.id));
+  /*
     «Note interne» (§785; the owner: «asta trebuie de asemenea să fie și în Excel!»): a last column in both files,
     for a role that may keep notes — asserted here and again in the reader — and for no other. Today every role
     that exports may, so the check never refuses; it is written so that moving either boundary moves the column.
@@ -168,12 +175,15 @@ export async function GET(request: Request): Promise<Response> {
   const withNotes = canKeepRegistrationNotes(actor.role);
   // «Partener» (the decision «De la parteneri»): in every file, for every role that gets one, headed in the reader's language.
   const partnerHeader = (await getTranslations({ locale, namespace: "Admin" }))("partner.column");
-  // «Reconfirmat» (the decision «Cere reconfirmarea»): in every file, after «Partener», headed in the reader's language.
+  // «Reconfirmat» (the decision «Cere reconfirmarea»): in every file, right after «Reconfirmare», headed in the reader's language.
   const reconfirmedHeader = (await getTranslations({ locale, namespace: "Admin" }))("reconfirm.column");
+  const t = await getTranslations({ locale, namespace: "Admin" });
+  // «Reconfirmare» (§NNN): in every file, right after «Status» — its header and the answer's three words, the reader's language.
+  const reconfirmAnswerHeader = t("reconfirm.answerColumn");
+  const reconfirmWords: ReconfirmAnswerWords = { yes: t("reconfirm.answerYes"), cancelled: t("reconfirm.answerCancelled"), none: t("reconfirm.answerNone") };
   let notesHeader: string | undefined;
   const notes = new Map<string, string>();
   if (withNotes) {
-    const t = await getTranslations({ locale, namespace: "Admin" });
     const words: ExportNotesWords<StaffRole> = {
       roles: Object.fromEntries(STAFF_ROLES.map((role) => [role, t(`registrations.notes.exportRole.${role}`)])) as ExportNotesWords<StaffRole>["roles"],
       authorGone: t("registrations.notes.exportGone"),
@@ -276,6 +286,8 @@ export async function GET(request: Request): Promise<Response> {
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
         partnerName: row.partnerName,
+        // «Reconfirmare» and «Reconfirmat» (§NNN), right after «Status»: the answer, then the moment on the club's clock.
+        reconfirmAnswer: reconfirmAnswers.get(row.id) ?? null,
         reconfirmedAt: row.reconfirmedAt,
         notes: notes.get(row.id) ?? "",
         // The footer's inputs (§787): is this one of the club's runners, and which event.
@@ -286,7 +298,15 @@ export async function GET(request: Request): Promise<Response> {
       })),
       eventTitle ?? "Participants",
       // «Status» is a drop-down (§790, amended), its error box in the reader's language.
-      { notesHeader, partnerHeader, reconfirmedHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
+      {
+        notesHeader,
+        partnerHeader,
+        reconfirmedHeader,
+        reconfirmAnswerHeader,
+        reconfirmWords,
+        statistics,
+        statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") },
+      },
     );
 
     return new NextResponse(new Uint8Array(workbook), {
@@ -351,12 +371,14 @@ export async function GET(request: Request): Promise<Response> {
       city: row.city,
       // «Partener» (the decision «De la parteneri»), before the notes.
       partnerName: row.partnerName,
-      // «Reconfirmat» (the decision «Cere reconfirmarea»), after «Partener»: an ISO moment, empty when the person did not say «Vin».
+      // «Reconfirmare» (§NNN), right after «Status»: the answer in the reader's words, empty when no send asked the row.
+      reconfirmAnswer: reconfirmAnswers.get(row.id) ?? null,
+      // «Reconfirmat» (the decision «Cere reconfirmarea»), beside it: an ISO moment, empty when the person did not say «Vin».
       reconfirmedAt: row.reconfirmedAt?.toISOString() ?? "",
       // «Note interne» (§785), last, written only with the header — a role that may keep notes.
       notes: notes.get(row.id) ?? "",
     })),
-    { notesHeader, partnerHeader, reconfirmedHeader },
+    { notesHeader, partnerHeader, reconfirmedHeader, reconfirmAnswerHeader, reconfirmWords },
   );
 
   return new NextResponse(csv, {

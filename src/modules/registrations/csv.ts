@@ -12,6 +12,7 @@
  */
 
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import type { ReconfirmFilter } from "./admin-repository";
 import { clubRunnerCell } from "./domain/club-runner";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibCell } from "./domain/member-bib";
@@ -174,10 +175,16 @@ export type RegistrationCsvRow = {
    */
   partnerName?: string | null;
   /**
-   * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», as an ISO moment, or empty — after
-   * «Partener», before «Note interne», which stays last.
+   * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», as an ISO moment, or empty — right
+   * after «Reconfirmare», beside «Status» (§NNN).
    */
   reconfirmedAt?: string | null;
+  /**
+   * «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»): the answer the list's filter gives the registration —
+   * «yes», «cancelled» or «none» (`admin-repository.ts#listReconfirmAnswers`) — written in words right after «Status»
+   * (`reconfirmAnswerCell`); null or absent when no send asked it, or it is in none of the three: an empty cell.
+   */
+  reconfirmAnswer?: ReconfirmFilter | null;
 };
 
 /** «Partener»'s header when the caller names none (`partnerHeader`): the export route passes it in the reader's language. */
@@ -185,6 +192,23 @@ export const PARTNER_HEADER_DEFAULT = "Partner";
 
 /** «Reconfirmat»'s header when the caller names none (`reconfirmedHeader`): the route passes it in the reader's language. */
 export const RECONFIRMED_HEADER_DEFAULT = "Reconfirmed";
+
+/** «Reconfirmare»'s header when the caller names none (`reconfirmAnswerHeader`): the route passes it in the reader's language. */
+export const RECONFIRM_ANSWER_HEADER_DEFAULT = "Reconfirmation";
+
+/** «Reconfirmare»'s words (§NNN), one per answer of the list's filter, in the reader's language: `Admin.reconfirm.answer*`. */
+export type ReconfirmAnswerWords = Record<ReconfirmFilter, string>;
+
+/** The words when the caller names none (`reconfirmWords`): the English catalogue's. The route passes the reader's language. */
+export const RECONFIRM_ANSWER_WORDS_DEFAULT: ReconfirmAnswerWords = { yes: "Reconfirmed", cancelled: "Cancelled after the ask", none: "No answer" };
+
+/**
+ * The «Reconfirmare» cell of both files (§NNN): the answer's word — «A reconfirmat», «A anulat după cerere», «N-a răspuns» —
+ * or empty for a registration no send asked, or one in none of the three (an expired one, an offer that did not answer).
+ */
+export function reconfirmAnswerCell(answer: ReconfirmFilter | null | undefined, words: ReconfirmAnswerWords = RECONFIRM_ANSWER_WORDS_DEFAULT): string {
+  return answer ? words[answer] : "";
+}
 
 const HEADER = [
   "Event",
@@ -194,7 +218,11 @@ const HEADER = [
   "Identity document",
   "Email",
   "Status",
-  // Declared or verified (§662): the cell says which. Same position, so a script reading by position still finds it.
+  /*
+    Here `buildRegistrationsCsv` puts «Reconfirmare» and «Reconfirmat» (§NNN), headed in the reader's language — inserted
+    rather than appended, because the answer is read beside the state. Every column below sits two later.
+  */
+  // Declared or verified (§662): the cell says which, under the header it always had.
   "Club member",
   "Medically fit (declared)",
   "Strava",
@@ -250,17 +278,25 @@ const HEADER = [
 ];
 
 /**
- * The file. «Partener» (the decision «De la parteneri») comes after «Club runner» in every file, headed `partnerHeader` (the
- * reader's language, from the route) or `PARTNER_HEADER_DEFAULT`. `notesHeader` adds the «Note interne» column (§785) after
- * it, the last — passed by the route only for a role that `canKeepRegistrationNotes`; without it no such column, which is
- * every other caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
+ * The file. «Reconfirmare» and «Reconfirmat» (§NNN, amending the decision «Cere reconfirmarea») sit right after «Status» in
+ * every file — the answer in words (`reconfirmWords`), then when the person said «Vin» — headed `reconfirmAnswerHeader` and
+ * `reconfirmedHeader` (the reader's language, from the route) or their defaults. «Partener» (the decision «De la parteneri»)
+ * comes after «Club runner», headed `partnerHeader` or `PARTNER_HEADER_DEFAULT`. `notesHeader` adds the «Note interne» column
+ * (§785) after it, the last — passed by the route only for a role that `canKeepRegistrationNotes`; without it no such column,
+ * which is every other caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
  */
 export function buildRegistrationsCsv(
   rows: readonly RegistrationCsvRow[],
-  options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string } = {},
+  options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string; reconfirmAnswerHeader?: string; reconfirmWords?: ReconfirmAnswerWords } = {},
 ): string {
-  // «Reconfirmat» (the decision «Cere reconfirmarea») after «Partener», in every file; the notes after both.
-  const withPartner = [...HEADER, options.partnerHeader ?? PARTNER_HEADER_DEFAULT, options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT];
+  /*
+    The answer and its moment beside «Status» (§NNN; the owner, 2026-11-20: «în excel export nu am dacă a re-confirmat un
+    alergător»), where the state is read — so every column after «Status» moved two to the right, and «Reconfirmat» left the
+    end, where it had been appended. «Partener» after the fixed columns, the notes after it.
+  */
+  const afterStatus = HEADER.indexOf("Status") + 1;
+  const reconfirmHeaders = [options.reconfirmAnswerHeader ?? RECONFIRM_ANSWER_HEADER_DEFAULT, options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT];
+  const withPartner = [...HEADER.slice(0, afterStatus), ...reconfirmHeaders, ...HEADER.slice(afterStatus), options.partnerHeader ?? PARTNER_HEADER_DEFAULT];
   const header = options.notesHeader ? [...withPartner, options.notesHeader] : withPartner;
   const lines = [
     // Through the same cell function as the data. No header needs quoting today; one added
@@ -275,6 +311,9 @@ export function buildRegistrationsCsv(
         row.idDocument,
         row.email,
         row.status,
+        // «Reconfirmare» and «Reconfirmat» (§NNN): the answer in words, then the ISO moment of «Vin» — each empty when none.
+        reconfirmAnswerCell(row.reconfirmAnswer, options.reconfirmWords),
+        row.reconfirmedAt ?? "",
         membershipCell(row),
         row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
@@ -305,7 +344,6 @@ export function buildRegistrationsCsv(
         memberBibExportCell(row),
         clubRunnerCell(row.clubRunner),
         row.partnerName ?? "",
-        row.reconfirmedAt ?? "",
         ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)

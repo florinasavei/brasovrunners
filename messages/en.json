@@ -9863,6 +9863,7 @@
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
                 "In Excel, a row takes the colour of its state, the member cells are blue when the Member tick (declared) column says Yes, and lavender for another club runner. A special guest's number and names are peach and italic. The numbers in «Statistics» are formulas: change something offline and they recount by themselves.",
+                "Beside the Status column, in Excel and in the CSV, «Reconfirmation» says how each person answered «Ask them to reconfirm»: «Reconfirmed», «Cancelled after the ask» or «No answer»; it is empty for anyone never asked. Beside it, «Reconfirmed» says when they pressed “I'm coming”.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },
@@ -13109,6 +13110,10 @@
       "filterHelp": "Only for messages sent with “Ask them to reconfirm”. Whoever does not answer stays registered.",
       "detail": "Pressed “I'm coming” on {date}.",
       "column": "Reconfirmed",
+      "answerColumn": "Reconfirmation",
+      "answerYes": "Reconfirmed",
+      "answerCancelled": "Cancelled after the ask",
+      "answerNone": "No answer",
       "personAsked": "Reconfirmation asked on {asked}",
       "personAnswered": "pressed “I'm coming” on {at}"
     },
