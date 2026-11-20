@@ -52,6 +52,7 @@ import {
   kitSummary,
   minAgeSummary,
   programmeSummary,
+  raffleSummary,
   registrationSummary,
   registrationWindowSummary,
   rulesSummary,
@@ -108,7 +109,8 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *    foot of «Regulamentul», under the minimum age (§799); there is no `#box-conditions` any more;
  * 3. the day itself: «Programul zilei și ce să aduci» (`#box-schedule`), then, while the club
  *    registers them here, «Kit de participare» (`#box-kit`, §554) and «Numere de concurs (BIB)»
- *    (`#box-bibs`, with the designer and, on the editor, allocation and printing);
+ *    (`#box-bibs`, with «Tombolă» — `#box-raffle`, §1023 —, the designer and, on the editor, allocation
+ *    and printing);
  * 4. «Lista publică a participanților» (`#box-start-list`, §512), last, as the page draws it last.
  *
  * The closed line says the registration's line, then the programme's, the rules' and the age in brief.
@@ -141,6 +143,7 @@ export default async function RegistrationBox({
   bibCounts,
   bibPrint,
   bibPrintSaved = false,
+  raffleSaved = false,
   locale,
   now,
   clubDeadlines,
@@ -149,6 +152,11 @@ export default async function RegistrationBox({
   rsvp = null,
   rsvpAsk = DEFAULT_RSVP_ASK_SETTINGS,
 }: BoxProps & {
+  /**
+   * The page is back from the save that moved the raffle's settings (§1023, `?raffle=1`): «Tombolă», the race numbers' card and this
+   * box open by themselves (`openWhen.saved`), so what was saved is in sight.
+   */
+  raffleSaved?: boolean;
   /**
    * The club's settings for the «Vii?» email (§823), read by the page, so the tick under «Acceptă răspunsuri „Vin!”» can say what it
    * does in the club's own numbers: how many days before, from what hour («Termene») and to whom («Emailuri», cut by the notice in force:
@@ -794,7 +802,7 @@ export default async function RegistrationBox({
                       bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null,
                       event ? spareBandOf(event) : null,
                     )}
-                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)), saved: bibPrintSaved }}
+                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)), saved: bibPrintSaved || raffleSaved }}
                   >
                     <Stack spacing={2}>
                       {/* The band's colour (§173) is the designer's «Antet» now (§759), with the rest of the header. */}
@@ -807,61 +815,84 @@ export default async function RegistrationBox({
                         sx={{ width: { sm: 220 } }}
                       />
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
-                      {/* «Avem tombolă» (§949): the club's internal switch, here because a raffle is drawn on the race numbers. Ticked by an
-                          Administrator — it is saved with the event, whose save is theirs (§542); the Organizer reads it. It shows the
-                          «Tombolă» tick on the registrations' and the volunteers' lists, which the Organizer presses too; no public page reads
-                          it. The marker says the form carried the box, so an unticked one reads as "no raffle", not as "not edited". */}
-                      <input type="hidden" name="event.hasRaffle.present" value="1" />
-                      <CheckboxField name="event.hasRaffle" defaultChecked={event?.hasRaffle ?? false} help={t("editor.hasRaffleHelp")}>
-                        {t("editor.hasRaffle")}
-                      </CheckboxField>
                       {/*
-                        The raffle's settings (§984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și
-                        elitele și voluntarii» and «tombolă din oficiu vs tombolă cu înscriere separată»), under «Avem tombolă» while it is
-                        ticked — hidden, never removed, so they still post. «Cine poate participa»: three ticks, all on by default, each with
-                        its marker; «Cum»: a native select of its two answers, so it always posts one; «Înscrierile … deschise»: a tick. Saved
-                        with the event — the Administrator's save (§542) — and one edition's own: no series edit, copy or event file carries them.
+                        6.3.2.1 — «Tombolă» (§1023, amending how §949 and §984 drew it; the owner, 2026-11-20: «aici ar trebui să fie o
+                        secțiune colapsată cu „Tombola”»): everything the editor holds about the event's raffle in one fold of this card,
+                        where §949 put it because a raffle is drawn on the race numbers. An option a race may skip, so a fold at the next
+                        level (`EventEditorLayout`'s rule): closed on arrival, its line saying who and how (`raffleSummary`), open by itself
+                        right after the save that moved one of its boxes (`raffleSaved`) and, as every fold, around a box a refusal names
+                        (`ActionForm`'s `revealField`; with scripts off, `BOXED_DISCLOSURE_SX`). The boxes, their names and markers and the
+                        one save are §984's, unchanged.
                       */}
-                      <OnlyWhenTicked name="event.hasRaffle" initiallyTicked={event?.hasRaffle ?? false}>
-                        <Stack spacing={1} sx={{ pl: { sm: 4 } }} data-testid="raffle-settings">
-                          <Typography variant="subtitle2" component="p">
-                            {t("editor.raffle.who")}
-                          </Typography>
-                          {(
-                            [
-                              // Each box's whole name written out: what the editor's reader takes is found by name (`event-form-together.test.ts`).
-                              ["event.raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners"), t("editor.raffle.runnersHelp")],
-                              ["event.raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites"), t("editor.raffle.elitesHelp")],
-                              ["event.raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers"), t("editor.raffle.volunteersHelp")],
-                            ] as const
-                          ).map(([name, on, label, help]) => (
-                            <Box key={name}>
-                              <input type="hidden" name={`${name}.present`} value="1" />
-                              <CheckboxField name={name} defaultChecked={on} help={help}>
-                                {label}
-                              </CheckboxField>
-                            </Box>
-                          ))}
-                          <BoxNote>{t("editor.raffle.whoHelp")}</BoxNote>
-                          <RecallField
-                            select
-                            name="event.raffleSignUp"
-                            label={t("editor.raffle.how")}
-                            defaultValue={event?.raffleSignUp === true ? "true" : "false"}
-                            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                            sx={{ width: { sm: 320 } }}
-                            data-testid="raffle-sign-up-mode"
-                          >
-                            <option value="false">{t("editor.raffle.howAutomatic")}</option>
-                            <option value="true">{t("editor.raffle.howSignUp")}</option>
-                          </RecallField>
-                          <BoxNote more={t("editor.raffle.howHelpMore")}>{t("editor.raffle.howHelp")}</BoxNote>
-                          <input type="hidden" name="event.raffleSignUpOpen.present" value="1" />
-                          <CheckboxField name="event.raffleSignUpOpen" defaultChecked={event?.raffleSignUpOpen ?? false} help={t("editor.raffle.openHelp")}>
-                            {t("editor.raffle.open")}
+                      <Panel
+                        glyph="raffle"
+                        collapsible
+                        level={4}
+                        id="box-raffle"
+                        title={t("editor.raffle.title")}
+                        aside={raffleSummary(words, event, locale)}
+                        openWhen={{ saved: raffleSaved }}
+                        data-testid="raffle-fold"
+                      >
+                        <Stack spacing={1}>
+                          {/* «Avem tombolă» (§949): the club's internal switch. Ticked by an Administrator — it is saved with the event, whose
+                              save is theirs (§542); the Organizer reads it. It shows the «Tombolă» tick on the registrations' and the volunteers'
+                              lists, which the Organizer presses too; no public page reads it. The marker says the form carried the box, so an
+                              unticked one reads as "no raffle", not as "not edited". */}
+                          <input type="hidden" name="event.hasRaffle.present" value="1" />
+                          <CheckboxField name="event.hasRaffle" defaultChecked={event?.hasRaffle ?? false} help={t("editor.hasRaffleHelp")}>
+                            {t("editor.hasRaffle")}
                           </CheckboxField>
+                          {/*
+                            The raffle's settings (§984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii
+                            și elitele și voluntarii» and «tombolă din oficiu vs tombolă cu înscriere separată»), under «Avem tombolă» while it
+                            is ticked — hidden, never removed, so they still post. «Cine poate participa»: three ticks, all on by default, each
+                            with its marker; «Cum»: a native select of its two answers, so it always posts one; «Înscrierile … deschise»: a
+                            tick. Saved with the event — the Administrator's save (§542) — and one edition's own: no series edit, copy or event
+                            file carries them.
+                          */}
+                          <OnlyWhenTicked name="event.hasRaffle" initiallyTicked={event?.hasRaffle ?? false}>
+                            <Stack spacing={1} sx={{ pl: { sm: 4 } }} data-testid="raffle-settings">
+                              <Typography variant="subtitle2" component="p">
+                                {t("editor.raffle.who")}
+                              </Typography>
+                              {(
+                                [
+                                  // Each box's whole name written out: what the editor's reader takes is found by name (`event-form-together.test.ts`).
+                                  ["event.raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners"), t("editor.raffle.runnersHelp")],
+                                  ["event.raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites"), t("editor.raffle.elitesHelp")],
+                                  ["event.raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers"), t("editor.raffle.volunteersHelp")],
+                                ] as const
+                              ).map(([name, on, label, help]) => (
+                                <Box key={name}>
+                                  <input type="hidden" name={`${name}.present`} value="1" />
+                                  <CheckboxField name={name} defaultChecked={on} help={help}>
+                                    {label}
+                                  </CheckboxField>
+                                </Box>
+                              ))}
+                              <BoxNote>{t("editor.raffle.whoHelp")}</BoxNote>
+                              <RecallField
+                                select
+                                name="event.raffleSignUp"
+                                label={t("editor.raffle.how")}
+                                defaultValue={event?.raffleSignUp === true ? "true" : "false"}
+                                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                                sx={{ width: { sm: 320 } }}
+                                data-testid="raffle-sign-up-mode"
+                              >
+                                <option value="false">{t("editor.raffle.howAutomatic")}</option>
+                                <option value="true">{t("editor.raffle.howSignUp")}</option>
+                              </RecallField>
+                              <BoxNote more={t("editor.raffle.howHelpMore")}>{t("editor.raffle.howHelp")}</BoxNote>
+                              <input type="hidden" name="event.raffleSignUpOpen.present" value="1" />
+                              <CheckboxField name="event.raffleSignUpOpen" defaultChecked={event?.raffleSignUpOpen ?? false} help={t("editor.raffle.openHelp")}>
+                                {t("editor.raffle.open")}
+                              </CheckboxField>
+                            </Stack>
+                          </OnlyWhenTicked>
                         </Stack>
-                      </OnlyWhenTicked>
+                      </Panel>
                       <BibDesignPanel
                         eventId={event?.id ?? null}
                         design={design}
@@ -884,7 +915,7 @@ export default async function RegistrationBox({
       id="box-registration"
       title={heading ?? t("editor.boxes.registration.title")}
       aside={summary}
-      openWhen={{ attention: line.missing, saved: bibPrintSaved }}
+      openWhen={{ attention: line.missing, saved: bibPrintSaved || raffleSaved }}
       tone={risk ? "risk" : "default"}
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}

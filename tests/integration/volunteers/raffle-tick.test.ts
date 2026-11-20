@@ -99,7 +99,7 @@ async function person(role: StaffRole, name: string): Promise<StaffUser> {
   return row;
 }
 
-async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; phone?: string | null; bibNumber?: number }): Promise<string> {
+async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; phone?: string | null; volunteerNumber?: number }): Promise<string> {
   const email = `${over.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
@@ -114,7 +114,7 @@ async function volunteer(over: { eventId: string; name: string; state?: "REGISTE
       source: over.phone === null ? "STAFF" : "PUBLIC",
       state: over.state ?? "CONFIRMED",
       roleId: over.given?.[0] ?? null,
-      bibNumber: over.bibNumber ?? null,
+      volunteerNumber: over.volunteerNumber ?? null,
       createdAt: NOW,
       updatedAt: NOW,
     })
@@ -166,7 +166,7 @@ beforeEach(async () => {
   points.junction = await point(raceId, "1.20", "Intersecția Stejeriș", ["DIRECTION"], 2);
   points.elsewhere = await point(runId, "3.00", "Punctul altui eveniment", ["DIRECTION"], 0);
 
-  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], bibNumber: 501 });
+  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], volunteerNumber: 1 });
   people.dan = await volunteer({ eventId: raceId, name: "Dan Ene", given: [waterId], phone: "+40700000002" });
   // Offered and not confirmed yet: on the plan, said so.
   people.ion = await volunteer({ eventId: raceId, name: "Ion Lupu", state: "REGISTERED" });
@@ -297,7 +297,7 @@ describe("§984 «Tombolă» beside each volunteer: whether they take part, and 
   it("says Da or Nu with the reason by the one answer, in both modes, beside the tick", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
     await db.update(eventVolunteers).set({ inRaffle: false }).where(eq(eventVolunteers.id, people.zoe));
-    await db.update(eventVolunteers).set({ bibNumber: 502 }).where(eq(eventVolunteers.id, people.zoe));
+    await db.update(eventVolunteers).set({ volunteerNumber: 2 }).where(eq(eventVolunteers.id, people.zoe));
     let page = await listPage();
     expect(standingOf(page, people.ana)).toEqual(["1 Da", "1 Da"]);
     expect(standingOf(page, people.dan)).toEqual(["0 Nu · fără număr", "0 Nu · fără număr"]);

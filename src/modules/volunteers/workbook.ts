@@ -108,8 +108,8 @@ function peopleColumns(header: VolunteerCsvHeader, words: VolunteerSheetWords, w
     { header: header.shirtSize, width: 10, cell: (row) => ({ ...text(row.shirtSize), align: "center" }) },
     // «Are kit» (§904): beside the T-shirt's size, what whoever packs the kits reads together.
     { header: header.hasKit, width: 9, cell: (row) => ({ ...text(row.hasKit), align: "center" }) },
-    // The volunteer's number (§948): a number, so the sheet sorts by it.
-    { header: header.bibNumber, width: 9, cell: (row) => ({ value: row.bibNumber ?? undefined, type: Number, align: "center" }) },
+    // The volunteer's V number (§1023, amending §948), as text — «V007», padded to three digits so the sheet still sorts it in order.
+    { header: header.bibNumber, width: 9, cell: (row) => ({ ...text(row.volunteerNumber), align: "center" }) },
     { header: header.guardianName, width: 22, cell: (row) => text(row.guardianName) },
     { header: header.guardianEmail, width: 28, cell: (row) => text(row.guardianEmail) },
     { header: header.guardianConsent, width: 11, cell: (row) => ({ ...text(row.guardianConsent), align: "center" }) },

@@ -56,8 +56,8 @@ export type VolunteerCsvRow = {
   guardianConsent: string;
   /** «Are kit» (§904): «Da» / «Nu» in the reader's words. */
   hasKit: string;
-  /** The volunteer's number (§948), or null before they have one. */
-  bibNumber: number | null;
+  /** The volunteer's number as written, «V007» (§1023, amending §948), or null before they have one (not confirmed yet). */
+  volunteerNumber: string | null;
 };
 
 export type VolunteerCsvHeader = {
@@ -113,7 +113,7 @@ export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly Vo
         row.guardianEmail ?? "",
         row.guardianConsent,
         row.hasKit,
-        row.bibNumber === null ? "" : String(row.bibNumber),
+        row.volunteerNumber ?? "",
       ]
         .map(csvCell)
         .join(","),

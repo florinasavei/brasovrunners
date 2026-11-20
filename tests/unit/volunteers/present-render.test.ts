@@ -97,7 +97,7 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => {
     clubMember: false,
     listOptIn: false,
     hasKit: false,
-    bibNumber: null,
+    volunteerNumber: null,
     checkpointId: null,
     raceDayDecision: null,
     inRaffle: true,
@@ -211,8 +211,10 @@ describe("§983 «Prezent» among the person's chips on their own page", () => {
   });
 
   it("draws it beside the person's other chips, the number first, for a cancelled person too — the tick stands in any state", async () => {
-    const page = await drawPage(person({ present: true, bibNumber: 501, hasKit: true }));
+    const page = await drawPage(person({ present: true, volunteerNumber: 7, hasKit: true }));
     const claims = /data-testid="volunteer-claims"[\s\S]*$/.exec(page)?.[0] ?? "";
+    // §1023: the number is the V number, «Nr. V007».
+    expect(claims).toContain("Nr. V007");
     expect(claims.indexOf('data-testid="volunteer-number"')).toBeLessThan(claims.indexOf('data-testid="volunteer-present"'));
     expect(claims.indexOf('data-testid="volunteer-present"')).toBeLessThan(claims.indexOf('data-testid="volunteer-kit"'));
     expect(await drawPage(person({ present: true, state: "CANCELLED", roleIds: [] }))).toContain('data-testid="volunteer-present"');

@@ -6,10 +6,12 @@ import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
+import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { RAFFLE_RULES_KEY } from "@/modules/legal-documents/domain/keys";
 import type { MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, noticeDescribesRaffle, raffleRulesInForce } from "@/modules/legal-documents/repository";
+import type { RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { isUuid } from "@/shared/ids";
 import {
@@ -22,6 +24,7 @@ import {
   type RaffleReason,
   type RaffleSettings,
   raffleKindOfRegistration,
+  raffleNumberText,
   raffleParticipation,
   raffleSettingsOf,
   raffleSignUpClosedFor,
@@ -43,11 +46,14 @@ export type RafflePersonRef = { table: "registration"; id: string } | { table: "
 // The event and the gate
 // ---------------------------------------------------------------------------------------------
 
-/** The event's raffle settings and the facts the gate reads, or null for an event that is not there. */
+/**
+ * The event's raffle settings and the facts the gate reads, or null for an event that is not there — and how the event writes a race
+ * number (§735), which the raffle's tab and files write a runner's and an elite's number with (`domain/raffle.ts#raffleNumberText`).
+ */
 export async function readRaffleEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<{ id: string; settings: RaffleSettings; event: RaffleGateEvent } | null> {
+): Promise<{ id: string; settings: RaffleSettings; event: RaffleGateEvent; numberFormat: RaceNumberFormat } | null> {
   if (!isUuid(eventId)) return null;
   const [row] = await db
     .select({
@@ -64,6 +70,7 @@ export async function readRaffleEvent<T extends Record<string, unknown>>(
       startsAt: events.startsAt,
       endsAt: events.endsAt,
       timezone: events.timezone,
+      numberFormat: RACE_NUMBER_FORMAT,
     })
     .from(events)
     .where(eq(events.id, eventId))
@@ -73,6 +80,7 @@ export async function readRaffleEvent<T extends Record<string, unknown>>(
     id: row.id,
     settings: raffleSettingsOf(row),
     event: { type: row.type, eventStatus: row.eventStatus, editorialStatus: row.editorialStatus, startsAt: row.startsAt, endsAt: row.endsAt, timezone: row.timezone },
+    numberFormat: row.numberFormat,
   };
 }
 
@@ -98,13 +106,20 @@ export function settingsMayOpen(settings: RaffleSettings): boolean {
   return settings.hasRaffle && settings.signUp && settings.signUpOpen;
 }
 
-/** The gate's facts for one event, uncached — what every press asks again. Null for an event that is not there. */
-export async function readRaffleGateFacts<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<RaffleGateFacts | null> {
+/**
+ * The gate's facts for one event, uncached — what every press asks again — with how the event writes a race number beside them, for
+ * the roster (no further read). Null for an event that is not there.
+ */
+export async function readRaffleGateFacts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<(RaffleGateFacts & { numberFormat: RaceNumberFormat }) | null> {
   const found = await readRaffleEvent(db, eventId);
   if (!found) return null;
   // The legal reads cost two queries a language: asked only when the settings alone would open the gate.
   const [rulesInForce, noticeDescribes] = settingsMayOpen(found.settings) ? await Promise.all([raffleRulesInForce(db, now), noticeDescribesRaffle(db, now)]) : [false, false];
-  return { settings: found.settings, event: found.event, rulesInForce, noticeDescribesRaffle: noticeDescribes };
+  return { settings: found.settings, event: found.event, rulesInForce, noticeDescribesRaffle: noticeDescribes, numberFormat: found.numberFormat };
 }
 
 /** Why the gate is shut for `kind` (or for every kind, asked without one), or null while it is open. An event that is not there is shut. */
@@ -184,19 +199,20 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
   }
   if (ref.table === "volunteer") {
     const [row] = await db
-      .select({ eventId: eventVolunteers.eventId, state: eventVolunteers.state, bibNumber: eventVolunteers.bibNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, locale: eventVolunteers.locale })
+      .select({ eventId: eventVolunteers.eventId, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, locale: eventVolunteers.locale })
       .from(eventVolunteers)
       .where(eq(eventVolunteers.id, ref.id))
       .limit(1);
     if (!row) return null;
+    // A volunteer takes part with their V number (§1023): drawn by itself at the confirmation, so every confirmed volunteer has one.
     return {
       ref,
       eventId: row.eventId,
       kind: "VOLUNTEER",
       name: row.name,
-      number: row.bibNumber,
+      number: row.volunteerNumber,
       locale: localeOr(row.locale),
-      person: { kind: "VOLUNTEER", confirmed: row.state === "CONFIRMED", hasNumber: row.bibNumber !== null, inRaffle: row.inRaffle },
+      person: { kind: "VOLUNTEER", confirmed: row.state === "CONFIRMED", hasNumber: row.volunteerNumber !== null, inRaffle: row.inRaffle },
     };
   }
   const [row] = await db
@@ -241,7 +257,10 @@ export async function findRaffleEntry<T extends Record<string, unknown>>(db: Dat
 export type RaffleRosterRow = {
   ref: RafflePersonRef;
   kind: RaffleKind;
+  /** The number: a race number for a runner or an elite, the V number's integer for a volunteer (§1023) — two series; null for none. */
   number: number | null;
+  /** The number as the raffle writes it (`raffleNumberText`): «7» or «007» as the event writes a race number, «V007» for a volunteer; null for none. */
+  label: string | null;
   name: string;
   reason: RaffleReason;
   /** Whether the person was there: a registration checked in (at the desk or by «Am ajuns»), a volunteer or a line ticked «Prezent». */
@@ -261,6 +280,8 @@ export type RaffleRosterRow = {
 
 export type RaffleRoster = {
   settings: RaffleSettings;
+  /** How the event writes a race number (§735): what each row's `label` was written with. */
+  numberFormat: RaceNumberFormat;
   /** Why the sign-up is shut for every group, or null while it is open for one. */
   gateClosed: RaffleGateClosed | null;
   rows: RaffleRosterRow[];
@@ -270,8 +291,9 @@ export type RaffleRoster = {
 /**
  * Everybody of the event's three groups with the answer (§984). Who is listed: every real registration still standing (cancelled,
  * expired and test ones left out — a test registration is in no count the club is given, §30), every volunteer not cancelled, every
- * line of the elite list; who takes part is the one function's answer. Four queries, whatever the size of the event. The caller
- * asks the role (`raffle-list.ts#readRaffleRoster`).
+ * line of the elite list; who takes part is the one function's answer. A volunteer by their V number (§1023), in the order
+ * `compareRaffleRows` gives: the race numbers, then the V numbers, then whoever has none. Four queries, whatever the size of the
+ * event. The caller asks the role (`raffle-list.ts#readRaffleRoster`).
  */
 export async function readRaffleRosterRows<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<RaffleRoster | null> {
   const facts = await readRaffleGateFacts(db, eventId, now);
@@ -283,7 +305,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       .from(registrations)
       .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]))),
     db
-      .select({ id: eventVolunteers.id, state: eventVolunteers.state, bibNumber: eventVolunteers.bibNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, here: eventVolunteers.present })
+      .select({ id: eventVolunteers.id, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, name: eventVolunteers.name, inRaffle: eventVolunteers.inRaffle, here: eventVolunteers.present })
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.eventId, eventId), ne(eventVolunteers.state, "CANCELLED"))),
     db
@@ -302,6 +324,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       ref,
       kind: person.kind,
       number,
+      label: raffleNumberText({ number, kind: person.kind }, facts.numberFormat),
       name,
       reason: raffleParticipation({ ...person, signedUp: entry !== null }, settings),
       present,
@@ -317,7 +340,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
       const kind = raffleKindOfRegistration(one);
       return row({ table: "registration", id: one.id }, one.bibNumber, one.name, { kind, confirmed: one.status === "CONFIRMED", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle }, one.checkedInAt !== null);
     }),
-    ...helpers.map((one) => row({ table: "volunteer", id: one.id }, one.bibNumber, one.name, { kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle }, one.here)),
+    ...helpers.map((one) => row({ table: "volunteer", id: one.id }, one.volunteerNumber, one.name, { kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.volunteerNumber !== null, inRaffle: one.inRaffle }, one.here)),
     ...lines.map((one) => row({ table: "elite", id: one.id }, one.bibNumber, one.name, { kind: "ELITE", confirmed: true, hasNumber: true, inRaffle: one.inRaffle }, one.here)),
   ].sort(compareRaffleRows);
 
@@ -328,7 +351,7 @@ export async function readRaffleRosterRows<T extends Record<string, unknown>>(db
     counts.total += 1;
     if (one.present) counts.present += 1;
   }
-  return { settings, gateClosed: raffleSignUpClosedFor(facts, now), rows, counts };
+  return { settings, numberFormat: facts.numberFormat, gateClosed: raffleSignUpClosedFor(facts, now), rows, counts };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -357,7 +380,7 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
       : Promise.resolve([]),
     volunteerIds.length > 0
       ? db
-          .select({ id: eventVolunteers.id, state: eventVolunteers.state, bibNumber: eventVolunteers.bibNumber, inRaffle: eventVolunteers.inRaffle })
+          .select({ id: eventVolunteers.id, state: eventVolunteers.state, volunteerNumber: eventVolunteers.volunteerNumber, inRaffle: eventVolunteers.inRaffle })
           .from(eventVolunteers)
           .where(and(eq(eventVolunteers.eventId, eventId), inArray(eventVolunteers.id, [...volunteerIds])))
       : Promise.resolve([]),
@@ -373,7 +396,7 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
     );
   }
   for (const one of helpers) {
-    reasons.set(one.id, raffleParticipation({ kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle, signedUp: signed.has(one.id) }, settings));
+    reasons.set(one.id, raffleParticipation({ kind: "VOLUNTEER", confirmed: one.state === "CONFIRMED", hasNumber: one.volunteerNumber !== null, inRaffle: one.inRaffle, signedUp: signed.has(one.id) }, settings));
   }
   return reasons;
 }

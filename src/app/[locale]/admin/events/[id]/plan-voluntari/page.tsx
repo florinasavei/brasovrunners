@@ -27,6 +27,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { PLAN_LINK_BOXES, planLinkShort, planMapsRefusalValues } from "@/modules/volunteers/domain/plan-link";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
+import { formatVolunteerNumber } from "@/modules/volunteers/domain/volunteer-number";
 import { readVolunteerPlan, type VolunteerPlanPerson, type VolunteerPlanPoint } from "@/modules/volunteers/plan";
 import { coordinatesOf, PLAN_POINT_BOXES, type PlanPoint, planPointRefusalValues } from "@/modules/volunteers/plan-points";
 import { readVolunteerPointMail } from "@/modules/volunteers/point-mail";
@@ -762,9 +763,10 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <Typography component="span" sx={place === undefined ? PERSON_NAME_SX : POINT_PERSON_NAME_SX} data-testid="plan-person-name">
           <Link href={{ pathname: "/admin/volunteers/[id]", params: { id: person.id } }}>{person.name}</Link>
         </Typography>
-        {person.bibNumber !== null && (
-          <Typography component="span" variant="body2" sx={{ ml: 1, whiteSpace: "nowrap" }}>
-            {t("volunteers.chips.number", { number: person.bibNumber })}
+        {/* The person's V number (§1023): «Nr. V007», as on the «Voluntari» list and the person's page. */}
+        {person.volunteerNumber !== null && (
+          <Typography component="span" variant="body2" sx={{ ml: 1, whiteSpace: "nowrap" }} data-testid="plan-person-volunteer-number">
+            {t("volunteers.chips.number", { number: formatVolunteerNumber(person.volunteerNumber) })}
           </Typography>
         )}
         {person.phone && (
