@@ -62,7 +62,7 @@ const PHONE = "+40712345678";
 
 /**
  * A published race a week away whose raffle asks a sign-up, open, every group ticked: two confirmed runners (Bogdan checked in), a
- * confirmed volunteer with their V number (V001, §NNN), an address and a telephone, and a line of the elite list.
+ * confirmed volunteer with their V number (V001, §1023), an address and a telephone, and a line of the elite list.
  */
 async function seed(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
@@ -205,7 +205,7 @@ test.describe("§1014 «Tombolă» for the desk's volunteer: the roster, the fil
         await fitsTheScreen(page);
       });
 
-      await test.step("the files' addresses answer 403 to the volunteer, as before — the random.org ones too (§NNN)", async () => {
+      await test.step("the files' addresses answer 403 to the volunteer, as before — the random.org ones too (§1023)", async () => {
         for (const query of ["?lang=ro", "?present=1&lang=ro", "?format=random-org&lang=ro", "?format=random-org&present=1&lang=ro"]) {
           const response = await page.request.get(`/api/admin/events/${seeded.eventId}/raffle${query}`);
           expect(response.status(), query).toBe(403);

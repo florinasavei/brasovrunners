@@ -441,7 +441,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
                 <GlyphButton icon="download" href={`/api/admin/events/${eventId}/raffle?present=1&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} aria-label={t("registrations.raffle.presentButtonLabel")} data-testid="raffle-download-present">
                   {t("registrations.raffle.presentButton")}
                 </GlyphButton>
-                {/* «Descarcă pentru random.org» (§NNN): the same people, one number per line and no name, for random.org's List Randomizer. */}
+                {/* «Descarcă pentru random.org» (§1023): the same people, one number per line and no name, for random.org's List Randomizer. */}
                 <GlyphButton
                   icon="download"
                   href={`/api/admin/events/${eventId}/raffle?format=random-org&lang=${locale}`}

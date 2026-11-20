@@ -70,7 +70,7 @@ export type RaffleListOptions = { onlyPresent?: boolean; format?: RaffleListForm
  * Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. A role or an account, so an
  * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984). Since §1014 it is no longer who reads the «Tombolă»
  * tab — every desk role does (`canReadRaffle`) — but what stays the organizers' there: the files — the two CSVs, whose names leave the
- * site, and the two for random.org (§NNN), which hold the same people by number —, the exclusion, «Șterge înscrierea», an elite line's
+ * site, and the two for random.org (§1023), which hold the same people by number —, the exclusion, «Șterge înscrierea», an elite line's
  * ticks, the organizers' «Înscrie» of anybody, how and when each person signed up, and the reason «scos de organizatori».
  */
 export function canTakeRaffleList(subject: StaffSubject): boolean {

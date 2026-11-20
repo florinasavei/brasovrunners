@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0225_volunteer_v_numbers` (§NNN, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la
+ * Migration `0225_volunteer_v_numbers` (§1023, amending §948; the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la
  * toti voluntarii automat!»), proven on real PostgreSQL (PGlite): one nullable integer on the event's volunteers, `volunteer_number`,
  * unique per event and positive — and the confirmed volunteers already there numbered by the migration itself, event by event, in
  * the order they were first confirmed (the trail's `volunteer.state_changed` row that made them CONFIRMED), then added, then by id;

@@ -63,7 +63,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    */
   legacyNumbersKept: number;
   /**
-   * Volunteers' V numbers given this run (§NNN): to confirmed volunteers who had none — those the code serving during migration `0225`
+   * Volunteers' V numbers given this run (§1023): to confirmed volunteers who had none — those the code serving during migration `0225`
    * confirmed — zero on every run after the one that found them.
    */
   volunteerNumbersGiven: number;
