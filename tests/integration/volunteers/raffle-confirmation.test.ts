@@ -348,10 +348,10 @@ describe("§NNN BR-REQ-071-01 a volunteer confirmed for the raffle takes part in
     const list = await exportRaffleList(db, staff.MODERATOR!, eventId, NOW);
     expect(list.rows).toEqual([{ number: 1, label: "V001", name: "Maria Minoră", kind: "VOLUNTEER", present: false }]);
     expect(buildRaffleCsv(WORDS, list.rows)).toContain("V001,Maria Minoră,Voluntar,Nu");
-    expect(buildRaffleRandomOrgText((await exportRaffleList(db, staff.ADMIN!, eventId, NOW, { format: "random-org" })).rows)).toBe("V001\r\n");
+    expect(buildRaffleRandomOrgText((await exportRaffleList(db, staff.ADMIN!, eventId, NOW, { format: "random-org" })).rows)).toBe("V001 Maria Minoră\r\n");
     // «— doar prezenții»: once ticked present, as any volunteer.
     await changeVolunteer(db, staff.MODERATOR!, { kind: "setPresent", eventId, id, present: true }, NOW);
-    expect(buildRaffleRandomOrgText((await exportRaffleList(db, staff.MODERATOR!, eventId, NOW, { onlyPresent: true, format: "random-org" })).rows)).toBe("V001\r\n");
+    expect(buildRaffleRandomOrgText((await exportRaffleList(db, staff.MODERATOR!, eventId, NOW, { onlyPresent: true, format: "random-org" })).rows)).toBe("V001 Maria Minoră\r\n");
   });
 
   it("is taken out by «Scoate» as before, and put back", async () => {

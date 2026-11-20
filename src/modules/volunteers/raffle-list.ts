@@ -34,9 +34,10 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
   part with their V number — every confirmed volunteer has one, drawn by itself at the confirmation (`volunteer-numbers.ts`) — and
   every file writes a number as the raffle writes it (`domain/raffle.ts#raffleNumberText`): a race number as the event writes it,
   «V007» for a volunteer. The order is the race numbers, then the V numbers, then whoever has none (`compareRaffleRows`). Beside the
-  CSV, **«Descarcă pentru random.org»** (`buildRaffleRandomOrgText`): the same people, one number per line and nothing else, for the
-  draw on random.org's List Randomizer — a name would leave the site for a third party the privacy notice does not name, so the
-  winner is found by number in the CSV or on «Tombolă».
+  CSV, **«Descarcă pentru random.org»** (`buildRaffleRandomOrgText`): the same people, one per line, the number and the name, for the
+  draw on random.org's List Randomizer. Numbers alone until the eve of the race; the owner, 2026-11-20: «cand descarc pentru random.org
+  trebuie sa am BIB (sau nr voluntar) dar si nume», asked and choosing the names of everybody — the club's decision, random.org being
+  a recipient the privacy notice does not yet name (`docs/OWNER-TODO.md`).
 
   A name and a number, for the club's own table: nothing else of the person — no address, telephone, age or state. It is still a file
   of names that leaves the site, so it is taken only by a role that reads the registrations and works the volunteers (the Organizer and
@@ -139,15 +140,16 @@ export function buildRaffleCsv(words: RaffleCsvWords, rows: readonly RaffleRow[]
 }
 
 /**
- * «Descarcă pentru random.org» (§1023): the same people as the CSV of the same scope, **one number per line** as the raffle writes it — a
- * race number as the event writes it, an elite's number, «V007» — in the raffle's order, each line ending CRLF, and nothing else: no
- * header, no name (a name would leave the site for random.org, a third party the privacy notice does not name), no BOM, no blank line —
- * what random.org's List Randomizer takes pasted as it is. A participant with no number (a line of the elite list nobody numbered yet)
- * cannot be written without a name and is left out; «Tombolă» says how many (`raffleWithoutNumber`). Every number once: the race numbers
- * are one per person at the event and the V numbers too, and «V» keeps the two series apart. An empty list is an empty file.
+ * «Descarcă pentru random.org» (§1023): the same people as the CSV of the same scope, **one per line: the number as the raffle writes
+ * it — a race number as the event writes it, an elite's number, «V007» — a space, and the name** (the owner, 2026-11-20: «trebuie sa
+ * am BIB (sau nr voluntar) dar si nume»), in the raffle's order, each line ending CRLF, and nothing else: no header, no BOM, no blank
+ * line — what random.org's List Randomizer takes pasted as it is. The name on one line, its spaces folded to one. A participant with no
+ * number (a line of the elite list nobody numbered yet) is left out, as before; «Tombolă» says how many (`raffleWithoutNumber`). Every
+ * number once: the race numbers are one per person at the event and the V numbers too, and «V» keeps the two series apart. An empty
+ * list is an empty file.
  */
 export function buildRaffleRandomOrgText(rows: readonly RaffleRow[]): string {
-  return rows.flatMap((row) => (row.label === null || row.label === "" ? [] : [`${row.label}\r\n`])).join("");
+  return rows.flatMap((row) => (row.label === null || row.label === "" ? [] : [`${`${row.label} ${row.name.replace(/\s+/g, " ").trim()}`.trim()}\r\n`])).join("");
 }
 
 /** How many of the people taking part the file for random.org cannot hold: those with no number (§1023). */

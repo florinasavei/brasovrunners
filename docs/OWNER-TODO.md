@@ -182,6 +182,11 @@ it is the authority, this is the summary):
     changed; but the privacy notice's template names neither this confirmation nor the record of how a parent agreed (its
     raffle paragraph names the sign-up, its volunteers' paragraph the volunteering agreement). Ask whether section 5 should
     say it — one sentence, then the notice approved again (`SETUP.md` §47). Nothing in the platform waits on it.
+28. **Name random.org in the privacy notice** (§1023, 2026-11-20). «Descarcă pentru random.org» now writes each
+    participant's number **and name** — the owner's choice, asked the eve of the race — and the file is pasted into
+    random.org's List Randomizer, so random.org receives the names. The notice in force does not name it. Ask the lawyer for
+    one sentence in the raffle paragraph (random.org, the draw, names and numbers), then approve the notice again
+    (`SETUP.md` §47); until then, keep the random.org screen off the livestream.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

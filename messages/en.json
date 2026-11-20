@@ -1424,10 +1424,10 @@
         "presentButton": "Raffle list — present only (CSV)",
         "presentButtonLabel": "Raffle list — present only (CSV): those taking part who were present — the runners checked in at the desk or with “I have arrived” from their own link, the volunteers and elites ticked “Present”",
         "randomOrgButton": "Download for random.org",
-        "randomOrgButtonLabel": "Download for random.org: a text file with one number per line, no names — the race numbers, then the volunteer numbers (V001…)",
+        "randomOrgButtonLabel": "Download for random.org: a text file with one line per person, number and name — the race numbers, then the volunteer numbers (V001…)",
         "randomOrgPresentButton": "Download for random.org — present only",
-        "randomOrgPresentButtonLabel": "Download for random.org — present only: one number per line, no names, only those taking part who were present",
-        "randomOrgHelp": "One number per line, no names: paste it into random.org → List Randomizer, then find the winner by number in the CSV list.",
+        "randomOrgPresentButtonLabel": "Download for random.org — present only: one line per person, number and name, only those taking part who were present",
+        "randomOrgHelp": "One line per person, the number and the name: paste it into random.org → List Randomizer and press Randomize. The first line is the winner.",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -8012,7 +8012,7 @@
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
         "Everyone at the table signs in with their own account, never someone else's: “Log” shows who scanned each code and who marked each runner present.",
         "They see no email address, cancel nobody and add nobody who is not on the list: for that, they call an organizer.",
-        "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
+        "Every confirmed participant got a QR code by email. At the desk: press “Scan” or open the phone's camera and point it at the code — the person's row opens.",
         "Under the row it says “Scanned before: …”? The code was opened at the desk before: check the person has not already picked up their number.",
         "Or search by name or by race number.",
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
@@ -9741,7 +9741,7 @@
               "title": "A participant with the QR code",
               "steps": [
                 "The participant shows you the QR code from the confirmation email.",
-                "Press «Scan» and hold the code in the frame (it works on Android). On an iPhone: open the Camera app, point it at the code and tap the link that appears.",
+                "Press «Scan» and hold the code in the frame. If the button is missing: open the Camera app, point it at the code and tap the link that appears.",
                 "The person's row opens: check the name with them.",
                 "Under the row it says «Scanned before: …»? The code was opened at the desk before: check the person has not already picked up their number; if they have, call an organizer.",
                 "Press «Mark present». It asks nothing; a message appears at the bottom.",
@@ -10125,9 +10125,9 @@
                 "«Race day» → «Raffle»: every runner, elite and volunteer of the event, each with «Taking part» and, when not, why. Who takes part and how is the Administrator's choice, in the event's editor.",
                 "Volunteers take part with their volunteer number, V001, V002…, which they get by themselves the moment you confirm them: you set nothing.",
                 "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. Their row says why.",
-                "A volunteer who is not confirmed — a minor whose parent has not yet given the consent to volunteer, for instance — you can confirm for the raffle alone: on their row of «Raffle», or on their page, press «Confirm for the raffle». The Organizer and the Administrators can.",
-                "For a minor first choose under «How the parent agreed»: by phone, in person or in writing. In the question tick «The parent or guardian agreed that they take part in the raffle», then «Yes, confirm for the raffle».",
-                "They get the volunteer number, if they have none, and go into the draw; the row says “confirmed for the raffle only”. As a volunteer they stay unconfirmed, and the parent's consent to volunteer is still missing. With a separate sign-up also tick «Accepted the rules»: it signs them up too.",
+                "A volunteer not confirmed (say, a minor without the parent's consent to volunteer) you confirm for the raffle alone with «Confirm for the raffle», on their row or their page.",
+                "For a minor first choose «How the parent agreed». In the question tick «The parent or guardian agreed that they take part in the raffle», then «Yes, confirm for the raffle».",
+                "They get a volunteer number, if they have none, and go into the draw. As a volunteer they stay unconfirmed. With a separate sign-up also tick «Accepted the rules»: it signs them up too.",
                 "«Log» keeps who decided, when and, for a minor, how the parent agreed."
               ]
             },
@@ -10174,8 +10174,8 @@
                 "Volunteers get their numbers by themselves: V001, V002, V003… Each gets the next number the moment you confirm them; you set nothing. The number shows beside the name on «Volunteers», on the person's page, on the plan and in the Excel file.",
                 "A volunteer number is never given twice: whoever is cancelled or deleted keeps theirs, retired. V007 and race number 7 are two different people.",
                 "On race day tick «Present» for the volunteers who came, on «Volunteers»; the desk checks the runners in.",
-                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one number per line and no names.",
-                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first number in the list is the winner.",
+                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one line per person: number and name.",
+                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first line in the list is the winner.",
                 "Look the winning number up in «Raffle list (CSV)» or on «Raffle»: the name is there. Race numbers are the runners' and the elites', the ones with a V the volunteers'."
               ]
             },
@@ -10465,7 +10465,7 @@
                 "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
                 "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
                 "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it.",
-                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. One not confirmed you can confirm for the raffle alone, with «Confirm for the raffle».",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. One not confirmed you confirm with «Confirm for the raffle».",
                 "Press «Save». After the save «Raffle» stays open, with what you saved.",
                 "On race day, «Race day» → «Raffle» shows everybody, whether they take part and, when not, why."
               ]
