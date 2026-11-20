@@ -14286,9 +14286,19 @@
       "changed": "Your choice has been saved.",
       "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
       "failed": "Could not save your choice. Try again or write to us.",
-      "shortListed": "You are on the public participant list.",
-      "shortNotListed": "You are not on the public participant list.",
-      "eventPage": "The event's page"
+      "eventPage": "The event's page",
+      "choice": {
+        "title": "Public list and results",
+        "listedWithResults": "Your name appears on the public list of participants and in the results.",
+        "listed": "Your name appears on the public list of participants.",
+        "notListedCountedWithResults": "Your name is not on the public list of participants or in the results: on the list you appear as “{anonymous}”.",
+        "notListedCounted": "Your name is not on the public list of participants: on the list you appear as “{anonymous}”.",
+        "notListedWithResults": "Your name is not on the public list of participants or in the results.",
+        "notListed": "Your name is not on the public list of participants.",
+        "saving": "Saving your choice…",
+        "help": "You can change it at any time, here or from “My registrations”.",
+        "helpMine": "You can change it at any time, here or from the registration's own page."
+      }
     },
     "withdraw": {
       "title": "What you gave us with your consent",

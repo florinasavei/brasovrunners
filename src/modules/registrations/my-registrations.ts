@@ -21,7 +21,7 @@ import { findRegistrationById, readWaitlistPosition } from "./repository";
 import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from "./service";
 import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
+import { publicListStillOpen, selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { RaceNumberFormat } from "./domain/race-number";
 
@@ -117,6 +117,24 @@ export type MyRegistration = {
   /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
   listed: boolean;
   /**
+   * What the list's block says beside that answer (§1016, `domain/list-choice.ts`): the event's type — only a race takes results —
+   * and «Vreau să apar cu numele în clasament» with the notice it was given under (§879), so the block says «și în clasament» only
+   * where the published results would print the name.
+   */
+  eventType: string;
+  resultsNameConsent: boolean;
+  resultsConsentVersion: number;
+  /**
+   * The event's public participant list is drawn now (§1016): switched on (`NAMES`) and inside the club's days after the event (§421)
+   * — where a confirmed person off it is a «Participant (nume ascuns)» row, which the list's block says. Display only.
+   */
+  listShown: boolean;
+  /**
+   * On «Lista de invitați speciali» (§643): such a person off the list is no row of it at all (§743), so the block never names the
+   * «Participant (nume ascuns)» row for them. Display only.
+   */
+  outsideCapacity: boolean;
+  /**
    * Whether there is a health note, or a Strava link or Instagram username, to withdraw (§322).
    * Booleans and never the values: the page offers the button and does not print the note.
    */
@@ -166,6 +184,10 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
       eventStatus: events.eventStatus,
+      eventType: events.type,
+      // Whether the event's public list is drawn now (§1016): its switch, and its end for the club's days after it (§421).
+      participantListVisibility: events.participantListVisibility,
+      eventEndsAt: events.endsAt,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
@@ -185,6 +207,8 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       promoConsent: registrations.promoConsent,
       promoConsentAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
+      resultsNameConsent: registrations.resultsNameConsent,
+      resultsConsentVersion: registrations.resultsConsentVersion,
       birthDate: registrations.birthDate,
       // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
       declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(
@@ -212,8 +236,10 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
   const standings = new Map<string, WaitlistStanding | null>(
     await Promise.all(rows.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
   );
-  return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, ...row }) => ({
+  return rows.map(({ listOptOut, eventStatus, outsideCapacity, capacity, confirmationOpensDaysBefore, confirmationDeadlineDaysBefore, releaseUnsignedAtDeadline, unsignedReleasedFor, participantListVisibility, eventEndsAt, ...row }) => ({
     ...row,
+    listShown: participantListVisibility === "NAMES" && deadlines !== null && publicListStillOpen({ startsAt: row.eventStartsAt, endsAt: eventEndsAt }, now, deadlines),
+    outsideCapacity,
     releaseDeadline:
       row.status !== "PENDING_DECLARATION"
         ? null
