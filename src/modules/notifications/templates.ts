@@ -2767,6 +2767,22 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      The wish recorded at the desk (§1017): a desk role pressed the row's eye on the person's spoken word. The fact is the body the
+      club may reword; the way back — the button, the public list's own switch — and the sentence that offers it are the platform's
+      (`listConsentRecordedUndo`), after the body whoever wrote it, so no rewording loses them. A minor's message goes to the parent
+      or guardian, greeted by name (`guardianName`): it says whose name it is.
+    */
+    listConsentRecorded: {
+      subject: (d: TemplateData) => `Cu nume pe lista participanților la ${d.eventTitle ?? "eveniment"}`,
+      body: (d: TemplateData) => [
+        d.guardianName
+          ? `La masa de ridicare a numerelor${d.eventTitle ? ` de la ${d.eventTitle}` : ""} ai cerut ca **${d.participantName ?? "participantul"} să apară cu numele pe lista participanților și în clasament**.`
+          : `La masa de ridicare a numerelor${d.eventTitle ? ` de la ${d.eventTitle}` : ""} ai cerut să apari **cu numele pe lista participanților și în clasament**.`,
+      ],
+      action: "Nu vreau să apar pe lista de participanți & rezultate",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
@@ -3233,6 +3249,8 @@ const T = {
     addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
       `Înscrierea are starea: ${status ?? "necunoscută"}.${nextStep ? " Pasul următor îl primești într-un email separat." : ""}`,
     addressAddedNotYours: (contactUrl?: string) => `Dacă înscrierea nu este a ta, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
+    // The wish recorded at the desk (§1017): the way back, above its button, whoever wrote the words before it.
+    listConsentRecordedUndo: "Dacă nu e așa, apasă butonul de mai jos și numele nu mai apare pe site. Alegerea se poate schimba oricând.",
     /** A group run's declaration signed for a minor (§769): who signed, in the signer's copy and in the club's archive copy. */
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
@@ -3779,6 +3797,16 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    listConsentRecorded: {
+      subject: (d: TemplateData) => `By name on the participant list at ${d.eventTitle ?? "the event"}`,
+      body: (d: TemplateData) => [
+        d.guardianName
+          ? `At the race-number pick-up desk${d.eventTitle ? ` of ${d.eventTitle}` : ""} you asked for **${d.participantName ?? "the participant"} to appear by name on the participant list and in the results**.`
+          : `At the race-number pick-up desk${d.eventTitle ? ` of ${d.eventTitle}` : ""} you asked to appear **by name on the participant list and in the results**.`,
+      ],
+      action: "I do not want to appear on the participants & results list",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -4118,6 +4146,7 @@ const T = {
     addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
       `The registration's status: ${status ?? "unknown"}.${nextStep ? " The next step comes in an email of its own." : ""}`,
     addressAddedNotYours: (contactUrl?: string) => `If the registration is not yours, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""}.`,
+    listConsentRecordedUndo: "If that is not so, press the button below and the name no longer appears on the site. The choice can be changed at any time.",
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
         ? `The declaration is the minor ${minor}'s: the minor signed it for themselves, and ${parent} signed it as parent or legal guardian.`
@@ -4196,6 +4225,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   REGISTRATION_ADDRESS_REMOVED: "registrationAddressRemoved",
   REGISTRATION_ADDRESS_ADDED: "registrationAddressAdded",
   VOLUNTEER_POINT: "volunteerPoint",
+  LIST_CONSENT_RECORDED: "listConsentRecorded",
 };
 
 /**
@@ -4928,6 +4958,8 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_ADDRESS_ADDED"
         ? [copy.addressAddedStatus(data.currentStatus, data.addressNextStep === true), copy.addressAddedNotYours(data.contactUrl)]
         : []),
+      // The wish recorded at the desk (§1017): the way back, above its button — only where the button is (never a club copy, §320).
+      ...(messageType === "LIST_CONSENT_RECORDED" && actionUrl ? [copy.listConsentRecordedUndo] : []),
       /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after
         dusk says the sunset and to bring a light. After the body — a fact about this date, not a matter of how the club writes — so a reminder the club

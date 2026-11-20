@@ -266,14 +266,15 @@ describe("§996 «Jurnal» — who may read it", () => {
     }
   });
 
-  it("is the last tab of «Ziua cursei» for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
+  it("is the tab of «Ziua cursei» before «Declarații» (§1018), the last, for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
     state.actor = staff.ADMIN;
     const own = tabsOf(await page());
-    expect(own.at(-1)).toEqual({ label: "Jurnal", current: true, href: `/ro/admin/checkin/jurnal?eventId=${eventId}` });
+    expect(own.at(-2)).toEqual({ label: "Jurnal", current: true, href: `/ro/admin/checkin/jurnal?eventId=${eventId}` });
+    expect(own.at(-1)).toEqual({ label: "Declarații", current: false, href: `/ro/admin/checkin/declaratii?eventId=${eventId}` });
     const deskTabs = async () => tabsOf(await html(await atTheClock(MORNING, () => DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId }) }))));
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       state.actor = staff[role];
-      expect((await deskTabs()).map((tab) => tab.label).at(-1), role).toBe("Jurnal");
+      expect((await deskTabs()).map((tab) => tab.label).slice(-2), role).toEqual(["Jurnal", "Declarații"]);
     }
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
@@ -281,7 +282,7 @@ describe("§996 «Jurnal» — who may read it", () => {
     }
     state.actor = staff.MODERATOR;
     state.locale = "en";
-    expect((await deskTabs()).map((tab) => tab.label).at(-1)).toBe("Log");
+    expect((await deskTabs()).map((tab) => tab.label).slice(-2)).toEqual(["Log", "Declarations"]);
   });
 });
 
