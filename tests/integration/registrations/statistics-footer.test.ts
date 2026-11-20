@@ -234,7 +234,7 @@ describe("§787 the footer, through the route", () => {
     // The column the formulas read is the sheet's own, filled from the registration's «outside the capacity» flag.
     const header = rows[0] as string[];
     // Last of the fixed columns, then «Partener» («De la parteneri»), every file's, and «Note interne» (§785), which an
-    // Administrator's file carries after it, still the last; «Reconfirmare» and «Reconfirmat» sit beside «Status» (§NNN).
+    // Administrator's file carries after it, still the last; «Reconfirmare» and «Reconfirmat» sit beside «Status» (§1019).
     expect(header.slice(-3)).toEqual(["Special guest", "Partener", "Note interne"]);
     expect(header.slice(header.indexOf("Status"), header.indexOf("Status") + 3)).toEqual(["Status", "Reconfirmare", "Reconfirmat"]);
     expect(startListRows(rows).slice(1).map((row) => row[header.indexOf("Special guest")]).sort()).toEqual(["0", "1", "1", "1"]);

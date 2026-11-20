@@ -129,7 +129,7 @@ describe("§785 the spreadsheet's «Note interne» column", () => {
     const buffer = await buildRegistrationsWorkbook([sheetRow({ notes: TWO_NOTES })], "Test", { notesHeader: ro.Admin.registrations.notes.title });
     const { rows } = readSheet(buffer);
     expect(rows[0].at(-1)).toBe("Note interne");
-    // The fixed columns — «Reconfirmare» and «Reconfirmat» among them, beside «Status» (§NNN) — then «Partener» («De la
+    // The fixed columns — «Reconfirmare» and «Reconfirmat» among them, beside «Status» (§1019) — then «Partener» («De la
     // parteneri») in every file, then the notes.
     expect(rows[0]).toHaveLength(REGISTRATION_SHEET_HEADERS.length + 2);
     expect(rows[0].at(-2)).toBe(PARTNER_HEADER_DEFAULT);
@@ -196,7 +196,7 @@ describe("§785 the CSV's «Note interne» column", () => {
     const header = csv.split("\r\n")[0].split(",");
     expect(header.at(-1)).toBe("Note interne");
     // «Partener» («De la parteneri») just before the notes, after «Club runner» and «Member bib»; «Reconfirmat» sits beside
-    // «Status» (§NNN).
+    // «Status» (§1019).
     expect(header.at(-2)).toBe(PARTNER_HEADER_DEFAULT);
     expect(header.at(-3)).toBe("Club runner");
     expect(header.at(-4)).toBe("Member bib");

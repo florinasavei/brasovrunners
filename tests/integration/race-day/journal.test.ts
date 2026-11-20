@@ -371,7 +371,7 @@ describe("§996 «Jurnal» — the lines and the summary", () => {
   });
 });
 
-describe("§NNN «Jurnal» — who took a runner off the raffle, and who put them back", () => {
+describe("§1020 «Jurnal» — who took a runner off the raffle, and who put them back", () => {
   /** The race holds a raffle; Ana taken out at the desk by QR1 and put back by QR2, Ion by the organizers' tick, a test row too. */
   async function raffleMorning() {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));

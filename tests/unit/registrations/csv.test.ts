@@ -77,7 +77,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    // «Reconfirmare» and «Reconfirmat» right after «Status» (§NNN), under their English defaults when no language is named.
+    // «Reconfirmare» and «Reconfirmat» right after «Status» (§1019), under their English defaults when no language is named.
     expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Reconfirmation,Reconfirmed,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner");
 
     const withRow = buildRegistrationsCsv([
@@ -140,7 +140,7 @@ describe("CSV formula neutralization", () => {
       { ...row, clubMemberDeclared: true, stravaUrl: "https://www.strava.com/athletes/12345", instagramHandle: "ana.pop", bibNumber: 17, checkedInAt: "2026-10-11T06:40:00.000Z", emailBounced: true },
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty. Nobody asked this row
-    // «Cere reconfirmarea»: «Reconfirmare» and «Reconfirmat», right after «Status» (§NNN), are two empty cells.
+    // «Cere reconfirmarea»: «Reconfirmare» and «Reconfirmat», right after «Status» (§1019), are two empty cells.
     expect(member.split("\r\n")[1]).toBe(
       "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,declared,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,,,,,,,,",
     );
@@ -384,7 +384,7 @@ describe("CSV formula neutralization", () => {
     expect(none.split(",").slice(-6, -3)).toEqual(["", "", ""]);
   });
 
-  // §NNN — «Reconfirmare» and «Reconfirmat» right after «Status»: the list filter's answer in the reader's words, then the moment.
+  // §1019 — «Reconfirmare» and «Reconfirmat» right after «Status»: the list filter's answer in the reader's words, then the moment.
   it.each(["ro", "en"] as const)("writes the reconfirmation's answer and its moment right after «Status», in the reader's words (%s)", (locale) => {
     const reconfirm = (locale === "ro" ? ro : en).Admin.reconfirm;
     const base = {

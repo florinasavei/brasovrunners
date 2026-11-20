@@ -129,7 +129,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const family = await familyOf(db, rows);
   // The raffle (§984): every row says whether its person takes part — a search by name or number, or a typed code, lands here and
   // not on the scanned person's view — and, in the open sign-up mode, offers the desk's «Înscrie la tombolă». One read for every row.
-  // Since §NNN every desk role also takes a runner off the raffle or puts them back from the line, asked first with their number.
+  // Since §1020 every desk role also takes a runner off the raffle or puts them back from the line, asked first with their number.
   const raffleLines = rows.length > 0 ? await readRaffleDeskLines(db, rows, now) : new Map<string, RaffleLine>();
   const raffleOf = new Map(
     await Promise.all(

@@ -223,7 +223,7 @@ describe("§996 the registration's own page", () => {
     expect(await line(eva.id)).toMatch(/· cont șters$/);
   });
 
-  it("names who took the runner off the raffle and who put them back — «· la masă» for the desk's press, nothing more for the organizers' tick (§NNN)", async () => {
+  it("names who took the runner off the raffle and who put them back — «· la masă» for the desk's press, nothing more for the organizers' tick (§1020)", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, eventId));
     const ana = await runner("Ana Pop");
     await setRegistrationInRaffleAtDesk(db, qr2, ana.id, false, at("08:30"));

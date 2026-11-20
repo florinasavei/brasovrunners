@@ -176,11 +176,11 @@ export type RegistrationCsvRow = {
   partnerName?: string | null;
   /**
    * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», as an ISO moment, or empty — right
-   * after «Reconfirmare», beside «Status» (§NNN).
+   * after «Reconfirmare», beside «Status» (§1019).
    */
   reconfirmedAt?: string | null;
   /**
-   * «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»): the answer the list's filter gives the registration —
+   * «Reconfirmare» (§1019, amending the decision «Cere reconfirmarea»): the answer the list's filter gives the registration —
    * «yes», «cancelled» or «none» (`admin-repository.ts#listReconfirmAnswers`) — written in words right after «Status»
    * (`reconfirmAnswerCell`); null or absent when no send asked it, or it is in none of the three: an empty cell.
    */
@@ -196,14 +196,14 @@ export const RECONFIRMED_HEADER_DEFAULT = "Reconfirmed";
 /** «Reconfirmare»'s header when the caller names none (`reconfirmAnswerHeader`): the route passes it in the reader's language. */
 export const RECONFIRM_ANSWER_HEADER_DEFAULT = "Reconfirmation";
 
-/** «Reconfirmare»'s words (§NNN), one per answer of the list's filter, in the reader's language: `Admin.reconfirm.answer*`. */
+/** «Reconfirmare»'s words (§1019), one per answer of the list's filter, in the reader's language: `Admin.reconfirm.answer*`. */
 export type ReconfirmAnswerWords = Record<ReconfirmFilter, string>;
 
 /** The words when the caller names none (`reconfirmWords`): the English catalogue's. The route passes the reader's language. */
 export const RECONFIRM_ANSWER_WORDS_DEFAULT: ReconfirmAnswerWords = { yes: "Reconfirmed", cancelled: "Cancelled after the ask", none: "No answer" };
 
 /**
- * The «Reconfirmare» cell of both files (§NNN): the answer's word — «A reconfirmat», «A anulat după cerere», «N-a răspuns» —
+ * The «Reconfirmare» cell of both files (§1019): the answer's word — «A reconfirmat», «A anulat după cerere», «N-a răspuns» —
  * or empty for a registration no send asked, or one in none of the three (an expired one, an offer that did not answer).
  */
 export function reconfirmAnswerCell(answer: ReconfirmFilter | null | undefined, words: ReconfirmAnswerWords = RECONFIRM_ANSWER_WORDS_DEFAULT): string {
@@ -219,7 +219,7 @@ const HEADER = [
   "Email",
   "Status",
   /*
-    Here `buildRegistrationsCsv` puts «Reconfirmare» and «Reconfirmat» (§NNN), headed in the reader's language — inserted
+    Here `buildRegistrationsCsv` puts «Reconfirmare» and «Reconfirmat» (§1019), headed in the reader's language — inserted
     rather than appended, because the answer is read beside the state. Every column below sits two later.
   */
   // Declared or verified (§662): the cell says which, under the header it always had.
@@ -278,7 +278,7 @@ const HEADER = [
 ];
 
 /**
- * The file. «Reconfirmare» and «Reconfirmat» (§NNN, amending the decision «Cere reconfirmarea») sit right after «Status» in
+ * The file. «Reconfirmare» and «Reconfirmat» (§1019, amending the decision «Cere reconfirmarea») sit right after «Status» in
  * every file — the answer in words (`reconfirmWords`), then when the person said «Vin» — headed `reconfirmAnswerHeader` and
  * `reconfirmedHeader` (the reader's language, from the route) or their defaults. «Partener» (the decision «De la parteneri»)
  * comes after «Club runner», headed `partnerHeader` or `PARTNER_HEADER_DEFAULT`. `notesHeader` adds the «Note interne» column
@@ -290,7 +290,7 @@ export function buildRegistrationsCsv(
   options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string; reconfirmAnswerHeader?: string; reconfirmWords?: ReconfirmAnswerWords } = {},
 ): string {
   /*
-    The answer and its moment beside «Status» (§NNN; the owner, 2026-11-20: «în excel export nu am dacă a re-confirmat un
+    The answer and its moment beside «Status» (§1019; the owner, 2026-11-20: «în excel export nu am dacă a re-confirmat un
     alergător»), where the state is read — so every column after «Status» moved two to the right, and «Reconfirmat» left the
     end, where it had been appended. «Partener» after the fixed columns, the notes after it.
   */
@@ -311,7 +311,7 @@ export function buildRegistrationsCsv(
         row.idDocument,
         row.email,
         row.status,
-        // «Reconfirmare» and «Reconfirmat» (§NNN): the answer in words, then the ISO moment of «Vin» — each empty when none.
+        // «Reconfirmare» and «Reconfirmat» (§1019): the answer in words, then the ISO moment of «Vin» — each empty when none.
         reconfirmAnswerCell(row.reconfirmAnswer, options.reconfirmWords),
         row.reconfirmedAt ?? "",
         membershipCell(row),

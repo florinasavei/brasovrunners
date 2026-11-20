@@ -24,7 +24,7 @@ import { importsModule } from "../../helpers/module-imports";
  * read of the settings is the sign-up's gate (`public-cache/reads.ts#cachedRaffleEvent`, through `readRaffleEvent`), which names
  * no column either.
  *
- * Since §NNN (the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare și cu
+ * Since §1020 (the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare și cu
  * logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă») the desk's line has a press of its own — «Scoate de
  * la tombolă» / «Pune înapoi la tombolă», asked first —: the line that posts the state it wants (`ui/RaffleLines.tsx`) and the
  * press (`checkin/raffle-actions.ts`) are readers, through the mark's own writer for the desk's door
@@ -79,7 +79,7 @@ const READERS = new Set(
     // §984: «Ziua cursei» → «Tombolă» — everybody with the answer, and «Scoate» / «Pune înapoi» through each kind's own writer.
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
     "src/app/[locale]/admin/checkin/tombola/actions.ts",
-    // §NNN: the desk's own «Scoate de la tombolă» / «Pune înapoi la tombolă» — the line posting the state it wants, and its press.
+    // §1020: the desk's own «Scoate de la tombolă» / «Pune înapoi la tombolă» — the line posting the state it wants, and its press.
     "src/modules/volunteers/ui/RaffleLines.tsx",
     "src/app/[locale]/admin/checkin/raffle-actions.ts",
   ].map((file) => path.join(ROOT, file)),
@@ -147,7 +147,7 @@ describe("§949 the raffle's switch and ticks stay with the organizers", () => {
     }
   });
 
-  it("are moved at the desk by one press that writes the mark and its trail row, and nothing else (§NNN)", () => {
+  it("are moved at the desk by one press that writes the mark and its trail row, and nothing else (§1020)", () => {
     const press = readFileSync(path.join(ROOT, "src/app/[locale]/admin/checkin/raffle-actions.ts"), "utf8");
     // The desk's door, through the desk's own writer — never the organizers' tick, the tab's presses or another writer.
     expect(press).toMatch(/import \{ setRegistrationInRaffleAtDesk \} from "@\/modules\/registrations\/raffle-mark";/);

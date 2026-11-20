@@ -181,7 +181,7 @@ describe("§650 the export carries the moment and what it is for", () => {
   // Before the age, the country and the city, which came last with §660.
   it("the CSV, last: the moment in ISO 8601 and the kind's token, or two empty cells", () => {
     const [header, held, none] = buildRegistrationsCsv([{ ...base, deadline: AHEAD.toISOString(), deadlineFor: "hold" }, base]).split("\r\n");
-    // Then the age, the country, the city, «Member bib», «Club runner» and «Partener» («Reconfirmat» sits beside «Status», §NNN).
+    // Then the age, the country, the city, «Member bib», «Club runner» and «Partener» («Reconfirmat» sits beside «Status», §1019).
     expect(header.split(",").slice(-8, -6)).toEqual(["Until when", "Waiting on"]);
     expect(held.split(",").slice(-8, -6)).toEqual([AHEAD.toISOString(), "hold"]);
     expect(none.split(",").slice(-8, -6)).toEqual(["", ""]);

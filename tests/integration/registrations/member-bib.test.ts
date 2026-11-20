@@ -339,7 +339,7 @@ describe("§664 the sheet prints the members' bib for the member tick (§972), w
       })),
     );
     const lines = csv.split("\r\n");
-    // Before «Club runner» and «Partener», the last («Reconfirmat» sits beside «Status» since §NNN).
+    // Before «Club runner» and «Partener», the last («Reconfirmat» sits beside «Status» since §1019).
     expect(lines[0].split(",").at(-3)).toBe("Member bib");
     const cellOf = (email: string) => lines.find((line) => line.includes(email))?.split(",").at(-3);
     expect(cellOf("membru@example.ro")).toBe("yes");

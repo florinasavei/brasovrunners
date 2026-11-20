@@ -63,7 +63,7 @@ const sheetRow = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRo
 describe("«Partener» in the CSV", () => {
   it("follows «Club runner» in every file, the name or empty, and the notes stay last", () => {
     const [header, from, plain] = buildRegistrationsCsv([csvRow({ partnerName: PARTNER }), csvRow({ registeredName: "Ion Pop" })], { partnerHeader: "Partener" }).split("\r\n");
-    // The last column without the notes: «Reconfirmat» (the decision «Cere reconfirmarea») moved beside «Status» (§NNN).
+    // The last column without the notes: «Reconfirmat» (the decision «Cere reconfirmarea») moved beside «Status» (§1019).
     expect(header.split(",").slice(-2)).toEqual(["Club runner", "Partener"]);
     expect(header.split(",")).toContain(RECONFIRMED_HEADER_DEFAULT);
     expect(from.split(",").at(-1)).toBe(PARTNER);
@@ -85,7 +85,7 @@ describe("«Partener» in the CSV", () => {
 describe("«Partener» in the Excel", () => {
   it("follows the fixed columns in every file, before «Note interne», which stays last", async () => {
     const { rows } = readSheet(await buildRegistrationsWorkbook([sheetRow({ partnerName: PARTNER, notes: "o notă" }), sheetRow({ id: "22222222-2222-4222-8222-222222222222" })], "Test", { partnerHeader: "Partener", notesHeader: "Note interne" }));
-    // «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» among the fixed columns (§NNN): «Partener» then the notes.
+    // «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» among the fixed columns (§1019): «Partener» then the notes.
     expect(rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS, "Partener", "Note interne"]);
     const partnerAt = (rows[0] as string[]).indexOf("Partener");
     expect([rows[1][partnerAt], rows[1].at(-1)]).toEqual([PARTNER, "o notă"]);

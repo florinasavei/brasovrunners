@@ -44,7 +44,7 @@ describe("§996 the address's filters", () => {
     expect(runnerKindOf("registration.code_scanned")).toBe("scanned");
     expect(runnerKindOf("registration.checked_in")).toBe("checkedIn");
     expect(runnerKindOf("registration.checkin_undone")).toBe("undone");
-    // §NNN: a runner taken off the raffle and put back — whichever door wrote the mark, the desk's or the organizers' tick.
+    // §1020: a runner taken off the raffle and put back — whichever door wrote the mark, the desk's or the organizers' tick.
     expect(runnerKindOf("registration.raffle_excluded")).toBe("raffleOut");
     expect(runnerKindOf("registration.raffle_included")).toBe("raffleIn");
     expect(runnerKindOf("volunteer.edited")).toBeNull();
@@ -56,7 +56,7 @@ describe("§996 the address's filters", () => {
     expect(journalReads("scanned", { kind: "all" })).toEqual({ runnerKinds: ["scanned"], volunteerTicks: [], selfCheckIns: false });
     expect(journalReads("checkedIn", { kind: "all" })).toEqual({ runnerKinds: ["checkedIn"], volunteerTicks: [], selfCheckIns: true });
     expect(journalReads("volunteerAbsent", { kind: "all" })).toEqual({ runnerKinds: [], volunteerTicks: [false], selfCheckIns: false });
-    // §NNN: the raffle's two kinds are the runners' audit rows alone — never a volunteer's tick, never the person's own «Am ajuns».
+    // §1020: the raffle's two kinds are the runners' audit rows alone — never a volunteer's tick, never the person's own «Am ajuns».
     expect(journalReads("raffleOut", { kind: "all" })).toEqual({ runnerKinds: ["raffleOut"], volunteerTicks: [], selfCheckIns: false });
     expect(journalReads("raffleIn", { kind: "staff", id: ACCOUNT })).toEqual({ runnerKinds: ["raffleIn"], volunteerTicks: [], selfCheckIns: false });
     expect(journalReads("raffleOut", { kind: "participant" })).toEqual({ runnerKinds: [], volunteerTicks: [], selfCheckIns: false });
@@ -119,7 +119,7 @@ describe("§996 the counts per account", () => {
     expect(accounts.map((who) => (who.kind === "staff" ? who.name : who.kind))).toEqual(["QR1", "QR2", "removed", "participant"]);
   });
 
-  it("counts the runners each account took off the raffle and put back (§NNN) — a test registration's never", () => {
+  it("counts the runners each account took off the raffle and put back (§1020) — a test registration's never", () => {
     const { rows, accounts } = journalSummary(
       [
         { actorId: ACCOUNT, actorName: "QR1", kind: "raffleOut", count: 2, test: false },

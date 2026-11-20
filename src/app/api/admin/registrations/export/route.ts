@@ -161,7 +161,7 @@ export async function GET(request: Request): Promise<Response> {
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
   /*
-    «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
+    «Reconfirmare» (§1019, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
     re-confirmat un alergător»): what each row answered, both formats — one grouped read of the exported rows' asks, never
     one per row, by the very definition the list's filter `reconfirm` and its chip read, so the file never disagrees with them.
   */
@@ -178,7 +178,7 @@ export async function GET(request: Request): Promise<Response> {
   // «Reconfirmat» (the decision «Cere reconfirmarea»): in every file, right after «Reconfirmare», headed in the reader's language.
   const reconfirmedHeader = (await getTranslations({ locale, namespace: "Admin" }))("reconfirm.column");
   const t = await getTranslations({ locale, namespace: "Admin" });
-  // «Reconfirmare» (§NNN): in every file, right after «Status» — its header and the answer's three words, the reader's language.
+  // «Reconfirmare» (§1019): in every file, right after «Status» — its header and the answer's three words, the reader's language.
   const reconfirmAnswerHeader = t("reconfirm.answerColumn");
   const reconfirmWords: ReconfirmAnswerWords = { yes: t("reconfirm.answerYes"), cancelled: t("reconfirm.answerCancelled"), none: t("reconfirm.answerNone") };
   let notesHeader: string | undefined;
@@ -286,7 +286,7 @@ export async function GET(request: Request): Promise<Response> {
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
         partnerName: row.partnerName,
-        // «Reconfirmare» and «Reconfirmat» (§NNN), right after «Status»: the answer, then the moment on the club's clock.
+        // «Reconfirmare» and «Reconfirmat» (§1019), right after «Status»: the answer, then the moment on the club's clock.
         reconfirmAnswer: reconfirmAnswers.get(row.id) ?? null,
         reconfirmedAt: row.reconfirmedAt,
         notes: notes.get(row.id) ?? "",
@@ -371,7 +371,7 @@ export async function GET(request: Request): Promise<Response> {
       city: row.city,
       // «Partener» (the decision «De la parteneri»), before the notes.
       partnerName: row.partnerName,
-      // «Reconfirmare» (§NNN), right after «Status»: the answer in the reader's words, empty when no send asked the row.
+      // «Reconfirmare» (§1019), right after «Status»: the answer in the reader's words, empty when no send asked the row.
       reconfirmAnswer: reconfirmAnswers.get(row.id) ?? null,
       // «Reconfirmat» (the decision «Cere reconfirmarea»), beside it: an ISO moment, empty when the person did not say «Vin».
       reconfirmedAt: row.reconfirmedAt?.toISOString() ?? "",

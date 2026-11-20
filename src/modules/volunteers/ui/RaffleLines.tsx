@@ -18,7 +18,7 @@ import type { RaffleLine } from "../raffle-roster";
   list and a scanned person's view), a registration's page, a volunteer's page and under the lists' «Tombolă» tick, all from the one
   answer (`raffleParticipation`). Beside it,
   where the door is a staff member's, «Înscrie la tombolă» with the acceptance's tick: the desk's (DESK) and the organizers' (STAFF) —
-  and, on the desk's line, «Scoate de la tombolă» / «Pune înapoi la tombolă», asked first (§NNN).
+  and, on the desk's line, «Scoate de la tombolă» / «Pune înapoi la tombolă», asked first (§1020).
 
   Functions the page awaits, not async components: the element each returns is drawn in the page's own tree, which every screen test
   renders synchronously (`race-day/ui/RaceDayTabs.tsx`'s shape). Only strings and the action cross to the islands they hold.
@@ -34,7 +34,7 @@ export function raffleStandingWords(t: Translate, reason: RaffleReason): string 
 /**
  * The house's state chip — green for in, plain for out — and, when out, why in a few words beside it («De ce: nu s-a înscris»): the
  * chip keeps its one line, the reason wraps as text does. `why` false leaves the reason out: the chip alone; a string says it in
- * those words instead (the desk's «— scos de la tombolă», §NNN).
+ * those words instead (the desk's «— scos de la tombolă», §1020).
  */
 function standingChip(t: Translate, reason: RaffleReason, testId: string, why: boolean | string = true): ReactElement {
   return (
@@ -70,7 +70,7 @@ function signUpForm(props: { action: ServerAction; hidden: ReactElement; label: 
 export type RaffleDeskBack = { to: "code"; code: string } | { to: "desk"; eventId?: string; q?: string };
 
 /**
- * «Scoate de la tombolă» (`takeOut`) or «Pune înapoi la tombolă» on the desk's line (§NNN): one plain form posting the state it
+ * «Scoate de la tombolă» (`takeOut`) or «Pune înapoi la tombolă» on the desk's line (§1020): one plain form posting the state it
  * wants (`inRaffle=0|1`), asked first by the house's one dialog — «Scoți pe Ana Pop (nr. 27) de la tombolă?», «Numărul lui nu mai
  * intră la tragere. Rămâne scris cine a decis.», the email nobody gets, «Anulează» focused, and «Da, scoate de la tombolă», red, which
  * Enter never presses (a way back is «Pune înapoi la tombolă», asked the same way). The question is a courtesy: the action and the
@@ -114,11 +114,11 @@ async function exclusionForm(props: { exclusionAction: ActionFormAction; hidden:
 /**
  * A person at the desk (§984), under their row on the desk's list and on the scanned person's view: «Tombolă: participă / nu
  * participă» for every desk role, always, in both modes, with why. A registration taken out reads «Tombolă: nu participă — scos de
- * la tombolă» for every desk role since §NNN — the reason is no longer the organizers' alone, the desk taking people out too — so the
+ * la tombolă» for every desk role since §1020 — the reason is no longer the organizers' alone, the desk taking people out too — so the
  * desk sees what it did and can put it back. Every other reason is said to all — «nu s-a înscris» is what lets the desk offer the
  * sign-up. Then one press at most, whichever the answer allows:
  *
- * - «Scoate de la tombolă» for a registration that takes part, and «Pune înapoi la tombolă» for one taken out (§NNN; the owner,
+ * - «Scoate de la tombolă» for a registration that takes part, and «Pune înapoi la tombolă» for one taken out (§1020; the owner,
  *   2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare») — every desk role, asked
  *   first (`exclusionForm`), the number named in the question; an elite registration (§897) like any other; never on a row the
  *   desk draws read-only (a completed event, §82), which reads and offers no button;

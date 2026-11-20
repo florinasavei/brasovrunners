@@ -302,7 +302,7 @@ describe("«A reconfirmat» and «Reconfirmare» on the registrations list", () 
     expect(tableOf(await listPage({ eventId: race.id, reconfirm: "maybe" }))?.props.total).toBe(4);
   });
 
-  it("draws the chip on exactly the rows the filter «yes» keeps — the export's «A reconfirmat» (§NNN) — whatever the state since «Vin»", async () => {
+  it("draws the chip on exactly the rows the filter «yes» keeps — the export's «A reconfirmat» (§1019) — whatever the state since «Vin»", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
     const sendId = randomUUID();

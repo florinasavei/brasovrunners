@@ -208,7 +208,7 @@ function rulesOf(buffer: Buffer): Rule[] {
 
 /**
  * The fixed columns — «Reconfirmare» and «Reconfirmat» (the decision «Cere reconfirmarea») among them, right after «Status»
- * (§NNN) — then «Partener» («De la parteneri»), every file's: the sheet's header row without the notes.
+ * (§1019) — then «Partener» («De la parteneri»), every file's: the sheet's header row without the notes.
  */
 const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT];
 const LAST_COLUMN = columnLetter(SHEET_HEADER.length - 1);
@@ -290,7 +290,7 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     const [header, club, other] = buildRegistrationsCsv([{ ...base, clubRunner: true }, base]).split("\r\n");
     const columns = header.split(",");
     // After «Member bib», as a script that reads by position expects. «Partener» («De la parteneri») came after it, the last
-    // fixed column; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» since §NNN.
+    // fixed column; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» since §1019.
     expect(columns.at(-2)).toBe("Club runner");
     expect(columns.at(-3)).toBe("Member bib");
     expect(columns.at(-1)).toBe(PARTNER_HEADER_DEFAULT);
@@ -345,7 +345,7 @@ describe("§796 the «Member tick (declared)» column: the tick alone, in the sp
     };
     const [header, line] = buildRegistrationsCsv([base]).split("\r\n");
     expect(header).toBe(
-      // The old header with «Reconfirmare» and «Reconfirmat» right after «Status» (§NNN), and «Partener» («De la parteneri»)
+      // The old header with «Reconfirmare» and «Reconfirmat» right after «Status» (§1019), and «Partener» («De la parteneri»)
       // appended: no «Member tick (declared)».
       "Event,Name,First name,Last name,Identity document,Email,Status,Reconfirmation,Reconfirmed,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
@@ -1137,7 +1137,7 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
 
   it("puts «Status» third, after «Race number (BIB)» and before «Name»; every other column keeps its relative order", async () => {
     const { rows } = readSheet(await buildPick(mixed()));
-    // «Reconfirmare» and «Reconfirmat» (§NNN) right after it, before «Name».
+    // «Reconfirmare» and «Reconfirmat» (§1019) right after it, before «Name».
     const lead = ["ID", "Race number (BIB)", "Status", RECONFIRM_ANSWER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, "Name"];
     expect((rows[0] as string[]).slice(0, 6)).toEqual(lead);
     expect(REGISTRATION_SHEET_HEADERS.slice(0, 6)).toEqual(lead);
@@ -1151,13 +1151,13 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
     expect(rows[0]?.filter((header) => header === "Status")).toHaveLength(1);
   });
 
-  it("leaves the CSV's «Status» where it was, the reconfirmation's two right after it (§NNN): scripts read it by position", () => {
+  it("leaves the CSV's «Status» where it was, the reconfirmation's two right after it (§1019): scripts read it by position", () => {
     const base: RegistrationCsvRow = {
       eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: false,
       memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
     };
     expect(buildRegistrationsCsv([base]).split("\r\n")[0]).toBe(
-      // The old header with «Reconfirmare» and «Reconfirmat» (the decision «Cere reconfirmarea», §NNN) right after «Status»,
+      // The old header with «Reconfirmare» and «Reconfirmat» (the decision «Cere reconfirmarea», §1019) right after «Status»,
       // where the state is read, then «Partener» («De la parteneri») appended.
       "Event,Name,First name,Last name,Identity document,Email,Status,Reconfirmation,Reconfirmed,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
@@ -1286,7 +1286,7 @@ function formatCodeOf(buffer: Buffer, style: number | undefined): string | undef
   return codes.get(/\bnumFmtId="(\d+)"/.exec(formats[style]?.[1] ?? "")?.[1] ?? "");
 }
 
-describe("§NNN «Reconfirmare» and «Reconfirmat» right after «Status»: the drop-down, the colours and the footer keep their columns", () => {
+describe("§1019 «Reconfirmare» and «Reconfirmat» right after «Status»: the drop-down, the colours and the footer keep their columns", () => {
   const CATALOGUES = { ro, en } as const;
   /** What the route hands the writer in one language: the footer's words, the drop-down's box, the two headers and the three words. */
   const routeOptions = (locale: "ro" | "en") => {

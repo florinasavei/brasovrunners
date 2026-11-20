@@ -412,13 +412,13 @@ describe("BR-REQ-060-01 «Tombolă» is every desk role's (§1014)", () => {
 });
 
 /**
- * BR-REQ-060-01, §NNN (amending §949 and §953 for the desk) — «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle
+ * BR-REQ-060-01, §1020 (amending §949 and §953 for the desk) — «Scoate de la tombolă» / «Pune înapoi la tombolă» on the desk's raffle
  * line, for every role that works the desk. The owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să
  * fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă». A predicate of its own,
  * written as the desk's so the two lines move together; never a member (§524); the organizers' tick on the lists keeps its own.
  */
-describe("BR-REQ-060-01 the desk's raffle press is every desk role's (§NNN)", () => {
-  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s take a runner off the raffle at the desk exactly when it works the desk (§NNN)", (role) => {
+describe("BR-REQ-060-01 the desk's raffle press is every desk role's (§1020)", () => {
+  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s take a runner off the raffle at the desk exactly when it works the desk (§1020)", (role) => {
     expect(canSetRaffleMarkAtDesk(role)).toBe(canWorkTheDesk(role));
     // A grant neither gives the press nor takes it away: the desk's line is a rung.
     expect(canSetRaffleMarkAtDesk({ role, permissions: new Set(["shop.manage"] as const) })).toBe(canWorkTheDesk(role));
@@ -434,7 +434,7 @@ describe("BR-REQ-060-01 the desk's raffle press is every desk role's (§NNN)", (
     for (const role of STAFF_ROLES) if (canSetRaffleMark(role)) expect(canSetRaffleMarkAtDesk(role), role).toBe(true);
   });
 
-  it("is what the desk's press asks at its door and its writer asks again — and the organizers' tick never asks it (§NNN)", () => {
+  it("is what the desk's press asks at its door and its writer asks again — and the organizers' tick never asks it (§1020)", () => {
     const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
     const press = read("src/app/[locale]/admin/checkin/raffle-actions.ts");
     expect(press).toContain("requireStaffCapability(canSetRaffleMarkAtDesk)");
@@ -688,7 +688,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
     // §949: «Participă la tombolă» on a registration — the Organizer and the Administrators, the readers of the list; never Tehnic, the volunteer or a member.
     canSetRaffleMark: /*      */ [false, false, false, true, false, true, true],
-    // §NNN: the same mark at the race-day desk, asked first and audited with who — every role that works the desk; never a member.
+    // §1020: the same mark at the race-day desk, asked first and audited with who — every role that works the desk; never a member.
     canSetRaffleMarkAtDesk: /**/ [false, true, true, true, true, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],

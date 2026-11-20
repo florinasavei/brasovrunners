@@ -413,7 +413,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       rows.filter((row) => row.guardianName).map((row) => row.eventId),
     ),
     /*
-      «A reconfirmat» (the decision «Cere reconfirmarea», §NNN): each row's answer, one grouped read over the page's ids — the
+      «A reconfirmat» (the decision «Cere reconfirmarea», §1019): each row's answer, one grouped read over the page's ids — the
       reader the export's «Reconfirmare» calls, by the definition the filter `reconfirm` narrows with, so the three never disagree.
     */
     listReconfirmAnswers(db, rows.map((row) => row.id)),
@@ -631,7 +631,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* «Ambasador» (§948): the club's label, the bib as any other — for every role that reads the list. */}
           {row.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={t("registrations.ambassador.chip")} testId="ambassador-chip" />}
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state;
-              the answer «yes», as the filter keeps it and the export writes it (§NNN). */}
+              the answer «yes», as the filter keeps it and the export writes it (§1019). */}
           {reconfirmAnswers.get(row.id) === "yes" && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}

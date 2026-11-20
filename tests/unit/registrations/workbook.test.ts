@@ -255,7 +255,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
   });
 
   /**
-   * §NNN — «Reconfirmare» and «Reconfirmat» right after «Status»: the list filter's answer in the words the caller hands
+   * §1019 — «Reconfirmare» and «Reconfirmat» right after «Status»: the list filter's answer in the words the caller hands
    * over, as text — empty for a registration no send asked — then the moment the person said «Vin», a stamp on the club's
    * clock like «Submitted» (§439).
    */

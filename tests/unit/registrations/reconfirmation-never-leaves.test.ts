@@ -31,7 +31,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 }
 
 /**
- * The answer's own names: its table and columns, the bare property everywhere it travels, its module — and since §NNN the
+ * The answer's own names: its table and columns, the bare property everywhere it travels, its module — and since §1019 the
  * answer in words (`reconfirmAnswer` on an exported row, `reconfirmAnswers` and their reader `listReconfirmAnswers`).
  */
 const NAMES_THE_ANSWER = /registration_reconfirmations|registrationReconfirmations|\breconfirmedAt\b|reconfirmed_at|[/.]reconfirmation["']|\breconfirmAnswers?\b|\blistReconfirmAnswers\b/;
@@ -50,7 +50,7 @@ const READERS = new Set([
   "src/modules/registrations/admin-repository.ts",
   "src/app/[locale]/admin/registrations/(list)/page.tsx",
   "src/app/[locale]/admin/registrations/[id]/page.tsx",
-  // The registrations' Excel and CSV: the route and the two writers, «Reconfirmare» and «Reconfirmat» right after «Status» (§NNN).
+  // The registrations' Excel and CSV: the route and the two writers, «Reconfirmare» and «Reconfirmat» right after «Status» (§1019).
   "src/app/api/admin/registrations/export/route.ts",
   "src/modules/registrations/csv.ts",
   "src/modules/registrations/workbook.ts",
@@ -150,7 +150,7 @@ describe("«Cere reconfirmarea»'s answer reaches only the backoffice and the pe
     const route = readFileSync(path.join(ROOT, "src/app/api/admin/registrations/export/route.ts"), "utf8");
     expect(route.match(/reconfirmedAt: row\.reconfirmedAt/g)).toHaveLength(2);
     expect(route).toMatch(/reconfirmedHeader = \(await getTranslations\(\{ locale, namespace: "Admin" \}\)\)\("reconfirm\.column"\)/);
-    // «Reconfirmare» (§NNN): read once for the exported rows, before the notes' rule, and written in both formats.
+    // «Reconfirmare» (§1019): read once for the exported rows, before the notes' rule, and written in both formats.
     expect(route.match(/listReconfirmAnswers\(db, rows\.map\(\(row\) => row\.id\)\)/g)).toHaveLength(1);
     expect(route.indexOf("listReconfirmAnswers(db,")).toBeLessThan(route.indexOf("if (withNotes)"));
     expect(route.match(/reconfirmAnswer: reconfirmAnswers\.get\(row\.id\) \?\? null/g)).toHaveLength(2);

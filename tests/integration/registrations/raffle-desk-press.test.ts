@@ -25,7 +25,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §949 and §953 for the desk), BR-REQ-037-08, BR-REQ-060-01, BR-REQ-050-02 — «Scoate de la tombolă» / «Pune înapoi la
+ * §1020 (amending §949 and §953 for the desk), BR-REQ-037-08, BR-REQ-060-01, BR-REQ-050-02 — «Scoate de la tombolă» / «Pune înapoi la
  * tombolă» on the race-day desk's raffle line (the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar
  * să fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă»), read from a real
  * database (PGlite) through the press and the pages:
@@ -254,7 +254,7 @@ async function failureOf(operation: Promise<unknown>) {
 const OUT_LINE = "Tombolă: nu participă — scos de la tombolă Pune înapoi la tombolă";
 const IN_LINE = "Tombolă: participă Scoate de la tombolă";
 
-describe("§NNN BR-REQ-037-08 «Scoate de la tombolă» / «Pune înapoi la tombolă» at the desk, every desk role", () => {
+describe("§1020 BR-REQ-037-08 «Scoate de la tombolă» / «Pune înapoi la tombolă» at the desk, every desk role", () => {
   it.each(DESK_ROLES)("%s takes a runner out and puts them back from the scanned view: one trail row each, with who and the desk's door", async (role) => {
     const ana = await runner("Ana Popescu", 7);
     const code = await codeOf(ana);
@@ -291,7 +291,7 @@ describe("§NNN BR-REQ-037-08 «Scoate de la tombolă» / «Pune înapoi la tomb
     expect(await lineWords(await deskView(ana, { saved: "rafflePutBack" })), role).toBe(IN_LINE);
   });
 
-  it("says «— scos de la tombolă» to every desk role once a runner is out, and every other reason as before (§NNN, amending §984)", async () => {
+  it("says «— scos de la tombolă» to every desk role once a runner is out, and every other reason as before (§1020, amending §984)", async () => {
     const ana = await runner("Ana Popescu", 7);
     const elena = await runner("Elena Waiting", null, { status: "WAITLISTED", confirmedAt: null, waitlistedAt: EFFECTIVE });
     await setRegistrationInRaffleAtDesk(db, staff.CONTRIBUTOR!, ana, false, NOW);
@@ -391,7 +391,7 @@ describe("§NNN BR-REQ-037-08 «Scoate de la tombolă» / «Pune înapoi la tomb
   });
 });
 
-describe("§NNN BR-REQ-060-01 the press asserts its own predicate, and the line's two conditions, again on the server", () => {
+describe("§1020 BR-REQ-060-01 the press asserts its own predicate, and the line's two conditions, again on the server", () => {
   it("refuses a member at the door and in the writer, writing nothing", async () => {
     const ana = await runner("Ana Popescu", 7);
     const code = await codeOf(ana);
@@ -429,7 +429,7 @@ describe("§NNN BR-REQ-060-01 the press asserts its own predicate, and the line'
   });
 });
 
-describe("§NNN the elites, and what does not move", () => {
+describe("§1020 the elites, and what does not move", () => {
   it("takes an elite registration out like any other runner; «Cine poate participa» still takes every elite out at once", async () => {
     const eliud = await runner("Eliud Kipchoge", 3, { elite: true });
     state.actor = staff.CONTRIBUTOR;

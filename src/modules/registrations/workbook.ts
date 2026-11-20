@@ -276,7 +276,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
     free text»): right after the race number, where the eye goes on race morning, and a pick from the list — the drop-down
     `buildRegistrationsWorkbook` puts over this column's data rows (`STATUS_WORDS`). In the spreadsheet only: the CSV keeps
     «Status» where it was. The formulas and the colour rules find the column by this header, never by a letter. Right after
-    it `registrationColumns` puts «Reconfirmare» and «Reconfirmat» (§NNN), as the CSV does after its own «Status».
+    it `registrationColumns` puts «Reconfirmare» and «Reconfirmat» (§1019), as the CSV does after its own «Status».
   */
   { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
@@ -359,7 +359,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
 ];
 
 /**
- * «Reconfirmare» (§NNN, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
+ * «Reconfirmare» (§1019, amending the decision «Cere reconfirmarea»; the owner, 2026-11-20: «în excel export nu am dacă a
  * re-confirmat un alergător»): what the person answered an organizer's message that asked «Cere reconfirmarea», in the list
  * filter's own words — «A reconfirmat», «A anulat după cerere», «N-a răspuns» — or empty when no send asked them. Text-typed
  * like every word cell, wide enough for the longest of the three in either language.
@@ -370,14 +370,14 @@ function reconfirmAnswerColumn(header: string, words: ReconfirmAnswerWords): She
 
 /**
  * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», on the club's clock like every moment
- * of the sheet, empty when not — right after «Reconfirmare», which says the answer (§NNN).
+ * of the sheet, empty when not — right after «Reconfirmare», which says the answer (§1019).
  */
 function reconfirmedColumn(header: string): SheetColumn<RegistrationSheetRow> {
   return { header, width: 18, cell: (row) => ({ value: onClubClock(row.reconfirmedAt ?? null), type: Date, format: STAMP_FORMAT }) };
 }
 
 /**
- * The fixed columns with «Reconfirmare» and «Reconfirmat» (§NNN) right after «Status», where the state is read: the two
+ * The fixed columns with «Reconfirmare» and «Reconfirmat» (§1019) right after «Status», where the state is read: the two
  * together near the front, headed as the caller says. Every column after «Status» sits two later than it did; the drop-down,
  * the colour rules and the statistics find theirs by header (`buildRegistrationsWorkbook`'s `at`), never by a letter.
  */
@@ -434,7 +434,7 @@ const STATUS_WORDS: readonly string[] = registrationStatus.enumValues;
 export type StatusPickWords = { title: string; error: string };
 
 /**
- * The workbook. «Reconfirmare» and «Reconfirmat» (§NNN) sit right after «Status» in every file, headed `reconfirmAnswerHeader`
+ * The workbook. «Reconfirmare» and «Reconfirmat» (§1019) sit right after «Status» in every file, headed `reconfirmAnswerHeader`
  * and `reconfirmedHeader`, the answer in `reconfirmWords` (all three the reader's language, from the route; English without).
  * «Partener» (the decision «De la parteneri») follows the fixed columns in every file, headed `partnerHeader`.
  * `notesHeader` adds the «Note interne» column (§785) after it, the last — passed by the route only for a role that

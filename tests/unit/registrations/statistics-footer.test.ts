@@ -230,7 +230,7 @@ describe("§787 the footer's place and typing in the file", () => {
     const { rows } = readSheet(buffer);
     expect(rows).toHaveLength(1 + 9);
     expect(JSON.stringify(rows)).not.toContain("Statistici");
-    // The fixed columns — «Reconfirmare» and «Reconfirmat» beside «Status» (§NNN) — and «Partener» («De la parteneri»), which every file carries.
+    // The fixed columns — «Reconfirmare» and «Reconfirmat» beside «Status» (§1019) — and «Partener» («De la parteneri»), which every file carries.
     expect(rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT]);
     expect(rows[0]).toContain(RECONFIRMED_HEADER_DEFAULT);
   });

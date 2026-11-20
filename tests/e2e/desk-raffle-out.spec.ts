@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §949 and §953 for the desk), BR-REQ-037-08, BR-REQ-060-01 — a «Voluntar» at the race-day desk takes a runner off the
+ * §1020 (amending §949 and §953 for the desk), BR-REQ-037-08, BR-REQ-060-01 — a «Voluntar» at the race-day desk takes a runner off the
  * event's raffle and puts them back, asked first, the press kept with who did it — walked at 320 pixels and on a desktop against
  * the production build:
  *
@@ -106,7 +106,7 @@ async function tall(locator: Locator, what: string): Promise<void> {
   expect((await locator.boundingBox())?.height ?? 0, `${what} is a thumb's 44 pixels`).toBeGreaterThanOrEqual(44);
 }
 
-test.describe("§NNN the desk takes a runner off the raffle, asked first, and puts them back", () => {
+test.describe("§1020 the desk takes a runner off the raffle, asked first, and puts them back", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("a «Voluntar» presses «Scoate de la tombolă», «Anulează» leaves it as it was, then confirms, then puts the runner back", async ({ page }) => {

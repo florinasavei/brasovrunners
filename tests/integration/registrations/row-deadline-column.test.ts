@@ -272,7 +272,7 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(response.status).toBe(200);
     const [header, ...lines] = (await response.text()).split("\r\n");
     // Before the age, the country, the city, «Member bib», «Club runner», «Partener» and «Note interne» («Reconfirmat» sits
-    // beside «Status» since §NNN).
+    // beside «Status» since §1019).
     expect(header.split(",").slice(-9, -7)).toEqual(["Until when", "Waiting on"]);
     const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-9, -7);
     expect(last("Bogdan Semnează")).toEqual([at.hold.toISOString(), "hold"]);

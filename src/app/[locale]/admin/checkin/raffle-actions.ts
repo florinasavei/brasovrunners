@@ -14,7 +14,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /*
-  The desk's raffle line's own press (§NNN; the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să
+  The desk's raffle line's own press (§1020; the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să
   fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă»): «Scoate de la tombolă»
   and «Pune înapoi la tombolă», under a row of the desk's list and on the scanned person's view, for every desk role. A file of its
   own beside the desk's page, as a card's verbs live beside theirs: the desk's other verbs are the registrations' (`registrations/
@@ -58,7 +58,7 @@ function deskAddress(form: FormData, outcome: Outcome): string {
 }
 
 /**
- * «Scoate de la tombolă» (`inRaffle=0`) / «Pune înapoi la tombolă» (`inRaffle=1`) at the desk (§NNN): every desk role, by the
+ * «Scoate de la tombolă» (`inRaffle=0`) / «Pune înapoi la tombolă» (`inRaffle=1`) at the desk (§1020): every desk role, by the
  * press's own predicate (`canSetRaffleMarkAtDesk`) at the door and again in the service, which writes the mark and its one audit
  * row — the staff member and the desk's door (`raffle-mark.ts#setRegistrationInRaffleAtDesk`). It emails nobody and expires no
  * public cache: no public page reads the mark. Back where it was pressed with the desk's sentence (`saved=`) — and, on the

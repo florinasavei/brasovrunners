@@ -32,7 +32,7 @@ import {
 /*
   «Ziua cursei» → «Jurnal» (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
   marcat prezent»), the reads: one event's scans, check-ins and undos of its registrations, the raffle marks taken off or put back
-  on them (§NNN: who decided that a runner does not take part — at the desk, asked first, or by the organizers' tick), and «Prezent»
+  on them (§1020: who decided that a runner does not take part — at the desk, asked first, or by the organizers' tick), and «Prezent»
   ticks of its volunteers, newest first, with how many each staff account did. The organizers' alone (`canReadRaceDayJournal`), and so never imported by a
   page of the desk: the scanned page's «Scanat înainte» reads the same scan rows through the desk's own module
   (`registrations/code-scans.ts`), which reads nothing else.

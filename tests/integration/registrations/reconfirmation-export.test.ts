@@ -15,7 +15,7 @@ import { statementsOf } from "../../helpers/statements";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending the decision «Cere reconfirmarea»; BR-REQ-071-01) — the owner, 2026-11-20: «vezi că în excel export nu am
+ * §1019 (amending the decision «Cere reconfirmarea»; BR-REQ-071-01) — the owner, 2026-11-20: «vezi că în excel export nu am
  * dacă a re-confirmat un alergător, că avem această opțiune». From a real database and through the export route itself:
  * «Reconfirmare» right after «Status» in both files, the list filter's own answer in the reader's words — «A reconfirmat»,
  * «A anulat după cerere», «N-a răspuns», empty for a registration no send asked — with «Reconfirmat», the moment of «Vin»,
@@ -160,7 +160,7 @@ beforeEach(async () => {
   state.actor = admin;
 });
 
-describe("§NNN «Reconfirmare» beside «Status» in the registrations' Excel and CSV", () => {
+describe("§1019 «Reconfirmare» beside «Status» in the registrations' Excel and CSV", () => {
   it.each(["ro", "en"] as const)("says each row's answer in the reader's words, right after «Status», in the spreadsheet (%s)", async (locale) => {
     const eventId = await createRace();
     await seedRace(eventId);

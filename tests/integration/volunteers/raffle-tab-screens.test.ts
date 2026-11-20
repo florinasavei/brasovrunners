@@ -35,7 +35,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - its presses, each asking its capability and coming back with the toast or the refusal's code;
  * - the desk — inside each row of its list, where a search by name or number lands, and on a scanned person's view: «Tombolă:
  *   participă / nu participă» for every desk role, and «Înscrie la tombolă» in the open sign-up mode, coming back where it was
- *   pressed; since §NNN «Scoate de la tombolă» / «Pune înapoi la tombolă» under it for every desk role, and «— scos de la tombolă»
+ *   pressed; since §1020 «Scoate de la tombolă» / «Pune înapoi la tombolă» under it for every desk role, and «— scos de la tombolă»
  *   said to all (the press itself: `tests/integration/registrations/raffle-desk-press.test.ts`); a volunteer's page and a
  *   registration's page, the same line.
  *
@@ -131,7 +131,7 @@ async function html(node: ReactNode): Promise<string> {
   await stream.allReady;
   return (await new Response(stream).text())
     .replace(/<style[\s\S]*?<\/style>/g, "")
-    // The inline script React writes beside a form posting to a Server Action — the desk's «Scoate de la tombolă» (§NNN) is one.
+    // The inline script React writes beside a form posting to a Server Action — the desk's «Scoate de la tombolă» (§1020) is one.
     .replace(/<script[\s\S]*?<\/script>/g, "")
     .replace(/<!-- -->/g, "");
 }
@@ -623,7 +623,7 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
       state.actor = staff[role];
       const line = byTestId(await deskView(people.ana), "desk-raffle");
       expect(line, role).toHaveLength(1);
-      // In, and — since §NNN, for every desk role — the press that takes the person out, asked first.
+      // In, and — since §1020, for every desk role — the press that takes the person out, asked first.
       expect(words(await html(line[0])), role).toBe("Tombolă: participă Scoate de la tombolă");
     }
     await signUpMode();
@@ -644,10 +644,10 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(byTestId(await deskView(people.ana), "desk-raffle")).toEqual([]);
   });
 
-  it("says «— scos de la tombolă» to every desk role, with «Pune înapoi la tombolă», and every other reason to all (§NNN, amending §984)", async () => {
+  it("says «— scos de la tombolă» to every desk role, with «Pune înapoi la tombolă», and every other reason to all (§1020, amending §984)", async () => {
     const people = await saturday();
     await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.ana));
-    // The desk takes people out too since §NNN: the reason is no longer the organizers' alone, so the desk sees it and can put it back.
+    // The desk takes people out too since §1020: the reason is no longer the organizers' alone, so the desk sees it and can put it back.
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV", "MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       state.actor = staff[role];
       expect(words(await html(byTestId(await deskView(people.ana), "desk-raffle")[0])), role).toBe("Tombolă: nu participă — scos de la tombolă Pune înapoi la tombolă");
@@ -688,7 +688,7 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
             return [(element.props.row as { id: string }).id, lines.length === 1 ? words(await html(lines[0])) : `${lines.length} lines`];
           }),
       );
-    // «Din oficiu»: one line inside the one row a search by name, or by the number, finds — and its «Scoate de la tombolă» (§NNN).
+    // «Din oficiu»: one line inside the one row a search by name, or by the number, finds — and its «Scoate de la tombolă» (§1020).
     expect(await rowsOf("Ana Popescu")).toEqual([[people.ana, "Tombolă: participă Scoate de la tombolă"]]);
     expect(await rowsOf("7")).toEqual([[people.ana, "Tombolă: participă Scoate de la tombolă"]]);
     // A search that finds several: a line inside each, each its own person's answer.

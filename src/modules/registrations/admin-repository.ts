@@ -86,7 +86,7 @@ export type RegistrationListRow = {
   partnerName: string | null;
   /**
    * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — the export's
-   * «Reconfirmat», beside its «Reconfirmare» (§NNN; the answer, and the row's chip, are `listReconfirmAnswers`'). Read by no
+   * «Reconfirmat», beside its «Reconfirmare» (§1019; the answer, and the row's chip, are `listReconfirmAnswers`'). Read by no
    * public page (`reconfirmation-never-leaves.test.ts`).
    */
   reconfirmedAt: Date | null;
@@ -277,7 +277,7 @@ export type RegistrationListFilters = {
   reconfirm?: ReconfirmFilter;
 };
 
-/** The three answers of «Reconfirmare», as the list's URL carries them — and the export's «Reconfirmare» column (§NNN). */
+/** The three answers of «Reconfirmare», as the list's URL carries them — and the export's «Reconfirmare» column (§1019). */
 export const RECONFIRM_FILTERS = ["yes", "cancelled", "none"] as const;
 export type ReconfirmFilter = (typeof RECONFIRM_FILTERS)[number];
 
@@ -300,7 +300,7 @@ const ANSWERING_STATUSES = sql.raw(RECONFIRM_STATUSES.map((status) => `'${status
 type ReconfirmAsks = { asked: SQL; answered: SQL; askedBeforeCancel: SQL };
 
 /**
- * «Reconfirmare»'s three answers (the decision «Cere reconfirmarea», amended by §NNN) — the ONE definition the list's filter,
+ * «Reconfirmare»'s three answers (the decision «Cere reconfirmarea», amended by §1019) — the ONE definition the list's filter,
  * its chip «A reconfirmat» and the export's «Reconfirmare» read, over the registration's own row and the facts of its asks:
  *
  * - «yes», «A reconfirmat»: still registered (`ACTIVE_REGISTRATION_STATUSES`) and «Vin» pressed on any ask;
@@ -336,7 +336,7 @@ function reconfirmCondition(filter: ReconfirmFilter): SQL {
 }
 
 /**
- * «Reconfirmare» of each of these registrations (§NNN): one grouped read of their asks — never one per row — through
+ * «Reconfirmare» of each of these registrations (§1019): one grouped read of their asks — never one per row — through
  * `reconfirmAnswerIs`, the filter's own definition, so a row says exactly the answer whose filter keeps it. The list reads it
  * for its page's rows (the chip «A reconfirmat» is «yes») and the export for every exported row. Only a registration with an
  * answer is in the map: one never asked, or asked and in none of the three, is absent, and its cell is empty.

@@ -40,7 +40,7 @@ function fill(template: string, values: Record<string, string>): string {
 
 /**
  * What may follow «pe» in a sentence: a place on the web, a count or a person — «Înscrie-te pe {provider}»,
- * «plata pe {host}», «Salvat pe {count} date», «Scoți pe {name} (nr. {number}) de la tombolă?» (§NNN) — never a
+ * «plata pe {host}», «Salvat pe {count} date», «Scoți pe {name} (nr. {number}) de la tombolă?» (§1020) — never a
  * date. `Event.series.monthly` («Lunar, pe {day}») is the one exception by key: its `{day}` is the day of the month, a
  * number («pe 11»).
  */

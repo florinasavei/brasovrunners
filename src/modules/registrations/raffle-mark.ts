@@ -29,7 +29,7 @@ import { isUuid } from "@/shared/ids";
   The event's own switch, «Avem tombolă», is not pressed here and is not the Organizer's: it is a box of the event editor,
   whose save is the Administrator's (`canEditEventFields`, §542). The Organizer reads it and works the column it shows.
 
-  **A second door, at the race-day desk (§NNN; the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar
+  **A second door, at the race-day desk (§1020; the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar
   dar să fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă»).** Every desk
   role takes a registration off the raffle, or puts it back, from the desk's raffle line — asked first there, naming the person
   and the number — through `setRegistrationInRaffleAtDesk` below, by a predicate of its own (`canSetRaffleMarkAtDesk`, written
@@ -80,11 +80,11 @@ export async function setRegistrationInRaffle<T extends Record<string, unknown>>
   });
 }
 
-/** What the desk's door writes beside the new value (§NNN): the door itself, which the registration's timeline reads back. */
+/** What the desk's door writes beside the new value (§1020): the door itself, which the registration's timeline reads back. */
 const RAFFLE_DESK_DOOR = "desk";
 
 /**
- * «Scoate de la tombolă» / «Pune înapoi la tombolă» at the race-day desk (§NNN): the same mark through a door of its own, for
+ * «Scoate de la tombolă» / «Pune înapoi la tombolă» at the race-day desk (§1020): the same mark through a door of its own, for
  * every desk role (`canSetRaffleMarkAtDesk`), on a registration the desk's raffle line is drawn for — a real one, at an event
  * that holds a raffle. One statement, as the organizers' tick: the mark changes only where it says otherwise, so a second press
  * — a colleague's on another phone, or the same one twice — is a no-op and writes no row; otherwise ONE audit row, the staff

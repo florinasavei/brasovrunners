@@ -10,7 +10,7 @@ import { isUuid } from "@/shared/ids";
  * Seven kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
  * runner marked present at the desk or by their own «Am ajuns», a check-in taken back (`registration.checked_in`,
  * `registration.checkin_undone`), a runner taken off the event's raffle or put back on it (`registration.raffle_excluded`,
- * `registration.raffle_included` — at the desk, asked first, or by the organizers' tick; §NNN: who decided that X does not take
+ * `registration.raffle_included` — at the desk, asked first, or by the organizers' tick; §1020: who decided that X does not take
  * part), and a volunteer's «Prezent» ticked or unticked (`volunteer.edited` with `fields: ["present"]`).
  */
 export const JOURNAL_KINDS = ["scanned", "checkedIn", "undone", "raffleOut", "raffleIn", "volunteerPresent", "volunteerAbsent"] as const;
@@ -21,7 +21,7 @@ export const RUNNER_JOURNAL_ACTIONS = {
   scanned: "registration.code_scanned",
   checkedIn: "registration.checked_in",
   undone: "registration.checkin_undone",
-  // §NNN: «a scos de la tombolă» / «a pus înapoi la tombolă», whichever door wrote the mark.
+  // §1020: «a scos de la tombolă» / «a pus înapoi la tombolă», whichever door wrote the mark.
   raffleOut: "registration.raffle_excluded",
   raffleIn: "registration.raffle_included",
 } as const;
@@ -114,7 +114,7 @@ const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, raffleOu
 
 /**
  * One line per account that acted at the event (§996): how many scans, check-ins, undos, runners taken off the raffle and put
- * back (§NNN) and volunteer ticks — the staff accounts
+ * back (§1020) and volunteer ticks — the staff accounts
  * by name, then the deleted accounts as one, then the participants' own «Am ajuns» (their check-ins alone). A test registration's
  * row is omitted from every count the club is given (§30, AGENTS.md §12.6), but its account is still one the filter offers
  * (`accounts`), so a rehearsal on test rows can be read by account too.

@@ -36,7 +36,7 @@ describe("BR-REQ-031-05 criterion 4 the exports leave the emergency details out"
       expect(csvHeader, `${header} is in the CSV`).toContain(header);
     }
     // Then «Member bib» (§664) and «Club runner» (§787), then «Partener» («De la parteneri»), the last fixed column — since
-    // «Reconfirmat» (the decision «Cere reconfirmarea») moved beside «Status», after «Reconfirmare» (§NNN), in both files.
+    // «Reconfirmat» (the decision «Cere reconfirmarea») moved beside «Status», after «Reconfirmare» (§1019), in both files.
     expect(csvHeader.slice(-6, -1)).toEqual(["Age on race day", "Country", "City", "Member bib", "Club runner"]);
     expect(csvHeader.at(-1)).toBe("Partner");
     for (const headers of [csvHeader, REGISTRATION_SHEET_HEADERS]) {

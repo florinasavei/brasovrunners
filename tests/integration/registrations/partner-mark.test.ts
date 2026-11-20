@@ -574,7 +574,7 @@ describe("the registrations' Excel and CSV", () => {
       const { rows } = readSheet(Buffer.from(await (await exportRegistrations(new Request(url(event.id, "&format=xlsx")))).arrayBuffer()));
       const header = rows[0] as string[];
       expect(header.at(-1), role).toBe("Note interne");
-      // «Partener» just before the notes; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» (§NNN).
+      // «Partener» just before the notes; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» (§1019).
       expect(header.at(-2), role).toBe("Partener");
       const cell = (name: string) => rows.find((row) => row?.[header.indexOf("Name")] === name)?.[header.indexOf("Partener")] ?? "";
       expect(cell("Ana Munteanu"), role).toBe(PARTNER);
