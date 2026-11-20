@@ -293,6 +293,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setResultsPublishedAction: [],
   // «Resetează clasamentul» (§997): every result of the race and the gun given, wiped before the start — nothing to undo it with.
   resetEventResultsAction: [],
+  // «Folosește» under a line's «Timpi la sosire» (§1012): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
+  chooseRecordedTimeAction: [],
 };
 
 /**
@@ -421,10 +423,10 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "adds a link, last, to the organizers' own plan, undone by «Șterge linkul» beside it, which asks; it tells nobody, is on no public page and changes no picture, point or person",
   // «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961): a point of the plan's own, on the route or at the start–finish.
   addPlanPointAction:
-    "adds a point to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
+    "adds a point — and its note for the volunteers, when given (§1011) — to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
   // «Salvează punctul» in a point's «Modifică punctul» (§961): a plan's own point changed, or the coordinates of one of the event's points.
   editPlanPointAction:
-    "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is — replaced by saving them again; it tells nobody, is on no public page, and everybody stays at the point they stand at",
+    "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is, its note for the volunteers — replaced by saving them again; it tells nobody (a changed note waits for the next «Trimite fiecăruia punctul lui», which asks, §1011), is on no public page, and everybody stays at the point they stand at",
   // «Lucruri de adus» on «Ziua cursei» (§979): the organizers' own checklist of things to bring to the race.
   setRaceDayItemBroughtAction:
     "a tick on the organizers' own checklist, posting the state it wants and undone by the same tick; it tells nobody, is on no public page and changes no person",
@@ -435,7 +437,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Înscrie la tombolă» on «Ziua cursei» → «Tombolă» and on a volunteer's page (§984): the organizers record a person's sign-up.
   raffleSignUpAction:
     "records one person's raffle sign-up, the acceptance of the rules ticked by its own box, undone by «Șterge înscrierea», which asks; it emails nobody, is on no public page and changes no state, place, number or count but the raffle's",
-  // The same at the race-day desk, on the desk's view of a person (§984).
+  // The same at the race-day desk, on the desk's view of a person (§984) — and, for a desk role that is not an organizer, on «Tombolă» (§1014).
   raffleDeskSignUpAction:
     "records one person's raffle sign-up at the desk, the acceptance of the rules ticked by its own box, undone on «Tombolă» by «Șterge înscrierea», which asks; it emails nobody and changes no state, place, number or count but the raffle's",
   // «Scoate» / «Pune înapoi» on a row of «Tombolă» (§984): the organizers' exclusion, through each kind's own tick.

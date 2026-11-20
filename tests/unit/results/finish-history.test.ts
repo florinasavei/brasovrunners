@@ -90,4 +90,19 @@ describe("§986 «Istoricul sosirilor»", () => {
     expect(finishHistoryLine(row("17", "event.results_reset", 8, null))?.what).toEqual({ kind: "reset", results: null, gunCleared: false });
     expect(historyBibOf({ kind: "reset", results: 4, gunCleared: true })).toBeNull();
   });
+
+  /** §1012 — «Folosește»: a time recorded at the line made a runner's, said as the choice it was — a change, or a result made again. */
+  it("reads «Folosește» as «Clasament»'s choice of a recorded time, whether it changed a result or made one again", () => {
+    const changed = finishHistoryLine(row("18", "event_result.updated", 9, { bibNumber: 102, status: "FINISHED", gunTimeMs: 2_717_000, chipTimeMs: null, changed: ["time"], chosenFromHistory: true }, "Ana Admin"));
+    expect(changed).toMatchObject({ where: "results", who: "Ana Admin", what: { kind: "chosen", bibNumber: 102, gunTimeMs: 2_717_000 } });
+    expect(finishHistoryLine(row("19", "event_result.created", 10, { bibNumber: 103, status: "FINISHED", gunTimeMs: 2_900_000, chipTimeMs: null, changed: ["status", "time"], chosenFromHistory: true }))?.what).toEqual({
+      kind: "chosen",
+      bibNumber: 103,
+      gunTimeMs: 2_900_000,
+    });
+    expect(historyBibOf({ kind: "chosen", bibNumber: 102, gunTimeMs: 2_717_000 })).toBe(102);
+    // A press at the line is the line's, whatever else its row says; a save's change stays a change.
+    expect(finishHistoryLine(row("20", "event_result.created", 11, { bibNumber: 104, gunTimeMs: 3_000_000, finishLine: true, chosenFromHistory: true }))?.what.kind).toBe("finish");
+    expect(finishHistoryLine(row("21", "event_result.updated", 12, { bibNumber: 104, status: "FINISHED", gunTimeMs: 3_000_000, changed: ["time"] }))?.what.kind).toBe("updated");
+  });
 });

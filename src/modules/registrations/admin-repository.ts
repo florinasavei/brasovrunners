@@ -1543,6 +1543,12 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
+   * «De la parteneri»: the partner's or sponsor's name, or null — the desk's chip «Partener: {name}» and its order, the partners'
+   * runners right after the elites (§1013; the owner, 2026-11-20: «pune elitele primii, apoi pune-i pe cei de la parteneri și cu
+   * numele partenerului»). A name of the club's sponsor, never the person's own data; read by no public surface.
+   */
+  partnerName: string | null;
+  /**
    * Whether the person appears by name on the site (§1004; the owner, 2026-11-19, on the desk: «trebuie să văd dacă oamenii doresc să
    * apară anonimi sau nu, să apară un ochișor»): the public list's one condition (`repository.ts#namedOnPublicList`) — their own «Vreau
    * să apar pe lista de participanți & rezultate», and no Administrator's «Apare pe site» unticked on an elite or an ambassador. A wish
@@ -1609,6 +1615,8 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
+  // «De la parteneri»: the partner's or sponsor's name, for the row's chip «Partener: {name}» and the desk's order (§1013).
+  partnerName: registrations.partnerName,
   // «Cu nume» / «Anonim» (§1004): the public list's own condition, so the desk's eye and the list never disagree.
   namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),
   // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
@@ -1704,7 +1712,19 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
   }
   const rows = await deskQuery(db, input.locale)
     .where(and(...conditions))
-    .orderBy(asc(registrations.registeredName), asc(registrations.id));
+    .orderBy(
+      /*
+        The owner, 2026-11-20, of «Prezența»: «sortează după BIB», then «pune elitele primii, apoi pune-i pe cei de la parteneri».
+        Inside every section: the elites first, then the partners' runners («De la parteneri»), then everybody else; inside each
+        group by the race number the row shows — a confirmed row's, as `raceNumberOf` draws it (§548): the desk hands out the
+        bibs from a pile in that order. A row that shows none (not confirmed, or confirmed and still without one) comes after its
+        group's numbers, by name; the id settles a tie.
+      */
+      sql`CASE WHEN ${registrations.elite} THEN 0 WHEN ${registrations.partnerName} IS NOT NULL THEN 1 ELSE 2 END`,
+      sql`CASE WHEN ${registrations.status} = 'CONFIRMED' THEN ${registrations.bibNumber} END ASC NULLS LAST`,
+      asc(registrations.registeredName),
+      asc(registrations.id),
+    );
   return rows.map(deskRowOf);
 }
 

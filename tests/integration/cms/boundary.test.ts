@@ -188,7 +188,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/checkin/jurnal",
       // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
       "/admin/checkin/lucruri",
-      // «Tombolă», the organizers' tab of «Ziua cursei» (§984), by hand.
+      // «Tombolă», «Ziua cursei»'s tab for every desk role since §1014 (§984), by hand.
       "/admin/checkin/tombola",
       // The design system page (§692), by hand.
       "/admin/design",
@@ -244,6 +244,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/pages/team",
       // «Unelte» (§926): the page's switch and its tools' ticks, one screen by hand.
       "/admin/pages/tools",
+      // «PR Kit» (§1015): the logo files, the sticker sheets and the YouTube poster for every role, one screen by hand.
+      "/admin/pr-kit",
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/registrations/new",

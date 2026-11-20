@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.81-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.86-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -998,12 +998,16 @@ gun and a clock since it.
    ones go; a press sent twice is recognised by its own id and kept once. «Site-ul a fost actualizat» (a deploy during
    the race): reload the page, the presses wait.
 3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
-   the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. A number no confirmed
-   registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»
-   later under «Alergători neînscriși»). Before the start, or more than a day after it: refused — and a press arriving
-   more than a day and three hours after the start is refused whatever moment it carries. A runner saved as «Abandon»
-   or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved «Descalificat», or written off after
-   the moment a press carries, stays as decided — the press goes to «Istoricul sosirilor».
+   the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. An elite already «Sosit»
+   whose number is typed again is asked first — on this phone, once the page knows the elite crossed: after any press of
+   yours, or a reload (a second press never changes the first time anyway). «Anulează» (focused, so Enter or Esc) records
+   nothing and uses no caught moment; «Trece numărul din nou» records it at the moment «Sosit» was pressed, the first time
+   staying. A number no confirmed registration and no elite line holds: refused, with the time to write on paper (the
+   runner is typed on «Clasament» later under «Alergători neînscriși»). Before the start, or more than a day after it:
+   refused — and a press arriving more than a day and three hours after the start is refused whatever moment it carries.
+   A runner saved as «Abandon» or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved
+   «Descalificat», or written off after the moment a press carries, stays as decided — the press goes to «Istoricul
+   sosirilor».
 4. **A mistake.** «Anulează» on your own line, for ten minutes, while nobody changed it and nobody pressed the number
    again after you (a second press of it is somebody else's, maybe the right one: the line then says «Clasament»
    corrects it). After that — or for anybody else's line, or a line typed on «Clasament» — correct it on «Clasament»,
@@ -1030,7 +1034,12 @@ started and any disqualification with the reason for the note box either way.
    sentence names the runner and the box. The places overall, by sex and by category are computed on every save;
    ties share a place and the next is skipped. An emptied line is a deleted result. A page opened before a
    colleague saved is refused rather than written over theirs: reload and save again.
-6. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.
+6. A number pressed more than once at «Cronometrare» — or whose «Timp» is not the one recorded — shows **«Timpi la sosire:»**
+   under its «Timp», each time with who pressed it and when: **«Folosește»** beside one makes it the line's «Sosit» time after a
+   question, the places follow, and «Istoricul sosirilor» names who chose it (§1012). The page need not be reloaded while
+   «Cronometrare» goes on recording: only a change to that runner's own line refuses the press. A «Descalificat» runner shows
+   no times to choose: a disqualification is changed by hand in «Stare», then «Salvează tot clasamentul».
+7. «Descarcă clasamentul (CSV)» is the staff file with the names; the download is in the trail.
 
 ### The awards
 
