@@ -32,7 +32,8 @@ const state = vi.hoisted(() => {
     afters: [] as (() => Promise<void>)[],
     /** Each send the provider was handed, and the drain clock's moment when it was. */
     sent: [] as { to: string; at: number }[],
-    /** The drain's clock: its moment, each wait it was asked for, and whether a wait ends (a stopped function's never does). */
+    /** The drain's clock: where it started, its moment, each wait it was asked for, and whether a wait ends (a stopped function's never does). */
+    clockStart: 0,
     clockAt: 0,
     slept: [] as number[],
     stopped: false,
@@ -185,7 +186,7 @@ async function redirectOf(press: Promise<unknown>): Promise<string> {
 
 /** What Next runs once the press's response is out, in the order the press asked, the drain's clock starting now. */
 async function runAfters(): Promise<void> {
-  state.held.clockAt = Date.now();
+  state.held.clockStart = state.held.clockAt = Date.now();
   for (const callback of state.held.afters.splice(0)) await callback();
 }
 
@@ -210,9 +211,9 @@ describe("§NNN «Adaugă»: the club's invitation leaves a minute and a half af
     expect(fakeNextCache.invalidated).toContain(JOB_DUE_TAG);
 
     await runAfters();
-    // One wait, for what was left of the gap — never longer.
-    expect(state.held.slept).toHaveLength(1);
-    expect(state.held.slept[0]).toBeGreaterThan(INVITATION_GAP_MS - 10_000);
+    // One wait, for exactly what was left of the gap when the response was out — never longer than the gap.
+    expect(state.held.slept).toEqual([due - state.held.clockStart]);
+    expect(state.held.slept[0]).toBeGreaterThan(0);
     expect(state.held.slept[0]).toBeLessThanOrEqual(INVITATION_GAP_MS);
     // Sent once, at its turn, under the scheduled pass — the press's drain does not ask «Când pleacă emailurile».
     expect(state.held.sent).toEqual([{ to: "ana@dev.test", at: due }]);
