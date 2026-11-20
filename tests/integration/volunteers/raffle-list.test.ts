@@ -9,7 +9,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { STAFF_ROLES, canManageVolunteers, canReadRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
-import { buildRaffleCsv, buildRaffleRandomOrgText, canTakeRaffleList, exportRaffleList, raffleFileName } from "@/modules/volunteers/raffle-list";
+import { buildRaffleCsv, buildRaffleRandomOrgText, canTakeRaffleList, exportRaffleList, raffleCsvFileName, raffleRandomOrgFileName } from "@/modules/volunteers/raffle-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -275,11 +275,11 @@ describe("§948 BR-REQ-071-01 the file", () => {
     );
     expect(buildRaffleCsv(words(en), [{ number: 1, label: "V001", name: "Ion", kind: "VOLUNTEER", present: true }]).slice(1)).toBe("Number,Name,Category,Present\r\nV001,Ion,Volunteer,Yes\r\n");
     expect(buildRaffleCsv(words(en), []).slice(1)).toBe("Number,Name,Category,Present\r\n");
-    expect(raffleFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
+    expect(raffleCsvFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
     // The present-only file has a name of its own, plain ASCII (§983); only a real `true` asks for it.
-    expect(raffleFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
-    expect(raffleFileName("2026-11-21", { onlyPresent: false })).toBe("tombola-2026-11-21.csv");
-    expect(raffleFileName("2026-11-21", { onlyPresent: true })).toMatch(/^[\x20-\x7e]+$/);
+    expect(raffleCsvFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
+    expect(raffleCsvFileName("2026-11-21", { onlyPresent: false })).toBe("tombola-2026-11-21.csv");
+    expect(raffleCsvFileName("2026-11-21", { onlyPresent: true })).toMatch(/^[\x20-\x7e]+$/);
   });
 
   it("is served by the route in the reader's language, as a private download named by the club's day", async () => {
@@ -535,9 +535,9 @@ describe("§NNN BR-REQ-071-01 «Descarcă pentru random.org»: one number per li
   });
 
   it("names its files after the CSV's, plain ASCII", () => {
-    expect(raffleFileName("2026-11-21", { format: "random-org" })).toBe("tombola-2026-11-21-random-org.txt");
-    expect(raffleFileName("2026-11-21", { format: "random-org", onlyPresent: true })).toBe("tombola-prezenti-2026-11-21-random-org.txt");
-    expect(raffleFileName("2026-11-21", { format: "csv", onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
-    expect(raffleFileName("2026-11-21", { format: "random-org", onlyPresent: true })).toMatch(/^[\x20-\x7e]+$/);
+    expect(raffleRandomOrgFileName("2026-11-21")).toBe("tombola-2026-11-21-random-org.txt");
+    expect(raffleRandomOrgFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21-random-org.txt");
+    expect(raffleRandomOrgFileName("2026-11-21", { onlyPresent: false })).toBe("tombola-2026-11-21-random-org.txt");
+    expect(raffleRandomOrgFileName("2026-11-21", { onlyPresent: true })).toMatch(/^[\x20-\x7e]+$/);
   });
 });

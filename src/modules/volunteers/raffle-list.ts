@@ -149,11 +149,15 @@ export function raffleWithoutNumber(rows: ReadonlyArray<{ label: string | null }
   return rows.filter((row) => row.label === null || row.label === "").length;
 }
 
+/** The file's name, with the club's date: `tombola-2026-11-21.csv`, and the present-only one `tombola-prezenti-2026-11-21.csv`. */
+export function raffleCsvFileName(day: string, options: RaffleListOptions = {}): string {
+  return options.onlyPresent === true ? `tombola-prezenti-${day}.csv` : `tombola-${day}.csv`;
+}
+
 /**
- * The file's name, with the club's date: `tombola-2026-11-21.csv`, the present-only one `tombola-prezenti-2026-11-21.csv`, and for
- * random.org (§NNN) `tombola-2026-11-21-random-org.txt` / `tombola-prezenti-2026-11-21-random-org.txt`. ASCII alone.
+ * The file for random.org's name (§NNN), as the CSV's is built: `tombola-2026-11-21-random-org.txt`, and the present-only one
+ * `tombola-prezenti-2026-11-21-random-org.txt`. ASCII alone.
  */
-export function raffleFileName(day: string, options: RaffleListOptions = {}): string {
-  const stem = options.onlyPresent === true ? `tombola-prezenti-${day}` : `tombola-${day}`;
-  return options.format === "random-org" ? `${stem}-random-org.txt` : `${stem}.csv`;
+export function raffleRandomOrgFileName(day: string, options: RaffleListOptions = {}): string {
+  return options.onlyPresent === true ? `tombola-prezenti-${day}-random-org.txt` : `tombola-${day}-random-org.txt`;
 }

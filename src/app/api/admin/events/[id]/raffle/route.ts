@@ -4,7 +4,7 @@ import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { buildRaffleCsv, buildRaffleRandomOrgText, canTakeRaffleList, exportRaffleList, raffleFileName, type RaffleListFormat } from "@/modules/volunteers/raffle-list";
+import { buildRaffleCsv, buildRaffleRandomOrgText, canTakeRaffleList, exportRaffleList, raffleCsvFileName, type RaffleListFormat, raffleRandomOrgFileName } from "@/modules/volunteers/raffle-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { contentDisposition } from "@/shared/http/content-disposition";
 import { isUuid } from "@/shared/ids";
@@ -63,7 +63,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
   const headers = {
-    "Content-Disposition": contentDisposition("attachment", raffleFileName(day, { onlyPresent, format }), "raffle"),
+    "Content-Disposition": contentDisposition("attachment", (format === "random-org" ? raffleRandomOrgFileName : raffleCsvFileName)(day, { onlyPresent }), "raffle"),
     "X-Robots-Tag": "noindex",
     "Cache-Control": "private, no-store",
   };

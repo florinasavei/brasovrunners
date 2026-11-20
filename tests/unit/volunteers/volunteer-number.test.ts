@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compareRaffleRows, raffleNumberText, type RaffleKind } from "@/modules/volunteers/domain/raffle";
 import { formatVolunteerNumber, VOLUNTEER_NUMBER_DIGITS, VOLUNTEER_NUMBER_PREFIX, volunteerNumberFrom, volunteerNumberText } from "@/modules/volunteers/domain/volunteer-number";
-import { buildRaffleRandomOrgText, type RaffleRow, raffleFileName, raffleWithoutNumber } from "@/modules/volunteers/raffle-list";
+import { buildRaffleRandomOrgText, raffleCsvFileName, raffleRandomOrgFileName, type RaffleRow, raffleWithoutNumber } from "@/modules/volunteers/raffle-list";
 
 /**
  * §NNN, amending §948 (the owner, 2026-11-20: «vreau sa le dai numar de voluntar V001 V002 la toti voluntarii automat!») — the V
@@ -97,9 +97,9 @@ describe("§NNN BR-REQ-071-01 «Descarcă pentru random.org»: one number per li
   });
 
   it("names the files for both scopes, the CSV's as before", () => {
-    expect(raffleFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
-    expect(raffleFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
-    expect(raffleFileName("2026-11-21", { format: "random-org" })).toBe("tombola-2026-11-21-random-org.txt");
-    expect(raffleFileName("2026-11-21", { format: "random-org", onlyPresent: true })).toBe("tombola-prezenti-2026-11-21-random-org.txt");
+    expect(raffleCsvFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
+    expect(raffleCsvFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
+    expect(raffleRandomOrgFileName("2026-11-21")).toBe("tombola-2026-11-21-random-org.txt");
+    expect(raffleRandomOrgFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21-random-org.txt");
   });
 });
