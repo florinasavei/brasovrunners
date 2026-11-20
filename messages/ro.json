@@ -14297,9 +14297,19 @@
       "changed": "Am reținut alegerea ta.",
       "changedHelp": "Linkul din email s-a folosit. Pagina aceasta are unul nou — dacă te răzgândești, apasă butonul de mai sus.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou sau scrie-ne.",
-      "shortListed": "Apari pe lista publică de participanți.",
-      "shortNotListed": "Nu apari pe lista publică de participanți.",
-      "eventPage": "Pagina evenimentului"
+      "eventPage": "Pagina evenimentului",
+      "choice": {
+        "title": "Lista publică și clasamentul",
+        "listedWithResults": "Numele tău apare pe lista publică a participanților și în clasament.",
+        "listed": "Numele tău apare pe lista publică a participanților.",
+        "notListedCountedWithResults": "Numele tău nu apare pe lista publică a participanților și nici în clasament: pe listă apari ca „{anonymous}”.",
+        "notListedCounted": "Numele tău nu apare pe lista publică a participanților: pe listă apari ca „{anonymous}”.",
+        "notListedWithResults": "Numele tău nu apare pe lista publică a participanților și nici în clasament.",
+        "notListed": "Numele tău nu apare pe lista publică a participanților.",
+        "saving": "Salvăm alegerea…",
+        "help": "Poți schimba oricând, de aici sau din „Înscrierile mele”.",
+        "helpMine": "Poți schimba oricând, de aici sau din pagina înscrierii."
+      }
     },
     "withdraw": {
       "title": "Datele date cu acordul tău",
