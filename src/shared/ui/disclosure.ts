@@ -112,6 +112,30 @@ export const FOLD_GLYPH_SX = { fontSize: "1.2em", flexShrink: 0 } as const;
 export const FOLD_GLYPH_INLINE_SX = { fontSize: "1.2em", flexShrink: 0, verticalAlign: "-0.2em", mr: 0.75 } as const;
 
 /**
+ * A refusal is never folded away (§336) — the boxed fold below carries it, and a fold of its own that holds a kept form spreads
+ * it too: «Modifică punctul»'s pencil on «Planul voluntarilor» (§NNN).
+ */
+export const REFUSAL_UNFOLDED_SX = {
+  /*
+    Backoffice folds start closed, and a kept form's refusal (§315) comes back as the form's state,
+    which the server rendering the fold around it cannot see. With JavaScript on nothing re-renders
+    the fold the person opened to press, and `ActionForm` opens the folds around its summary anyway;
+    with JavaScript off the refused POST renders the page afresh, the fold arrives shut, and the
+    summary with the boxes as typed would be behind a line that says nothing happened. So while a
+    refusal summary (`ActionForm`'s `form-refusal…` id) is inside a closed fold, the fold's body is
+    shown regardless — the `::details-content` part is where the browser hides it. A browser without
+    that pseudo-element drops this one rule and the fold opens by hand, as before.
+  */
+  "&:not([open]):has([id^='form-refusal'])::details-content": { contentVisibility: "visible", display: "block" },
+  /*
+    The same for a box the refusal *named* (§350, the event editor's boxes): the summary sits at
+    the top of the form and the field it names may be three folds down. MUI marks a named box
+    `aria-invalid`, so a closed fold holding one shows its body without JavaScript as well.
+  */
+  "&:not([open]):has([aria-invalid='true'])::details-content": { contentVisibility: "visible", display: "block" },
+} as const;
+
+/**
  * The backoffice fold, as a box (`DECISIONS.md` §269 and its follow-up; the owner, looking at
  * the bib-design panel and the event editor: "toate aceste acordeoane din zona de backoffice
  * trebuie sa fie mai 'boxed'").
@@ -165,22 +189,5 @@ export const BOXED_DISCLOSURE_SX = {
     mb: 1.5,
   },
   "&[open]": { pb: 1.5 },
-  /*
-    A refusal is never folded away (§336). Backoffice folds start closed, and a kept form's
-    refusal (§315) comes back as the form's state, which the server rendering the fold around it
-    cannot see. With JavaScript on nothing re-renders the fold the person opened to press, and
-    `ActionForm` opens the folds around its summary anyway; with JavaScript off the refused POST
-    renders the page afresh, the fold arrives shut, and the summary with the boxes as typed would
-    be behind a line that says nothing happened. So while a refusal summary (`ActionForm`'s
-    `form-refusal…` id) is inside a closed fold, the fold's body is shown regardless — the
-    `::details-content` part is where the browser hides it. A browser without that pseudo-element
-    drops this one rule and the fold opens by hand, as before.
-  */
-  "&:not([open]):has([id^='form-refusal'])::details-content": { contentVisibility: "visible", display: "block" },
-  /*
-    The same for a box the refusal *named* (§350, the event editor's boxes): the summary sits at
-    the top of the form and the field it names may be three folds down. MUI marks a named box
-    `aria-invalid`, so a closed fold holding one shows its body without JavaScript as well.
-  */
-  "&:not([open]):has([aria-invalid='true'])::details-content": { contentVisibility: "visible", display: "block" },
+  ...REFUSAL_UNFOLDED_SX,
 } as const;

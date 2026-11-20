@@ -30,6 +30,14 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   kilometre or coordinates do: a person told before the coordinates were typed stays told, and «Trimite din nou tuturor» is
   how the organizers send the place.
 
+  **Its «Notă pentru voluntari» is the one thing of a point that does (§NNN, amending §1009).** What everybody standing there
+  has to know is what they act on, so a person told the point by a message that left before its note last changed — written,
+  changed in either language, or taken off — is not told any more, and the next ordinary press writes to them, each with their
+  next telling; nobody else is written to for it, and «Trimite din nou tuturor» is not needed. The moment is the point's own
+  (`event_checkpoints.volunteer_note_changed_at`, stamped by `plan-points.ts#changePlanPoint` only when the note's words change,
+  read here through `listPlanPoints`); the message's moment is when the provider took it (`sent_at`). A message still waiting
+  to leave is told all the same: it says the note as it is when it leaves.
+
   **Who is written to.** Every volunteer of the event who stands at one of its points, is not cancelled and has an address:
   one message each, in the language of their own row, queued through the outbox in the press's own transaction
   (BR-REQ-080-02). Nobody else: a person at no point, a cancelled one and a row with no address (§865) are counted for the
@@ -45,10 +53,11 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   - their newest row still waits to leave (PENDING, PROCESSING), names the point they stand at and goes to the address the
     row holds now → told: it is on its way, and it says what is true when it leaves;
   - else the newest of their rows that left (SENT — or COMPLAINED, which reached the inbox) names that point at that
-    address → told;
+    address, and left after the point's note last changed (§NNN) → told;
   - anything else → not told: no row at all; a row **withdrawn** at the send, which the outbox deletes; a row that **failed**
     for good or was **refused** by the receiving server (FAILED, BOUNCED), which never reached anybody; a message that named
-    another point (the person was moved since) or went to an address corrected since.
+    another point (the person was moved since) or went to an address corrected since; a message that left before the point's
+    note last changed — it carried the note as it was.
 
   A press writes only to those not told. «Trimite din nou tuturor» writes to everybody again (the map was replaced, a point
   renamed), each with their next telling. An older row still waiting when the newer one is queued is withdrawn at the send
@@ -59,6 +68,11 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   and past the check — is not called back: it leaves, and the newer one after it. Both were asked for by a press, and the
   second says what is true when it leaves. An ordinary press does not meet this: a row being sent that names the point the
   person stands at counts as told, so nothing is queued beside it.
+
+  The same edge, for the note (§NNN): a message the outbox was drawing at the very moment the note changed — drawn a moment
+  before the save, taken by the provider a moment after it — says the note as it was and counts as told. `sent_at` is the one
+  moment the outbox keeps of a send; a column for the moment a message was drawn would close it, and a note saved in the second
+  a message is in flight does not earn one. A message queued after the save is drawn after it, and says the new note.
 
   What this memory does not hold: the outbox keeps a message that left for ninety days and one about nobody's registration
   for ninety from its queueing (`jobs/retention.ts`) — a point told earlier than that is told again by the next press.
@@ -87,8 +101,12 @@ export type VolunteerPointCounts = {
 /** What a press did: how many messages it queued, whether it wrote to everybody again, and the numbers it counted first. */
 export type VolunteerPointsSent = VolunteerPointCounts & { queued: number; again: boolean };
 
-/** One `VOLUNTEER_POINT` row of a volunteer, as the «already told» question reads it: never a word of the message. */
-export type PointMailRow = { checkpointId: string | null; round: number; status: EmailOutboxStatus; recipientEmail: string };
+/**
+ * One `VOLUNTEER_POINT` row of a volunteer, as the «already told» question reads it: never a word of the message. `sentAt` — when
+ * the provider took it, null for a row that never left — else `createdAt` is the message's moment, compared with the point's
+ * note (§NNN).
+ */
+export type PointMailRow = { checkpointId: string | null; round: number; status: EmailOutboxStatus; recipientEmail: string; createdAt: Date; sentAt: Date | null };
 
 /** A message that has not left yet: it may still leave, or be withdrawn at the send. */
 const WAITING: ReadonlySet<EmailOutboxStatus> = new Set(["PENDING", "PROCESSING"]);
@@ -101,18 +119,41 @@ function roundOf(value: unknown): number {
   return Number.isInteger(round) && round > 0 ? round : 0;
 }
 
+/** The person a telling is about: the point they stand at now, their address as the canonicalizer has it, and that point's note's moment. */
+export type ToldPerson = {
+  checkpointId: string;
+  canonicalEmail: string;
+  /** When the note of the point they stand at last changed (§NNN, `PlanPoint.volunteerNoteChangedAt`); null or absent for never. */
+  noteChangedAt?: Date | null;
+};
+
 /**
- * Whether a person was already told the point they stand at now (the rule at the top of this file): pure, from their own
- * `VOLUNTEER_POINT` rows. The address is compared through the canonicalizer (AGENTS.md §10.4), never as typed.
+ * What a person's rows say of the point they stand at now (the rule at the top of this file), pure:
+ *
+ * - `told` — a message on its way names it, or the newest one that reached them did, after the point's note last changed;
+ * - `toldBeforeTheNote` — the newest message that reached them named it, but left before its note last changed (§NNN): the next
+ *   ordinary press writes to them again, for the note;
+ * - `notTold` — anything else.
+ *
+ * The address is compared through the canonicalizer (AGENTS.md §10.4), never as typed.
  */
-export function alreadyTold(person: { checkpointId: string; canonicalEmail: string }, rows: readonly PointMailRow[]): boolean {
+export function tellingOf(person: ToldPerson, rows: readonly PointMailRow[]): "told" | "toldBeforeTheNote" | "notTold" {
   const newestFirst = [...rows].sort((a, b) => b.round - a.round);
   const saysIt = (row: PointMailRow) => row.checkpointId === person.checkpointId && canonicalOrNull(row.recipientEmail) === person.canonicalEmail;
   const newest = newestFirst[0];
-  // On its way: the newest row is the one that says where they stand — an older one still waiting is withdrawn at the send.
-  if (newest && WAITING.has(newest.status) && saysIt(newest)) return true;
+  // On its way: the newest row is the one that says where they stand — an older one still waiting is withdrawn at the send. It
+  // says the note as it is when it leaves, whenever the note changed.
+  if (newest && WAITING.has(newest.status) && saysIt(newest)) return "told";
   const reached = newestFirst.find((row) => REACHED.has(row.status));
-  return reached !== undefined && saysIt(reached);
+  if (reached === undefined || !saysIt(reached)) return "notTold";
+  // It left before the point's note last changed: it carried the note as it was.
+  const noteChangedAt = person.noteChangedAt ?? null;
+  return noteChangedAt !== null && (reached.sentAt ?? reached.createdAt).getTime() < noteChangedAt.getTime() ? "toldBeforeTheNote" : "told";
+}
+
+/** Whether a person was already told the point they stand at now, as it is now — its note included (`tellingOf`). */
+export function alreadyTold(person: ToldPerson, rows: readonly PointMailRow[]): boolean {
+  return tellingOf(person, rows) === "told";
 }
 
 /** The outbox key of one telling: one row a person, a point and a telling — the unique key is what keeps it one. */
@@ -121,6 +162,12 @@ export function volunteerPointKey(volunteerId: string, pointId: string, round: n
 }
 
 type Standing = "unplaced" | "noAddress" | "told" | "toWrite";
+
+/**
+ * The question's four numbers, and per point of the plan how many people there were told it before its «Notă pentru voluntari»
+ * last changed (§NNN): the next ordinary press writes to them again — the line the plan's page says under the point's note.
+ */
+export type VolunteerPointMail = { counts: VolunteerPointCounts; toldBeforeTheNote: ReadonlyMap<string, number> };
 
 type PlacedPerson = {
   id: string;
@@ -140,6 +187,8 @@ async function pointRows<T extends Record<string, unknown>>(db: Database<T>, sco
     .select({
       status: emailOutbox.status,
       recipientEmail: emailOutbox.recipientEmail,
+      createdAt: emailOutbox.createdAt,
+      sentAt: emailOutbox.sentAt,
       volunteerId: sql<string | null>`${emailOutbox.payloadJson} ->> 'volunteerId'`,
       checkpointId: sql<string | null>`${emailOutbox.payloadJson} ->> 'checkpointId'`,
       round: sql<string | null>`${emailOutbox.payloadJson} ->> 'round'`,
@@ -150,40 +199,44 @@ async function pointRows<T extends Record<string, unknown>>(db: Database<T>, sco
   for (const row of rows) {
     if (!row.volunteerId) continue;
     const list = byVolunteer.get(row.volunteerId) ?? [];
-    list.push({ checkpointId: row.checkpointId, round: roundOf(row.round), status: row.status, recipientEmail: row.recipientEmail });
+    list.push({ checkpointId: row.checkpointId, round: roundOf(row.round), status: row.status, recipientEmail: row.recipientEmail, createdAt: row.createdAt, sentAt: row.sentAt });
     byVolunteer.set(row.volunteerId, list);
   }
   return byVolunteer;
 }
 
 /**
- * Everybody of one event who is not cancelled, each with where they stand for this message — and the four numbers. This
- * event's rows only: a volunteer is read by `event_id`, a point is held to the event's own, and the outbox rows by the
- * event their payload names.
+ * Everybody of one event who is not cancelled, each with where they stand for this message — and the four numbers, and per
+ * point how many were told it before its note last changed (§NNN). This event's rows only: a volunteer is read by `event_id`,
+ * a point is held to the event's own, and the outbox rows by the event their payload names.
  */
-async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ people: PlacedPerson[]; counts: VolunteerPointCounts }> {
-  // Every point of the event's plan, whichever kind (§961): the one list the page and the message read too.
-  const onPlan = new Set((await listPlanPoints(db, eventId)).map((point) => point.id));
+async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ people: PlacedPerson[] } & VolunteerPointMail> {
+  // Every point of the event's plan, whichever kind (§961): the one list the page and the message read too — with the moment
+  // each one's note last changed (§NNN).
+  const noteChangedAt = new Map((await listPlanPoints(db, eventId)).map((point) => [point.id, point.volunteerNoteChangedAt]));
   const volunteers = await db
     .select({ id: eventVolunteers.id, email: eventVolunteers.email, canonicalEmail: eventVolunteers.canonicalEmail, locale: eventVolunteers.locale, checkpointId: eventVolunteers.checkpointId })
     .from(eventVolunteers)
     .where(and(eq(eventVolunteers.eventId, eventId), ne(eventVolunteers.state, "CANCELLED")));
   const rows = await pointRows(db, { eventId });
   const counts: VolunteerPointCounts = { toWrite: 0, told: 0, noAddress: 0, unplaced: 0 };
+  const toldBeforeTheNote = new Map<string, number>();
   const people = volunteers.map((volunteer): PlacedPerson => {
     const own = rows.get(volunteer.id) ?? [];
-    const standing: Standing =
-      volunteer.checkpointId === null || !onPlan.has(volunteer.checkpointId)
-        ? "unplaced"
-        : volunteer.email === null || volunteer.canonicalEmail === null
-          ? "noAddress"
-          : alreadyTold({ checkpointId: volunteer.checkpointId, canonicalEmail: volunteer.canonicalEmail }, own)
-            ? "told"
-            : "toWrite";
+    let standing: Standing;
+    if (volunteer.checkpointId === null || !noteChangedAt.has(volunteer.checkpointId)) standing = "unplaced";
+    else if (volunteer.email === null || volunteer.canonicalEmail === null) standing = "noAddress";
+    else {
+      const point = volunteer.checkpointId;
+      const telling = tellingOf({ checkpointId: point, canonicalEmail: volunteer.canonicalEmail, noteChangedAt: noteChangedAt.get(point) }, own);
+      standing = telling === "told" ? "told" : "toWrite";
+      // Not told only because the note changed since: said under that point's note on the plan.
+      if (telling === "toldBeforeTheNote") toldBeforeTheNote.set(point, (toldBeforeTheNote.get(point) ?? 0) + 1);
+    }
     counts[standing] += 1;
     return { ...volunteer, standing, nextRound: Math.max(0, ...own.map((row) => row.round)) + 1 };
   });
-  return { people, counts };
+  return { people, counts, toldBeforeTheNote };
 }
 
 function assertMayManage(actor: Pick<StaffUser, "role">): void {
@@ -191,16 +244,24 @@ function assertMayManage(actor: Pick<StaffUser, "role">): void {
 }
 
 /**
- * The numbers of the question before the press (§956): how many people «Trimite fiecăruia punctul lui» would write to now,
- * how many were already told the point they stand at, how many stand at a point with no address and how many stand at no
- * point yet — counted exactly as the press counts them. For whoever works the volunteers; anybody else is refused.
+ * What the plan's page says of «Trimite fiecăruia punctul lui» before anything is pressed (§956): the question's four numbers —
+ * how many people it would write to now, how many were already told the point they stand at, how many stand at a point with
+ * no address and how many stand at no point yet, counted exactly as the press counts them — and, per point, how many of the
+ * people it would write to were told that point before its «Notă pentru voluntari» last changed (§NNN): the line under the
+ * point's note. For whoever works the volunteers; anybody else is refused.
  */
-export async function previewVolunteerPoints<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointCounts> {
+export async function readVolunteerPointMail<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointMail> {
   assertMayManage(actor);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
   const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
-  return (await standingsOf(db, event.id)).counts;
+  const { counts, toldBeforeTheNote } = await standingsOf(db, event.id);
+  return { counts, toldBeforeTheNote };
+}
+
+/** The question's four numbers alone (`readVolunteerPointMail`): whom the press would write to, who knows, who has no address, who stands nowhere. */
+export async function previewVolunteerPoints<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointCounts> {
+  return (await readVolunteerPointMail(db, actor, eventId)).counts;
 }
 
 /**

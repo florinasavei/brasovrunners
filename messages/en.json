@@ -6806,6 +6806,16 @@
           "volunteerNoteEn": "Note for the volunteers (English)",
           "volunteerNoteHelper": "What everybody at this point needs to know: it is on the plan and in each one's email.",
           "volunteerNoteHelperBoth": "In both languages or in neither, at most {max} characters each.",
+          "noteChanged": {
+            "one": "The note changed after the last email: {count} volunteer will get the new note with the next “Send each their point”.",
+            "few": "The note changed after the last email: {count} volunteers will get the new note with the next “Send each their point”.",
+            "other": "The note changed after the last email: {count} volunteers will get the new note with the next “Send each their point”."
+          },
+          "noteRemoved": {
+            "one": "The note was taken off after the last email: {count} volunteer will get the point without it with the next “Send each their point”.",
+            "few": "The note was taken off after the last email: {count} volunteers will get the point without it with the next “Send each their point”.",
+            "other": "The note was taken off after the last email: {count} volunteers will get the point without it with the next “Send each their point”."
+          },
           "add": "Add the point",
           "openMap": "Open on the map",
           "openMapFor": "Open on the map: {name}",
@@ -6875,7 +6885,7 @@
           "help": "One email to each volunteer placed at a point who has an email address: their point, what they do there and the plan's picture. It leaves only when you press here.",
           "send": "Send each their point",
           "again": "Send to everybody again",
-          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, coordinates or note, the order of the points, a role.",
+          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name or coordinates, the order of the points, a role.",
           "nobody": "Nobody to tell: no volunteer with an email address stands at a point yet.",
           "toTell": {
             "one": "{count} volunteer to tell",
@@ -9971,10 +9981,11 @@
               "steps": [
                 "«Volunteers» in the top bar: choose the event, press «Filter», then «The volunteers' plan».",
                 "«Table» shows every point in one table; «By point», each point with its people. There, at a point, choose a volunteer and press «Put here»; «Take off» takes them off the point.",
-                "Each point's volunteers are numbered. In «Table», their names are in bold, with a thin line between two — on the screen and on paper.",
-                "What everybody at a point has to know: on «By point» open the point, press the pencil («Change the point»), write «Note for the volunteers (Romanian)» and «Note for the volunteers (English)» — in both languages or in neither — and press «Save the point». The note shows under the point's name, in the table and on paper.",
+                "Each point's volunteers are numbered, their names in bold with a thin line between two — in both views, on the screen and on paper.",
+                "What everybody at a point has to know: write «Note for the volunteers (Romanian)» and «Note for the volunteers (English)» — in both languages or in neither — right in «Add a point», or later: on «By point» open the point, press the pencil («Change the point») and press «Save the point». If something is wrong, the message shows at the form and what you typed stays. The note shows under the point's name, in the table and on paper.",
                 "«Print the plan» prints what you see: the table, or every point, open.",
-                "Once the plan is ready: «Send each their point». Each volunteer placed at a point gets an email with their point, the point's note for the volunteers, what they do there and the plan's pictures. Nobody is told before."
+                "Once the plan is ready: «Send each their point». Each volunteer placed at a point gets an email with their point, the point's note for the volunteers, what they do there and the plan's pictures. Nobody is told before.",
+                "Changed a point's note after sending? Under the note it says how many got the old one; the next «Send each their point» writes again to them alone (and to whoever was not told yet)."
               ]
             },
             {

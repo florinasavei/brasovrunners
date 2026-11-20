@@ -62,6 +62,13 @@ import { openFold } from "./support/fold";
  * names in bold with a line between two, nothing wider than a 320-pixel phone; and the email of each person at that point
  * carries the note, in both halves. The rules are `plan-points.test.ts`, `plan-table-screens.test.ts`,
  * `plan-points-screens.test.ts` and `plan-points-mail.test.ts`.
+ *
+ * And, since §NNN (amending §1009): the Organizer gives a new point its note in «Adaugă un punct»; a refused «Modifică punctul»
+ * keeps everything typed — the note too — and says why at the form, the pencil still open, the address unchanged — and with
+ * scripts off the same, in the page the plain POST draws, its shut folds showing the refusal; «Pe puncte» draws a point's
+ * people like «Tabel», numbered, the names in bold capitals with a line between two, on paper too; and once a point's note
+ * changes after its people were emailed, the point says under the note how many will get the new one, and the next ordinary
+ * press writes to them — and only them.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -1028,18 +1035,31 @@ test.describe("§1009 «Notă pentru voluntari» and the numbered people on «Pl
     await expect(fold.getByText("În ambele limbi sau în niciuna, cel mult 500 de caractere în fiecare.")).toBeVisible();
     await fits(page);
 
-    // ---- One language alone is refused: the page's alert says why, the point open under it, nothing saved -----------------
+    // ---- One language alone is refused — since §NNN as the form's own state: the sentence at the form naming the empty box,
+    // what was typed still in it, the pencil and the point open, the address the same, nothing saved ----------------------
+    const pressedAt = page.url();
     await noteRo.fill("Doar în română.");
     await fold.getByTestId("plan-point-save").click();
-    await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=points&open=${points.junction}&planError=PLAN_POINT_NOTE_ONE_LANGUAGE#admin-alert$`), { timeout: 30_000 });
-    await hydrated(page);
-    await expect(page.locator("#admin-alert")).toContainText("Scrie nota pentru voluntari și în română, și în engleză, sau lasă ambele casete goale.");
+    const refusal = fold.getByTestId("form-refusal");
+    await expect(refusal).toContainText("Scrie nota pentru voluntari și în română, și în engleză, sau lasă ambele casete goale.", { timeout: 30_000 });
+    await expect(refusal.getByRole("link", { name: "Notă pentru voluntari (engleză)" })).toBeVisible();
+    expect(page.url()).toBe(pressedAt);
+    await expect(noteRo).toHaveValue("Doar în română.");
+    await expect(noteEn).toHaveValue("");
+    await expect(noteEn).toHaveAttribute("aria-invalid", "true");
+    await expect(fold).toHaveAttribute("open", "");
     await expect(junction).toHaveAttribute("open", "");
     await expect(junction.getByTestId("plan-point-volunteer-note")).toHaveCount(0);
+    await insideTheScreen(page, refusal);
+    await fits(page);
 
     // ---- Both languages, two lines each: saved, back to the point, open -------------------------------------------------
+    // The refusal drew the boxes anew with what was typed (§315); a person goes into a box before writing over it — and a
+    // script's select-then-focus on a box never focused would type in front of the kept words instead.
     await openFold(fold);
+    await noteRo.focus();
     await noteRo.fill(NOTE.ro);
+    await noteEn.focus();
     await noteEn.fill(NOTE.en);
     await fold.getByTestId("plan-point-save").click();
     await expect(page).toHaveURL(backTo(eventId, `view=points&open=${points.junction}`, `point-${points.junction}`), { timeout: 30_000 });
@@ -1128,5 +1148,234 @@ test.describe("§1009 «Notă pentru voluntari» and the numbered people on «Pl
       async (client) => (await client.query<{ ro: string; en: string }>(`SELECT volunteer_note_ro AS ro, volunteer_note_en AS en FROM event_checkpoints WHERE id = $1`, [points.junction])).rows,
     );
     expect(stored).toEqual(NOTE);
+  });
+});
+
+test.describe("§NNN the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», a changed note told again", () => {
+  test.describe.configure({ timeout: 240_000 });
+
+  /** An element's box inside the screen's width. */
+  async function insideTheScreen(page: Page, element: Locator) {
+    const viewport = page.viewportSize();
+    const box = await element.boundingBox();
+    expect(viewport).not.toBeNull();
+    expect(box).not.toBeNull();
+    if (viewport && box) {
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 0.5);
+    }
+  }
+
+  /** Every `VOLUNTEER_POINT` of the event marked as gone by the outbox — the capture's own send, drained after the press. */
+  const allSent = (eventId: string) =>
+    expect
+      .poll(
+        () =>
+          withDatabase(
+            async (client) =>
+              (
+                await client.query<{ waiting: number }>(
+                  `SELECT count(*)::int AS waiting FROM email_outbox WHERE message_type = 'VOLUNTEER_POINT' AND payload_json->>'eventId' = $1 AND status <> 'SENT'`,
+                  [eventId],
+                )
+              ).rows[0].waiting,
+          ),
+        { timeout: 60_000 },
+      )
+      .toBe(0);
+
+  test("the Organizer adds a point with its note, keeps what was typed through a refused save, reads «Pe puncte» like «Tabel», and a changed note goes to that point's people alone", async ({
+    page,
+  }) => {
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-f`);
+    const { eventId, points, ana, dan, radu } = seeded;
+    // Radu at the junction beside Ana — the setup: a point with two people, so its list has a line between two.
+    await withDatabase((client) => client.query(`UPDATE event_volunteers SET checkpoint_id = $2 WHERE id = $1`, [radu.id, points.junction]));
+    await signIn(page, "Dev Moderator");
+    await page.goto(`${planPath(eventId)}?view=points`);
+    await hydrated(page);
+
+    // ---- «Adaugă un punct» takes the note too: the two boxes after the coordinates, a thumb's height, inside the screen ----
+    const builder = page.getByTestId("plan-points-section");
+    await openFold(builder);
+    const addNoteRo = builder.getByTestId("plan-point-add-note-ro");
+    const addNoteEn = builder.getByTestId("plan-point-add-note-en");
+    for (const box of [addNoteRo, addNoteEn]) {
+      await expect(box).toHaveAttribute("maxlength", "500");
+      await thumbSized(box);
+      await insideTheScreen(page, box);
+    }
+    await builder.getByTestId("plan-point-add-name").fill("Izvor");
+    await builder.getByTestId("plan-point-add-km").fill("3,4");
+    await addNoteRo.fill("Apă și pahare la izvor.");
+    await addNoteEn.fill("Water and cups at the spring.");
+    await fits(page);
+    await builder.getByTestId("plan-point-add").click();
+    await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=points&open=[0-9a-f-]{36}&saved=planPointAdded#plan-points$`), { timeout: 30_000 });
+    await toastSays(page, "Punct adăugat.");
+    await hydrated(page);
+    const spring = pointIn(page, "route", "Izvor");
+    await expect(spring).toHaveAttribute("open", "");
+    await expect(spring.getByTestId("plan-point-volunteer-note")).toHaveText("Notă pentru voluntari: Apă și pahare la izvor.");
+
+    // ---- A refused «Modifică punctul» keeps everything typed — the note beside the wrong kilometre — and says why at the form --
+    const springFold = spring.getByTestId("plan-point-edit");
+    await openFold(springFold);
+    const editNoteRo = springFold.getByTestId("plan-point-edit-note-ro");
+    const editNoteEn = springFold.getByTestId("plan-point-edit-note-en");
+    await expect(editNoteRo).toHaveValue("Apă și pahare la izvor.");
+    await springFold.getByTestId("plan-point-edit-km").fill("departe");
+    await editNoteRo.fill("Apă, pahare și burete.");
+    await editNoteEn.fill("Water, cups and a sponge.");
+    const pressedAt = page.url();
+    await springFold.getByTestId("plan-point-save").click();
+    const refusal = springFold.getByTestId("form-refusal");
+    await expect(refusal).toContainText("Scrie la ce kilometru e punctul de pe traseu", { timeout: 30_000 });
+    await expect(refusal.getByRole("link", { name: "La ce km e" })).toBeVisible();
+    expect(page.url()).toBe(pressedAt);
+    await expect(springFold.getByTestId("plan-point-edit-km")).toHaveValue("departe");
+    await expect(editNoteRo).toHaveValue("Apă, pahare și burete.");
+    await expect(editNoteEn).toHaveValue("Water, cups and a sponge.");
+    await expect(springFold).toHaveAttribute("open", "");
+    await expect(spring).toHaveAttribute("open", "");
+    await insideTheScreen(page, refusal);
+    await fits(page);
+    // Corrected, it goes through as ever: back to the point, open, the new note under its name — and the form drawn afresh, the
+    // refusal gone with the press that answered it. The box drawn anew by the refusal is gone into first, as a person does.
+    await springFold.getByTestId("plan-point-edit-km").focus();
+    await springFold.getByTestId("plan-point-edit-km").fill("3,4");
+    await springFold.getByTestId("plan-point-save").click();
+    await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=points&open=[0-9a-f-]{36}#point-[0-9a-f-]{36}$`), { timeout: 30_000 });
+    await toastSays(page, "Punct salvat.");
+    await hydrated(page);
+    await expect(spring).toHaveAttribute("open", "");
+    await expect(spring.getByTestId("plan-point-volunteer-note")).toHaveText("Notă pentru voluntari: Apă, pahare și burete.");
+    await expect(spring.getByTestId("form-refusal")).toHaveCount(0);
+    await expect(springFold.getByTestId("plan-point-edit-km")).toHaveValue("3,4");
+
+    // ---- «Pe puncte» like «Tabel»: numbered, the names in bold capitals, a one-pixel line between two — on paper too --------
+    const junction = await openPoint(page, "route", "Intersecția Stejeriș");
+    await expect(junction.getByTestId("plan-person-number")).toHaveText(["1.", "2."]);
+    await expect(junction.getByTestId("plan-person-name")).toHaveText([ana.name, radu.name]);
+    const people = junction.getByTestId("plan-person");
+    for (const media of ["screen", "print"] as const) {
+      await page.emulateMedia({ media });
+      for (let index = 0; index < 2; index++) {
+        await expect(junction.getByTestId("plan-person-name").nth(index)).toHaveCSS("font-weight", "700");
+        await expect(junction.getByTestId("plan-person-name").nth(index)).toHaveCSS("text-transform", "uppercase");
+      }
+      await expect(people.nth(0)).toHaveCSS("border-top-width", "0px");
+      await expect(people.nth(1)).toHaveCSS("border-top-width", "1px");
+      await expect(people.nth(1)).toHaveCSS("border-top-style", "solid");
+    }
+    await page.emulateMedia({ media: "screen" });
+    await fits(page);
+
+    // ---- The junction's people told: Ana and Radu, and Dan at the water; gone from the outbox ------------------------------
+    await openMail(page);
+    await mailSection(page).send.click();
+    await confirmDialog(page, QUESTION);
+    await toastSays(page, "3 voluntari anunțați.");
+    await allSent(eventId);
+
+    // ---- The junction's note written after: the point says how many get it at the next press, and the counts follow --------
+    await page.goto(`${planPath(eventId)}?view=points&open=${points.junction}#point-${points.junction}`);
+    await hydrated(page);
+    const junctionFold = junction.getByTestId("plan-point-edit");
+    await openFold(junctionFold);
+    await junctionFold.getByTestId("plan-point-edit-note-ro").fill("Direcționați spre stânga.");
+    await junctionFold.getByTestId("plan-point-edit-note-en").fill("Send the runners left.");
+    await junctionFold.getByTestId("plan-point-save").click();
+    await expect(page).toHaveURL(backTo(eventId, `view=points&open=${points.junction}`, `point-${points.junction}`), { timeout: 30_000 });
+    await toastSays(page, "Punct salvat.");
+    await hydrated(page);
+    const changed = junction.getByTestId("plan-point-note-changed");
+    await expect(changed).toHaveText("Nota s-a schimbat după ultimul email: 2 voluntari vor primi nota nouă la următorul „Trimite fiecăruia punctul lui”.");
+    await insideTheScreen(page, changed);
+    // Under the note, and only at this point: the water's people know theirs.
+    const order = await junction.evaluate((element) => {
+      const note = element.querySelector('[data-testid="plan-point-volunteer-note"]');
+      const line = element.querySelector('[data-testid="plan-point-note-changed"]');
+      return note && line ? note.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
+    });
+    expect(order).toBeTruthy();
+    await expect(page.getByTestId("plan-point-note-changed")).toHaveCount(1);
+    await page.emulateMedia({ media: "print" });
+    await expect(changed).toBeHidden();
+    await page.emulateMedia({ media: "screen" });
+    await openMail(page);
+    await expect(mailSection(page).counts).toHaveText("Scriem la: 2 · Își știu deja punctul: 1 · La un punct, dar fără adresă de email: 0 · Încă fără punct: 0");
+    await fits(page);
+
+    // ---- The next ordinary press writes to the junction's two — and to nobody else ----------------------------------------
+    const before = await pointMails(eventId);
+    await mailSection(page).send.click();
+    const question = page.getByRole("dialog", { name: QUESTION });
+    await expect(question.getByTestId("confirm-email")).toHaveText(`Pleacă 2 emailuri „Punctul tău de voluntar”, ${NOT_TOLD}`);
+    await expect(question.getByRole("checkbox", { name: AGAIN_BOX })).not.toBeChecked();
+    await confirmDialog(page, QUESTION);
+    await toastSays(page, "2 voluntari anunțați.");
+    const since = (await pointMails(eventId)).filter((row) => !before.some((old) => old.volunteerId === row.volunteerId && old.round === row.round));
+    expect(told(since)).toEqual([
+      { volunteerId: ana.id, checkpointId: points.junction, round: 2, to: ana.email, resend: false },
+      { volunteerId: radu.id, checkpointId: points.junction, round: 2, to: radu.email, resend: false },
+    ]);
+    expect(since.some((row) => row.volunteerId === dan.id)).toBe(false);
+    // On their way: told, and the line is gone.
+    await hydrated(page);
+    await expect(page.getByTestId("plan-point-note-changed")).toHaveCount(0);
+    await fits(page);
+  });
+
+  test("with scripts off, a refused «Modifică punctul» comes back in the page the POST draws: the sentence in that point's form, every box as typed, the shut folds showing it", async ({
+    page,
+    browser,
+  }) => {
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-g`);
+    const { eventId, points } = seeded;
+    await signIn(page, "Dev Moderator");
+    // The same Organizer, in a browser that runs no script: the folds open natively, the form posts as a plain POST.
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      baseURL: test.info().project.use.baseURL,
+      viewport: page.viewportSize() ?? undefined,
+      storageState: await page.context().storageState(),
+    });
+    try {
+      const plain = await context.newPage();
+      await plain.goto(`${planPath(eventId)}?view=points`);
+      const route = plain.locator('details[data-testid="plan-group"][data-group="route"]');
+      await route.locator(":scope > summary").click();
+      const junction = route.locator('details[data-testid="plan-point"]').filter({ has: plain.getByTestId("plan-point-name").filter({ hasText: "Intersecția Stejeriș" }) });
+      await junction.locator(":scope > summary").click();
+      const pencil = junction.getByTestId("plan-point-edit");
+      await pencil.locator(":scope > summary").click();
+      await pencil.getByTestId("plan-point-edit-coordinates").fill("45.64271, 25.58871");
+      await pencil.getByTestId("plan-point-edit-note-ro").fill("Doar în română.");
+      await pencil.getByTestId("plan-point-save").click();
+      await plain.waitForLoadState("load");
+
+      // The page the POST answered: one refusal, in the junction's own form — its folds arrived shut and show it all the same.
+      await expect(plain.getByTestId("form-refusal")).toHaveCount(1);
+      const refusal = pencil.getByTestId("form-refusal");
+      await expect(refusal).toBeVisible();
+      await expect(refusal).toContainText("Scrie nota pentru voluntari și în română, și în engleză, sau lasă ambele casete goale.");
+      expect(await pencil.getAttribute("open")).toBeNull();
+      // Every box as typed.
+      await expect(pencil.getByTestId("plan-point-edit-note-ro")).toHaveValue("Doar în română.");
+      await expect(pencil.getByTestId("plan-point-edit-note-en")).toHaveValue("");
+      await expect(pencil.getByTestId("plan-point-edit-note-en")).toHaveAttribute("aria-invalid", "true");
+      await expect(pencil.getByTestId("plan-point-edit-coordinates")).toHaveValue("45.64271, 25.58871");
+      await fits(plain);
+
+      // Nothing was written.
+      const [stored] = await withDatabase(
+        async (client) =>
+          (await client.query<{ latitude: string | null; note: string | null }>(`SELECT latitude::text AS latitude, volunteer_note_ro AS note FROM event_checkpoints WHERE id = $1`, [points.junction])).rows,
+      );
+      expect(stored).toEqual({ latitude: null, note: null });
+    } finally {
+      await context.close();
+    }
   });
 });

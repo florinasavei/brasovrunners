@@ -259,8 +259,9 @@ function planPointBoxes(form: FormData) {
 }
 
 /**
- * The two boxes of «Notă pentru voluntari» in «Modifică punctul» (§1009), as the service takes them — or nothing, for a form that
- * has neither (one drawn before them): the service then keeps the note the point has.
+ * The two boxes of «Notă pentru voluntari» (§1009) — in «Modifică punctul», and in «Adaugă un punct» since §NNN —, as the service
+ * takes them, or nothing for a form that has neither (one drawn before them): an edit then keeps the note the point has, an add
+ * adds the point with none.
  */
 function planPointNoteBoxes(form: FormData): { volunteerNoteRo?: string; volunteerNoteEn?: string } {
   const [ro, en] = [PLAN_POINT_BOXES.volunteerNoteRo, PLAN_POINT_BOXES.volunteerNoteEn];
@@ -268,10 +269,21 @@ function planPointNoteBoxes(form: FormData): { volunteerNoteRo?: string; volunte
 }
 
 /**
+ * The answer a refused press of a point's form is given as its own state (§315): everything typed, the box the rule names, and
+ * the sentence — `Admin.errors.<reason>`, with what it needs filled in (a rule of the boxes), or the reason a point no longer
+ * on the plan or coordinates in no shape read are said with, or the domain's code (a role that may not, an event not there).
+ */
+function refusedPoint(error: DomainError, form: FormData): FormOutcome {
+  const outcome = refused(error, form);
+  return error instanceof PlanPointRefusal ? { ...outcome, error: error.reason, errorValues: error.values } : { ...outcome, error: planPointRefusalCode(error) };
+}
+
+/**
  * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961; the owner, 2026-11-17: «vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish
  * și pe traseu»): a point of the plan's own, on the route — with its kilometre — or at the start–finish, with its name and,
- * when the organizers know them, its coordinates.
+ * when the organizers know them, its coordinates — and, since §NNN, its «Notă pentru voluntari» in both languages, held by the
+ * service to the rules «Modifică punctul» holds it to and stored with the point.
  *
  * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
  * BR-REQ-060-01), before the service asks it again and holds what was typed to the rules. A refusal does not redirect: it
@@ -291,11 +303,10 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
   let added: string;
   try {
     const actor = await requireStaffCapability(canManageVolunteers);
-    added = (await changePlanPoint(getDb(), actor, { kind: "add", eventId, ...planPointBoxes(form) }, new Date())).id;
+    added = (await changePlanPoint(getDb(), actor, { kind: "add", eventId, ...planPointBoxes(form), ...planPointNoteBoxes(form) }, new Date())).id;
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    const outcome = refused(error, form);
-    return error instanceof PlanPointRefusal ? { ...outcome, error: error.reason, errorValues: error.values } : { ...outcome, error: planPointRefusalCode(error) };
+    return refusedPoint(error, form);
   }
   await flashOutcome({ saved: "planPointAdded" });
   revalidatePath(path);
@@ -310,12 +321,15 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
  * both or neither and `PLAN_POINT_NOTE_MAX` characters. The capability is asked here by name, at the door, and the service asks it again.
  *
  * A press that went through comes back to its point, in the view it was pressed in, the point and its group drawn open
- * (`open=`, §974), its outcome in the toast; a refused one — a name left empty, a kilometre that is no number, coordinates in
- * no shape read, the point deleted meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its
- * code in the address, as every press of this page does (§953). It emails nobody, and the people who stand at the point stay
- * there.
+ * (`open=`, §974), its outcome in the toast. A refused one — a note in one language or too long, a name left empty, a
+ * kilometre that is no number, coordinates in no shape read, the point deleted meanwhile, a role that may not — does not
+ * redirect since §NNN (amending §953 for this form): it comes back as the form's own state (§315), as «Adaugă un punct»'s
+ * does, so every box keeps what was typed — the note's two boxes too —, the sentence is said at the form, naming its box, and
+ * the point's fold stays open, with scripts or without (`BOXED_DISCLOSURE_SX` and the pencil's own fold show a refusal shut).
+ * It emails nobody, and the people who stand at the point stay there; a note changed here is told to the point's people by the
+ * next «Trimite fiecăruia punctul lui» (§NNN).
  */
-export async function editPlanPointAction(form: FormData): Promise<void> {
+export async function editPlanPointAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
@@ -324,17 +338,17 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
   const pointId = field(form, "pointId");
 
-  let refusal: string | null = null;
+  let changed: boolean;
   try {
     const actor = await requireStaffCapability(canManageVolunteers);
-    const result = await changePlanPoint(getDb(), actor, { kind: "edit", eventId, id: pointId, ...planPointBoxes(form), ...planPointNoteBoxes(form) }, new Date());
-    await flashOutcome({ saved: result.changed ? "planPointSaved" : "volunteerUnchanged" });
+    changed = (await changePlanPoint(getDb(), actor, { kind: "edit", eventId, id: pointId, ...planPointBoxes(form), ...planPointNoteBoxes(form) }, new Date())).changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    refusal = planPointRefusalCode(error);
+    return refusedPoint(error, form);
   }
+  await flashOutcome({ saved: changed ? "planPointSaved" : "volunteerUnchanged" });
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal, pointId) : planAddress(path, isUuid(pointId) ? { view, open: pointId, hash: `point-${pointId}` } : { view, hash: LIST_ANCHOR }));
+  redirect(planAddress(path, isUuid(pointId) ? { view, open: pointId, hash: `point-${pointId}` } : { view, hash: LIST_ANCHOR }));
 }
 
 /**

@@ -29,7 +29,7 @@ import { PLAN_LINK_BOXES, planLinkShort, planMapsRefusalValues } from "@/modules
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerPlan, type VolunteerPlanPerson, type VolunteerPlanPoint } from "@/modules/volunteers/plan";
 import { coordinatesOf, PLAN_POINT_BOXES, type PlanPoint, planPointRefusalValues } from "@/modules/volunteers/plan-points";
-import { previewVolunteerPoints } from "@/modules/volunteers/point-mail";
+import { readVolunteerPointMail } from "@/modules/volunteers/point-mail";
 import PlanPictureUpload from "@/modules/volunteers/ui/PlanPictureUpload";
 import type { VolunteerPlanNote } from "@/modules/volunteers/volunteer-notes";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -43,7 +43,7 @@ import { isUuid } from "@/shared/ids";
 import { noteLine } from "@/shared/notes/note-text";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX, REFUSAL_UNFOLDED_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
@@ -116,6 +116,24 @@ const TABLE_PEOPLE_SX = {
 const TABLE_PERSON_NAME_SX = { fontWeight: 700, overflowWrap: "anywhere", textTransform: "uppercase" } as const;
 
 /**
+ * A point's people on «Pe puncte», drawn like «Tabel»'s (§NNN, amending §1009): the numbered list with a thin line — the house's
+ * divider colour, one pixel — above every person but the first, the room above it the list's own spacing and the same under it;
+ * on the screen and on paper alike. «Fără punct» is no point's list: no numbers, no lines.
+ */
+const POINT_PEOPLE_SX = {
+  listStyle: "none",
+  m: 0,
+  p: 0,
+  "& > li + li": { borderTop: "1px solid", borderColor: "divider", pt: 1 },
+} as const;
+
+/** A person's name at a point on «Pe puncte» (§NNN): as the table draws it — in bold and in capitals, the words as typed. */
+const POINT_PERSON_NAME_SX = { fontWeight: 700, overflowWrap: "break-word", textTransform: "uppercase" } as const;
+
+/** A person's name under «Fără punct»: as it always was. */
+const PERSON_NAME_SX = { fontWeight: 600, overflowWrap: "break-word" } as const;
+
+/**
  * «Notă pentru voluntari» where the plan draws it (§1009): a quiet block under the point's name — in its fold on «Pe puncte», in
  * the «Punct» cell of «Punctele, pe scurt» —, its label in bold, the note's own line breaks kept and a long word broken, so it
  * wraps inside the cell and never widens the table, a phone's 320 pixels included; on paper as on the screen. Its own weight and
@@ -174,6 +192,12 @@ const LINK_SCOPE = "plan-link-add";
 
 /** The prefix of the ids the boxes of «Adaugă un punct» carry, which its refusal's summary links to (`fieldId`). */
 const ADD_SCOPE = "plan-point-add";
+
+/**
+ * …and of one point's «Modifică punctul» (§NNN): one form a point, each its own prefix, so two points' boxes never share an id and
+ * a refusal's summary links to the box of the point it was pressed on.
+ */
+const editScopeOf = (pointId: string) => `plan-point-edit-${pointId}`;
 
 /** The glyph of «Modifică punctul», by its name in the registry — drawn here, on the server, never handed to an island. */
 const EditIcon = ACTION_ICONS.edit;
@@ -237,11 +261,14 @@ const MAPS_ON_PAPER = {
 /**
  * «Modifică punctul» (§974; the owner: «și în loc de „modifică punctul” pune doar buton de edit»): the house's pencil, a
  * 44-pixel square at the right of the point's people — a native fold whose bar is the glyph alone, so it opens without a
- * script —, and open, the point's form under it across the whole row, the pencil still at its right. Never on paper.
+ * script —, and open, the point's form under it across the whole row, the pencil still at its right. Never on paper. Its form
+ * is a kept one since §NNN: a refusal comes back inside it, and a refusal is never folded away (`REFUSAL_UNFOLDED_SX`, §336) —
+ * with scripts off the refused POST draws the page afresh, the fold shut, and its body is shown across the row all the same.
  */
 const PENCIL_FOLD_SX = {
   flex: "none",
-  "&[open]": { flexBasis: "100%" },
+  "&[open], &:has([id^='form-refusal'])": { flexBasis: "100%" },
+  ...REFUSAL_UNFOLDED_SX,
   "& > summary": {
     display: "flex",
     alignItems: "center",
@@ -321,11 +348,17 @@ const PENCIL_FOLD_SX = {
  *
  * «Notă pentru voluntari» and the people as a list (§1009; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
  * voluntari"», «vreau sa numerotez aici voluntarii si sa fac cu bold numele lor», «vreau un separator acolo la voluntari sa se
- * vada ca e o lista»): every point may carry what everybody standing there has to know, in both languages, written in its
- * «Modifică punctul» and drawn under its name — in its fold on «Pe puncte», in the «Punct» cell of «Punctele, pe scurt» — on
- * the screen and on paper (`volunteerNoteBlock`); the email of each person placed there says it too (`point-mail.ts`). A
- * point's people are numbered in its order, «1.», «2.», … — in the table each name in bold with a thin line between two
- * people (`TABLE_PEOPLE_SX`), on «Pe puncte» the same numbers before the names.
+ * vada ca e o lista»): every point may carry what everybody standing there has to know, in both languages, written in
+ * «Adaugă un punct» with the point or later in its «Modifică punctul» (§NNN), and drawn under its name — in its fold on «Pe
+ * puncte», in the «Punct» cell of «Punctele, pe scurt» — on the screen and on paper (`volunteerNoteBlock`); the email of each
+ * person placed there says it too (`point-mail.ts`), and a note changed after they were told is told to them again by the
+ * next «Trimite fiecăruia punctul lui» — said under the note on «Pe puncte» (`noteChangedLine`, §NNN). A point's people are
+ * numbered in its order, «1.», «2.», …, each name in bold and in capitals with a thin line between two people — in the table
+ * (`TABLE_PEOPLE_SX`) and on «Pe puncte» alike (`POINT_PEOPLE_SX`, §NNN).
+ *
+ * «Modifică punctul» keeps what was typed (§NNN, amending §953 for this form): one kept form a point (`ActionForm`, its own
+ * `editScopeOf`), whose refusal comes back as the form's own state, as «Adaugă un punct»'s does — every box as typed, the
+ * sentence at the form naming its box, the fold open.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -339,15 +372,17 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
   const db = getDb();
   let plan;
-  // The four numbers of «Trimite fiecăruia punctul lui» (§956), counted by the service exactly as the press counts them.
-  let mail;
+  // The four numbers of «Trimite fiecăruia punctul lui» (§956), counted by the service exactly as the press counts them — and per
+  // point how many there were told it before its note last changed (§NNN), which the point says under its note.
+  let pointMail;
   try {
     plan = await readVolunteerPlan(db, actor, id);
-    mail = await previewVolunteerPoints(db, actor, id);
+    pointMail = await readVolunteerPointMail(db, actor, id);
   } catch (error) {
     if (isDomainError(error) && (error.code === "NOT_FOUND" || error.code === "FORBIDDEN")) notFound();
     throw error;
   }
+  const mail = pointMail.counts;
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");
   // The day in words, or «Data se anunță mai târziu» while it is left blank (§545).
@@ -398,6 +433,54 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           {t("volunteers.plan.points.volunteerNote")}
         </Box>{" "}
         <span data-testid={`${testId}-words`}>{note}</span>
+      </Typography>
+    );
+  };
+  /**
+   * The two boxes of «Notă pentru voluntari» (§1009) — in a point's «Modifică punctul», filled with what the point has, and in «Adaugă
+   * un punct», empty (§NNN): Romanian, then English, both or neither (the service refuses one alone), the browser stopping each at
+   * `PLAN_POINT_NOTE_MAX` characters; plain text, a line break typed a line break on the plan and in the email. Kept boxes: a
+   * refusal hands back what was typed in them (§315).
+   */
+  const volunteerNoteBoxes = (testId: string, point?: PlanPoint) => (
+    <>
+      <RecallField
+        name={PLAN_POINT_BOXES.volunteerNoteRo}
+        label={t("volunteers.plan.points.volunteerNoteRo")}
+        helperText={t("volunteers.plan.points.volunteerNoteHelper")}
+        defaultValue={point?.volunteerNoteRo ?? ""}
+        multiline
+        minRows={2}
+        fullWidth
+        size="small"
+        slotProps={{ htmlInput: { maxLength: PLAN_POINT_NOTE_MAX, "data-testid": `${testId}-ro` } }}
+      />
+      <RecallField
+        name={PLAN_POINT_BOXES.volunteerNoteEn}
+        label={t("volunteers.plan.points.volunteerNoteEn")}
+        helperText={t("volunteers.plan.points.volunteerNoteHelperBoth", { max: String(PLAN_POINT_NOTE_MAX) })}
+        defaultValue={point?.volunteerNoteEn ?? ""}
+        multiline
+        minRows={2}
+        fullWidth
+        size="small"
+        slotProps={{ htmlInput: { maxLength: PLAN_POINT_NOTE_MAX, "data-testid": `${testId}-en` } }}
+      />
+    </>
+  );
+  /**
+   * Under a point's note on «Pe puncte», when it changed after some of the point's people were told (§NNN): one quiet line saying how
+   * many of them the next «Trimite fiecăruia punctul lui» writes to again for it — «Nota s-a schimbat după ultimul email: …», or,
+   * for a note taken off, that they get the point without it. Counted by the press's own rule (`readVolunteerPointMail`); nothing
+   * for a point with nobody to tell again, and never on paper: it is about emails, not about the day.
+   */
+  const noteChangedLine = (point: PlanPoint) => {
+    const count = pointMail.toldBeforeTheNote.get(point.id) ?? 0;
+    if (count === 0) return null;
+    const changed = (locale === "ro" ? point.volunteerNoteRo : point.volunteerNoteEn) !== null ? "noteChanged" : "noteRemoved";
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word", ...NOT_ON_PAPER }} data-testid="plan-point-note-changed">
+        {t(`volunteers.plan.points.${changed}.${countForm(count, locale)}`, { count })}
       </Typography>
     );
   };
@@ -576,20 +659,23 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       <input type="hidden" name="view" value={view} />
     </>
   );
-  // «Adaugă un punct» (§961): the words its refusal's summary says, and the label of each box it can name.
+  // «Adaugă un punct» (§961) and each point's «Modifică punctul» (§NNN): the words a refusal's summary says, and the label of each
+  // box it can name — the note's two among them. One object for every form: the page hands it over once.
   const pointBoxes = {
     [PLAN_POINT_BOXES.place]: t("volunteers.plan.points.place"),
     [PLAN_POINT_BOXES.name]: t("volunteers.plan.points.name"),
     [PLAN_POINT_BOXES.km]: t("volunteers.plan.points.km"),
     [PLAN_POINT_BOXES.coordinates]: t("volunteers.plan.points.coordinates"),
+    [PLAN_POINT_BOXES.volunteerNoteRo]: t("volunteers.plan.points.volunteerNoteRo"),
+    [PLAN_POINT_BOXES.volunteerNoteEn]: t("volunteers.plan.points.volunteerNoteEn"),
   };
-  const addRefusal = await refusalMessages(pointBoxes);
+  const pointRefusal = await refusalMessages(pointBoxes);
   // The form is drawn anew whenever the plan's points change, so the boxes are empty for the next point — while a refusal,
   // which changes no point, keeps the form and what was typed in it.
   const addFormKey = plan.points.map(({ point }) => point.id).join(",");
 
   /*
-    «Trimite fiecăruia punctul lui» (§956): from the four numbers of its question (`previewVolunteerPoints`, read above with
+    «Trimite fiecăruia punctul lui» (§956): from the four numbers of its question (`readVolunteerPointMail`, read above with
     the plan), what the press can be:
 
     - somebody still to tell, nobody told yet → the plain question;
@@ -661,7 +747,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   /**
    * One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct» —, and
    * under it the organizers' own words about them (`ownWordsOf`). At a point, `place` is the person's place in the point's list
-   * (§1009), said before the name as the table says it: «1.», «2.», …; under «Fără punct» nobody is numbered.
+   * (§1009), said before the name as the table says it: «1.», «2.», …, and the name as the table draws it, in bold and in capitals
+   * (§NNN); under «Fără punct» nobody is numbered and the name is as it was.
    */
   const personWords = (person: VolunteerPlanPerson, place?: number) => {
     const roles = rolesOf(person);
@@ -672,7 +759,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
             {personNumber(place)}
           </Typography>
         )}
-        <Typography component="span" sx={{ fontWeight: 600, overflowWrap: "break-word" }} data-testid="plan-person-name">
+        <Typography component="span" sx={place === undefined ? PERSON_NAME_SX : POINT_PERSON_NAME_SX} data-testid="plan-person-name">
           <Link href={{ pathname: "/admin/volunteers/[id]", params: { id: person.id } }}>{person.name}</Link>
         </Typography>
         {person.bibNumber !== null && (
@@ -734,8 +821,10 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
             </Typography>
           </Box>
           <Stack spacing={1.5}>
-            {/* Under the bar, the point's «Notă pentru voluntari» (§1009): what everybody standing here has to know — printed. */}
+            {/* Under the bar, the point's «Notă pentru voluntari» (§1009): what everybody standing here has to know — printed. Under
+                it, while somebody here was told the point before the note changed, how many the next press tells it again (§NNN). */}
             {volunteerNoteBlock(point, "fold", "plan-point-volunteer-note")}
+            {noteChangedLine(point)}
             {/* A point of the route that only the plan has: said so, quietly; then what an editor's point offers, and its note. */}
             {((point.planOnly && !point.startFinish) || facts.length > 0) && (
               <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }}>
@@ -765,8 +854,9 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                     {t("volunteers.plan.nobodyHere")}
                   </Typography>
                 ) : (
-                  // Numbered in the point's order, as the table numbers them (§1009): «1.», «2.», … before each name.
-                  <Stack spacing={1} component="ol" role="list" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="plan-point-people">
+                  // Numbered in the point's order, as the table numbers them (§1009): «1.», «2.», … before each name, the name in bold
+                  // and in capitals, a thin line between two people (§NNN) — on paper too.
+                  <Stack spacing={1} component="ol" role="list" sx={POINT_PEOPLE_SX} data-testid="plan-point-people">
                     {people.map((person, at) => (
                       <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
                         {personWords(person, at + 1)}
@@ -788,8 +878,9 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
               {/* «Modifică punctul» (§961, §974): the pencil alone, named for a reader who does not see it and in its tooltip. A
                   point added here is changed whole, its kind included; of an editor's point only where it is: its name and
-                  kilometre are public, and are the editor's. A refused save lands at the page's alert with its code, as every
-                  press of this page (§953). */}
+                  kilometre are public, and are the editor's. A kept form since §NNN, one a point (its own `editScopeOf`): a refused
+                  save comes back as the form's own state — the sentence first in the form, naming its box, and every box as it
+                  was typed — and with scripts off the same, in the page the refused POST draws (§315). */}
               <Box component="details" sx={PENCIL_FOLD_SX} data-testid="plan-point-edit">
                 <Box component="summary" aria-label={editFor} title={editFor} data-testid="plan-point-edit-toggle">
                   <EditIcon fontSize="small" aria-hidden />
@@ -798,85 +889,71 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                   <Typography component="p" variant="subtitle2" sx={{ mb: 1.5 }}>
                     {t("volunteers.plan.points.edit")}
                   </Typography>
-                  <Stack component="form" action={editPlanPointAction} spacing={2} sx={{ alignItems: "flex-start" }} data-testid="plan-point-edit-form">
+                  <ActionForm action={editPlanPointAction} messages={pointRefusal} scope={editScopeOf(point.id)} data-testid="plan-point-edit-form">
                     {hidden}
                     <input type="hidden" name="pointId" value={point.id} />
-                    {point.planOnly ? (
-                      <>
-                        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%" }}>
-                          <Typography component="legend" variant="body2" sx={{ p: 0, fontWeight: 600 }}>
-                            {t("volunteers.plan.points.place")}
-                          </Typography>
-                          <RadioField name={PLAN_POINT_BOXES.place} value="route" defaultChecked={!point.startFinish}>
-                            {t("volunteers.plan.points.placeRoute")}
-                          </RadioField>
-                          <RadioField name={PLAN_POINT_BOXES.place} value="startFinish" defaultChecked={point.startFinish}>
-                            {t("volunteers.plan.points.placeStartFinish")}
-                          </RadioField>
-                        </Box>
-                        <TextField
-                          name={PLAN_POINT_BOXES.name}
-                          label={t("volunteers.plan.points.name")}
-                          defaultValue={point.nameRo}
-                          required
-                          fullWidth
-                          size="small"
-                          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX, "data-testid": "plan-point-edit-name" } }}
-                        />
-                        <TextField
-                          name={PLAN_POINT_BOXES.km}
-                          label={t("volunteers.plan.points.km")}
-                          helperText={t("volunteers.plan.points.kmHelper")}
-                          defaultValue={point.startFinish ? "" : kmBox(point.km)}
-                          fullWidth
-                          size="small"
-                          slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12, "data-testid": "plan-point-edit-km" } }}
-                        />
-                      </>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary" data-testid="plan-point-editors">
-                        {/* The link says the editor's card by its own name: the sentence has already said «în editorul evenimentului». */}
-                        {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("checkpoints.title")}</Link>
-                      </Typography>
-                    )}
-                    <TextField
-                      name={PLAN_POINT_BOXES.coordinates}
-                      label={t("volunteers.plan.points.coordinates")}
-                      helperText={t("volunteers.plan.points.coordinatesHelper")}
-                      defaultValue={where ? formatCoordinates(where) : ""}
-                      fullWidth
-                      size="small"
-                      slotProps={{ htmlInput: { "data-testid": "plan-point-edit-coordinates" } }}
-                    />
-                    {/* «Notă pentru voluntari» (§1009), of any point — an editor's too: what everybody standing here has to know, in
-                        Romanian and in English, both or neither (the service refuses one alone), the browser stopping each box at
-                        its most. Plain text: a line break typed is a line break on the plan and in the email. */}
-                    <TextField
-                      name={PLAN_POINT_BOXES.volunteerNoteRo}
-                      label={t("volunteers.plan.points.volunteerNoteRo")}
-                      helperText={t("volunteers.plan.points.volunteerNoteHelper")}
-                      defaultValue={point.volunteerNoteRo ?? ""}
-                      multiline
-                      minRows={2}
-                      fullWidth
-                      size="small"
-                      slotProps={{ htmlInput: { maxLength: PLAN_POINT_NOTE_MAX, "data-testid": "plan-point-edit-note-ro" } }}
-                    />
-                    <TextField
-                      name={PLAN_POINT_BOXES.volunteerNoteEn}
-                      label={t("volunteers.plan.points.volunteerNoteEn")}
-                      helperText={t("volunteers.plan.points.volunteerNoteHelperBoth", { max: String(PLAN_POINT_NOTE_MAX) })}
-                      defaultValue={point.volunteerNoteEn ?? ""}
-                      multiline
-                      minRows={2}
-                      fullWidth
-                      size="small"
-                      slotProps={{ htmlInput: { maxLength: PLAN_POINT_NOTE_MAX, "data-testid": "plan-point-edit-note-en" } }}
-                    />
-                    <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-point-save">
-                      {t("volunteers.plan.points.save")}
-                    </GlyphButton>
-                  </Stack>
+                    <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
+                      {point.planOnly ? (
+                        <>
+                          <Box
+                            component="fieldset"
+                            id={fieldId(PLAN_POINT_BOXES.place, editScopeOf(point.id))}
+                            tabIndex={-1}
+                            sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%", scrollMarginTop: 16 }}
+                          >
+                            <Typography component="legend" variant="body2" sx={{ p: 0, fontWeight: 600 }}>
+                              {t("volunteers.plan.points.place")}
+                            </Typography>
+                            <RadioField name={PLAN_POINT_BOXES.place} value="route" defaultChecked={!point.startFinish}>
+                              {t("volunteers.plan.points.placeRoute")}
+                            </RadioField>
+                            <RadioField name={PLAN_POINT_BOXES.place} value="startFinish" defaultChecked={point.startFinish}>
+                              {t("volunteers.plan.points.placeStartFinish")}
+                            </RadioField>
+                          </Box>
+                          <RecallField
+                            name={PLAN_POINT_BOXES.name}
+                            label={t("volunteers.plan.points.name")}
+                            defaultValue={point.nameRo}
+                            required
+                            fullWidth
+                            size="small"
+                            slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX, "data-testid": "plan-point-edit-name" } }}
+                          />
+                          <RecallField
+                            name={PLAN_POINT_BOXES.km}
+                            label={t("volunteers.plan.points.km")}
+                            helperText={t("volunteers.plan.points.kmHelper")}
+                            defaultValue={point.startFinish ? "" : kmBox(point.km)}
+                            fullWidth
+                            size="small"
+                            slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12, "data-testid": "plan-point-edit-km" } }}
+                          />
+                        </>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" data-testid="plan-point-editors">
+                          {/* The link says the editor's card by its own name: the sentence has already said «în editorul evenimentului». */}
+                          {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("checkpoints.title")}</Link>
+                        </Typography>
+                      )}
+                      <RecallField
+                        name={PLAN_POINT_BOXES.coordinates}
+                        label={t("volunteers.plan.points.coordinates")}
+                        helperText={t("volunteers.plan.points.coordinatesHelper")}
+                        defaultValue={where ? formatCoordinates(where) : ""}
+                        fullWidth
+                        size="small"
+                        slotProps={{ htmlInput: { "data-testid": "plan-point-edit-coordinates" } }}
+                      />
+                      {/* «Notă pentru voluntari» (§1009), of any point — an editor's too: what everybody standing here has to know, in
+                          Romanian and in English, both or neither (the service refuses one alone), the browser stopping each box at
+                          its most. Plain text: a line break typed is a line break on the plan and in the email. */}
+                      {volunteerNoteBoxes("plan-point-edit-note", point)}
+                      <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-point-save">
+                        {t("volunteers.plan.points.save")}
+                      </GlyphButton>
+                    </Stack>
+                  </ActionForm>
                   {/* «Șterge punctul», last and only on a point added here: it asks first, with the point's name and how many people
                       stand there — they stay on the plan, at no point. An editor's point is deleted in the editor. */}
                   {point.planOnly && (
@@ -1361,7 +1438,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           {t("volunteers.plan.points.help")} {t("volunteers.plan.points.helpCoordinates")} {t("volunteers.plan.points.helpPrivate")}
         </Typography>
         <Box sx={{ mt: 1.5, maxWidth: 560 }}>
-          <ActionForm key={addFormKey} action={addPlanPointAction} messages={addRefusal} scope={ADD_SCOPE} data-testid="plan-point-add-form">
+          <ActionForm key={addFormKey} action={addPlanPointAction} messages={pointRefusal} scope={ADD_SCOPE} data-testid="plan-point-add-form">
             {hidden}
             <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
               <Box component="fieldset" id={fieldId(PLAN_POINT_BOXES.place, ADD_SCOPE)} tabIndex={-1} sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%", scrollMarginTop: 16 }}>
@@ -1399,6 +1476,9 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                 size="small"
                 slotProps={{ htmlInput: { "data-testid": "plan-point-add-coordinates" } }}
               />
+              {/* «Notă pentru voluntari» (§NNN, amending §1009): the point's note given with the point, as «Modifică punctul» gives it
+                  later — the same two boxes, after the coordinates, empty. */}
+              {volunteerNoteBoxes("plan-point-add-note")}
               <GlyphButton icon="add" type="submit" variant="contained" size="medium" sx={TAP_TARGET} data-testid="plan-point-add">
                 {t("volunteers.plan.points.add")}
               </GlyphButton>

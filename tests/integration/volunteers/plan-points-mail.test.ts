@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
@@ -12,7 +12,7 @@ import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { addVolunteerPlanPicture, readVolunteerPlan } from "@/modules/volunteers/plan";
 import { changePlanPoint } from "@/modules/volunteers/plan-points";
-import { previewVolunteerPoints, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
+import { previewVolunteerPoints, readVolunteerPointMail, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -349,7 +349,8 @@ describe("§1009 the message says the point's «Notă pentru voluntari»", () =>
     // Taken off: the message is the one it was, to the byte.
     await writeNote(race.points.junction, { ro: "", en: "" });
     expect(await render(row)).toEqual(before);
-    // Nobody «already told» is told again because the note changed: «Trimite din nou tuturor» is how a new note is sent.
+    // Changed since §NNN: a changed note un-tells whoever was told by a message that LEFT before it — but these still wait, and
+    // say the note as it is when they leave, so nobody is to write again.
     expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
   });
 });
@@ -434,3 +435,135 @@ describe("§961 who already knows their point is not changed by its coordinates"
     expect(en.Admin.emails.whenMore.VOLUNTEER_POINT).toContain("The text is the same at the start–finish and on the route");
   });
 });
+
+/*
+  §NNN (amending §1009 and §961's rule for the note), BR-REQ-080-02 — a changed «Notă pentru voluntari» re-tells that point's people at
+  the next ordinary press: whoever was told the point by a message that left before the note last changed — written, changed in
+  either language, taken off — is «de anunțat» again, and «Trimite fiecăruia punctul lui» writes to them (and to whoever was not told
+  anyway), each with their next telling. A message still waiting, a save that leaves the words as they were, a name, a kilometre or
+  coordinates changed, and another point's note change nobody.
+*/
+describe("§NNN a changed note is told again at the next ordinary press", () => {
+  const NOTE = { ro: "Direcționați spre stânga la intersecție.", en: "Send the runners left at the junction." };
+  /** A note written on a point at an instant of the test's clock (the save's own `now`). */
+  const noteAt = (id: string, minutes: number, note: { ro: string; en: string } = NOTE, boxes: Partial<PointBoxes> = {}) =>
+    changePlanPoint(db, staff.MODERATOR!, { kind: "edit", eventId: race.raceId, id, place: "route", name: "", km: "", coordinates: "", volunteerNoteRo: note.ro, volunteerNoteEn: note.en, ...boxes }, at(minutes));
+  /** Every queued message marked as left, at an instant of the test's clock. */
+  const allSentAt = async (minutes: number) =>
+    db.update(emailOutbox).set({ status: "SENT", sentAt: at(minutes), attemptCount: 1 }).where(and(eq(emailOutbox.messageType, "VOLUNTEER_POINT"), eq(emailOutbox.status, "PENDING")));
+  const pointMail = () => readVolunteerPointMail(db, staff.MODERATOR!, race.raceId);
+  /** Every telling queued, as «ana:2» — the person, the round, and «:resend» for a resend by hand —, sorted: rows of one instant have no order. */
+  const rounds = async () => {
+    const names = new Map(Object.entries(race.people).map(([name, id]) => [id, name]));
+    return (await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_POINT")))
+      .map((row) => `${names.get(payloadOf(row as OutboxRow).volunteerId)}:${payloadOf(row as OutboxRow).round}${row.isManualResend ? ":resend" : ""}`)
+      .sort();
+  };
+
+  it("makes whoever was told the point before its note changed «de anunțat» again, and the next ordinary press writes to them alone", async () => {
+    // Ana at the junction, Dan at the water, Ion at the bridge: told, the messages gone at minute 1.
+    await press();
+    await allSentAt(1);
+    expect(await preview()).toEqual({ toWrite: 0, told: 3, noAddress: 1, unplaced: 1 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map());
+
+    // The junction's note written at minute 5: Ana was told before it; Zoe, there with no address, is the organizers' as ever.
+    await noteAt(race.points.junction, 5);
+    expect(await preview()).toEqual({ toWrite: 1, told: 2, noAddress: 1, unplaced: 1 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map([[race.points.junction, 1]]));
+
+    // The ordinary press: Ana's second telling, and nobody else's — no «din nou tuturor» asked.
+    expect(await press({ now: at(6) })).toEqual({ toWrite: 1, told: 2, noAddress: 1, unplaced: 1, queued: 1, again: false });
+    expect(await rounds()).toEqual(["ana:1", "ana:2", "dan:1", "ion:1"]);
+    // On its way, she is told; and what leaves says the new note.
+    expect(await preview()).toEqual({ toWrite: 0, told: 3, noAddress: 1, unplaced: 1 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map());
+    expect((await render(await mailOf(race.people.ana, 2), at(7))).text).toContain(`Notă pentru voluntari: ${NOTE.ro}`);
+    // Gone too, at minute 7, after the note: told, and a press writes to nobody.
+    await allSentAt(7);
+    await expect(press({ now: at(8) })).rejects.toMatchObject({ code: "VOLUNTEER_POINTS_ALL_TOLD" });
+  });
+
+  it("re-tells for a note changed in either language and for a note taken off, each a telling of its own", async () => {
+    await noteAt(race.points.junction, 0);
+    await press({ now: at(1) });
+    await allSentAt(2);
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
+    // The English half alone.
+    await noteAt(race.points.junction, 3, { ro: NOTE.ro, en: "Send the runners right at the junction." });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map([[race.points.junction, 1]]));
+    expect(await press({ now: at(4) })).toMatchObject({ queued: 1 });
+    await allSentAt(5);
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
+    // Taken off: told it again too — the point, with no note now.
+    await noteAt(race.points.junction, 6, { ro: "", en: "" });
+    expect(await preview()).toMatchObject({ toWrite: 1, told: 2 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map([[race.points.junction, 1]]));
+    expect(await press({ now: at(7) })).toMatchObject({ queued: 1 });
+    expect((await rounds()).filter((one) => one.startsWith("ana:"))).toEqual(["ana:1", "ana:2", "ana:3"]);
+    expect(notesOfMail((await render(await mailOf(race.people.ana, 3), at(8))).text)).toEqual([]);
+  });
+
+  it("keeps told whoever was told after the note changed, and whoever has a message still waiting — it says the note as it leaves", async () => {
+    // Written first, told after: told.
+    await noteAt(race.points.junction, 0);
+    await press({ now: at(1) });
+    await allSentAt(2);
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
+    // Pressed, not gone yet, and the note changed meanwhile: still told — the message is drawn when it leaves.
+    await noteAt(race.points.water, 3);
+    expect(await preview()).toMatchObject({ toWrite: 1, told: 2 });
+    await press({ now: at(4) });
+    await noteAt(race.points.water, 5, { ro: "Paharele pe masa a doua.", en: "The cups on the second table." });
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map());
+    expect((await render(await mailOf(race.people.dan, 2), at(6))).text).toContain("Notă pentru voluntari: Paharele pe masa a doua.");
+    // …and gone after the change: told.
+    await allSentAt(6);
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
+  });
+
+  it("changes nobody for a save that leaves the words as they were, for a name, a kilometre or coordinates — and another point's people are not touched", async () => {
+    await place(race.people.radu, own.spring);
+    await noteAt(race.points.junction, 0);
+    await noteAt(own.spring, 0, NOTE, { name: "Izvor", km: "3,4" });
+    await press({ now: at(1) });
+    await allSentAt(2);
+    expect(await preview()).toEqual({ toWrite: 0, told: 4, noAddress: 1, unplaced: 0 });
+    // The same words, as a browser posts them; then the point's name, kilometre and coordinates.
+    await noteAt(race.points.junction, 3, { ro: ` ${NOTE.ro} `, en: NOTE.en });
+    await noteAt(own.spring, 4, NOTE, { name: "Izvorul rece", km: "4,5", coordinates: PIATA_TYPED });
+    await changePlanPoint(db, staff.MODERATOR!, { kind: "edit", eventId: race.raceId, id: race.points.water, place: "route", name: "", km: "", coordinates: PIATA_TYPED }, at(5));
+    expect(await preview()).toEqual({ toWrite: 0, told: 4, noAddress: 1, unplaced: 0 });
+    // The water's note changed: Dan alone is to write — Ana at the junction, Ion at the bridge and Radu at the spring stay told.
+    await noteAt(race.points.water, 6);
+    expect(await preview()).toEqual({ toWrite: 1, told: 3, noAddress: 1, unplaced: 0 });
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map([[race.points.water, 1]]));
+    expect(await press({ now: at(7) })).toMatchObject({ queued: 1 });
+    expect((await rounds()).filter((one) => !one.endsWith(":1"))).toEqual(["dan:2"]);
+  });
+
+  it("counts a point's people told before its note apart from those never told, and «Trimite din nou tuturor» still writes to everybody", async () => {
+    await press();
+    await allSentAt(1);
+    // Radu placed at the junction after the send: never told. Then the junction's note changes.
+    await place(race.people.radu, race.points.junction);
+    await noteAt(race.points.junction, 2);
+    expect(await preview()).toEqual({ toWrite: 2, told: 2, noAddress: 1, unplaced: 0 });
+    // The line under the note counts Ana alone: Radu was told nothing, old or new.
+    expect((await pointMail()).toldBeforeTheNote).toEqual(new Map([[race.points.junction, 1]]));
+    // «Din nou tuturor»: everybody at a point, those still to write as first-hand messages, those told as resends.
+    expect(await press({ now: at(3), again: true })).toMatchObject({ queued: 4, again: true });
+    expect(await rounds()).toEqual(["ana:1", "ana:2", "dan:1", "dan:2:resend", "ion:1", "ion:2:resend", "radu:1"]);
+  });
+
+  it("is refused to anybody who does not work the volunteers, like the four numbers", async () => {
+    for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
+      await expect(readVolunteerPointMail(db, { role }, race.raceId), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    await expect(readVolunteerPointMail(db, staff.MODERATOR!, "not-an-id")).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+/** «Notă pentru voluntari» lines of a message's plain text. */
+const notesOfMail = (text: string) => text.split("\n").filter((line) => /^(Notă pentru voluntari|Note for the volunteers):/.test(line));
