@@ -39,11 +39,12 @@ function fill(template: string, values: Record<string, string>): string {
 }
 
 /**
- * What may follow «pe» in a sentence: a place on the web or a count — «Înscrie-te pe {provider}»,
- * «plata pe {host}», «Salvat pe {count} date» — never a date. `Event.series.monthly` («Lunar, pe
- * {day}») is the one exception by key: its `{day}` is the day of the month, a number («pe 11»).
+ * What may follow «pe» in a sentence: a place on the web, a count or a person — «Înscrie-te pe {provider}»,
+ * «plata pe {host}», «Salvat pe {count} date», «Scoți pe {name} (nr. {number}) de la tombolă?» (§1020) — never a
+ * date. `Event.series.monthly` («Lunar, pe {day}») is the one exception by key: its `{day}` is the day of the month, a
+ * number («pe 11»).
  */
-const NOT_A_DATE_AFTER_PE = new Set(["host", "provider", "count", "baseUrl", "email", "branch"]);
+const NOT_A_DATE_AFTER_PE = new Set(["host", "provider", "count", "baseUrl", "email", "branch", "name"]);
 const MONTHLY_DAY = "Event.series.monthly";
 
 /** The placeholders a caller fills with a date from the helper; the hour inside one already has its word. */

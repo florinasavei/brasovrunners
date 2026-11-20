@@ -574,21 +574,20 @@ describe("the registrations' Excel and CSV", () => {
       const { rows } = readSheet(Buffer.from(await (await exportRegistrations(new Request(url(event.id, "&format=xlsx")))).arrayBuffer()));
       const header = rows[0] as string[];
       expect(header.at(-1), role).toBe("Note interne");
-      // «Reconfirmat» (the decision «Cere reconfirmarea») between «Partener» and the notes.
-      expect(header.at(-2), role).toBe("Reconfirmat");
-      expect(header.at(-3), role).toBe("Partener");
+      // «Partener» just before the notes; «Reconfirmat» (the decision «Cere reconfirmarea») sits beside «Status» (§1019).
+      expect(header.at(-2), role).toBe("Partener");
       const cell = (name: string) => rows.find((row) => row?.[header.indexOf("Name")] === name)?.[header.indexOf("Partener")] ?? "";
       expect(cell("Ana Munteanu"), role).toBe(PARTNER);
       expect(cell("Bia Munteanu"), role).toBe("");
       const csv = await (await exportRegistrations(new Request(url(event.id)))).text();
       const [csvHeader, ...lines] = csv.split("\r\n");
-      expect(csvHeader.split(",").slice(-3), role).toEqual(["Partener", "Reconfirmat", "Note interne"]);
-      expect(lines.find((line) => line.includes("Ana Munteanu"))?.split(",").at(-3), role).toBe(PARTNER);
+      expect(csvHeader.split(",").slice(-2), role).toEqual(["Partener", "Note interne"]);
+      expect(lines.find((line) => line.includes("Ana Munteanu"))?.split(",").at(-2), role).toBe(PARTNER);
     }
     // In English, its English word.
     state.actor = admin;
     const english = readSheet(Buffer.from(await (await exportRegistrations(new Request(url(event.id, "&format=xlsx&lang=en")))).arrayBuffer()));
-    expect((english.rows[0] as string[]).slice(-3)).toEqual(["Partner", "Reconfirmed", "Internal notes"]);
+    expect((english.rows[0] as string[]).slice(-2)).toEqual(["Partner", "Internal notes"]);
   });
 
   it("follows the list's filter: the file is the rows on screen", async () => {

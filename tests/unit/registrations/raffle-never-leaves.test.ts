@@ -23,6 +23,13 @@ import { importsModule } from "../../helpers/module-imports";
  * words — «Participă la tombolă» or why not — through `readRaffleLine`, and names no tick; no desk query reads one. The one public
  * read of the settings is the sign-up's gate (`public-cache/reads.ts#cachedRaffleEvent`, through `readRaffleEvent`), which names
  * no column either.
+ *
+ * Since §1020 (the owner, 2026-11-20: «ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare și cu
+ * logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă») the desk's line has a press of its own — «Scoate de
+ * la tombolă» / «Pune înapoi la tombolă», asked first —: the line that posts the state it wants (`ui/RaffleLines.tsx`) and the
+ * press (`checkin/raffle-actions.ts`) are readers, through the mark's own writer for the desk's door
+ * (`raffle-mark.ts#setRegistrationInRaffleAtDesk`), which writes the mark and its one audit row and nothing else. The desk's pages
+ * and queries still name no tick, and nothing the press reaches emails anybody or expires a public page.
  */
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
@@ -72,6 +79,9 @@ const READERS = new Set(
     // §984: «Ziua cursei» → «Tombolă» — everybody with the answer, and «Scoate» / «Pune înapoi» through each kind's own writer.
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
     "src/app/[locale]/admin/checkin/tombola/actions.ts",
+    // §1020: the desk's own «Scoate de la tombolă» / «Pune înapoi la tombolă» — the line posting the state it wants, and its press.
+    "src/modules/volunteers/ui/RaffleLines.tsx",
+    "src/app/[locale]/admin/checkin/raffle-actions.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -134,6 +144,25 @@ describe("§949 the raffle's switch and ticks stay with the organizers", () => {
     // The desk's queries and the counts of the same file that holds the list's row.
     for (const name of ["listDeskRegistrations", "countDesk", "findRegistrationByCheckinCode", "countKits", "summariseRegistrationsForAdmin"]) {
       expect(NAMES_THE_RAFFLE_MARKS.test(functionSource("src/modules/registrations/admin-repository.ts", name)), name).toBe(false);
+    }
+  });
+
+  it("are moved at the desk by one press that writes the mark and its trail row, and nothing else (§1020)", () => {
+    const press = readFileSync(path.join(ROOT, "src/app/[locale]/admin/checkin/raffle-actions.ts"), "utf8");
+    // The desk's door, through the desk's own writer — never the organizers' tick, the tab's presses or another writer.
+    expect(press).toMatch(/import \{ setRegistrationInRaffleAtDesk \} from "@\/modules\/registrations\/raffle-mark";/);
+    expect(press).not.toMatch(/\bsetRegistrationInRaffle\b|changeVolunteer|setEliteLineRaffleTick/);
+    // Nobody is told and no public page reads the mark: no email press, no outbox, no public cache, no other module's write.
+    expect(press).not.toMatch(/inEmailPress|enqueueEmail|modules\/notifications|public-cache|revalidateTag|admin-service/);
+    // The writer: one update of the mark alone — the moment beside it — and the one trail row; no other table is written.
+    const writer = functionSource("src/modules/registrations/raffle-mark.ts", "setRegistrationInRaffleAtDesk");
+    expect([...writer.matchAll(/\.set\(([^)]*)\)/g)].map((match) => match[1])).toEqual(["{ inRaffle, updatedAt: now }"]);
+    expect([...writer.matchAll(/\.(update|insert|delete)\(/g)].map((match) => match[1])).toEqual(["update"]);
+    expect([...writer.matchAll(/recordAuditEvent\(/g)]).toHaveLength(1);
+    // The desk's pages hand the press to the line and still name no tick themselves (the list above holds them to it).
+    for (const page of ["src/app/[locale]/admin/checkin/page.tsx", "src/app/[locale]/admin/checkin/[code]/page.tsx"]) {
+      expect(reads(page), page).toBe(false);
+      expect(readFileSync(path.join(ROOT, page), "utf8"), page).toContain("exclusionAction: raffleDeskExclusionAction");
     }
   });
 

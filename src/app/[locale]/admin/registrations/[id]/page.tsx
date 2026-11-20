@@ -490,6 +490,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     }
     if (typeof shown.reason === "string" && shown.reason.trim() !== "") parts.push(tr("registrations.auditDetail.reason", { reason: shown.reason.trim() }));
     if (Number.isInteger(shown.bibNumber)) parts.push(tr("registrations.auditDetail.bib", { number: written(Number(shown.bibNumber)) }));
+    // The raffle mark pressed at the race-day desk (§1020): «· la masă» beside who did it, the organizers' tick saying nothing more.
+    if (shown.door === "desk") parts.push(tr("registrations.auditDetail.atDesk"));
     return parts;
   };
 

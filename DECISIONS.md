@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.88-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.89-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.88-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31623,3 +31623,57 @@ The words are in both catalogues (`Admin.raceDay.declarations.*`, `Admin.raceDay
 **Refused.** The identity document on the page, even masked: the table at the start is public, and the PDF already holds it, one recorded download at a time. A tab for every desk role: the desk keeps its one runner at a time. A new route for the PDF: the existing one asserts the reading right and writes the trail. A press of any kind on this page: it lists; everything that changes a registration stays where it was.
 
 Baseline `BR-V4.88-2026-11-20`.
+
+## 1019. «Reconfirmare» in the registrations' Excel and CSV: the answer beside «Status», «Reconfirmat» beside it (amending §941)
+
+**The owner, 2026-11-20:** «vezi că în excel export nu am dacă a re-confirmat un alergător, că avem această opțiune».
+
+**What was there.** Since §941 the export carried «Reconfirmat» — when the person last pressed «Vin», empty otherwise — appended after «Partener», near the end of a sheet some forty columns wide. It said a moment, never an answer: one empty cell was at once somebody asked who stayed silent, somebody who cancelled after the ask and somebody nobody asked. The list's filter «Reconfirmare» tells those three apart, and the file had no column for it.
+
+**Decision.** Both files — the Excel and the CSV — carry «Reconfirmare» right after «Status», and «Reconfirmat» moves beside it: the state, the answer and its moment read together, near the front.
+
+- «Reconfirmare» says the list filter's own answer, in the reader's words (`Admin.reconfirm.answerYes`, `answerCancelled`, `answerNone`): «A reconfirmat» / "Reconfirmed" — still registered, «Vin» pressed on any ask, so a person asked by two sends who answered the first reads «A reconfirmat»; «A anulat după cerere» / "Cancelled after the ask" — cancelled, by the person or an Administrator, at or after an ask; «N-a răspuns» / "No answer" — asked, in a state that can answer (`RECONFIRM_STATUSES`), no «Vin» on any ask. The cell is empty for a registration no send asked, and for one asked that the filter keeps under none of the three — an expired one, a waiting-list offer made since the ask that did not answer — so the file never says what the filter would not.
+- «Reconfirmat» keeps what it said: the latest «Vin», on the club's clock in the sheet's stamp format (`STAMP_FORMAT`), an ISO instant in the CSV, empty when none.
+- Both are headed in the reader's language (`reconfirm.answerColumn`, `reconfirm.column`) — the page's, which the button passes as `lang`, Romanian without it — as «Partener» and «Note interne» are; a writer called with no words of its own falls back to the English catalogue's.
+
+**One definition.** `admin-repository.ts#reconfirmAnswerIs` states the three answers once, over the registration's state and cancellation and three facts about its asks: asked, answered «Vin», asked at or before the cancellation. The list's filter `reconfirm` reads it with an `EXISTS` per fact — its SQL as it was —, and `listReconfirmAnswers` reads it with the same facts as aggregates of one grouped query over the asks of the given registrations, never one query per row. The export calls it for the exported rows and the list for its page's rows, whose chip «A reconfirmat» is the answer «yes». The filter, the chip and the file cannot disagree; an integration test holds the file's cells to the filter's rows on every kind of row, and counts the same statements for a file of three rows as for one of thirty.
+
+**The spreadsheet keeps working.** The two columns sit after «Status», so «Status» stays the third column and its drop-down, its colour rules and the footer's status counts keep their letter; every column after them moves two to the right. The drop-down, the colour rules and the statistics footer find their columns by header, never by a letter, and the tests read every rule and formula back from the file's bytes and evaluate the footer over the sheet's own cells, before and after an offline edit.
+
+**The CSV's order.** The CSV's columns have mostly been appended, so a script reading by position kept finding the earlier ones (§425); §581 is the precedent the other way — «Public list & results» went beside the socials it governs, where the owner asked for it. The same here: the answer is read beside the state, in both files, so every CSV column after «Status» now sits two later — a script that reads the CSV by position has to be told — and «Reconfirmat» left the end, where «Partener» is again the last fixed column.
+
+**What does not change.** Who may export, the filter and its words, the audit row (who, which event, the format and the count — never an answer), the sponsors' file, which never carries it, and every public page. The never-leaves guard also names the answer's new carriers (`reconfirmAnswer`, `listReconfirmAnswers`), and holds the filter and the grouped reader to the one definition.
+
+**Refused.** Working the answer out in the route from the row's «Reconfirmat» and its state: a second definition beside the filter's SQL, and one that cannot see whether a registration was asked at all, or asked before it was cancelled. Keeping «Reconfirmat» at the end and adding only the answer beside «Status»: the answer and its moment are read together.
+
+Baseline `BR-V4.89-2026-11-20`.
+
+## 1020. The desk takes a runner off the raffle, or puts them back, asked first and kept with who decided (amending §949 and §953 for the desk, §984's words there and §1014's refusal)
+
+**The owner, 2026-11-20:** «La fel cum pot marca pe cineva să apară public ar trebui să pot să-l scot de la tombolă ca și voluntar dar să fie cu extra confirmare și cu logarea în aplicație cu ce voluntar a decis că X nu participă la tombolă, spre exemplu e posibil că unele elite să nu participe la tombolă».
+
+**What was there.** «Participă la tombolă» on a registration (`registrations.in_raffle`, §949) was the organizers' tick alone — the Organizer and the Administrators, by its own predicate `canSetRaffleMark` (§953) — on the registrations' list and, since §984, on «Ziua cursei» → «Tombolă». The desk's raffle line (§984) said «Tombolă: participă / nu participă» under every desk row and on a scanned person's view, with the organizers' reason «scos de organizatori» said to the organizers alone; a desk volunteer who met a runner who did not want to take part had to call an organizer (§1014, refused there).
+
+**Decision.**
+
+- **At the desk, asked first.** On the desk's raffle line — under a row of «Prezența»'s list and on the scanned person's view — every desk role has «Scoate de la tombolă» on a registration that takes part and «Pune înapoi la tombolă» on one taken out. Pressed, the house's question opens (`ActionForm`'s `confirm`, `ConfirmDialog`): «Scoți pe {name} (nr. {number}) de la tombolă?» — the number as the event writes it (§735) —, «Numărul lui nu mai intră la tragere. Rămâne scris cine a decis.», «Nu pleacă niciun email către {name}.», «Anulează» focused and «Da, scoate de la tombolă» in red, which Enter never presses; putting back is asked the same way («Pui înapoi pe {name} (nr. {number}) la tombolă?», «Da, pune înapoi la tombolă»). The form posts the state it wants, never a toggle, and comes back where it was pressed: the scanned view's alert, or the desk's list at the row with its toast (`row=`, §1002); a refusal's code at the alert.
+- **Asserted on the server, by a predicate of its own.** `canSetRaffleMarkAtDesk` (`staff-identity/domain/roles.ts`), written as `canWorkTheDesk` so the two lines move together — the Voluntar, the Redactor, the Organizer, Tehnic and the Administrators; never a member (§524) —, asked at the door by `checkin/raffle-actions.ts#raffleDeskExclusionAction` (a Server Action: a GET never reaches it) and again by the writer, `raffle-mark.ts#setRegistrationInRaffleAtDesk`, a sibling of the organizers' `setRegistrationInRaffle`: the same mark in one statement, only for a real registration of an event that holds a raffle — the line's own two conditions, so «Avem tombolă» unticked since the page was drawn is refused (`RAFFLE_NOT_HELD`), a test registration too (`RAFFLE_NOT_ELIGIBLE`), anything that is not a registration `NOT_FOUND`, nothing written. A second press — the same phone twice, or a colleague's — changes nothing and writes nothing; otherwise one audit row, `registration.raffle_excluded` / `registration.raffle_included`, the staff member its actor and `{ inRaffle, door: "desk" }` its metadata. `canSetRaffleMark` still answers the organizers' tick on the lists alone, and neither press asks the other's predicate.
+- **The desk sees what it did.** A registration taken out reads «Tombolă: nu participă — scos de la tombolă» for every desk role: the reason is no longer the organizers' alone, so the desk can put the person back. Every other reason reads as before («De ce: neconfirmat», «De ce: nu s-a înscris»), and offers no press of the mark.
+- **Who decided is recorded and read.** «Ziua cursei» → «Jurnal» (§996) gains two kinds read from those rows — «a scos de la tombolă» / «a pus înapoi la tombolă» —, with the staff member, the person and the time, filtered by «Ce s-a făcut» like the other kinds and counted per account in «Pe conturi» (a test registration's row never counted); the organizers' tick on the lists writes the same rows and is read the same way, so the log says who decided whichever door was used. The registration's own timeline names who did it, and «· la masă» beside the desk's press. Still six queries whatever the rows.
+- **It moves nothing else.** No state, place, race number, count, kit, email or public page; the person is not told (as §949); the file for the draw (`Lista pentru tombolă`) drops the number and takes it back, as with the organizers' tick. `tests/unit/registrations/raffle-never-leaves.test.ts` names the line and the press as readers and holds the press to the desk's writer, which sets the mark alone.
+- **Elites.** A registration marked «Elită» (§897) is a desk row and is taken out there like any other. A line of the race's elite list (`event_elite_entries.in_raffle`, §895) and a volunteer (`event_volunteers.in_raffle`) are not at the desk: they keep the organizers' ticks where they are — the «Tombolă» tab, the «Voluntari» list. «Cine poate participa» in the event's editor still takes every elite (or runner, or volunteer) out at once, and the line then says «grupa nu e bifată» and offers no press.
+- **A row the race is over for** (§82, the desk's rows read-only) offers no press; the line still reads.
+- **The words**, in both catalogues: `Admin.raffle.desk.*`, `Admin.desk.saved.raffleTakenOut` / `rafflePutBack` / `raffleUnchanged`, `Admin.errors.RAFFLE_NOT_HELD`, `Admin.raceDay.journal.{kinds,verbs,counts}.raffleOut|raffleIn`, `Admin.registrations.auditDetail.atDesk`; a line of the desk's «Cum merge ziua cursei, pas cu pas»; the guide's desk section gains «Scoate pe cineva de la tombolă, sau pune-l înapoi» / “Take somebody out of the raffle, or put them back”, and «La tombolă: cine participă, și înscrie pe cineva» says the desk's own press. `CLAUDE.md`'s staff row, `AGENTS.md` §15.11, `BUSINESS.md` BR-BUS-060, `SETUP.md` § 34 and § 47 and `docs/WHERE-THINGS-LIVE.md` say the same.
+
+**What this amends.** §949 and §953 in who changes «Participă la tombolă» on a registration — at the desk, every desk role, by a predicate of its own —; §984 in what the desk's line says of a person taken out; §1014's refusal of «the organizers' presses for every desk role» for this one press at the desk.
+
+**Refused.**
+
+- *The press on «Ziua cursei» → «Tombolă» for every desk role.* The tab's «Scoate» / «Pune înapoi» stays the organizers' (§1014), with the tab's other presses; the desk's door is the runner's own row, where the volunteer stands with the person.
+- *A typed reason.* The owner asked for who decided; the trail keeps who and when, and a reason box would make a phone's press slower. The organizers who want one write a note (§777).
+- *Telling the person.* As §949: the mark is the club's own, and no email leaves.
+- *The elite list's lines and the volunteers at the desk.* They are not desk rows; their ticks stay where the organizers keep them.
+
+**Not done.** The reason the lists and the tab say to the organizers stays «scos de organizatori», although a desk volunteer may now be the one who took the person out; «Jurnal» and the timeline say who.
+
+Baseline `BR-V4.89-2026-11-20`.
