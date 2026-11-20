@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.85` | «PR Kit» in the backoffice for every role: logo kit, sticker sheets, YouTube poster (§1015) |
 | `BR-V4.84` | «Clasament» offers every time «Cronometrare» recorded for a number, «Folosește» choosing one (§1012) · «Prezența»: elites, then partners, then everybody, by race number (§1013) · «Tombolă» for every desk role, the volunteers included (§1014) |
 | `BR-V4.83` | the note given with a new point, «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», and a changed note told again (§1011) |
 | `BR-V4.82` | «Cronometrare» asks before a finished elite's number typed again is recorded (§1010) |
