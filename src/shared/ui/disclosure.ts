@@ -113,7 +113,7 @@ export const FOLD_GLYPH_INLINE_SX = { fontSize: "1.2em", flexShrink: 0, vertical
 
 /**
  * A refusal is never folded away (§336) — the boxed fold below carries it, and a fold of its own that holds a kept form spreads
- * it too: «Modifică punctul»'s pencil on «Planul voluntarilor» (§NNN).
+ * it too: «Modifică punctul»'s pencil on «Planul voluntarilor» (§1011).
  */
 export const REFUSAL_UNFOLDED_SX = {
   /*

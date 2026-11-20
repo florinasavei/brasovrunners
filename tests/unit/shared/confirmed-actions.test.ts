@@ -421,10 +421,10 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "adds a link, last, to the organizers' own plan, undone by «Șterge linkul» beside it, which asks; it tells nobody, is on no public page and changes no picture, point or person",
   // «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961): a point of the plan's own, on the route or at the start–finish.
   addPlanPointAction:
-    "adds a point — and its note for the volunteers, when given (§NNN) — to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
+    "adds a point — and its note for the volunteers, when given (§1011) — to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
   // «Salvează punctul» in a point's «Modifică punctul» (§961): a plan's own point changed, or the coordinates of one of the event's points.
   editPlanPointAction:
-    "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is, its note for the volunteers — replaced by saving them again; it tells nobody (a changed note waits for the next «Trimite fiecăruia punctul lui», which asks, §NNN), is on no public page, and everybody stays at the point they stand at",
+    "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is, its note for the volunteers — replaced by saving them again; it tells nobody (a changed note waits for the next «Trimite fiecăruia punctul lui», which asks, §1011), is on no public page, and everybody stays at the point they stand at",
   // «Lucruri de adus» on «Ziua cursei» (§979): the organizers' own checklist of things to bring to the race.
   setRaceDayItemBroughtAction:
     "a tick on the organizers' own checklist, posting the state it wants and undone by the same tick; it tells nobody, is on no public page and changes no person",

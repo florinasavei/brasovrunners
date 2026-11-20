@@ -350,7 +350,7 @@ describe("§1009 the message says the point's «Notă pentru voluntari»", () =>
     // Taken off: the message is the one it was, to the byte.
     await writeNote(race.points.junction, { ro: "", en: "" });
     expect(await render(row)).toEqual(before);
-    // Changed since §NNN: a changed note un-tells whoever was told by a message that LEFT before it — but these still wait, and
+    // Changed since §1011: a changed note un-tells whoever was told by a message that LEFT before it — but these still wait, and
     // say the note as it is when they leave, so nobody is to write again.
     expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
   });
@@ -438,13 +438,13 @@ describe("§961 who already knows their point is not changed by its coordinates"
 });
 
 /*
-  §NNN (amending §1009 and §961's rule for the note), BR-REQ-080-02 — a changed «Notă pentru voluntari» re-tells that point's people at
+  §1011 (amending §1009 and §961's rule for the note), BR-REQ-080-02 — a changed «Notă pentru voluntari» re-tells that point's people at
   the next ordinary press: whoever was told the point by a message that left before the note last changed — written, changed in
   either language, taken off — is «de anunțat» again, and «Trimite fiecăruia punctul lui» writes to them (and to whoever was not told
   anyway), each with their next telling. A message still waiting, a save that leaves the words as they were, a name, a kilometre or
   coordinates changed, and another point's note change nobody.
 */
-describe("§NNN a changed note is told again at the next ordinary press", () => {
+describe("§1011 a changed note is told again at the next ordinary press", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.", en: "Send the runners left at the junction." };
   /** A note written on a point at an instant of the test's clock (the save's own `now`). */
   const noteAt = (id: string, minutes: number, note: { ro: string; en: string } = NOTE, boxes: Partial<PointBoxes> = {}) =>

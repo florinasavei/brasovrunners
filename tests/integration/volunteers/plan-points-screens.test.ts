@@ -54,7 +54,7 @@ const state = vi.hoisted(() => ({
   changed: 0,
   /**
    * A form whose action answered a refusal: the action, and the state it returned — what `useActionState` hands the form. With
-   * `nth`, only the nth form of that action in the page's order gets it (§NNN: one «Modifică punctul» a point, and React hands a
+   * `nth`, only the nth form of that action in the page's order gets it (§1011: one «Modifică punctul» a point, and React hands a
    * plain POST's answer to the one form that posted it, by its place in the tree); the count is `refusedCalls`.
    */
   refused: undefined as undefined | { action: unknown; outcome: unknown; nth?: number },
@@ -767,8 +767,8 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     expect(point).not.toContain('data-testid="plan-point-own"');
   });
 
-  // Since §NNN a refused «Salvează punctul» is the form's own state, as «Adaugă punctul»'s always was: it redirects nowhere (it
-  // came back to the page's alert under §953). What the page draws with it is the §NNN block at the end of this file.
+  // Since §1011 a refused «Salvează punctul» is the form's own state, as «Adaugă punctul»'s always was: it redirects nowhere (it
+  // came back to the page's alert under §953). What the page draws with it is the §1011 block at the end of this file.
   it("answers a refused save as the form's own state — the box's rule, a point gone meanwhile, a role that may not — and writes nothing", async () => {
     const spring = await ownPoint("route", "Izvor", "3,4");
     const before = await rowOf(spring);
@@ -1012,7 +1012,7 @@ describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe punc
     expect(offPaper(await planPage(POINTS, race.raceId, true), 'data-testid="plan-point-edit"')).toBe(true);
   });
 
-  it("saves the note from «Salvează punctul» and comes back to that point, open; a note in one language or too long is the form's own state (§NNN)", async () => {
+  it("saves the note from «Salvează punctul» and comes back to that point, open; a note in one language or too long is the form's own state (§1011)", async () => {
     const atJunction = `${planPath()}?view=points&open=${race.points.junction}#point-${race.points.junction}`;
     const boxes = { pointId: race.points.junction, coordinates: "" };
     // As a browser posts a textarea: its line breaks as \r\n.
@@ -1021,7 +1021,7 @@ describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe punc
     expect(await rowOf(race.points.junction)).toMatchObject({ volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en });
     expect(state.asked).toEqual(["canManageVolunteers"]);
 
-    // Refused: one language alone, a language too long — each the form's own state since §NNN, naming its box and keeping what
+    // Refused: one language alone, a language too long — each the form's own state since §1011, naming its box and keeping what
     // was typed; nothing written, nobody sent anywhere.
     state.flashed.length = 0;
     state.redirected.length = 0;
@@ -1070,12 +1070,12 @@ describe("§1009 «Notă pentru voluntari» and the numbered people on «Pe punc
 });
 
 /*
-  §NNN (amending §1009), BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — the plan's points, four follow-ups: «Adaugă un punct» takes
+  §1011 (amending §1009), BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — the plan's points, four follow-ups: «Adaugă un punct» takes
   «Notă pentru voluntari» too; «Modifică punctul» is a kept form — a refusal is the form's own state, every box as typed, the fold
   shown —, one a point; «Pe puncte» draws a point's people like «Tabel»; and a point whose note changed after some of its people
   were told says, under the note, how many the next «Trimite fiecăruia punctul lui» tells it again.
 */
-describe("§NNN the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», and the note told again", () => {
+describe("§1011 the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», and the note told again", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
   const MINUTE = 60_000;
   const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE);

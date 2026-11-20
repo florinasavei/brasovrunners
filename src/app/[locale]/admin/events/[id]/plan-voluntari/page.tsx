@@ -116,7 +116,7 @@ const TABLE_PEOPLE_SX = {
 const TABLE_PERSON_NAME_SX = { fontWeight: 700, overflowWrap: "anywhere", textTransform: "uppercase" } as const;
 
 /**
- * A point's people on «Pe puncte», drawn like «Tabel»'s (§NNN, amending §1009): the numbered list with a thin line — the house's
+ * A point's people on «Pe puncte», drawn like «Tabel»'s (§1011, amending §1009): the numbered list with a thin line — the house's
  * divider colour, one pixel — above every person but the first, the room above it the list's own spacing and the same under it;
  * on the screen and on paper alike. «Fără punct» is no point's list: no numbers, no lines.
  */
@@ -127,7 +127,7 @@ const POINT_PEOPLE_SX = {
   "& > li + li": { borderTop: "1px solid", borderColor: "divider", pt: 1 },
 } as const;
 
-/** A person's name at a point on «Pe puncte» (§NNN): as the table draws it — in bold and in capitals, the words as typed. */
+/** A person's name at a point on «Pe puncte» (§1011): as the table draws it — in bold and in capitals, the words as typed. */
 const POINT_PERSON_NAME_SX = { fontWeight: 700, overflowWrap: "break-word", textTransform: "uppercase" } as const;
 
 /** A person's name under «Fără punct»: as it always was. */
@@ -194,7 +194,7 @@ const LINK_SCOPE = "plan-link-add";
 const ADD_SCOPE = "plan-point-add";
 
 /**
- * …and of one point's «Modifică punctul» (§NNN): one form a point, each its own prefix, so two points' boxes never share an id and
+ * …and of one point's «Modifică punctul» (§1011): one form a point, each its own prefix, so two points' boxes never share an id and
  * a refusal's summary links to the box of the point it was pressed on.
  */
 const editScopeOf = (pointId: string) => `plan-point-edit-${pointId}`;
@@ -262,7 +262,7 @@ const MAPS_ON_PAPER = {
  * «Modifică punctul» (§974; the owner: «și în loc de „modifică punctul” pune doar buton de edit»): the house's pencil, a
  * 44-pixel square at the right of the point's people — a native fold whose bar is the glyph alone, so it opens without a
  * script —, and open, the point's form under it across the whole row, the pencil still at its right. Never on paper. Its form
- * is a kept one since §NNN: a refusal comes back inside it, and a refusal is never folded away (`REFUSAL_UNFOLDED_SX`, §336) —
+ * is a kept one since §1011: a refusal comes back inside it, and a refusal is never folded away (`REFUSAL_UNFOLDED_SX`, §336) —
  * with scripts off the refused POST draws the page afresh, the fold shut, and its body is shown across the row all the same.
  */
 const PENCIL_FOLD_SX = {
@@ -349,14 +349,14 @@ const PENCIL_FOLD_SX = {
  * «Notă pentru voluntari» and the people as a list (§1009; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru
  * voluntari"», «vreau sa numerotez aici voluntarii si sa fac cu bold numele lor», «vreau un separator acolo la voluntari sa se
  * vada ca e o lista»): every point may carry what everybody standing there has to know, in both languages, written in
- * «Adaugă un punct» with the point or later in its «Modifică punctul» (§NNN), and drawn under its name — in its fold on «Pe
+ * «Adaugă un punct» with the point or later in its «Modifică punctul» (§1011), and drawn under its name — in its fold on «Pe
  * puncte», in the «Punct» cell of «Punctele, pe scurt» — on the screen and on paper (`volunteerNoteBlock`); the email of each
  * person placed there says it too (`point-mail.ts`), and a note changed after they were told is told to them again by the
- * next «Trimite fiecăruia punctul lui» — said under the note on «Pe puncte» (`noteChangedLine`, §NNN). A point's people are
+ * next «Trimite fiecăruia punctul lui» — said under the note on «Pe puncte» (`noteChangedLine`, §1011). A point's people are
  * numbered in its order, «1.», «2.», …, each name in bold and in capitals with a thin line between two people — in the table
- * (`TABLE_PEOPLE_SX`) and on «Pe puncte» alike (`POINT_PEOPLE_SX`, §NNN).
+ * (`TABLE_PEOPLE_SX`) and on «Pe puncte» alike (`POINT_PEOPLE_SX`, §1011).
  *
- * «Modifică punctul» keeps what was typed (§NNN, amending §953 for this form): one kept form a point (`ActionForm`, its own
+ * «Modifică punctul» keeps what was typed (§1011, amending §953 for this form): one kept form a point (`ActionForm`, its own
  * `editScopeOf`), whose refusal comes back as the form's own state, as «Adaugă un punct»'s does — every box as typed, the
  * sentence at the form naming its box, the fold open.
  */
@@ -373,7 +373,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const db = getDb();
   let plan;
   // The four numbers of «Trimite fiecăruia punctul lui» (§956), counted by the service exactly as the press counts them — and per
-  // point how many there were told it before its note last changed (§NNN), which the point says under its note.
+  // point how many there were told it before its note last changed (§1011), which the point says under its note.
   let pointMail;
   try {
     plan = await readVolunteerPlan(db, actor, id);
@@ -438,7 +438,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   };
   /**
    * The two boxes of «Notă pentru voluntari» (§1009) — in a point's «Modifică punctul», filled with what the point has, and in «Adaugă
-   * un punct», empty (§NNN): Romanian, then English, both or neither (the service refuses one alone), the browser stopping each at
+   * un punct», empty (§1011): Romanian, then English, both or neither (the service refuses one alone), the browser stopping each at
    * `PLAN_POINT_NOTE_MAX` characters; plain text, a line break typed a line break on the plan and in the email. Kept boxes: a
    * refusal hands back what was typed in them (§315).
    */
@@ -469,7 +469,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     </>
   );
   /**
-   * Under a point's note on «Pe puncte», when it changed after some of the point's people were told (§NNN): one quiet line saying how
+   * Under a point's note on «Pe puncte», when it changed after some of the point's people were told (§1011): one quiet line saying how
    * many of them the next «Trimite fiecăruia punctul lui» writes to again for it — «Nota s-a schimbat după ultimul email: …», or,
    * for a note taken off, that they get the point without it. Counted by the press's own rule (`readVolunteerPointMail`); nothing
    * for a point with nobody to tell again, and never on paper: it is about emails, not about the day.
@@ -659,7 +659,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       <input type="hidden" name="view" value={view} />
     </>
   );
-  // «Adaugă un punct» (§961) and each point's «Modifică punctul» (§NNN): the words a refusal's summary says, and the label of each
+  // «Adaugă un punct» (§961) and each point's «Modifică punctul» (§1011): the words a refusal's summary says, and the label of each
   // box it can name — the note's two among them. One object for every form: the page hands it over once.
   const pointBoxes = {
     [PLAN_POINT_BOXES.place]: t("volunteers.plan.points.place"),
@@ -748,7 +748,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
    * One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct» —, and
    * under it the organizers' own words about them (`ownWordsOf`). At a point, `place` is the person's place in the point's list
    * (§1009), said before the name as the table says it: «1.», «2.», …, and the name as the table draws it, in bold and in capitals
-   * (§NNN); under «Fără punct» nobody is numbered and the name is as it was.
+   * (§1011); under «Fără punct» nobody is numbered and the name is as it was.
    */
   const personWords = (person: VolunteerPlanPerson, place?: number) => {
     const roles = rolesOf(person);
@@ -822,7 +822,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           </Box>
           <Stack spacing={1.5}>
             {/* Under the bar, the point's «Notă pentru voluntari» (§1009): what everybody standing here has to know — printed. Under
-                it, while somebody here was told the point before the note changed, how many the next press tells it again (§NNN). */}
+                it, while somebody here was told the point before the note changed, how many the next press tells it again (§1011). */}
             {volunteerNoteBlock(point, "fold", "plan-point-volunteer-note")}
             {noteChangedLine(point)}
             {/* A point of the route that only the plan has: said so, quietly; then what an editor's point offers, and its note. */}
@@ -855,7 +855,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                   </Typography>
                 ) : (
                   // Numbered in the point's order, as the table numbers them (§1009): «1.», «2.», … before each name, the name in bold
-                  // and in capitals, a thin line between two people (§NNN) — on paper too.
+                  // and in capitals, a thin line between two people (§1011) — on paper too.
                   <Stack spacing={1} component="ol" role="list" sx={POINT_PEOPLE_SX} data-testid="plan-point-people">
                     {people.map((person, at) => (
                       <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
@@ -878,7 +878,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
               {/* «Modifică punctul» (§961, §974): the pencil alone, named for a reader who does not see it and in its tooltip. A
                   point added here is changed whole, its kind included; of an editor's point only where it is: its name and
-                  kilometre are public, and are the editor's. A kept form since §NNN, one a point (its own `editScopeOf`): a refused
+                  kilometre are public, and are the editor's. A kept form since §1011, one a point (its own `editScopeOf`): a refused
                   save comes back as the form's own state — the sentence first in the form, naming its box, and every box as it
                   was typed — and with scripts off the same, in the page the refused POST draws (§315). */}
               <Box component="details" sx={PENCIL_FOLD_SX} data-testid="plan-point-edit">
@@ -1476,7 +1476,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                 size="small"
                 slotProps={{ htmlInput: { "data-testid": "plan-point-add-coordinates" } }}
               />
-              {/* «Notă pentru voluntari» (§NNN, amending §1009): the point's note given with the point, as «Modifică punctul» gives it
+              {/* «Notă pentru voluntari» (§1011, amending §1009): the point's note given with the point, as «Modifică punctul» gives it
                   later — the same two boxes, after the coordinates, empty. */}
               {volunteerNoteBoxes("plan-point-add-note")}
               <GlyphButton icon="add" type="submit" variant="contained" size="medium" sx={TAP_TARGET} data-testid="plan-point-add">

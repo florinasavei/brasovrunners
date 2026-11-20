@@ -501,7 +501,7 @@ describe("§974 the way back: every form carries its view, every press comes bac
     // Refused — another event's point — to the alert, the view kept.
     expect(await pressed(() => placeVolunteerAction(form({ view: "points", volunteerId: race.people.ion, checkpointId: race.points.elsewhere, at: water })))).toBe(back(`view=points&open=${water}&planError=NOT_FOUND`, "admin-alert"));
 
-    // «Salvează punctul»: to the point, open. Refused, since §NNN it is the form's own state — the page is not left at all, so its
+    // «Salvează punctul»: to the point, open. Refused, since §1011 it is the form's own state — the page is not left at all, so its
     // fold stays as the person opened it (the house's kept form, `plan-points-screens.test.ts`).
     const spring = await ownPoint("route", "Izvor", "3,4");
     expect(await pressed(() => editPlanPointAction(null, form({ view: "points", pointId: spring, place: "route", name: "Izvorul rece", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}`, `point-${spring}`));

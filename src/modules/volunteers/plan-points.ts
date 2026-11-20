@@ -49,11 +49,11 @@ import { isUuid } from "@/shared/ids";
   point — the editor's and the plan's own alike — may carry what everybody standing there has to know («Direcționați spre
   stânga la intersecție; vestă reflectorizantă»), in Romanian and in English, both or neither, at most `PLAN_POINT_NOTE_MAX`
   characters each, its line breaks kept (`volunteer_note_ro`, `volunteer_note_en`). It is the plan's side of
-  a point as the coordinates are: written here — in «Adaugă punctul» with the point (§NNN) or later in the point's own «Salvează
+  a point as the coordinates are: written here — in «Adaugă punctul» with the point (§1011) or later in the point's own «Salvează
   punctul» —, read through `listPlanPoints` by the plan's page and the point's email, and never by the public side — which has
   its own short note, `note_ro` / `note_en`, the event's page shows.
 
-  **A changed note is told again (§NNN, amending §1009).** The save that changes the note's words — written, changed in either
+  **A changed note is told again (§1011, amending §1009).** The save that changes the note's words — written, changed in either
   language, or taken off — stamps the moment on the point (`volunteer_note_changed_at`), in its own transaction; a save that
   leaves the words as they were, or changes only the name, the kilometre or the coordinates, stamps nothing. «Trimite fiecăruia
   punctul lui» reads the moment (`point-mail.ts#alreadyTold`): whoever was told this point by a message that left before it is
@@ -95,7 +95,7 @@ export type PlanPoint = {
   volunteerNoteRo: string | null;
   volunteerNoteEn: string | null;
   /**
-   * When the note last changed (§NNN): written, changed or taken off — null for a note never written. A person told this point
+   * When the note last changed (§1011): written, changed or taken off — null for a note never written. A person told this point
    * by a message that left before it is told again by the next «Trimite fiecăruia punctul lui» (`point-mail.ts#alreadyTold`).
    */
   volunteerNoteChangedAt: Date | null;
@@ -175,7 +175,7 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
 // The verbs: «Adaugă punctul», «Salvează punctul», «Șterge punctul»
 // ---------------------------------------------------------------------------------------------
 
-/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§1009) in both forms since §NNN. */
+/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§1009) in both forms since §1011. */
 export const PLAN_POINT_BOXES = {
   place: "place",
   name: "name",
@@ -243,7 +243,7 @@ export class PlanPointGone extends DomainError {
 /** What a form posts, before it is a change: this service validates, the action only reads boxes. */
 export type PlanPointRequest =
   /**
-   * «Adaugă punctul»: a new point of the plan's own — and, since §NNN, its «Notă pentru voluntari», held to the rules an edit
+   * «Adaugă punctul»: a new point of the plan's own — and, since §1011, its «Notă pentru voluntari», held to the rules an edit
    * holds it to. A request that names neither of the note's boxes adds the point with none.
    */
   | { kind: "add"; eventId: string; place: unknown; name: unknown; km: unknown; coordinates: unknown; volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }
@@ -328,7 +328,7 @@ const sameNote = (a: VolunteerNote, b: VolunteerNote): boolean => a.ro === b.ro 
 const noteColumns = (note: VolunteerNote) => ({ volunteerNoteRo: note.ro, volunteerNoteEn: note.en });
 
 /**
- * The moment a note's words changed (§NNN, amending §1009), for the save that changes them — written, changed in either language,
+ * The moment a note's words changed (§1011, amending §1009), for the save that changes them — written, changed in either language,
  * taken off: «Trimite fiecăruia punctul lui» then writes again to whoever was told the point before it. A save that leaves the
  * words as they were (`sameNote`, after `volunteerNoteOf`'s trimming) keeps the moment the point has.
  */
@@ -351,7 +351,7 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  *   its inner spaces folded, 1 to 60 characters; on the route the kilometre is required — a comma or a point, two decimals,
  *   0 to 9999.99, not held to the route's length — and at the start–finish it is not read and 0 is stored; the coordinates
  *   optional for both (`parseCoordinates`). At most `PLAN_POINTS_MAX` of the plan's own on an event, both kinds together,
- *   counted under the event row's lock. Its «Notă pentru voluntari» (§NNN, amending §1009) is held to the rules an edit holds it
+ *   counted under the event row's lock. Its «Notă pentru voluntari» (§1011, amending §1009) is held to the rules an edit holds it
  *   to (`volunteerNoteOf`), read after the point's other boxes and before anything is locked, and stored in the point's own
  *   insert — with the moment it was written; a request with no note, or both boxes empty, adds the point with none.
  * - **`edit`:** of a plan's own point, all of it, the kind included: moved to the start–finish it loses its kilometre, moved
@@ -361,7 +361,7 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  * - **«Notă pentru voluntari» (§1009), on `edit` of either kind:** both languages or neither, each at most
  *   `PLAN_POINT_NOTE_MAX` characters, line breaks kept (`volunteerNoteOf`), read after the point's other boxes; both empty
  *   takes the note off. A request that names neither box keeps the note as it is. When the note's words change — written,
- *   changed in either language, taken off — the same update stamps the moment (`volunteer_note_changed_at`, §NNN), which tells
+ *   changed in either language, taken off — the same update stamps the moment (`volunteer_note_changed_at`, §1011), which tells
  *   «Trimite fiecăruia punctul lui» to write again to whoever was told the point before; a save that leaves the words as they
  *   were (after the trimming above) stamps nothing, and neither does a name, a kilometre or coordinates changed.
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
@@ -372,7 +372,7 @@ const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, 
  * - **The trail:** one row a change — `volunteer_plan.point_added`, `.point_changed`, `.point_removed` — with the point's id,
  *   whether it is the plan's own, and its place, name, kilometre and coordinates before and after; a removal also says how
  *   many people it freed, a change of the note whether there was one before and is one after (`volunteerNote`), and an add
- *   whether the point came with one (`volunteerNote: { from: null, to }`, §NNN) — never its words. A count, never a person.
+ *   whether the point came with one (`volunteerNote: { from: null, to }`, §1011) — never its words. A count, never a person.
  *
  * Nobody is emailed, no state or number of a person moves, and no public cache tag is expired: no public page reads these rows.
  */
@@ -383,7 +383,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
   const pointId = request.kind === "add" ? null : text(request.id).trim().toLowerCase();
   if (pointId !== null && !isUuid(pointId)) throw new PlanPointGone();
   // What an «Adaugă punctul» typed is held to the rules before anything is locked: it needs no row to be read — the point's
-  // boxes first, then its «Notă pentru voluntari» (§NNN), in the order of the form's boxes.
+  // boxes first, then its «Notă pentru voluntari» (§1011), in the order of the form's boxes.
   const added = request.kind === "add" ? wordsOf(request) : null;
   const addedNote = request.kind === "add" ? volunteerNoteOf(request) : null;
 
@@ -414,7 +414,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
           noteRo: null,
           noteEn: null,
           onProfile: false,
-          // The volunteers' own note (§NNN), when the add carries one — and the moment it was written: nobody stands at a point
+          // The volunteers' own note (§1011), when the add carries one — and the moment it was written: nobody stands at a point
           // that did not exist, so nobody is told again for it.
           ...noteColumns(addedNote),
           volunteerNoteChangedAt: addedNote.ro === null ? null : now,

@@ -128,7 +128,7 @@ export const eventCheckpoints = pgTable(
     volunteerNoteRo: text("volunteer_note_ro"),
     volunteerNoteEn: text("volunteer_note_en"),
     /**
-     * When «Notă pentru voluntari» last changed (§NNN, amending §1009): written, changed in either language, or taken off — set by
+     * When «Notă pentru voluntari» last changed (§1011, amending §1009): written, changed in either language, or taken off — set by
      * `changePlanPoint` in the save's own transaction, and only when the note's words are not what they were, so a save that leaves
      * them as they are keeps it. «Trimite fiecăruia punctul lui» reads it: a person told this point by a message that left before
      * it is told again by the next ordinary press (`volunteers/point-mail.ts#alreadyTold`). Null for a point whose note was never

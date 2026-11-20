@@ -243,7 +243,7 @@ describe("§961 «Adaugă punctul»", () => {
     const rows = await trail();
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ action: "volunteer_plan.point_added", actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: race.raceId });
-    // Since §NNN the add also says whether the point came with «Notă pentru voluntari» — this one did not.
+    // Since §1011 the add also says whether the point came with «Notă pentru voluntari» — this one did not.
     expect(rows[0].metadataJson).toEqual({
       pointId: result.id,
       planOnly: true,
@@ -672,7 +672,7 @@ describe("§1009 «Notă pentru voluntari»: written with the point, both or nei
       outcome: "edited",
       id: race.points.water,
     });
-    // …and, since §NNN, the moment the note changed: the press's own instant.
+    // …and, since §1011, the moment the note changed: the press's own instant.
     expect(await rowOf(race.points.water)).toEqual({ ...before, volunteerNoteRo: NOTE.ro, volunteerNoteEn: NOTE.en, volunteerNoteChangedAt: new Date(NOW.getTime() + ticks * 1000) });
     // A point of the plan's own, with its other boxes in the same press.
     const spring = await added({ name: "Izvor", km: "3,4" });
@@ -787,12 +787,12 @@ describe("§1009 «Notă pentru voluntari»: written with the point, both or nei
 });
 
 /*
-  §NNN (amending §1009), BR-REQ-050-02, BR-REQ-080-02 — «Notă pentru voluntari» given in «Adaugă punctul» with the point, held to
+  §1011 (amending §1009), BR-REQ-050-02, BR-REQ-080-02 — «Notă pentru voluntari» given in «Adaugă punctul» with the point, held to
   the rules «Salvează punctul» holds it to; and the moment a point's note last changed (`volunteer_note_changed_at`), stamped in the
   save's own transaction when — and only when — its words change, which «Trimite fiecăruia punctul lui» reads to tell the point's
   people again.
 */
-describe("§NNN «Notă pentru voluntari» in «Adaugă punctul», and the moment a note changes", () => {
+describe("§1011 «Notă pentru voluntari» in «Adaugă punctul», and the moment a note changes", () => {
   const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
   /** The instant of the press just made: the clock ticked once for it. */
   const lastPress = () => new Date(NOW.getTime() + ticks * 1000);

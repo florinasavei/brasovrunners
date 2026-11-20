@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.82-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.83-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.82-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.83-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3812,7 +3812,7 @@ told and «already told» alike. A person at the start–finish is told the plac
 («Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
 HTML and in the text; who «already knows their point» does not change when a point's name, kilometre, kind or
 coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent — its «Notă pentru voluntari» is
-the one thing of a point that does (below, §NNN). Never by placing, moving or taking a person off; never by a
+the one thing of a point that does (below, §1011). Never by placing, moving or taking a person off; never by a
 job; never to another event's people. The payload holds ids and the telling (`eventId`, `volunteerId`,
 `checkpointId`, `round`: 1 for the person's first message, one more for each later one) and the key is exactly
 that, `volunteer-point:<volunteer>:<point>:<round>`.
@@ -3832,7 +3832,7 @@ one the outbox was already sending when «din nou tuturor» committed the newer 
 leave — a known edge, left as it is, since each was asked for by a press. The limit of this memory is the
 outbox's retention (ninety days): a point told earlier than that is told again by the next press.
 
-**A changed note is told again** (§NNN, amending §1009, and §961's rule above for this one field of a point). The
+**A changed note is told again** (§1011, amending §1009, and §961's rule above for this one field of a point). The
 moment is the point's own, `event_checkpoints.volunteer_note_changed_at`, stamped by
 `volunteers/plan-points.ts#changePlanPoint` in the save's own transaction when — and only when — the note's words
 change after the service's trimming: written, changed in either language, or taken off. A save that leaves them as
@@ -4219,8 +4219,8 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
   - **The page** groups the points under «Start–finish» and «Pe traseu», on the screen and on the paper, adds them in
     «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed) — each with
     its «Notă pentru voluntari» in both languages when it has one, which «Modifică punctul» also gives later
-    (§1009, §NNN) —, and folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first.
-    «Modifică punctul» is a kept form too (§NNN, amending §953 for it), one a point (`ActionForm`, its boxes' ids
+    (§1009, §1011) —, and folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first.
+    «Modifică punctul» is a kept form too (§1011, amending §953 for it), one a point (`ActionForm`, its boxes' ids
     prefixed `plan-point-edit-<id>`): a refused edit comes back as that form's own state — its sentence first,
     naming its box; every box as typed, the note's two included; the point's fold open, without scripts as well
     (`shared/ui/disclosure.ts#REFUSAL_UNFOLDED_SX`, §336) — and a save that goes through comes back to the point,
@@ -4281,7 +4281,7 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
   «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
   they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows
   remember who was told, what is withdrawn at the send — is §16.3 (`modules/volunteers/point-mail.ts`). The page states
-  the four numbers the service counts (`readVolunteerPointMail`, its one reader of them since §NNN: who is written to,
+  the four numbers the service counts (`readVolunteerPointMail`, its one reader of them since §1011: who is written to,
   who already knows their point, who stands at a point with no address, who stands at none) beside the button and
   again in the question the button asks, with the email line the one builder words; and from the same read, under a
   point's note on «Pe puncte», never on paper, how many of its people were told it before the note last changed and

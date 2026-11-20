@@ -63,7 +63,7 @@ import { openFold } from "./support/fold";
  * carries the note, in both halves. The rules are `plan-points.test.ts`, `plan-table-screens.test.ts`,
  * `plan-points-screens.test.ts` and `plan-points-mail.test.ts`.
  *
- * And, since §NNN (amending §1009): the Organizer gives a new point its note in «Adaugă un punct»; a refused «Modifică punctul»
+ * And, since §1011 (amending §1009): the Organizer gives a new point its note in «Adaugă un punct»; a refused «Modifică punctul»
  * keeps everything typed — the note too — and says why at the form, the pencil still open, the address unchanged — and with
  * scripts off the same, in the page the plain POST draws, its shut folds showing the refusal; «Pe puncte» draws a point's
  * people like «Tabel», numbered, the names in bold capitals with a line between two, on paper too; and once a point's note
@@ -1035,7 +1035,7 @@ test.describe("§1009 «Notă pentru voluntari» and the numbered people on «Pl
     await expect(fold.getByText("În ambele limbi sau în niciuna, cel mult 500 de caractere în fiecare.")).toBeVisible();
     await fits(page);
 
-    // ---- One language alone is refused — since §NNN as the form's own state: the sentence at the form naming the empty box,
+    // ---- One language alone is refused — since §1011 as the form's own state: the sentence at the form naming the empty box,
     // what was typed still in it, the pencil and the point open, the address the same, nothing saved ----------------------
     const pressedAt = page.url();
     await noteRo.fill("Doar în română.");
@@ -1151,7 +1151,7 @@ test.describe("§1009 «Notă pentru voluntari» and the numbered people on «Pl
   });
 });
 
-test.describe("§NNN the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», a changed note told again", () => {
+test.describe("§1011 the note in «Adaugă un punct», «Modifică punctul» kept on a refusal, «Pe puncte» like «Tabel», a changed note told again", () => {
   test.describe.configure({ timeout: 240_000 });
 
   /** An element's box inside the screen's width. */

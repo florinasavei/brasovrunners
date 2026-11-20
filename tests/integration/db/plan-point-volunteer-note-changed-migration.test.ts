@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * The migration of the moment a point's «Notă pentru voluntari» last changed (§NNN, amending §1009: a changed note is told again to
+ * The migration of the moment a point's «Notă pentru voluntari» last changed (§1011, amending §1009: a changed note is told again to
  * whoever was told the point before it), proven on real PostgreSQL (PGlite), on a database migrated by the release before: one
  * nullable column, `event_checkpoints.volunteer_note_changed_at`, absent on every row from before — a note written before this
  * release included: nobody is told again for it — and on a row written without it. The file only expands.

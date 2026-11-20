@@ -259,7 +259,7 @@ function planPointBoxes(form: FormData) {
 }
 
 /**
- * The two boxes of «Notă pentru voluntari» (§1009) — in «Modifică punctul», and in «Adaugă un punct» since §NNN —, as the service
+ * The two boxes of «Notă pentru voluntari» (§1009) — in «Modifică punctul», and in «Adaugă un punct» since §1011 —, as the service
  * takes them, or nothing for a form that has neither (one drawn before them): an edit then keeps the note the point has, an add
  * adds the point with none.
  */
@@ -282,7 +282,7 @@ function refusedPoint(error: DomainError, form: FormData): FormOutcome {
  * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961; the owner, 2026-11-17: «vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish
  * și pe traseu»): a point of the plan's own, on the route — with its kilometre — or at the start–finish, with its name and,
- * when the organizers know them, its coordinates — and, since §NNN, its «Notă pentru voluntari» in both languages, held by the
+ * when the organizers know them, its coordinates — and, since §1011, its «Notă pentru voluntari» in both languages, held by the
  * service to the rules «Modifică punctul» holds it to and stored with the point.
  *
  * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
@@ -323,11 +323,11 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
  * A press that went through comes back to its point, in the view it was pressed in, the point and its group drawn open
  * (`open=`, §974), its outcome in the toast. A refused one — a note in one language or too long, a name left empty, a
  * kilometre that is no number, coordinates in no shape read, the point deleted meanwhile, a role that may not — does not
- * redirect since §NNN (amending §953 for this form): it comes back as the form's own state (§315), as «Adaugă un punct»'s
+ * redirect since §1011 (amending §953 for this form): it comes back as the form's own state (§315), as «Adaugă un punct»'s
  * does, so every box keeps what was typed — the note's two boxes too —, the sentence is said at the form, naming its box, and
  * the point's fold stays open, with scripts or without (`BOXED_DISCLOSURE_SX` and the pencil's own fold show a refusal shut).
  * It emails nobody, and the people who stand at the point stay there; a note changed here is told to the point's people by the
- * next «Trimite fiecăruia punctul lui» (§NNN).
+ * next «Trimite fiecăruia punctul lui» (§1011).
  */
 export async function editPlanPointAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);

@@ -30,7 +30,7 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   kilometre or coordinates do: a person told before the coordinates were typed stays told, and «Trimite din nou tuturor» is
   how the organizers send the place.
 
-  **Its «Notă pentru voluntari» is the one thing of a point that does (§NNN, amending §1009).** What everybody standing there
+  **Its «Notă pentru voluntari» is the one thing of a point that does (§1011, amending §1009).** What everybody standing there
   has to know is what they act on, so a person told the point by a message that left before its note last changed — written,
   changed in either language, or taken off — is not told any more, and the next ordinary press writes to them, each with their
   next telling; nobody else is written to for it, and «Trimite din nou tuturor» is not needed. The moment is the point's own
@@ -53,7 +53,7 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   - their newest row still waits to leave (PENDING, PROCESSING), names the point they stand at and goes to the address the
     row holds now → told: it is on its way, and it says what is true when it leaves;
   - else the newest of their rows that left (SENT — or COMPLAINED, which reached the inbox) names that point at that
-    address, and left at or after the moment the point's note last changed (§NNN) → told;
+    address, and left at or after the moment the point's note last changed (§1011) → told;
   - anything else → not told: no row at all; a row **withdrawn** at the send, which the outbox deletes; a row that **failed**
     for good or was **refused** by the receiving server (FAILED, BOUNCED), which never reached anybody; a message that named
     another point (the person was moved since) or went to an address corrected since; a message that left before the point's
@@ -69,7 +69,7 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   second says what is true when it leaves. An ordinary press does not meet this: a row being sent that names the point the
   person stands at counts as told, so nothing is queued beside it.
 
-  The same edge, for the note (§NNN): a message the outbox was drawing at the very moment the note changed — drawn a moment
+  The same edge, for the note (§1011): a message the outbox was drawing at the very moment the note changed — drawn a moment
   before the save, taken by the provider a moment after it — says the note as it was and counts as told. `sent_at` is the one
   moment the outbox keeps of a send; a column for the moment a message was drawn would close it, and a note saved in the second
   a message is in flight does not earn one. A message queued after the save is drawn after it, and says the new note.
@@ -104,7 +104,7 @@ export type VolunteerPointsSent = VolunteerPointCounts & { queued: number; again
 /**
  * One `VOLUNTEER_POINT` row of a volunteer, as the «already told» question reads it: never a word of the message. `sentAt` — when
  * the provider took it, null for a row that never left — else `createdAt` is the message's moment, compared with the point's
- * note (§NNN).
+ * note (§1011).
  */
 export type PointMailRow = { checkpointId: string | null; round: number; status: EmailOutboxStatus; recipientEmail: string; createdAt: Date; sentAt: Date | null };
 
@@ -123,7 +123,7 @@ function roundOf(value: unknown): number {
 export type ToldPerson = {
   checkpointId: string;
   canonicalEmail: string;
-  /** When the note of the point they stand at last changed (§NNN, `PlanPoint.volunteerNoteChangedAt`); null or absent for never. */
+  /** When the note of the point they stand at last changed (§1011, `PlanPoint.volunteerNoteChangedAt`); null or absent for never. */
   noteChangedAt?: Date | null;
 };
 
@@ -131,7 +131,7 @@ export type ToldPerson = {
  * What a person's rows say of the point they stand at now (the rule at the top of this file), pure:
  *
  * - `told` — a message on its way names it, or the newest one that reached them did, after the point's note last changed;
- * - `toldBeforeTheNote` — the newest message that reached them named it, but left before its note last changed (§NNN): the next
+ * - `toldBeforeTheNote` — the newest message that reached them named it, but left before its note last changed (§1011): the next
  *   ordinary press writes to them again, for the note;
  * - `notTold` — anything else.
  *
@@ -165,7 +165,7 @@ type Standing = "unplaced" | "noAddress" | "told" | "toWrite";
 
 /**
  * The question's four numbers, and per point of the plan how many people there were told it before its «Notă pentru voluntari»
- * last changed (§NNN): the next ordinary press writes to them again — the line the plan's page says under the point's note.
+ * last changed (§1011): the next ordinary press writes to them again — the line the plan's page says under the point's note.
  */
 export type VolunteerPointMail = { counts: VolunteerPointCounts; toldBeforeTheNote: ReadonlyMap<string, number> };
 
@@ -207,12 +207,12 @@ async function pointRows<T extends Record<string, unknown>>(db: Database<T>, sco
 
 /**
  * Everybody of one event who is not cancelled, each with where they stand for this message — and the four numbers, and per
- * point how many were told it before its note last changed (§NNN). This event's rows only: a volunteer is read by `event_id`,
+ * point how many were told it before its note last changed (§1011). This event's rows only: a volunteer is read by `event_id`,
  * a point is held to the event's own, and the outbox rows by the event their payload names.
  */
 async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ people: PlacedPerson[] } & VolunteerPointMail> {
   // Every point of the event's plan, whichever kind (§961): the one list the page and the message read too — with the moment
-  // each one's note last changed (§NNN).
+  // each one's note last changed (§1011).
   const noteChangedAt = new Map((await listPlanPoints(db, eventId)).map((point) => [point.id, point.volunteerNoteChangedAt]));
   const volunteers = await db
     .select({ id: eventVolunteers.id, email: eventVolunteers.email, canonicalEmail: eventVolunteers.canonicalEmail, locale: eventVolunteers.locale, checkpointId: eventVolunteers.checkpointId })
@@ -247,10 +247,10 @@ function assertMayManage(actor: Pick<StaffUser, "role">): void {
  * What the plan's page says of «Trimite fiecăruia punctul lui» before anything is pressed (§956): the question's four numbers —
  * how many people it would write to now, how many were already told the point they stand at, how many stand at a point with
  * no address and how many stand at no point yet, counted exactly as the press counts them — and, per point, how many of the
- * people it would write to were told that point before its «Notă pentru voluntari» last changed (§NNN): the line under the
+ * people it would write to were told that point before its «Notă pentru voluntari» last changed (§1011): the line under the
  * point's note. For whoever works the volunteers; anybody else is refused, before the event is so much as looked for. The
  * page's one reader of these numbers: it replaced `previewVolunteerPoints`, the four numbers alone, when the page came to need
- * the second answer (§NNN).
+ * the second answer (§1011).
  */
 export async function readVolunteerPointMail<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPointMail> {
   assertMayManage(actor);

@@ -58,7 +58,7 @@ const NAMES_THE_KIND = /planOnly|plan_only|startFinish|start_finish/;
 /** A point's coordinates read from the table: the column of the Drizzle table, or of the stamp's own SQL alias. */
 const NAMES_A_POINTS_PLACE = /eventCheckpoints\s*\.\s*(?:latitude|longitude)|\bc\.(?:latitude|longitude)\b/;
 /**
- * «Notă pentru voluntari» (§1009): a point's note for the people standing at it, by the column or by the field — and, since §NNN, the
+ * «Notă pentru voluntari» (§1009): a point's note for the people standing at it, by the column or by the field — and, since §1011, the
  * moment it last changed (`volunteer_note_changed_at`), which only the plan's reader, its verb and the press read.
  */
 const NAMES_THE_VOLUNTEER_NOTE = /volunteerNote(?:Ro|En|ChangedAt)|volunteer_note_(?:ro|en|changed_at)/;

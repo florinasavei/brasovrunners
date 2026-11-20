@@ -109,12 +109,12 @@ describe("§956 whether a volunteer was already told the point they stand at", (
 });
 
 /*
-  §NNN (amending §1009 and §956's rule), BR-REQ-080-02 — a changed «Notă pentru voluntari» is told again: a person told the point by a
+  §1011 (amending §1009 and §956's rule), BR-REQ-080-02 — a changed «Notă pentru voluntari» is told again: a person told the point by a
   message that left before the point's note last changed is not told any more (`toldBeforeTheNote`), and the next ordinary press
   writes to them. A message still waiting is told whatever the note did — it says the note as it is when it leaves —, and a point
   whose note never changed (no moment) is §956's rule exactly.
 */
-describe("§NNN a changed note un-tells whoever was told the point before it", () => {
+describe("§1011 a changed note un-tells whoever was told the point before it", () => {
   it("tells by a message that left after the note last changed, and not by one that left before it", () => {
     // Left a minute after the press; the note changed four minutes later: the message carried the note as it was.
     expect(tellingOf({ ...person, noteChangedAt: minutes(5) }, [row()])).toBe("toldBeforeTheNote");
