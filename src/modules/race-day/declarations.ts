@@ -14,7 +14,7 @@ import { isUuid } from "@/shared/ids";
 import type { RaceDayDeclarationRow } from "./domain/declarations";
 
 /*
-  «Ziua cursei» → «Declarații» (§NNN), the reads: one event's registrations that hold a signed declaration, each with its newest
+  «Ziua cursei» → «Declarații» (§1018), the reads: one event's registrations that hold a signed declaration, each with its newest
   acceptance — what the page draws and nothing more. The organizers' alone (`canReadRaceDayDeclarations`, asserted here as on the
   page, BR-REQ-060-01). Reading only: nothing here writes. The trail is written where a declaration is read whole — the PDF route
   every row links to (`registration.declaration_downloaded`, §324) — as before.
@@ -47,7 +47,7 @@ export async function findDeclarationsEvent<T extends Record<string, unknown>>(d
 const recordedBy = alias(staffUsers, "declaration_recorded_by");
 
 /**
- * Every registration of one event that holds a signed declaration (§NNN), with its newest acceptance, for the Organizer, the
+ * Every registration of one event that holds a signed declaration (§1018), with its newest acceptance, for the Organizer, the
  * Administrator and the Superadministrator (`canReadRaceDayDeclarations`); any other role is refused here as on the page. In no
  * particular order: the page sorts them into its folds (`domain/declarations.ts`).
  */

@@ -344,7 +344,7 @@ export const routing = defineRouting({
      */
     "/admin/checkin/jurnal": "/admin/checkin/jurnal",
     /**
-     * «Declarații» (§NNN): «Ziua cursei»'s list of the chosen event's signed declarations — the organizers'. One spelling in both
+     * «Declarații» (§1018): «Ziua cursei»'s list of the chosen event's signed declarations — the organizers'. One spelling in both
      * locales, like `jurnal`; a static segment, so it wins over `[code]` (and «DECLARATII» holds an I, which no desk code does).
      */
     "/admin/checkin/declaratii": "/admin/checkin/declaratii",

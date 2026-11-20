@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Ziua cursei» → «Declarații» (BR-REQ-060-01, BR-REQ-037-08, BR-REQ-033-02, BR-REQ-041-01), walked at 320 pixels and on a
+ * §1018 — «Ziua cursei» → «Declarații» (BR-REQ-060-01, BR-REQ-037-08, BR-REQ-033-02, BR-REQ-041-01), walked at 320 pixels and on a
  * desk against a production build: the Organizer's row of «Ziua cursei» reaches «Declarații», its last tab, and the row brings it into
  * view; the page lists the race's two signed declarations — one by the email link, one recorded on paper by the Organizer — with the
  * number, the signature, the version and the fingerprint, and no identity document though one was typed; «Declarația (PDF)» answers
@@ -115,7 +115,7 @@ async function signOut(page: Page) {
   await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
 }
 
-test.describe("§NNN «Ziua cursei» → «Declarații»", () => {
+test.describe("§1018 «Ziua cursei» → «Declarații»", () => {
   test.describe.configure({ timeout: 120_000 });
 
   test("the Organizer's row reaches «Declarații»; the page lists the race's declarations with no identity document; the PDF answers and is recorded", async ({ page }) => {

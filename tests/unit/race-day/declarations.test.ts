@@ -20,7 +20,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Ziua cursei» → «Declarații», the pure half (`race-day/domain/declarations.ts`) and its gate (BR-REQ-060-01): who reads it,
+ * §1018 — «Ziua cursei» → «Declarații», the pure half (`race-day/domain/declarations.ts`) and its gate (BR-REQ-060-01): who reads it,
  * and where that is asked; the folds by state — «Prezența»'s own, the confirmed one fold, first and open —; the order inside each —
  * race numbers rising, then the rows without one by name, then by id —; the number as the desk shows it; the search by a name blind
  * to case and diacritics or by a race number; the counts, a test registration never in them; and who signed — one hand, or a minor's
@@ -47,7 +47,7 @@ function row(over: Partial<RaceDayDeclarationRow> = {}): RaceDayDeclarationRow {
   };
 }
 
-describe("§NNN BR-REQ-060-01 who reads «Declarații»", () => {
+describe("§1018 BR-REQ-060-01 who reads «Declarații»", () => {
   it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s read it exactly when it reads the participant list, by role or as an actor", (role) => {
     expect(canReadRaceDayDeclarations(role)).toBe(canReadRegistrations(role));
     expect(canReadRaceDayDeclarations({ role })).toBe(canReadRegistrations(role));
@@ -83,7 +83,7 @@ describe("§NNN BR-REQ-060-01 who reads «Declarații»", () => {
   });
 });
 
-describe("§NNN the folds by state", () => {
+describe("§1018 the folds by state", () => {
   it("are «Prezența»'s, in its order, the confirmed one fold first; every other state in the desk's own fold", () => {
     expect([...DECLARATION_SECTION_KEYS]).toEqual(["confirmed", "unsigned", "addressUnconfirmed", "offered", "waitlisted", "voided"]);
     expect(Object.fromEntries(registrationStatus.enumValues.map((status) => [status, declarationSectionOf(status)]))).toEqual({
@@ -139,7 +139,7 @@ describe("§NNN the folds by state", () => {
   });
 });
 
-describe("§NNN the order inside a fold", () => {
+describe("§1018 the order inside a fold", () => {
   it("rises by race number, then the rows without one by name, then by id", () => {
     const ana = row({ registeredName: "Ana Pop", bibNumber: 27 });
     const bogdan = row({ registeredName: "Bogdan Ilie", bibNumber: 4 });
@@ -168,7 +168,7 @@ describe("§NNN the order inside a fold", () => {
   });
 });
 
-describe("§NNN the search", () => {
+describe("§1018 the search", () => {
   it("reads one to five digits as a race number, anything else as part of a name, nothing as everybody", () => {
     expect(declarationSearchOf(undefined)).toEqual({ kind: "none" });
     expect(declarationSearchOf("")).toEqual({ kind: "none" });
@@ -215,7 +215,7 @@ describe("§NNN the search", () => {
   });
 });
 
-describe("§NNN who signed", () => {
+describe("§1018 who signed", () => {
   it("names two signers on a minor's declaration that carries the minor's own signature, one otherwise", () => {
     expect(signedByTwo({ guardianName: "Maria Pop", minorTypedName: "Ion Pop" })).toBe(true);
     // A minor's declaration from before two signatures were asked: the parent's alone.

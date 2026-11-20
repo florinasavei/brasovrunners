@@ -22,7 +22,7 @@ export type RaceDayTab = "desk" | "results" | "timing" | "raffle" | "items" | "j
 /**
  * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, the stopwatch, a
  * wrapped prize, a checklist, the trail's clock with its arrow (the registration's «Ce a făcut echipa», §996), and the pen that
- * signs, as the desk's «Fără declarație semnată» wears it (§NNN). Looked up here, on the server; only the drawn `<svg>` reaches the
+ * signs, as the desk's «Fără declarație semnată» wears it (§1018). Looked up here, on the server; only the drawn `<svg>` reaches the
  * browser.
  */
 const TAB_GLYPH = {
@@ -44,7 +44,7 @@ const TAB_GLYPH = {
  * three groups, every desk role's since §1014 (the owner, 2026-11-20: «voluntarii logați nu văd tabul de Tombolă, doar adminii și
  * organizatorii văd acest tab») — and «Lucruri de adus», the event's checklist; and, after it, §996 (the owner, 2026-11-19: «vreau
  * si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
- * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`); and, seventh and last, §NNN: «Declarații», every signed
+ * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`); and, seventh and last, §1018: «Declarații», every signed
  * declaration of the chosen event in «Prezența»'s folds by state, its PDF and its registration one tap away. **The organizers' alone
  * too** (`canReadRaceDayDeclarations`, written as `canReadRegistrations`, so moving who reads the list moves this with it): a page
  * of every declaration names every person of the race beside how, when and by whom their signature was taken — the list the
@@ -117,7 +117,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
   if (canReadRaceDayJournal(actor)) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/jurnal" })), label: t("raceDay.tabs.journal"), active: active === "journal", glyph: glyph("journal") });
   }
-  // «Declarații» (§NNN): the organizers' tab (`canReadRaceDayDeclarations`), last; one word, so a phone draws it whole. The page asserts it again.
+  // «Declarații» (§1018): the organizers' tab (`canReadRaceDayDeclarations`), last; one word, so a phone draws it whole. The page asserts it again.
   if (canReadRaceDayDeclarations(actor)) {
     items.push({
       href: withEvent(getPathname({ locale, href: "/admin/checkin/declaratii" })),

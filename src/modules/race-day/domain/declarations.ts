@@ -4,7 +4,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 
 /**
- * «Ziua cursei» → «Declarații» (§NNN), the pure half: what a row of the page is, the folds it stands in by the registration's
+ * «Ziua cursei» → «Declarații» (§1018), the pure half: what a row of the page is, the folds it stands in by the registration's
  * state, the order inside each, the search by name or race number, and the counts. No database, no request, no words:
  * `race-day/declarations.ts` reads, the page says it. The organizers' alone (`canReadRaceDayDeclarations`).
  *

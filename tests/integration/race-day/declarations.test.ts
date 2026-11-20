@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, BR-REQ-060-01, BR-REQ-037-08, BR-REQ-033-02 — «Ziua cursei» → «Declarații», read from a real database through the page:
+ * §1018, BR-REQ-060-01, BR-REQ-037-08, BR-REQ-033-02 — «Ziua cursei» → «Declarații», read from a real database through the page:
  *
  * - the seventh and last tab, for the Organizer, the Administrator and the Superadministrator; no tab and a 404 for the Voluntar,
  *   the Redactor, Tehnic and a member, and the read refuses them;
@@ -250,7 +250,7 @@ const tabsOf = (markup: string) => {
 const rowOf = (markup: string, id: string) => rowsOf(markup).find((row) => row.id === id)!;
 const signedAt = (instant: Date, locale: "ro" | "en" = "ro") => formatDay(instant, { locale, timeZone: TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
-describe("§NNN «Declarații» — who may read it", () => {
+describe("§1018 «Declarații» — who may read it", () => {
   it("opens for the Organizer, the Administrator and the Superadministrator, and is a 404 for every other role", async () => {
     await morning();
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
@@ -302,7 +302,7 @@ describe("§NNN «Declarații» — who may read it", () => {
   });
 });
 
-describe("§NNN «Declarații» — the folds, their counts and the rows' order", () => {
+describe("§1018 «Declarații» — the folds, their counts and the rows' order", () => {
   it("draws every registration that holds a signed declaration in «Prezența»'s folds by state, the confirmed first and open, the others closed", async () => {
     await morning();
     const markup = await page();
@@ -350,7 +350,7 @@ describe("§NNN «Declarații» — the folds, their counts and the rows' order"
   });
 });
 
-describe("§NNN «Declarații» — a row", () => {
+describe("§1018 «Declarații» — a row", () => {
   it("says the number, the name, when, the signature in the hand, the version, the fingerprint and the two links", async () => {
     await morning();
     const markup = await page();
@@ -418,7 +418,7 @@ describe("§NNN «Declarații» — a row", () => {
   });
 });
 
-describe("§NNN «Declarații» — the search", () => {
+describe("§1018 «Declarații» — the search", () => {
   it("finds a name blind to case and diacritics in every fold, and a race number as the row shows it", async () => {
     await morning();
     const names = async (q: string) => foldsOf(await page({ q })).flatMap((fold) => fold.names);
@@ -455,7 +455,7 @@ describe("§NNN «Declarații» — the search", () => {
   });
 });
 
-describe("§NNN «Declarații» — light", () => {
+describe("§1018 «Declarații» — light", () => {
   it("sends the same statements for a race of seven declarations as for one of forty: one read for the rows, never one per row", async () => {
     await morning();
     const statements = async () => (await statementsOf(db, () => page())).filter((text) => !text.includes('from "platform_settings"'));
@@ -469,7 +469,7 @@ describe("§NNN «Declarații» — light", () => {
   });
 });
 
-describe("§NNN «Declarații» — in English", () => {
+describe("§1018 «Declarații» — in English", () => {
   it("speaks English on the English page", async () => {
     await morning();
     state.locale = "en";

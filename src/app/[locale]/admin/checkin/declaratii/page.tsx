@@ -71,7 +71,7 @@ const HAND_SX = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375
 const ROW_SX = { listStyle: "none", py: 1, borderBottom: 1, borderColor: "divider", minWidth: 0, overflowWrap: "anywhere" } as const;
 
 /**
- * «Declarații» — «Ziua cursei»'s list of signed declarations (§NNN), its last tab (`raceDayTabs`): for the chosen event, every
+ * «Declarații» — «Ziua cursei»'s list of signed declarations (§1018), its last tab (`raceDayTabs`): for the chosen event, every
  * registration that holds a signed declaration, in «Prezența»'s folds by state — «Confirmați» first and open, then «De semnat din
  * nou», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare» and «Anulate sau expirate», closed —, each fold
  * with how many real registrations it holds, and «N declarații semnate» above them all. A row: the race number as the desk writes it

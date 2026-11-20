@@ -266,7 +266,7 @@ describe("§996 «Jurnal» — who may read it", () => {
     }
   });
 
-  it("is the tab of «Ziua cursei» before «Declarații» (§NNN), the last, for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
+  it("is the tab of «Ziua cursei» before «Declarații» (§1018), the last, for those three, current on its page and carrying the event — and drawn for nobody else", async () => {
     state.actor = staff.ADMIN;
     const own = tabsOf(await page());
     expect(own.at(-2)).toEqual({ label: "Jurnal", current: true, href: `/ro/admin/checkin/jurnal?eventId=${eventId}` });

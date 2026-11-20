@@ -847,7 +847,7 @@ export function canReadRaceDayJournal(subject: StaffSubject): boolean {
 }
 
 /**
- * **«Ziua cursei» → «Declarații» (§NNN)** — every signed declaration of one event on one page: each registration that holds one,
+ * **«Ziua cursei» → «Declarații» (§1018)** — every signed declaration of one event on one page: each registration that holds one,
  * by state, its number, its name, when and how it was signed, the version, the fingerprint, and the links to its PDF and to the
  * registration. Whoever reads the participant list (`canReadRegistrations`): **the Organizer, the Administrator and the
  * Superadministrator**, written as that function so moving the line moves both — the declarations are part of the list they read
