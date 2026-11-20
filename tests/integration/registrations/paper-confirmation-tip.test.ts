@@ -76,6 +76,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   setPublicRegistrationOpenAction: vi.fn(),
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
+  recordListWishAtDeskAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   // «Datele înscrierii» (§645), folding «Corectează numele».
   editRegistrationAnswersAction: vi.fn(),

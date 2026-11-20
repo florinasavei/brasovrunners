@@ -106,6 +106,7 @@ import {
 } from "@/modules/registrations/family-sitting";
 import { compareFamilyOrder, SITTING_HELD, withFamilyRank } from "@/modules/registrations/domain/family-sitting";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
@@ -148,6 +149,9 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
+  // The wish recorded at the desk (§1017): its one button is the public list's own switch, the way back in one tap — the same
+  // `LIST_CONSENT` page the confirmation's second token opens, minted here at the send and superseding the older one (§12.8).
+  LIST_CONSENT_RECORDED: "LIST_CONSENT",
   // Another person on the same address, confirmed from the inbox (§389, §446) — only while the
   // address has room and the posted form is still kept; at the club's limit the message carries no
   // link, and nothing is minted for it.
@@ -369,6 +373,16 @@ async function renderRow(
     registration.emailConfirmedByStaffUserId !== null
   ) {
     throw new OutboxMessageWithdrawn("the club vouched for the address: there is nothing left to confirm");
+  }
+
+  /*
+    The wish recorded at the desk (§1017, `desk-list-wish.ts`): it tells the person their name is now asked to show, with the way
+    back. By the send, the name may be off the list again — the person's own link, another press at the desk — or the registration
+    over or erased: then there is nothing to take back, and «ai cerut să apari cu numele» would be untrue, so the message (and the
+    club's copy beside it) is withdrawn rather than sent.
+  */
+  if (row.messageType === "LIST_CONSENT_RECORDED" && (!registration || registration.listOptOut || isTerminalStatus(registration.status))) {
+    throw new OutboxMessageWithdrawn("the name is off the public list again, or the registration is over: nothing to take back");
   }
 
   /*
@@ -1686,12 +1700,15 @@ async function renderRow(
         ? await extendHeldVerificationLink(db, registration.id, emailLinkExpiresAt(now, settings), now)
         : null;
     // A one-person sitting's reserved place (§543) keeps the sitting's fixed deadline: this send moves the link, never the place.
+    // The public list's switch (§1017) borrows no deadline: a confirmed runner's old hold is not its life — the fortnight is.
     const placeUntil =
       purpose === "COMPLETE_DECLARATION"
         ? (eventStartsAt ?? holdExpiresAt)
         : purpose === "VERIFY_REGISTRATION_EMAIL"
           ? (heldLink ?? registration?.emailLinkExpiresAt ?? emailLinkExpiresAt(now, settings))
-          : holdExpiresAt;
+          : purpose === "LIST_CONSENT"
+            ? null
+            : holdExpiresAt;
     const expiresAt = placeUntil && placeUntil.getTime() > now.getTime() ? placeUntil : defaultExpiresAt;
     const issued = await issueActionToken(db, {
       participantId: row.participantId,

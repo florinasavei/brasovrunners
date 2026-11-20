@@ -168,7 +168,8 @@ describe("the declaration's merge fields", () => {
         // And the notice by one sentence in that paragraph for a member answering from the members' zone with one press (§822).
         // And the notice by the member mark's four sentences in the same paragraph and a clause in section 5: «BVR» beside a shown name, the count, the claim, the withdrawal (§831).
         // And the notice by one paragraph in section 5 and a line in section 7 for the raffle's own sign-up: what a sign-up keeps, why, who sees it, how long, the withdrawal (§984).
-        const ceiling = key === "EVENT_DECLARATION" || key === "EVENT_DECLARATION_ROAD" ? 11700 : key === "PRIVACY_NOTICE" ? 39500 + 1500 + 1000 + 1000 + 3500 + 500 + 600 + 1500 + 300 + 1200 + 1200 : key === "TERMS" ? 12000 : 11000;
+        // And the notice by one sentence in section 4's public-list paragraph: the wish to appear by name told at the race-number desk, recorded, the person emailed the way back (§1017).
+        const ceiling = key === "EVENT_DECLARATION" || key === "EVENT_DECLARATION_ROAD" ? 11700 : key === "PRIVACY_NOTICE" ? 39500 + 1500 + 1000 + 1000 + 3500 + 500 + 600 + 1500 + 300 + 1200 + 1200 + 300 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }
