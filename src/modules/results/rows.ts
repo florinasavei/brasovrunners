@@ -31,21 +31,26 @@ export const EXTRA_ROWS = "extraRows";
 
 /**
  * «Folosește» under a line's «Timpi la sosire» (§NNN): the page's one hidden form its buttons name with `form=`, as «Șterge»'s do, and
- * the box each button posts — `choice`, `<number>:<milliseconds>` (`chosenTimeValue`, read back by `readChosenTime`). Here, in a module
- * with no React, so the page that draws the question, the island that draws the button and the action that reads it spell it one way.
+ * the box each button posts — `choice`, `<number>:<milliseconds>:<the line's fingerprint>` (`chosenTimeValue`, read back by
+ * `readChosenTime`). Here, in a module with no React, so the page that draws the question, the island that draws the button and the
+ * action that reads it spell it one way.
  */
 export const CHOOSE_TIME_FORM_ID = "choose-recorded-time";
 export const CHOICE_BOX = "choice";
 
-/** What a «Folosește» button posts: the line's number and the time, `101:2717000`. */
-export function chosenTimeValue(bibNumber: number, gunTimeMs: number): string {
-  return `${bibNumber}:${gunTimeMs}`;
+/**
+ * What a «Folosește» button posts: the line's number, the time, and what that line stored when the page was drawn
+ * (`domain/fingerprint.ts#resultLineFingerprint`) — `101:2717000:3f2a…` —, so the server refuses only a press whose own line changed
+ * since, never one another number's arrival made older.
+ */
+export function chosenTimeValue(bibNumber: number, gunTimeMs: number, lineFingerprint: string): string {
+  return `${bibNumber}:${gunTimeMs}:${lineFingerprint}`;
 }
 
-/** A posted `choice`, read back: the number and the time, or null for anything the page never draws. */
-export function readChosenTime(value: string): { bibNumber: number; gunTimeMs: number } | null {
-  const match = /^(\d{1,6}):(\d{1,9})$/.exec(value.trim());
-  return match ? { bibNumber: Number(match[1]), gunTimeMs: Number(match[2]) } : null;
+/** A posted `choice`, read back: the number, the time and the line's fingerprint, or null for anything the page never draws. */
+export function readChosenTime(value: string): { bibNumber: number; gunTimeMs: number; lineFingerprint: string } | null {
+  const match = /^(\d{1,6}):(\d{1,9}):([0-9a-f]{16})$/.exec(value.trim());
+  return match ? { bibNumber: Number(match[1]), gunTimeMs: Number(match[2]), lineFingerprint: match[3] } : null;
 }
 
 /** Where «Clasament» is drawn again after a «Folosește» that went through: at the line of that number (`id` on the line). */

@@ -34,7 +34,7 @@ import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "
  * **«Timpi la sosire»** (§NNN): under a line's «Timp», when «Cronometrare» recorded more than one time for its number — or one that is
  * not the line's —, each time with who pressed it and when, «în clasament» on the one the line shows, and beside each other one a
  * 44-pixel «Folosește» that posts the page's one hidden form (`CHOOSE_TIME_FORM_ID`, as «Șterge» posts its own), asked first. The
- * page decides which lines draw it and words every time; this only lays them out.
+ * page decides which lines draw it — never a «Descalificat» one — and words every time; this only lays them out.
  *
  * A client island because the recall and the «Adaugă un alergător» button are; plain data crosses the boundary — strings, numbers
  * and booleans — and never an element (`AGENTS.md` §14.1).
@@ -97,7 +97,7 @@ export type RecordedTimeView = {
   /** «Tudor Tehnic, la 09:45:20» — «cont șters» for an account gone. */
   by: string;
   current: boolean;
-  /** The button's value, `<number>:<milliseconds>` (`rows.ts#chosenTimeValue`). */
+  /** The button's value, `<number>:<milliseconds>:<the line's fingerprint>` (`rows.ts#chosenTimeValue`). */
   choice: string;
   /** «Folosește 0:45:17 pentru #102 Bia Marin». */
   useLabel: string;
@@ -405,8 +405,8 @@ function LineBox({
 /**
  * «Timpi la sosire:» under a line's «Timp» (§NNN): each time «Cronometrare» recorded for the line's number, with who pressed it and
  * when; «în clasament» on the one the line shows; beside each other one, «Folosește» — a submit of the page's one hidden form
- * (`CHOOSE_TIME_FORM_ID`) posting `choice=<number>:<milliseconds>`, which asks first, as «Șterge» does. In the «Timp» cell, so it
- * reads as that box's own, at every width; the words wrap inside the cell rather than widen the line.
+ * (`CHOOSE_TIME_FORM_ID`) posting `choice=<number>:<milliseconds>:<the line's fingerprint>`, which asks first, as «Șterge» does. In
+ * the «Timp» cell, so it reads as that box's own, at every width; the words wrap inside the cell rather than widen the line.
  */
 function RecordedTimes({ times, words }: { times: readonly RecordedTimeView[]; words: ResultWords }) {
   return (

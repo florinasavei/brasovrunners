@@ -163,20 +163,21 @@ export async function saveEventResultsAction(_previous: FormOutcome | null, form
 /**
  * «Folosește» under a line's «Timpi la sosire» (§NNN): one of the times «Cronometrare» recorded for the number becomes the line's
  * «Sosit» time (`chooseRecordedFinishTime`), asked first — the page's one hidden form, as «Șterge» is, its button posting
- * `choice=<number>:<milliseconds>` beside the page's fingerprint. Through: back to «Clasament» at the line (`#result-line-<number>`),
- * the toast naming the number. Refused — CONFLICT for a page older than the stored rows, `RESULT_TIME_NOT_RECORDED`, FORBIDDEN,
- * NOT_FOUND, `RESULTS_NOT_OPEN` —: back with `?timeError=<code>` at the page's alert, which says why; nothing was written.
+ * `choice=<number>:<milliseconds>:<the line's fingerprint>`. Through: back to «Clasament» at the line (`#result-line-<number>`), the
+ * toast naming the number. Refused — CONFLICT for a line changed since the page was drawn (that line's alone: another number's arrival
+ * refuses nothing), `RESULT_DISQUALIFIED`, `RESULT_TIME_NOT_RECORDED`, FORBIDDEN, NOT_FOUND, `RESULTS_NOT_OPEN` —: back with
+ * `?timeError=<code>` at the page's alert, which says why; nothing was written.
  */
 export async function chooseRecordedTimeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const id = eventIdOf(form);
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id } } });
   // A value the page never drew is no number and no time: the service asserts the role first, then refuses it as no recorded time.
-  const choice = readChosenTime(field(form, CHOICE_BOX)) ?? { bibNumber: 0, gunTimeMs: 0 };
+  const choice = readChosenTime(field(form, CHOICE_BOX)) ?? { bibNumber: 0, gunTimeMs: 0, lineFingerprint: null };
   let outcome: { changed: boolean; bibNumber: number };
   try {
     const actor = await requireStaff();
-    outcome = await chooseRecordedFinishTime(getDb(), actor, { eventId: id, ...choice, fingerprint: field(form, "fingerprint") || null }, new Date());
+    outcome = await chooseRecordedFinishTime(getDb(), actor, { eventId: id, ...choice }, new Date());
   } catch (error) {
     if (!isDomainError(error)) throw error;
     revalidatePath(path);

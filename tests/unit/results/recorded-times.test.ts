@@ -1,12 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { isRecordedTime, RECORDED_TIME_ACTIONS, recordedFinishTimes, recordedTimesOf, recordedTimesOffered, type RecordedTimeRow } from "@/modules/results/domain/recorded-times";
+import { type FingerprintedResult, resultLineFingerprint, resultsFingerprint } from "@/modules/results/domain/fingerprint";
+import {
+  isRecordedTime,
+  mayChooseRecordedTime,
+  RECORDED_TIME_ACTIONS,
+  recordedFinishTimes,
+  recordedTimesOf,
+  recordedTimesOffered,
+  type RecordedTimeRow,
+  shownFinishTime,
+} from "@/modules/results/domain/recorded-times";
+import { chosenTimeValue, readChosenTime } from "@/modules/results/rows";
 
 /**
  * §NNN — «Timpi la sosire» read from the race's trail (BR-REQ-050-02): for each number, the times «Cronometrare» recorded since the last
  * «Resetează clasamentul» — the first press and every later press (`finish_duplicate`), a press undone at the line left out, each time
  * once with who pressed it first and when, in the order pressed; another number's presses, a «Clasament» save's rows and «Folosește»'s
  * own rows are no time recorded at the line. And when a line of «Clasament» draws the block: a choice — more than one time, or one that
- * is not the line's «Timp».
+ * is not the line's «Timp» — on any line but a «Descalificat» one. And what a «Folosește» posts: the number, the time and the line's own
+ * fingerprint, so only a change of that line refuses it.
  */
 const AT = Date.UTC(2026, 10, 21, 7, 45, 0);
 let sequence = 0;
@@ -115,21 +127,84 @@ describe("§NNN «Timpi la sosire»: the times recorded at the line, by number",
 describe("§NNN when a line of «Clasament» draws «Timpi la sosire»", () => {
   const one = recordedTimesOf([press(102, T(45, 12), 15)], 102);
   const two = recordedTimesOf([press(102, T(45, 12), 15), again(102, T(45, 17), T(45, 12), 20)], 102);
+  /** A line's stored result, as the rule reads it: «Sosit» at a time, or a state with none. */
+  const finished = (gunTimeMs: number) => ({ status: "FINISHED", gunTimeMs });
+  const writtenOff = (status: "DNF" | "DNS" | "DSQ") => ({ status, gunTimeMs: null });
 
   it("draws it for a choice: two times or more, whatever the line shows", () => {
-    expect(recordedTimesOffered(two, T(45, 12))).toBe(true);
-    expect(recordedTimesOffered(two, T(45, 17))).toBe(true);
+    expect(recordedTimesOffered(two, finished(T(45, 12)))).toBe(true);
+    expect(recordedTimesOffered(two, finished(T(45, 17)))).toBe(true);
     expect(recordedTimesOffered(two, null)).toBe(true);
   });
 
-  it("draws it for one time that is not the line's «Timp» — typed otherwise, or a line with no «Sosit» time", () => {
-    expect(recordedTimesOffered(one, T(45, 15))).toBe(true);
+  it("draws it for one time that is not the line's «Timp» — typed otherwise, a line with no result, or one written off «Abandon» or «Neprezentat»", () => {
+    expect(recordedTimesOffered(one, finished(T(45, 15)))).toBe(true);
     expect(recordedTimesOffered(one, null)).toBe(true);
+    // A runner written off by mistake who was pressed at the line: the block stays, «Folosește» makes them «Sosit».
+    expect(recordedTimesOffered(one, writtenOff("DNF"))).toBe(true);
+    expect(recordedTimesOffered(one, writtenOff("DNS"))).toBe(true);
+    expect(recordedTimesOffered(two, writtenOff("DNS"))).toBe(true);
   });
 
   it("draws nothing for one time equal to the line's, or for none", () => {
-    expect(recordedTimesOffered(one, T(45, 12))).toBe(false);
-    expect(recordedTimesOffered([], T(45, 12))).toBe(false);
+    expect(recordedTimesOffered(one, finished(T(45, 12)))).toBe(false);
+    expect(recordedTimesOffered([], finished(T(45, 12)))).toBe(false);
     expect(recordedTimesOffered([], null)).toBe(false);
+  });
+
+  it("draws nothing on a «Descalificat» line, whatever was recorded: a disqualification is changed by hand in «Stare», never by «Folosește»", () => {
+    expect(recordedTimesOffered(one, writtenOff("DSQ"))).toBe(false);
+    expect(recordedTimesOffered(two, writtenOff("DSQ"))).toBe(false);
+    // A disqualification typed with a time still stored is no «Sosit» time either way.
+    expect(recordedTimesOffered(two, { status: "DSQ", gunTimeMs: T(45, 12) })).toBe(false);
+    expect(mayChooseRecordedTime(writtenOff("DSQ"))).toBe(false);
+    for (const stored of [null, finished(T(45, 12)), writtenOff("DNF"), writtenOff("DNS")]) expect(mayChooseRecordedTime(stored), JSON.stringify(stored)).toBe(true);
+  });
+
+  it("marks «în clasament» only a «Sosit» line's own time", () => {
+    expect(shownFinishTime(finished(T(45, 12)))).toBe(T(45, 12));
+    expect(shownFinishTime(writtenOff("DNS"))).toBeNull();
+    expect(shownFinishTime({ status: "DSQ", gunTimeMs: T(45, 12) })).toBeNull();
+    expect(shownFinishTime(null)).toBeNull();
+  });
+});
+
+describe("§NNN what «Folosește» posts: the number, the time and the line's own fingerprint", () => {
+  const stored = (over: Partial<FingerprintedResult> = {}): FingerprintedResult => ({
+    bibNumber: 102,
+    registrationId: "registration-102",
+    displayName: null,
+    sex: null,
+    birthDate: null,
+    status: "FINISHED",
+    gunTimeMs: T(45, 12),
+    chipTimeMs: null,
+    note: null,
+    ...over,
+  });
+
+  it("fingerprints one line by its one row's own columns, or by none — the whole list's rule, on that line alone", () => {
+    expect(resultLineFingerprint(stored())).toBe(resultsFingerprint([stored()]));
+    expect(resultLineFingerprint(null)).toBe(resultsFingerprint([]));
+    expect(resultLineFingerprint(undefined)).toBe(resultLineFingerprint(null));
+    expect(resultLineFingerprint(stored())).toMatch(/^[0-9a-f]{16}$/);
+    // The line's own write moves it; nothing about another line can, since only this row is in it.
+    for (const change of [{ gunTimeMs: T(45, 17) }, { status: "DNS", gunTimeMs: null }, { note: "corectat" }, { chipTimeMs: T(45, 10) }, { registrationId: null }]) {
+      expect(resultLineFingerprint(stored(change)), JSON.stringify(change)).not.toBe(resultLineFingerprint(stored()));
+    }
+    expect(resultLineFingerprint(stored())).not.toBe(resultLineFingerprint(null));
+  });
+
+  it("posts `<number>:<milliseconds>:<fingerprint>` and reads back exactly that, nothing the page never draws", () => {
+    const line = resultLineFingerprint(stored());
+    const value = chosenTimeValue(102, T(45, 17), line);
+    expect(value).toBe(`102:${T(45, 17)}:${line}`);
+    expect(readChosenTime(value)).toEqual({ bibNumber: 102, gunTimeMs: T(45, 17), lineFingerprint: line });
+    expect(readChosenTime(` ${value} `)).toEqual({ bibNumber: 102, gunTimeMs: T(45, 17), lineFingerprint: line });
+    // A line with no result posts the fingerprint of none.
+    expect(readChosenTime(chosenTimeValue(103, T(52, 0), resultLineFingerprint(null)))?.lineFingerprint).toBe(resultsFingerprint([]));
+    for (const forged of [`102:${T(45, 17)}`, `102:${T(45, 17)}:`, `102:${T(45, 17)}:ABCDEF0123456789`, `102:${T(45, 17)}:${line}0`, `102:repede:${line}`, `x:${T(45, 17)}:${line}`, ""]) {
+      expect(readChosenTime(forged), forged).toBeNull();
+    }
   });
 });

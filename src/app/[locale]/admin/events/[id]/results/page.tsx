@@ -24,7 +24,7 @@ import { anonymousResultLabel } from "@/modules/results/domain/public-name";
 import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/finish-history";
-import { recordedTimesOffered } from "@/modules/results/domain/recorded-times";
+import { recordedTimesOffered, shownFinishTime } from "@/modules/results/domain/recorded-times";
 import { readRecordedFinishTimes } from "@/modules/results/recorded-times";
 import { plannedGunOf, readEventResults, type ResultRunner } from "@/modules/results/results";
 import { CHOICE_BOX, CHOOSE_TIME_FORM_ID, chosenTimeValue, RESULTS_ALERT_ANCHOR } from "@/modules/results/rows";
@@ -78,10 +78,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "CONFLICT", "RESULTS_RESET_AFTER_START"] as const;
 
 /**
- * The codes a refused «Folosește» comes back with (§NNN), in `?timeError=` — its own parameter, so its CONFLICT («the results changed
- * since your page») is never said in the reset's words. Each is `errors.<code>`, but CONFLICT, `results.recorded.changed`.
+ * The codes a refused «Folosește» comes back with (§NNN), in `?timeError=` — its own parameter, so its CONFLICT («the runner's line
+ * changed since your page») is never said in the reset's words. Each is `errors.<code>`, but CONFLICT, `results.recorded.changed`.
  */
-const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "RESULT_TIME_NOT_RECORDED"] as const;
+const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "RESULT_TIME_NOT_RECORDED", "RESULT_DISQUALIFIED"] as const;
 
 /**
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
@@ -98,9 +98,9 @@ const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "
  * at all.
  *
  * Under a line's «Timp», «Timpi la sosire» (§NNN): the times «Cronometrare» recorded for its number since the last reset — read with
- * the page's data, one query of the race's trail (`recorded-times.ts`) — drawn only when there is a choice, each with who pressed it and
- * when, «în clasament» on the one the line shows, and «Folosește» beside each other one: the page's one hidden form, as «Șterge»'s, its
- * question naming the time and the runner, the page's fingerprint posted with it.
+ * the page's data, one query of the race's trail (`recorded-times.ts`) — drawn only when there is a choice and never on a «Descalificat»
+ * line, each with who pressed it and when, «în clasament» on the one the line shows, and «Folosește» beside each other one: the page's
+ * one hidden form, as «Șterge»'s, its question naming the time and the runner, the line's own fingerprint posted with it.
  *
  * Whoever enters results — the Organizer, the Administrator, the Superadministrator (`canEnterResults`); anybody else meets the 404 an
  * unknown page gets (BR-REQ-060-01), and every action asserts again. A group run has no results: the page says so and offers nothing.
@@ -256,16 +256,17 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const writtenByOf = (runner: ResultRunner) =>
     runner.result ? t(runner.result.writtenBy.changed ? "timing.changedBy" : "timing.enteredBy", { name: runner.result.writtenBy.name ?? t("timing.accountGone") }) : undefined;
   // «Timpi la sosire» (§NNN): a line's recorded times, worded, only when there is a choice (`recordedTimesOffered`) — more than one, or one
-  // that is not the line's «Timp». Each «Folosește» gets its own question in the page's one hidden form, the time and the runner named.
+  // that is not the line's «Timp» — and never on a «Descalificat» line, changed by hand in «Stare». Each «Folosește» gets its own question
+  // in the page's one hidden form, the time and the runner named, and posts its line's own fingerprint: only that line is guarded.
   const confirm = await confirmWords();
   const chooseQuestions: ConfirmSpec[] = [];
   const recordedOf = (runner: ResultRunner, runnerWords: string): RecordedTimeView[] | undefined => {
     const times = recorded.get(runner.bibNumber) ?? [];
-    const current = runner.result?.status === "FINISHED" ? runner.result.gunTimeMs : null;
-    if (!recordedTimesOffered(times, current)) return undefined;
+    if (!recordedTimesOffered(times, runner.result)) return undefined;
+    const current = shownFinishTime(runner.result);
     return times.map((time) => {
       const timeWords = formatResultTime(time.gunTimeMs);
-      const choice = chosenTimeValue(runner.bibNumber, time.gunTimeMs);
+      const choice = chosenTimeValue(runner.bibNumber, time.gunTimeMs, runner.lineFingerprint);
       const isCurrent = time.gunTimeMs === current;
       if (!isCurrent) {
         chooseQuestions.push({
@@ -458,7 +459,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       )}
       {(errorCode || timeErrorCode) && (
         <Alert severity="error" id={RESULTS_ALERT_ANCHOR} tabIndex={-1} sx={{ scrollMarginTop: 16 }} data-testid="results-error">
-          {/* A refused «Folosește» (§NNN) says its own CONFLICT — the results changed since the page was drawn —; a CONFLICT in
+          {/* A refused «Folosește» (§NNN) says its own CONFLICT — the runner's line changed since the page was drawn —; a CONFLICT in
               `resultsError` is the reset's (§997): results arrived or the start changed since its page was drawn — nothing was wiped. */}
           {timeErrorCode
             ? timeErrorCode === "CONFLICT"
@@ -563,8 +564,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </ActionForm>
 
       {/* A line's «Folosește» under «Timpi la sosire» (§NNN): one hidden form for the whole page, as «Șterge»'s; the button names it with
-          `form=` and posts `choice=<number>:<milliseconds>`. Asks first — each button its own question, the time and the runner named —
-          and posts the page's fingerprint, so a page older than another save changes nothing. Drawn only while some line offers a choice. */}
+          `form=` and posts `choice=<number>:<milliseconds>:<the line's fingerprint>`. Asks first — each button its own question, the time
+          and the runner named —; the line's own fingerprint, never the page's, so a line changed since changes nothing while another
+          number's arrival at «Cronometrare» refuses nothing. Drawn only while some line offers a choice. */}
       {chooseQuestions.length > 0 && (
         <ActionForm
           id={CHOOSE_TIME_FORM_ID}
@@ -579,7 +581,6 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={id} />
-          <input type="hidden" name="fingerprint" value={view.fingerprint} />
         </ActionForm>
       )}
 

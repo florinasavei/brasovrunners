@@ -2910,7 +2910,8 @@
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
       "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
       "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start.",
-      "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare."
+      "RESULT_TIME_NOT_RECORDED": "Nu s-a schimbat nimic: timpul nu e printre cei înregistrați la «Cronometrare» pentru acest număr de la ultima resetare.",
+      "RESULT_DISQUALIFIED": "Nu s-a schimbat nimic: alergătorul e descalificat. O descalificare se schimbă de mână, la «Stare», apoi «Salvează tot clasamentul»."
     },
     "editor": {
       "draftPreview": {
@@ -10002,7 +10003,7 @@
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
-                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând. Un număr trecut de mai multe ori la «Cronometrare» își arată sub «Timp» toți timpii prinși, cu cine l-a trecut și când: «Folosește» pune alt timp în clasament, după o întrebare.",
+                "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând. Un număr trecut de mai multe ori la «Cronometrare» își arată sub «Timp» toți timpii prinși, cu cine l-a trecut și când: «Folosește» pune alt timp în clasament, după o întrebare — nu și la un descalificat, a cărui «Stare» o schimbi de mână.",
                 "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul. Ați făcut o probă înainte de cursă? Administratorul o șterge cu «Resetează clasamentul»."
               ]
             },
@@ -12856,7 +12857,7 @@
         "confirmTitle": "Folosești acest timp?",
         "confirmBody": "Pui {time} ca timp pentru {runner}? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
         "confirmBodyAny": "Pui timpul ales ca timp al alergătorului? Rezultatul devine «Sosit», cu timpul cip și nota de acum, iar locurile se recalculează. Ce n-ai salvat pe pagină se pierde: salvează întâi.",
-        "changed": "Timpul nu s-a schimbat: între timp altcineva a salvat clasamentul. Uită-te din nou la rând și alege din nou."
+        "changed": "Timpul nu s-a schimbat: între timp altcineva a modificat rândul acestui alergător. Uită-te din nou la rând și alege din nou."
       },
       "reset": {
         "title": "Resetează clasamentul",

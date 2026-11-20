@@ -16,6 +16,8 @@
  *   number still standing, of its time — by the undo's own rule (`finish-line.ts#mayUndo`) nobody pressed the number after it.
  *   And everything before the race's last «Resetează clasamentul» (`event.results_reset`, §997): the trial it wiped.
  * - **Each time once**, in the order first pressed: two presses of the same time are one time, with who pressed it first and when.
+ * - **Never over «Descalificat»** (`mayChooseRecordedTime`): a disqualification is changed by hand in «Stare», so a «Descalificat»
+ *   line draws no block and the service refuses it; «Abandon» and «Neprezentat» keep it.
  */
 
 /** The trail's actions the times are read from: the presses, the undo (a `deleted`), and the reset that wipes what came before. */
@@ -94,11 +96,31 @@ export function isRecordedTime(times: readonly RecordedTime[], gunTimeMs: number
   return times.some((time) => time.gunTimeMs === gunTimeMs);
 }
 
+/** A line's stored result as these rules read it — its state and its time since the gun —; null for a line with none. */
+export type StoredLineResult = { status: string; gunTimeMs: number | null } | null;
+
+/** The time a line shows «în clasament»: its stored «Sosit» time; null for a line with no result, or with another state, which has no time. */
+export function shownFinishTime(stored: StoredLineResult): number | null {
+  return stored?.status === "FINISHED" ? stored.gunTimeMs : null;
+}
+
 /**
- * Whether a line of «Clasament» draws its «Timpi la sosire» block: there is a choice — more than one time recorded for its number, or
- * the one recorded time is not the line's «Timp» (`currentGunTimeMs`, the stored «Sosit» time; null for a line with none, or with
- * another state, which has no time). One recorded time equal to the line's, or none at all, draws nothing.
+ * Whether «Folosește» may make a recorded time a line's (§NNN): never over «Descalificat» — a decision of «Clasament», which the line
+ * itself never undoes either (`finish-line.ts#pressMeets`), changed only by hand in «Stare» —; a line «Abandon» or «Neprezentat», or
+ * one with no result, may: a runner written off by mistake who was pressed at the line. The page asks it before drawing the block,
+ * the service before writing (`RESULT_DISQUALIFIED`).
  */
-export function recordedTimesOffered(times: readonly RecordedTime[], currentGunTimeMs: number | null): boolean {
-  return times.length > 1 || (times.length === 1 && times[0].gunTimeMs !== currentGunTimeMs);
+export function mayChooseRecordedTime(stored: StoredLineResult): boolean {
+  return stored?.status !== "DSQ";
+}
+
+/**
+ * Whether a line of «Clasament» draws its «Timpi la sosire» block: a line «Folosește» may change (`mayChooseRecordedTime`: never a
+ * «Descalificat» one) with a choice — more than one time recorded for its number, or the one recorded time is not the line's «Timp»
+ * (`shownFinishTime`). One recorded time equal to the line's, or none at all, draws nothing.
+ */
+export function recordedTimesOffered(times: readonly RecordedTime[], stored: StoredLineResult): boolean {
+  if (!mayChooseRecordedTime(stored)) return false;
+  const current = shownFinishTime(stored);
+  return times.length > 1 || (times.length === 1 && times[0].gunTimeMs !== current);
 }

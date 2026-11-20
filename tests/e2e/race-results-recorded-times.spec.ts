@@ -7,12 +7,13 @@ import { hydrated, signIn } from "./support/featured-event";
  * §NNN — «Timpi la sosire» and «Folosește» on «Clasament» (BR-REQ-050-02, BR-REQ-041-01), walked at 320 pixels and on a desk against a
  * production build: on «Cronometrare» an Administrator types 101, then 102, then 101 again — the second 101 a duplicate, the first time
  * kept on the row —; on «Clasament» the line of 101 lists both times under its «Timp», who pressed each and when, «în clasament» on the
- * first and a 44-pixel «Folosește» beside the second; pressed, the question names the time and the runner and says that what is not
- * saved on the page is lost; confirmed, the page comes back at the line, the toast says it, the line's «Timp» is the second time, the
- * places follow — 102 first now —, a box typed on another line and not saved is empty again, as the question said, and «Istoricul
- * sosirilor» says the choice. Nothing scrolls sideways.
+ * first and a 44-pixel «Folosește» beside the second; while that page is open, 103 arrives at «Cronometrare» in another tab — race day
+ * goes on —, and the press still goes through, only its own line being guarded; pressed, the question names the time and the runner
+ * and says that what is not saved on the page is lost; confirmed, the page comes back at the line, the toast says it, the line's «Timp»
+ * is the second time, the places follow — 102 first now, 103 third —, a box typed on another line and not saved is empty again, as the
+ * question said, and «Istoricul sosirilor» says the choice. Nothing scrolls sideways.
  *
- * The race and its two runners are written straight into the database — the setup, not the subject — one per project and run.
+ * The race and its three runners are written straight into the database — the setup, not the subject — one per project and run.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -32,7 +33,7 @@ async function query<T extends Record<string, unknown>>(text: string, values: un
   }
 }
 
-/** A race whose planned gun was a few minutes ago, with runners 101 and 102. */
+/** A race whose planned gun was a few minutes ago, with runners 101, 102 and 103. */
 async function seedRace(tag: string): Promise<string> {
   const [{ id: eventId }] = await query<{ id: string }>(
     `INSERT INTO events (type, starts_at, registration_mode, location_name) VALUES ('RACE', now() - interval '3 minutes', 'INTERNAL', 'Parcul Tractorul') RETURNING id`,
@@ -48,6 +49,7 @@ async function seedRace(tag: string): Promise<string> {
   for (const runner of [
     { bib: 101, name: `Ana Popescu ${tag}` },
     { bib: 102, name: `Bia Marin ${tag}` },
+    { bib: 103, name: `Cora Dinu ${tag}` },
   ]) {
     const email = `times-${runner.bib}-${tag}@test.invalid`;
     const [person] = await query<{ id: string }>(
@@ -136,6 +138,18 @@ test.describe("§NNN «Timpi la sosire» and «Folosește»", () => {
     // A box typed on another line and not saved: «Folosește» posts its own small form, as «Șterge» does, and says what that does to it.
     await line102.getByTestId("result-note").fill("notă nesalvată");
 
+    // Race day goes on: while this page is open, 103 arrives at «Cronometrare» in another tab. «Folosește» guards only its own line,
+    // so the press below still goes through — no reload for another number's arrival.
+    const timing = await page.context().newPage();
+    await timing.goto(`/ro/admin/checkin/cronometrare?eventId=${eventId}`);
+    await hydrated(timing);
+    await expect(timing.getByTestId("finish-clock")).toContainText(/De la start: 0:\d\d:\d\d/);
+    await pressNumber(timing, 103, "saved");
+    await timing.close();
+    const [press103] = await query<{ ms: number }>(`SELECT gun_time_ms AS ms FROM event_results WHERE event_id = $1 AND bib_number = 103`, [eventId]);
+    expect(press103.ms).toBeGreaterThan(second.ms);
+    await expect(page.locator('[data-testid="result-line"][data-bib="103"]').getByTestId("result-time")).toHaveValue("");
+
     // «Folosește» on the second time: 44 pixels, asked first, the time and the runner in the question.
     const use = times.nth(1).getByRole("button", { name: `Folosește ${clock(second.ms)} pentru #101 Ana Popescu ${tag}` });
     expect((await use.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -146,7 +160,8 @@ test.describe("§NNN «Timpi la sosire» and «Folosește»", () => {
     await expect(dialog).toContainText("Ce n-ai salvat pe pagină se pierde: salvează întâi.");
     await dialog.getByTestId("confirm-dialog-confirm").click();
 
-    // Back at the line, the toast saying it; the line's «Timp» is the second time, «în clasament» moved, and 102 is first now.
+    // Back at the line, the toast saying it; the line's «Timp» is the second time, «în clasament» moved, 102 is first now, and 103 —
+    // arrived after the page was drawn — third, its time on its line.
     await expect(page.getByTestId("toast-live")).toContainText("#101: timpul ales e acum în clasament, iar locurile s-au recalculat.", { timeout: 30_000 });
     await expect(page).toHaveURL(new RegExp(`/ro/admin/events/${eventId}/results#result-line-101$`));
     await hydrated(page);
@@ -155,6 +170,9 @@ test.describe("§NNN «Timpi la sosire» and «Folosește»", () => {
     await expect(line101.getByTestId("result-recorded-time").nth(0).getByTestId("result-recorded-use")).toHaveCount(1);
     await expect(line101.getByTestId("result-place").locator(".MuiTypography-body1")).toHaveText("2");
     await expect(line102.getByTestId("result-place").locator(".MuiTypography-body1")).toHaveText("1");
+    const line103 = page.locator('[data-testid="result-line"][data-bib="103"]');
+    await expect(line103.getByTestId("result-time")).toHaveValue(clock(press103.ms));
+    await expect(line103.getByTestId("result-place").locator(".MuiTypography-body1")).toHaveText("3");
     // What the question said: the page is drawn again from what is stored, so the box typed and not saved is empty again — nothing of it was saved.
     await expect(line102.getByTestId("result-note")).toHaveValue("");
     expect(await query<{ note: string | null }>(`SELECT note FROM event_results WHERE event_id = $1 AND bib_number = 102`, [eventId])).toEqual([{ note: null }]);
