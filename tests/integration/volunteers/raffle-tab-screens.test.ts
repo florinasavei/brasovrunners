@@ -403,7 +403,8 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
       expect(rowsOf(page), role).toEqual([
         expect.stringMatching(/^3 Eliud Kipchoge Elită Da Nu$/),
         expect.stringMatching(/^7 Ana Popescu Alergător Da Da$/),
-        expect.stringMatching(/^500 Ion Voluntar Voluntar Da Nu$/),
+        // The volunteer by their V number (§NNN), after the race numbers.
+        expect.stringMatching(/^V001 Ion Voluntar Voluntar Da Nu$/),
         expect.stringMatching(/^— Elena Waiting Alergător Nu · neconfirmat Nu$/),
         // A line of the elite list: its «Prezent» in words — the tick is the organizers'.
         expect.stringMatching(/^— Zoe Elita Elită Da Nu$/),
@@ -423,7 +424,18 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
       expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? ""), role).toBe(ro.Admin.raffle.introDesk);
       // Nothing of the organizers': no file, no exclusion, no deletion, no elite tick, no way to the editor, no STAFF sign-up.
       const ids = testIdsOf(page);
-      for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-delete-form", "raffle-elite-present-form", "raffle-settings-edit", "raffle-sign-up-form"]) {
+      for (const id of [
+        "raffle-download",
+        "raffle-download-present",
+        "raffle-download-random-org",
+        "raffle-download-random-org-present",
+        "raffle-random-org-help",
+        "raffle-exclusion-form",
+        "raffle-delete-form",
+        "raffle-elite-present-form",
+        "raffle-settings-edit",
+        "raffle-sign-up-form",
+      ]) {
         expect(ids.has(id), `${role}: ${id}`).toBe(false);
       }
       expect(page, role).not.toContain(`/api/admin/events/${eventId}/raffle`);
@@ -437,7 +449,9 @@ describe("§1014 BR-REQ-060-01 BR-REQ-037-08 «Tombolă» for a «Voluntar» and
     state.actor = staff.MODERATOR;
     const theirs = await tab();
     expect(words(/data-testid="raffle-intro"[^>]*>([\s\S]*?)<\/p>/.exec(theirs)?.[1] ?? "")).toBe(ro.Admin.raffle.intro);
-    for (const id of ["raffle-download", "raffle-download-present", "raffle-exclusion-form", "raffle-elite-present-form"]) expect(testIdsOf(theirs).has(id), id).toBe(true);
+    for (const id of ["raffle-download", "raffle-download-present", "raffle-download-random-org", "raffle-download-random-org-present", "raffle-random-org-help", "raffle-exclusion-form", "raffle-elite-present-form"]) {
+      expect(testIdsOf(theirs).has(id), id).toBe(true);
+    }
     expect(await holding("raffle-exclusion-form")).toEqual([people.ana, people.eliud, people.elena, people.ion, people.zoe].sort());
     // English, for a desk role.
     state.actor = staff.CONTRIBUTOR;
