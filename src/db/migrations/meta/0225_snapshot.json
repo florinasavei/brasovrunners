@@ -1,5 +1,5 @@
 {
-  "id": "f8108132-da89-4d15-911b-5fda360d7cac",
+  "id": "ab028977-7270-45da-b14c-fd78bebf8ba3",
   "prevId": "a0658bb7-ef57-4c28-bd06-f3bb10ee0ecb",
   "version": "7",
   "dialect": "postgresql",
@@ -4412,6 +4412,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "volunteer_number": {
+          "name": "volunteer_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "checkpoint_id": {
           "name": "checkpoint_id",
           "type": "uuid",
@@ -4641,6 +4647,28 @@
           "method": "btree",
           "with": {}
         },
+        "event_volunteers_event_volunteer_number_unique": {
+          "name": "event_volunteers_event_volunteer_number_unique",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "volunteer_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"event_volunteers\".\"volunteer_number\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "event_volunteers_role_idx": {
           "name": "event_volunteers_role_idx",
           "columns": [
@@ -4856,6 +4884,10 @@
         "event_volunteers_bib_number_positive": {
           "name": "event_volunteers_bib_number_positive",
           "value": "\"event_volunteers\".\"bib_number\" IS NULL OR \"event_volunteers\".\"bib_number\" > 0"
+        },
+        "event_volunteers_volunteer_number_positive": {
+          "name": "event_volunteers_volunteer_number_positive",
+          "value": "\"event_volunteers\".\"volunteer_number\" IS NULL OR \"event_volunteers\".\"volunteer_number\" > 0"
         },
         "event_volunteers_address_whole": {
           "name": "event_volunteers_address_whole",
@@ -11619,170 +11651,6 @@
         "staff_team_agreement_acceptances_typed_name": {
           "name": "staff_team_agreement_acceptances_typed_name",
           "value": "char_length(btrim(\"staff_team_agreement_acceptances\".\"typed_name\")) BETWEEN 1 AND 200"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.staff_team_agreement_sign_in_acceptances": {
-      "name": "staff_team_agreement_sign_in_acceptances",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "staff_user_id": {
-          "name": "staff_user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "legal_document_id": {
-          "name": "legal_document_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "document_version": {
-          "name": "document_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_sha256": {
-          "name": "content_sha256",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "locale": {
-          "name": "locale",
-          "type": "locale",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "typed_name": {
-          "name": "typed_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text_hash": {
-          "name": "text_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ip": {
-          "name": "ip",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "signed_in_at": {
-          "name": "signed_in_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "accepted_at": {
-          "name": "accepted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "staff_team_agreement_sign_in_acceptances_document_idx": {
-          "name": "staff_team_agreement_sign_in_acceptances_document_idx",
-          "columns": [
-            {
-              "expression": "legal_document_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "staff_team_agreement_sign_in_acceptances_staff_user_id_staff_users_id_fk": {
-          "name": "staff_team_agreement_sign_in_acceptances_staff_user_id_staff_users_id_fk",
-          "tableFrom": "staff_team_agreement_sign_in_acceptances",
-          "tableTo": "staff_users",
-          "columnsFrom": [
-            "staff_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "staff_team_agreement_sign_in_acceptances_legal_document_id_legal_documents_id_fk": {
-          "name": "staff_team_agreement_sign_in_acceptances_legal_document_id_legal_documents_id_fk",
-          "tableFrom": "staff_team_agreement_sign_in_acceptances",
-          "tableTo": "legal_documents",
-          "columnsFrom": [
-            "legal_document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "staff_team_agreement_sign_in_acceptances_once": {
-          "name": "staff_team_agreement_sign_in_acceptances_once",
-          "nullsNotDistinct": true,
-          "columns": [
-            "staff_user_id",
-            "legal_document_id",
-            "signed_in_at"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "staff_team_agreement_sign_in_acceptances_version_positive": {
-          "name": "staff_team_agreement_sign_in_acceptances_version_positive",
-          "value": "\"staff_team_agreement_sign_in_acceptances\".\"document_version\" >= 1"
-        },
-        "staff_team_agreement_sign_in_acceptances_content_sha256": {
-          "name": "staff_team_agreement_sign_in_acceptances_content_sha256",
-          "value": "\"staff_team_agreement_sign_in_acceptances\".\"content_sha256\" ~ '^[0-9a-f]{64}$'"
-        },
-        "staff_team_agreement_sign_in_acceptances_text_sha256": {
-          "name": "staff_team_agreement_sign_in_acceptances_text_sha256",
-          "value": "\"staff_team_agreement_sign_in_acceptances\".\"text_hash\" ~ '^[0-9a-f]{64}$'"
-        },
-        "staff_team_agreement_sign_in_acceptances_typed_name": {
-          "name": "staff_team_agreement_sign_in_acceptances_typed_name",
-          "value": "char_length(btrim(\"staff_team_agreement_sign_in_acceptances\".\"typed_name\")) BETWEEN 1 AND 200"
         }
       },
       "isRLSEnabled": false

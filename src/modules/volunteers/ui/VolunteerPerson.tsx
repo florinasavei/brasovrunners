@@ -68,6 +68,7 @@ import {
   type VolunteerGuardianAsk,
   type VolunteerState,
 } from "../domain/volunteer";
+import { formatVolunteerNumber } from "../domain/volunteer-number";
 import { ROLE_EMAIL_SETTLE_MINUTES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
 
@@ -977,10 +978,12 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
-      {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit || person.bibNumber !== null || (as === "section" && person.present)) && (
+      {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit || person.volunteerNumber !== null || (as === "section" && person.present)) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
-          {/* The volunteer's number (§948): first, as a runner's on the registrations list — what the raffle and the badge say. */}
-          {person.bibNumber !== null && <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: person.bibNumber })} testId="volunteer-number" />}
+          {/* The volunteer's V number (§1023, amending §948): first, as a runner's on the registrations list — «Nr. V007», what the raffle says. */}
+          {person.volunteerNumber !== null && (
+            <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: formatVolunteerNumber(person.volunteerNumber) })} testId="volunteer-number" />
+          )}
           {/* «Prezent» (§983): the person came on the day — the organizers' mark, ticked beside the name on the person's own page or on
               the «Voluntari» list. Said on that page alone: the event editor's card keeps its row as it was. Nothing for the absent. */}
           {as === "section" && person.present && <StatusChip glyph="checkedIn" color="success" variant="outlined" label={t("volunteers.presence.chip")} testId="volunteer-present" />}

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.89-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.92-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.89-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.92-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1365,11 +1365,14 @@ it "Add" creates the account too and Zitadel sends the password link.
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
 5. Check: Echipa → add yourself with a second address → the alert says two emails are on their
-   way, Zitadel's first, and two mails arrive: Zitadel's from `noreply@mail.<club domain>`
-   (Zitadel's SMTP, §35), subject «Invitație la …» («Invitation to …» for an English account),
-   and the club's (through Mailgun), whose numbered steps say to open Zitadel's first. The
-   club's leaves only once Zitadel has answered (`DECISIONS.md` §1000). A colleague who never
-   signed in has "Resend the invitation" on their row.
+   way, Zitadel's now and ours a minute and a half later, and two mails arrive in that order:
+   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35), subject «Invitație la …»
+   («Invitation to …» for an English account), and about ninety seconds after it the club's
+   (through Mailgun), whose numbered steps say to open Zitadel's first. The club's leaves only
+   once Zitadel has answered (`DECISIONS.md` §1000), and the press itself sends it that gap
+   after the answer, whatever «Când pleacă emailurile» says (`DECISIONS.md` §1021) — so wait
+   the minute and a half before calling it lost. A colleague who never signed in has "Resend
+   the invitation" on their row.
 6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §1000).
    Zitadel writes its invitation in its default words; written here, the two emails speak the
    same language. Zitadel console → **Organization** → **Settings** → **Message Texts** →
@@ -2764,13 +2767,17 @@ An agent never approves either text.
    30 de zile de la începutul evenimentului». Read, «Salvează ciorna», «Aprobă și publică», both languages. The marker is `{{raffle}}`;
    until a notice naming it is in force in both languages `/admin/tasks` carries the row «Nota de confidențialitate: înscrierea la
    tombolă» while an event asks a sign-up.
-3. **Set the event** (an Administrator: the event's save is theirs, §542). `/admin/events` → the race → «Numere de concurs» → «Avem
-   tombolă», then, under it: **«Cine poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they
-   decide in both modes —, **«Cum participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt
-   deschise»**. Save. None of the four travels to a series' other dates, a copy or the event's file.
+3. **Set the event** (an Administrator: the event's save is theirs, §542). `/admin/events` → the race → «Numere de concurs» → the fold
+   **«Tombolă»** (closed; its bar says who takes part and how, «nu avem» without a raffle) → «Avem tombolă», then, under it: **«Cine
+   poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they decide in both modes —, **«Cum
+   participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt deschise»**. Save: the page comes
+   back with «Tombolă» open on what was saved. None of the four travels to a series' other dates, a copy or the event's file.
+   **Nothing to set for the volunteers** (`DECISIONS.md` §1023): each draws the event's next volunteer number, «V001», «V002»…, the
+   moment the organizers confirm them, and takes part with it; a volunteer is out only while not confirmed, when the organizers took
+   them out or, «Cu înscriere separată», until they sign up — each row of «Ziua cursei» → «Tombolă» says why.
 4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
    (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
-   volunteer's own number) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
+   volunteer's own number, «V007» or just 7 — `DECISIONS.md` §1023) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
    number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
    tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
@@ -2781,10 +2788,13 @@ An agent never approves either text.
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the
-   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. Every other desk
+   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the files. Every other desk
    role — a Voluntar at the raffle's table — opens the same tab since §1014: the same table, counts and filters, without how and when
    anybody signed up, and one press, «Înscrie» on a runner's row, with «A acceptat regulamentul» ticked once the person accepted. **At the draw,
-   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take «Lista pentru tombolă» (or «— doar prezenții») and draw from it.
+   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take **«Descarcă pentru random.org»** (or «— doar prezenții»):
+   one number per line, no names — the race numbers, then the volunteers' «V001», «V002»… (`DECISIONS.md` §1023). Paste it into
+   random.org → «List Randomizer», «Randomize», and look the first number up in «Lista pentru tombolă (CSV)» or on «Tombolă» for the
+   name. The steps: `docs/RUNBOOKS.md` § The raffle on race day.
 6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
    the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing
    else is asked of anybody. Sign-ups already made are kept until their thirty days; they count again if the event goes back to the

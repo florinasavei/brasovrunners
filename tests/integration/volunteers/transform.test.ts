@@ -52,7 +52,7 @@ vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () =
 
 const { submitRegistration, confirmEmail, signDeclaration } = await import("@/modules/registrations/service");
 const { pickBibNumber } = await import("@/modules/registrations/bibs");
-const { changeVolunteer, setVolunteerNumbersStart } = await import("@/modules/volunteers/volunteers");
+const { changeVolunteer } = await import("@/modules/volunteers/volunteers");
 const { RUNNER_TO_VOLUNTEER_MINOR, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS } = await import("@/modules/volunteers/transform");
 const { setRegistrationInRaffle } = await import("@/modules/registrations/raffle-mark");
 const { checkInByStaff } = await import("@/modules/registrations/admin-service");
@@ -180,7 +180,7 @@ async function failureOf(operation: Promise<unknown>) {
 async function snapshot() {
   return {
     registrations: (await db.select({ id: registrations.id, status: registrations.status, bib: registrations.bibNumber }).from(registrations).orderBy(asc(registrations.id))).map((row) => JSON.stringify(row)),
-    volunteers: (await db.select({ id: eventVolunteers.id, state: eventVolunteers.state, bib: eventVolunteers.bibNumber }).from(eventVolunteers).orderBy(asc(eventVolunteers.id))).map((row) => JSON.stringify(row)),
+    volunteers: (await db.select({ id: eventVolunteers.id, state: eventVolunteers.state, bib: eventVolunteers.bibNumber, number: eventVolunteers.volunteerNumber }).from(eventVolunteers).orderBy(asc(eventVolunteers.id))).map((row) => JSON.stringify(row)),
     outbox: (await db.select({ id: emailOutbox.id }).from(emailOutbox)).length,
     trail: (await db.select({ id: auditLogs.id }).from(auditLogs)).length,
   };
@@ -221,7 +221,8 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     });
     expect((await db.select().from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
     expect((await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
-    expect(result).toEqual({ eventId: event.id, volunteerId: volunteer.id, bibNumber: null });
+    // Every event numbers its volunteers (§1023): the person drew V001 at the confirmation.
+    expect(result).toEqual({ eventId: event.id, volunteerId: volunteer.id, volunteerNumber: 1 });
 
     // The emails: the person's two, and the next in line's offer.
     expect((await mailOf("REGISTRATION_CANCELLED")).map((row) => row.registrationId)).toEqual([radu.id]);
@@ -270,21 +271,21 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     expect((await trail("registration.became_volunteer"))[0].metadata).toMatchObject({ from: "WAITLISTED" });
   });
 
-  it("BR-REQ-038-01: the runner's number stays retired with the registration, and the volunteer draws one from the volunteers' own series", async () => {
+  it("§1023 BR-REQ-050-02: the runner's number stays retired with the registration, and the volunteer draws the next V number at the confirmation", async () => {
     const { event, roleId } = await createRace(150);
     const radu = await registered(event, "Radu", 0, true);
     expect(radu.bibNumber).toBe(1);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(5));
 
     const result = await toVolunteer(radu.id, roleId);
 
-    expect(result.bibNumber).toBe(500);
-    expect((await volunteersOf(event.id))[0].bibNumber).toBe(500);
+    // V001 — a series of its own: the race number 1 he wore is not carried over, and nothing is written in the old series' column.
+    expect(result.volunteerNumber).toBe(1);
+    expect((await volunteersOf(event.id))[0]).toMatchObject({ volunteerNumber: 1, bibNumber: null });
     // The registration keeps its number, cancelled: nobody else is ever handed it.
     expect((await rowOf("Radu")).bibNumber).toBe(1);
     const next = await db.transaction((tx) => pickBibNumber(tx, event.id, new Set(), undefined, "race"));
     expect(next).toBe(2);
-    expect((await trail("volunteer.state_changed"))[0].metadata).toMatchObject({ bibNumber: 500 });
+    expect((await trail("volunteer.state_changed"))[0].metadata).toMatchObject({ volunteerNumber: 1 });
   });
 
   it("carries the answers the person gave only under a privacy notice that names the volunteers' answers — and never a place on the public list", async () => {
@@ -312,7 +313,6 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
 
   it("carries «Participă la tombolă»: a runner an organizer took out of the raffle is out of it as a volunteer too, and one who was in stays in (§953)", async () => {
     const { event, roleId } = await createRace(150);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const radu = await registered(event, "Radu", 1, true);
     const elena = await registered(event, "Elena", 3, true);
     // The Organizer took Radu out on the registrations list: his number is off the raffle's file.
@@ -323,10 +323,10 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     const stays = await toVolunteer(elena.id, roleId);
 
     const rows = await volunteersOf(event.id);
-    expect(rows.find((row) => row.id === out.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", bibNumber: 500, inRaffle: false });
-    expect(rows.find((row) => row.id === stays.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", bibNumber: 501, inRaffle: true });
+    expect(rows.find((row) => row.id === out.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", volunteerNumber: 1, inRaffle: false });
+    expect(rows.find((row) => row.id === stays.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", volunteerNumber: 2, inRaffle: true });
     // The press that was about something else did not put him back: the file has Elena, the volunteer, and never Radu.
-    expect((await exportRaffleList(db, admin, event.id, at(40))).rows).toEqual([{ number: 501, name: "Elena Munteanu", kind: "VOLUNTEER", present: false }]);
+    expect((await exportRaffleList(db, admin, event.id, at(40))).rows).toEqual([{ number: 2, label: "V002", name: "Elena Munteanu", kind: "VOLUNTEER", present: false }]);
     // Said in the trail as the volunteers' own tick says it: once, for Radu alone, by the Administrator who pressed.
     const ticks = (await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("inRaffle"));
     expect(ticks).toEqual([{ entityId: event.id, actor: admin.id, metadata: expect.objectContaining({ volunteerId: out.volunteerId, fields: ["inRaffle"], inRaffle: false }) }]);
@@ -337,7 +337,6 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
 
   it("carries «Prezent» one way: a runner the desk had checked in is ticked present as a volunteer, by the volunteers' own tick — one who was not stays absent (§983)", async () => {
     const { event, roleId } = await createRace(150);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const radu = await registered(event, "Radu", 1, true);
     const elena = await registered(event, "Elena", 3, true);
     // Radu was checked in at the desk on the morning of the race; Elena was not.
@@ -348,14 +347,14 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     const away = await toVolunteer(elena.id, roleId);
 
     const rows = await volunteersOf(event.id);
-    expect(rows.find((row) => row.id === here.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", bibNumber: 500, present: true, inRaffle: true });
-    expect(rows.find((row) => row.id === away.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", bibNumber: 501, present: false });
+    expect(rows.find((row) => row.id === here.volunteerId)).toMatchObject({ name: "Radu Munteanu", state: "CONFIRMED", volunteerNumber: 1, present: true, inRaffle: true });
+    expect(rows.find((row) => row.id === away.volunteerId)).toMatchObject({ name: "Elena Munteanu", state: "CONFIRMED", volunteerNumber: 2, present: false });
     // Said in the trail as the volunteers' own tick says it: once, for Radu alone, by the Administrator who pressed, at the press.
     const ticks = (await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"));
     expect(ticks).toEqual([{ entityId: event.id, actor: admin.id, metadata: { volunteerId: here.volunteerId, fields: ["present"], present: true, assignedRoleIds: [roleId] } }]);
     // The press about something else kept him on the present-only raffle file; Elena, who never came to the desk, is not on it.
-    expect((await exportRaffleList(db, admin, event.id, at(40), { onlyPresent: true })).rows).toEqual([{ number: 500, name: "Radu Munteanu", kind: "VOLUNTEER", present: true }]);
-    expect((await exportRaffleList(db, admin, event.id, at(41))).rows.map((row) => [row.number, row.present])).toEqual([[500, true], [501, false]]);
+    expect((await exportRaffleList(db, admin, event.id, at(40), { onlyPresent: true })).rows).toEqual([{ number: 1, label: "V001", name: "Radu Munteanu", kind: "VOLUNTEER", present: true }]);
+    expect((await exportRaffleList(db, admin, event.id, at(41))).rows.map((row) => [row.label, row.present])).toEqual([["V001", true], ["V002", false]]);
     // Nobody was written to about it: the transform's own emails alone.
     expect((await db.select().from(emailOutbox)).map((row) => row.messageType).filter((type) => !["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED", "REGISTRATION_CANCELLED", "VOLUNTEER_ROLE_ASSIGNED", "BIB_ASSIGNED"].includes(type))).toEqual([]);
   });
@@ -458,9 +457,8 @@ const toRunner = (eventId: string, volunteerId: string, actor: StaffUser = admin
 describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer becomes a runner", () => {
   it("enters the person by the official list's own entry — a counted free place, the declaration theirs to sign — and cancels the volunteer, who keeps roles and number", async () => {
     const { event, roleId } = await createRace(150);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
-    expect((await volunteersOf(event.id))[0].bibNumber).toBe(500);
+    expect((await volunteersOf(event.id))[0].volunteerNumber).toBe(1);
 
     const result = await toRunner(event.id, ana);
 
@@ -477,9 +475,9 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
 
     // The volunteer: cancelled, the row, its role and its number kept — and the number never drawn again.
     const [row] = await volunteersOf(event.id);
-    expect(row).toMatchObject({ id: ana, state: "CANCELLED", bibNumber: 500, roleId });
+    expect(row).toMatchObject({ id: ana, state: "CANCELLED", volunteerNumber: 1, roleId });
     const dan = await volunteer(event.id, roleId, "Dan Ionescu", "dan@example.ro", 40);
-    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, dan)))[0].bibNumber).toBe(501);
+    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, dan)))[0].volunteerNumber).toBe(2);
 
     // The trail: the entry's own rows, the volunteers' own, and one that ties the two — ids alone.
     expect(await trail("volunteer.became_runner")).toEqual([{ entityId: event.id, actor: admin.id, metadata: { volunteerId: ana, registrationId: registration.id, to: "PENDING_DECLARATION" } }]);
@@ -562,7 +560,7 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
     expect((await trail("volunteer.edited")).filter((row) => (row.metadata.fields as string[]).includes("present"))).toEqual(ticksBefore);
     // Confirmed with a number later, she is on the whole raffle file as a runner nobody checked in — and on no present-only one.
     await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: at(50), bibNumber: 7, holdExpiresAt: null }).where(eq(registrations.id, result.registrationId));
-    expect((await exportRaffleList(db, admin, event.id, at(60))).rows).toEqual([{ number: 7, name: "Ana Pop", kind: "RUNNER", present: false }]);
+    expect((await exportRaffleList(db, admin, event.id, at(60))).rows).toEqual([{ number: 7, label: "7", name: "Ana Pop", kind: "RUNNER", present: false }]);
     expect((await exportRaffleList(db, admin, event.id, at(61), { onlyPresent: true })).rows).toEqual([]);
   });
 
@@ -617,7 +615,6 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
 
   it("there and back: a runner turned volunteer and turned runner again is one person on each list, once", async () => {
     const { event, roleId } = await createRace(150);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const radu = await registered(event, "Radu", 1, true);
     const { volunteerId } = await toVolunteer(radu.id, roleId);
 
@@ -625,7 +622,7 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
 
     const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(rows.filter((row) => row.status !== "CANCELLED").map((row) => [row.id, row.status])).toEqual([[back.registrationId, "PENDING_DECLARATION"]]);
-    expect((await volunteersOf(event.id)).map((row) => [row.state, row.bibNumber])).toEqual([["CANCELLED", 500]]);
+    expect((await volunteersOf(event.id)).map((row) => [row.state, row.volunteerNumber])).toEqual([["CANCELLED", 1]]);
     expect(await placesHeld(event.id)).toBe(1);
   });
 
@@ -671,7 +668,6 @@ describe("§984 «Transformă în …» moves the person's raffle sign-up with t
   it("a runner turned volunteer keeps theirs — the same row, door and acceptance, now the volunteer's — and takes part as one", async () => {
     const { event, roleId } = await createRace(150);
     await signUpMode(event.id);
-    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const radu = await registered(event, "Radu", 1, true);
     const entry = await signUp(event.id, { registrationId: radu.id }, await rules(), "Radu Munteanu");
 

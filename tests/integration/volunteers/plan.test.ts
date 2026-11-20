@@ -112,7 +112,7 @@ async function person(role: StaffRole, name: string): Promise<StaffUser> {
   return row;
 }
 
-async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; phone?: string | null; bibNumber?: number }): Promise<string> {
+async function volunteer(over: { eventId: string; name: string; state?: "REGISTERED" | "CONFIRMED" | "CANCELLED"; given?: string[]; phone?: string | null; volunteerNumber?: number }): Promise<string> {
   const email = `${over.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.test`;
   const [row] = await db
     .insert(eventVolunteers)
@@ -127,7 +127,7 @@ async function volunteer(over: { eventId: string; name: string; state?: "REGISTE
       source: over.phone === null ? "STAFF" : "PUBLIC",
       state: over.state ?? "CONFIRMED",
       roleId: over.given?.[0] ?? null,
-      bibNumber: over.bibNumber ?? null,
+      volunteerNumber: over.volunteerNumber ?? null,
       createdAt: NOW,
       updatedAt: NOW,
     })
@@ -179,7 +179,7 @@ beforeEach(async () => {
   points.junction = await point(raceId, "1.20", "Intersecția Stejeriș", ["DIRECTION"], 2);
   points.elsewhere = await point(runId, "3.00", "Punctul altui eveniment", ["DIRECTION"], 0);
 
-  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], bibNumber: 501 });
+  people.ana = await volunteer({ eventId: raceId, name: "Ana Pop", given: [guideId], volunteerNumber: 7 });
   people.dan = await volunteer({ eventId: raceId, name: "Dan Ene", given: [waterId], phone: "+40700000002" });
   // Offered and not confirmed yet: on the plan, said so.
   people.ion = await volunteer({ eventId: raceId, name: "Ion Lupu", state: "REGISTERED" });
@@ -381,7 +381,7 @@ describe("§949 the plan's page", () => {
     // Ana at the junction: her name to her page, her number, her telephone as a link, her role.
     expect(textOf(drawn[0], "plan-person-name")).toEqual(["Ana Pop"]);
     expect(drawn[0]).toContain(`href="/ro/admin/volunteers/${people.ana}"`);
-    expect(drawn[0]).toContain("Nr. 501");
+    expect(drawn[0]).toContain("Nr. V007");
     expect(drawn[0]).toContain('href="tel:+40700000001"');
     // Read grouped, as her own page reads it (§953): never the bare run of digits.
     expect(textOf(drawn[0], "plan-person-phone")).toEqual(["+40 700 000 001"]);

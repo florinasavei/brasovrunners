@@ -12,6 +12,7 @@ import { releaseLegacyHeldNumbers } from "./bibs";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { queueRsvpAsks } from "@/modules/rsvp/ask";
+import { numberWaitingVolunteers } from "@/modules/volunteers/volunteer-numbers";
 import { announceLegalTemplateChanges, legalFactsInForce } from "@/modules/legal-documents/templates-notice";
 import { applyOutageGrace, type OutageGraceDeps } from "./outage-grace";
 import { purgeLapsedFamilyEntries } from "./family-entries";
@@ -61,6 +62,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * (`releaseLegacyHeldNumbers`) — once per database, zero on every run after the first.
    */
   legacyNumbersKept: number;
+  /**
+   * Volunteers' V numbers given this run (§1023): to confirmed volunteers who had none — those the code serving during migration `0225`
+   * confirmed — zero on every run after the one that found them.
+   */
+  volunteerNumbersGiven: number;
   /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
   /**
@@ -236,6 +242,21 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   } catch {
     // The numbers are written; a failure here is a message nobody got, not a race with no bibs.
     errorCount += 1;
+  }
+
+  /*
+    The volunteers' V numbers (§1023): every confirmed volunteer who has none is given the next of their event's own series, event by
+    event under the event row's lock (`volunteers/volunteer-numbers.ts#numberWaitingVolunteers`) — a volunteer the code still serving
+    while migration `0225` ran confirmed, which knew no such column; the migration numbered everybody confirmed before it. Idempotent
+    and cheap, like the data step above: one read of a small table that finds nobody once the stragglers are numbered. A failure is
+    retryable: the confirmation stands, only the number waits for the next ping.
+  */
+  let volunteerNumbersGiven = 0;
+  try {
+    volunteerNumbersGiven = (await numberWaitingVolunteers(db, now)).given;
+  } catch {
+    errorCount += 1;
+    retryableErrorCount += 1;
   }
 
   /**
@@ -414,7 +435,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         legalTemplatesNoticesQueued +
         outageGrace.moved +
         outageGrace.noticesQueued +
-        occurrencesCreated,
+        occurrencesCreated +
+        volunteerNumbersGiven,
       errorCount,
       // The retention steps that failed, by name (§322) — the one error this run writes down,
       // because it is the one `/api/health` is asked to turn into an alarm.
@@ -433,6 +455,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     confirmationRetriesQueued,
     interestsNotified,
     legacyNumbersKept,
+    volunteerNumbersGiven,
     familyEntriesPurged,
     legalTemplatesNoticesQueued,
     rsvpAsksQueued,

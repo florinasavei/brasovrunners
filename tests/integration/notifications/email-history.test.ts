@@ -312,6 +312,7 @@ describe("§915 a registration's emails", () => {
       clubCopy: false,
       familyHeld: false,
       sentNow: false,
+      sentAtTurn: false,
       road: null,
       idempotencyKey: "k:alone",
     };

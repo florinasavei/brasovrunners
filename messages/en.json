@@ -1035,7 +1035,7 @@
       "name": "Name",
       "nameHelp": "The name you registered with, for example “Ana Popescu”.",
       "volunteer": "I'm a volunteer",
-      "volunteerHelp": "Then type your volunteer number above.",
+      "volunteerHelp": "Then type your volunteer number above: V007, or just 7.",
       "rules": "Read the raffle rules",
       "accept": "I have read and accept the raffle rules",
       "notice": "What we keep about the sign-up is in the <privacy>privacy notice</privacy>. You receive no email for it.",
@@ -1048,6 +1048,7 @@
       "fix": "Check what you typed below.",
       "errors": {
         "number": "Type the race number, digits only.",
+        "volunteerNumber": "A number starting with V is a volunteer's: tick “I'm a volunteer” below. A runner's race number is digits only.",
         "name": "Type the name, at most 120 characters.",
         "accept": "Tick that you accept the raffle rules."
       },
@@ -1403,7 +1404,7 @@
       "toVolunteer": {
         "title": "Turn into a volunteer",
         "intro": "The registration is cancelled and its place freed, as with any cancellation. The person goes onto this event's volunteers, confirmed, with the role you choose.",
-        "numberNote": "The registration's race number stays retired. As a volunteer the person gets a number only if the event has the volunteers' number series.",
+        "numberNote": "The registration's race number stays retired. As a volunteer the person gets the next volunteer number at the confirmation, for example V007.",
         "role": "Volunteer role",
         "action": "Turn into a volunteer",
         "noRoles": "The event has no volunteer role yet. Add one in the event's «Volunteers» card, then come back here.",
@@ -1422,6 +1423,11 @@
         "buttonLabel": "Raffle list (CSV): the runners, elites and volunteers taking part, with the number, the name, the group and whether the person is present",
         "presentButton": "Raffle list — present only (CSV)",
         "presentButtonLabel": "Raffle list — present only (CSV): those taking part who were present — the runners checked in at the desk or with “I have arrived” from their own link, the volunteers and elites ticked “Present”",
+        "randomOrgButton": "Download for random.org",
+        "randomOrgButtonLabel": "Download for random.org: a text file with one number per line, no names — the race numbers, then the volunteer numbers (V001…)",
+        "randomOrgPresentButton": "Download for random.org — present only",
+        "randomOrgPresentButtonLabel": "Download for random.org — present only: one number per line, no names, only those taking part who were present",
+        "randomOrgHelp": "One number per line, no names: paste it into random.org → List Randomizer, then find the winner by number in the CSV list.",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -2698,8 +2704,8 @@
         "test": "The address is a test one (@test.invalid): the email reaches nobody, but it counts against the day's limit.",
         "nextInLineMaybe": "The freed place is offered to the first on the waiting list — they are sent “A place has freed up” — or stays free, by the event's setting.",
         "nextInLineMaybeMany": "Each freed place is offered to the first on the waiting list — they are sent “A place has freed up” — or stays free, by the event's setting.",
-        "zitadel": "And Zitadel sends them the password link separately, at once.",
-        "zitadelEach": "And for each new address, Zitadel sends the password link separately, at once.",
+        "zitadel": "And Zitadel sends them the password link separately, at once; ours leaves a minute and a half later.",
+        "zitadelEach": "And for each new address, Zitadel sends the password link separately, at once; ours leave a minute and a half after the last one.",
         "zitadelAgain": "An address that already belongs to a member gets only Zitadel's password link again.",
         "linkReplaced": "The link sent before ({date}) stops working once this one leaves.",
         "agreementCopy": "It is their copy, with the signed agreement attached (PDF).",
@@ -2843,7 +2849,6 @@
       "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour.",
       "BADGE_SIZE_TOO_SMALL": "Not saved: a {width} × {height} mm badge has no room for everything you ticked: {what}. Make it at least {minHeight} mm tall, or untick one.",
       "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
-      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "The volunteers' numbers must start above the runners': the race's places, the desk's spares and the numbers already given. Choose a higher number. Nothing was saved.",
       "RUNNER_TO_VOLUNTEER_MINOR": "The person is under 18 on the event's day. Add them by hand under «Volunteers», with the parent's or guardian's details. Nothing was changed.",
       "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then try again. Nothing was changed.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
@@ -3938,6 +3943,17 @@
             "toPrint": "to print: {count}",
             "spares": "spares {from}–{to}"
           },
+          "raffle": {
+            "off": "none",
+            "groups": {
+              "RUNNER": "runners",
+              "ELITE": "elites",
+              "VOLUNTEER": "volunteers"
+            },
+            "nobody": "no group ticked",
+            "automatic": "automatically",
+            "signUp": "with a separate sign-up"
+          },
           "bibDesign": {
             "parts": "{parts}",
             "footer": "footer: {parts}"
@@ -4157,6 +4173,7 @@
         }
       },
       "raffle": {
+        "title": "Raffle",
         "who": "Who may take part in the raffle",
         "runners": "The runners",
         "elites": "The elites",
@@ -4196,12 +4213,12 @@
       "invite": "Add",
       "inviteHelp": "Adds the address to the team list and emails the invitation. The sign-in account is created by itself only with the Zitadel key set; until then, in the Zitadel console.",
       "inviteHelpSends": "Adds the address to the team list, creates their sign-in account and emails them the invitation and the password link.",
-      "inviteSent": "Added. They get two emails: one from Zitadel, with the “Accept invite” button, for the password, and one from us, with the steps.",
-      "inviteExists": "Added. They already had a Zitadel account, without a password: they still get two emails, one from Zitadel, with a new code, and one from us, with the steps.",
+      "inviteSent": "Added. They get two emails: one from Zitadel now, with the “Accept invite” button, for the password, and, a minute and a half later, one from us, with the steps.",
+      "inviteExists": "Added. They already had a Zitadel account, without a password: two emails still, one from Zitadel now, with a new code, and, a minute and a half later, one from us, with the steps.",
       "inviteReady": "Added. They already have a Zitadel account with a password: only our email goes, with the steps, and they sign in with the password they have.",
       "inviteManual": "Added. They get one email, from us, with the steps to make the account themselves: the Zitadel key is missing, so it was not made here.",
       "inviteFailed": "Added, but Zitadel did not make the account ({reason}): only our email goes, with the steps to make the account themselves at the sign-in page.",
-      "resendSent": "Sent again. They get two emails: one from Zitadel, with a new code (the old one stops working), and one from us, with the steps.",
+      "resendSent": "Sent again. They get two emails: one from Zitadel now, with a new code (the old one stops working), and, a minute and a half later, one from us, with the steps.",
       "resendReady": "Sent again, from us only: they already have a Zitadel account with a password, and sign in with it.",
       "resendManual": "Sent again: they get one email, from us, with the steps to make the account themselves — the Zitadel key is missing.",
       "resendInvite": "Resend the invitation",
@@ -4277,8 +4294,8 @@
       "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
       "membersRetried": "Already members: {retried} — only their account was tried again.",
       "membersOutcome": {
-        "created": "account created: two emails, first from Zitadel, for the password, then from us",
-        "invited": "the account existed, without a password: two emails, first from Zitadel, with a new code, then from us",
+        "created": "account created: two emails, one from Zitadel now, for the password, and, a minute and a half later, one from us",
+        "invited": "the account existed, without a password: two emails, one from Zitadel now, with a new code, and, a minute and a half later, one from us",
         "ready": "already has an account with a password: only our email",
         "failed": "Zitadel did not make the account ({reason}): only our email, they make it themselves",
         "unconfigured": "no Zitadel key: only our email, they make the account themselves"
@@ -6567,12 +6584,6 @@
         "withdrawTitle": "Withdraw the invitation?",
         "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
       },
-      "numbers": {
-        "label": "Volunteers' numbers start at",
-        "help": "Every confirmed volunteer gets a number of their own series, from here up — never one a runner wears. Choose a number above the runners' numbers. Empty: no numbers.",
-        "save": "Save the numbers",
-        "saving": "Saving…"
-      },
       "choicesMax": {
         "label": "The most roles one person may tick",
         "placeholder": "any number",
@@ -8006,7 +8017,7 @@
         "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
         "A search opens only the sections with a match. After a press you are back on the person's row, its section open: whoever is marked present moves to “Present”.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
-        "The eye beside the name says how they appear on the site: “By name” or “Anonymous”. Press it only when the person tells you what they want; asking for their name, they get an email to take it back.",
+        "Beside the name it says “By name” or “Anonymous”; press “Show the name in the results” / “Hide the name from the results” only when the person tells you what they want.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
@@ -8120,7 +8131,9 @@
         "showAria": "{state}: press if the person tells you they want to appear by name",
         "hideAria": "{state}: press if the person asks to no longer appear by name",
         "clubHiddenNamed": "Hidden by the club («On the site» unticked). The person wants their name shown.",
-        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous."
+        "clubHiddenAnonymous": "Hidden by the club («On the site» unticked). The person wants to be anonymous.",
+        "showButton": "Show the name in the results",
+        "hideButton": "Hide the name from the results"
       },
       "eliteFold": "Elite and bib",
       "sections": {
@@ -9754,12 +9767,12 @@
             {
               "title": "They want to appear by name, or no longer",
               "steps": [
-                "Beside the name, the eye says how the person appears on the site and in the results: «By name» or «Anonymous».",
-                "They tell you they want to appear by name? Press «Anonymous», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
+                "Beside the name it says how the person appears on the site and in the results: «By name» or «Anonymous»; the button beside it says what it changes.",
+                "They tell you they want to appear by name? Press «Show the name in the results», read the question and press «Yes, they said so — show on the site». For a minor, the parent or guardian answers.",
                 "The person gets an email at once with the button «I do not want to appear on the participants & results list». The registration's history keeps that you recorded it.",
-                "They ask to no longer appear by name? Press «By name», then «Yes — hide the name». No email leaves.",
+                "They ask to no longer appear by name? Press «Hide the name from the results», then «Yes — hide the name». No email leaves.",
                 "Under the name it says «Hidden by the club…»? An administrator hid it: the press changes only the person's wish, and the name stays hidden.",
-                "On a row whose address is not confirmed the eye is not a button: first «Confirm on paper». Never press it without the person's spoken agreement."
+                "On a row whose address is not confirmed there is no button: first «Confirm on paper». Never press it without the person's spoken agreement."
               ]
             },
             {
@@ -10094,6 +10107,14 @@
               ]
             },
             {
+              "title": "The raffle on race day",
+              "steps": [
+                "«Race day» → «Raffle»: every runner, elite and volunteer of the event, each with «Taking part» and, when not, why. Who takes part and how is the Administrator's choice, in the event's editor.",
+                "Volunteers take part with their volunteer number, V001, V002…, which they get by themselves the moment you confirm them: you set nothing.",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up. Their row says why."
+              ]
+            },
+            {
               "title": "A change to the event",
               "steps": [
                 "«Events» → «Open»: see the event with all its cards, without «Save».",
@@ -10128,6 +10149,17 @@
                 "Want other groups? On «Results», under «Age categories», write in «Ages the groups start at» the starting ages, separated by commas — “18, 35, 45, 55” gives under 18, 18-34, 35-44, 45-54 and 55+ — and press «Save the categories». The line under the box shows the groups as the site will say them. Empty means the standard groups.",
                 "Do this before the race, or before the Administrator publishes the results: the category places of the results already saved are recounted at once, and the event's page and the CSV follow.",
                 "Under «Awards» you see the podium from the saved results: the first places for women and for men, then — if you award the categories too — the first in every category, with the number, the name and the time. Write under «How many places you award» how many you give (1 to 10), tick or untick «You award every category too» and press «Save the awards». For “top 5 women and top 5 men”: 5, unticked."
+              ]
+            },
+            {
+              "title": "The raffle: the volunteers' numbers and the draw on random.org",
+              "steps": [
+                "Volunteers get their numbers by themselves: V001, V002, V003… Each gets the next number the moment you confirm them; you set nothing. The number shows beside the name on «Volunteers», on the person's page, on the plan and in the Excel file.",
+                "A volunteer number is never given twice: whoever is cancelled or deleted keeps theirs, retired. V007 and race number 7 are two different people.",
+                "On race day tick «Present» for the volunteers who came, on «Volunteers»; the desk checks the runners in.",
+                "«Race day» → «Raffle» (or the registrations list, or «Volunteers», with the event chosen): «Download for random.org» — or «Download for random.org — present only» —, a text file with one number per line and no names.",
+                "On random.org → List Randomizer: paste the whole content of the file and press Randomize. The first number in the list is the winner.",
+                "Look the winning number up in «Raffle list (CSV)» or on «Raffle»: the name is there. Race numbers are the runners' and the elites', the ones with a V the volunteers'."
               ]
             },
             {
@@ -10410,6 +10442,18 @@
               ]
             },
             {
+              "title": "The raffle: who takes part and how",
+              "steps": [
+                "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Raffle». Closed, its bar says who takes part and how, for example “Runners, elites, volunteers · automatically”.",
+                "Tick «We hold a raffle», then, under «Who may take part in the raffle», the groups that take part: «The runners», «The elites», «The volunteers».",
+                "Under «How people take part» choose «Automatically: everybody ticked above» or «With a separate sign-up: only those who sign up» — the second only with the raffle rules and the privacy notice in force. With a separate sign-up, tick «Raffle sign-ups are open» and untick it at the draw.",
+                "For the volunteers you set nothing: each gets their volunteer number, V001, V002…, the moment they are confirmed, and takes part with it.",
+                "A volunteer is out while not confirmed, when you took them out of the raffle or, with a separate sign-up, until they sign up.",
+                "Press «Save». After the save «Raffle» stays open, with what you saved.",
+                "On race day, «Race day» → «Raffle» shows everybody, whether they take part and, when not, why."
+              ]
+            },
+            {
               "title": "The Mailgun plan, before and after a race",
               "steps": [
                 "First pay for the plan in the Mailgun account.",
@@ -10498,7 +10542,7 @@
               "steps": [
                 "«Staff» is the Administrator's and the Superadministrator's. The Superadministrator role and a Superadministrator's row are changed only by a Superadministrator.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
-                "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
+                "Press «Add» and confirm. The person gets two emails: first one from Zitadel, where they choose a password, then, a minute and a half later, our invitation, with the steps.",
                 "It never arrived: press their row, then «Resend the invitation» → «Send now, without waiting for the scheduled round».",
                 "On the person's row (press it to open it): another role — «Role», then «Change role»; left the team — «Revoke access», the last.",
                 "The shop without the Administrator role: press the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses.",
@@ -13477,9 +13521,14 @@
     "raffle": {
       "title": "Raffle",
       "intro": "Every runner, elite and volunteer of the event, and whether they take part in the raffle. You make the draw yourselves, from the file.",
+      "randomOrgMissing": {
+        "one": "{count} participant without a number is not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
+        "few": "{count} participants without a number are not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor.",
+        "other": "{count} participants without a number are not in the file for random.org: give them a number first, with “Number the elites without one” in the event's editor."
+      },
       "introDesk": "Every runner, elite and volunteer of the event: who takes part in the raffle and who is present. With a separate sign-up, sign a runner up here once they have accepted the rules.",
       "noEvent": "No event to show.",
-      "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers”.",
+      "noRaffle": "The chosen event holds no raffle. “We hold a raffle” is ticked in the event's editor, under “Race numbers” → “Raffle”.",
       "event": "Event",
       "show": "Show",
       "settings": {
@@ -15839,8 +15888,6 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
-      "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
-      "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
       "volunteerChoicesMaxOn": {
         "one": "The limit is saved: at most {count} role can be ticked on the public form.",
         "few": "The limit is saved: at most {count} roles can be ticked on the public form.",

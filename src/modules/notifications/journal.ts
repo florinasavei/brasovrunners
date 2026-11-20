@@ -12,7 +12,7 @@ import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import type { DepartureRow } from "./domain/departure";
 import { recipientRoleOf, STAFF_PERSON_TYPES } from "./domain/email-audience";
 import { isPressCause, type PressCause } from "./domain/press-causes";
-import { SENT_NOW_FLAG } from "./domain/send-at-once";
+import { SENT_AT_TURN_FLAG, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { gmailRoadCondition } from "./outbox";
 import { readOutboxRoads } from "./outbox-roads";
 
@@ -151,6 +151,7 @@ export type JournalRowRead = {
   nextAttemptAt: Date | null;
   familyHeld: boolean;
   sentNow: boolean;
+  sentAtTurn: boolean;
   onMailgunRoad: boolean;
   isManualResend: boolean;
   clubCopy: boolean;
@@ -291,6 +292,7 @@ export function groupEmailJournal(
         lastError: row.lastError,
         familyHeld: row.familyHeld,
         sentNow: row.sentNow,
+        sentAtTurn: row.sentAtTurn,
         onMailgunRoad: row.onMailgunRoad,
         isManualResend: row.isManualResend,
       },
@@ -391,9 +393,10 @@ export async function readEmailJournal<T extends Record<string, unknown>>(db: Da
       lastError: emailOutbox.lastError,
       attemptCount: emailOutbox.attemptCount,
       nextAttemptAt: emailOutbox.nextAttemptAt,
-      // The payload's flags only — the family's hold (§519), a press's «now» (§540), a club copy (§320) — never its words.
+      // The payload's flags only — the family's hold (§519), a press's «now» (§540) or its turn (§1021), a club copy (§320) — never its words.
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
+      sentAtTurn: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_AT_TURN_FLAG}::text) = 'true', false)`,
       onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
       isManualResend: emailOutbox.isManualResend,
       clubCopy: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${CLUB_COPY_FLAG}::text) = 'true', false)`,
@@ -434,6 +437,7 @@ export async function readEmailJournal<T extends Record<string, unknown>>(db: Da
     // A raw `timestamptz` read through `sql` would come back as text; these are the columns' own mappings.
     familyHeld: Boolean(row.familyHeld),
     sentNow: Boolean(row.sentNow),
+    sentAtTurn: Boolean(row.sentAtTurn),
     onMailgunRoad: Boolean(row.onMailgunRoad),
     clubCopy: Boolean(row.clubCopy),
     test: Boolean(row.test),
