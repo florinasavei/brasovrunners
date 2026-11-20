@@ -1155,7 +1155,8 @@
       "registeredOutside": "special guests: {count}",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter",
-      "shop": "Shop"
+      "shop": "Shop",
+      "prKit": "PR Kit"
     },
     "outbox": {
       "status": {
@@ -4212,9 +4213,9 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
-      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day only: the desk and «Timing».",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day (the desk and «Timing») and «PR Kit».",
       "roles": {
-        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number, signs up for the raffle; under «Timing», records finishes and undoes their own press. That is all.",
+        "CONTRIBUTOR": "the desk: scans, checks people in, confirms on paper, gives a free place, types a number, signs up for the raffle; «Timing»: records finishes, undoes their own press; downloads «PR Kit». That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
@@ -9595,7 +9596,19 @@
                 "«Settings» → «Appearance» → «Design system»: the site's colours, type, buttons and pills as they are in the code, and the redesign plan — for whoever reads the club's content.",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
+                "«PR Kit»: the club's logo, the stickers and the YouTube poster, to download at any time — for the whole team.",
                 "«Staff» and «Guide» (this page)."
+              ]
+            },
+            {
+              "title": "PR Kit: logo, stickers and poster",
+              "steps": [
+                "Open «PR Kit» from the top bar — the whole team has it, volunteers included.",
+                "«Logo»: the full logo and the mountains alone, each in the club's colour, white and black. Give a print shop the SVG or the PDF: they scale to any size without blurring.",
+                "The PNG is for Word, Canva, PowerPoint or social media. White is for dark backgrounds or photos (on white it does not show, which is normal), black for one-colour printing.",
+                "«Stickers»: A4 sheets ready to cut — with a QR code to the site or with the logo alone. Print the PDF at 100% (“Actual size”), not “Fit to page”, so the cuts land where they should.",
+                "«YouTube poster»: an A4 poster with the code to the club's channel. If it says the channel's address is not set, tell an Administrator.",
+                "«Colours»: the club's colour code. On paper it comes out a little darker than on screen: ask the print shop to match it to the logo."
               ]
             },
             {
@@ -10737,6 +10750,77 @@
       "familyPending": "Not switched on on this environment yet: the database keeps one registration per address per event. Until then, sending the form for another person only re-sends the first registration's email.",
       "network": "A save fails on an office laptop?",
       "networkLink": "Check the network"
+    },
+    "prKit": {
+      "title": "PR Kit",
+      "intro": "The club's logo, the stickers and the YouTube poster, to download at any time and take to a print shop.",
+      "logo": {
+        "title": "Logo",
+        "intro": "SVG or PDF for a print shop, PNG for Word, Canva or social media.",
+        "introMore": "White is for dark backgrounds or photos, black for one-colour printing. The PNG is 4000 px wide on a transparent background.",
+        "shape": {
+          "lockup": "Full logo",
+          "mountains": "Mountains only"
+        },
+        "ink": {
+          "primary": "in the club's colour",
+          "white": "white",
+          "black": "black"
+        },
+        "tile": "{shape} · {ink}",
+        "format": {
+          "svg": "SVG",
+          "png": "PNG",
+          "pdf": "PDF"
+        },
+        "download": "Download {name} ({format})"
+      },
+      "stickers": {
+        "title": "Stickers",
+        "intro": "A4 sheets ready to cut. Print the PDF at 100%, not “Fit to page”.",
+        "introMore": "The grey dashed lines are the cuts. Around the QR code stays the white margin a phone needs to read it.",
+        "withCode": "With a QR code to the site",
+        "codeTo": "The code leads to {address}.",
+        "logoOnly": "The logo alone",
+        "sheet": {
+          "qr12": "12 per sheet",
+          "qr24": "24 per sheet",
+          "logo12": "12 per sheet",
+          "logo24": "24 per sheet",
+          "logo40": "40 per sheet",
+          "logo12Primary": "12 per sheet, on the club's colour"
+        },
+        "what": {
+          "qr12": "Large: the logo, the code and the address, one under the other.",
+          "qr24": "Small: the logo and the address on the left, the code on the right.",
+          "logo12": "The logo, large.",
+          "logo24": "The logo, medium.",
+          "logo40": "The logo, small.",
+          "logo12Primary": "The logo in white, on the club's colour."
+        },
+        "download": "Download PDF",
+        "downloadLabel": "Download PDF: {name}"
+      },
+      "poster": {
+        "title": "YouTube poster",
+        "intro": "An A4 poster with a QR code to the club's YouTube channel.",
+        "codeTo": "The code leads to {address}.",
+        "unset": "The club's YouTube address is not set: it goes in CLUB_YOUTUBE_URL, in the Vercel project's variables, then redeploy.",
+        "download": "Download the poster (PDF)",
+        "kicker": "We're on",
+        "brand": "YouTube",
+        "lead": "The races, the training runs and the people of the club — follow us and subscribe!",
+        "tab": "SCAN ME",
+        "scan": "Open your phone's camera and point it at the code"
+      },
+      "colours": {
+        "title": "Colours",
+        "intro": "The club's colour, for a print shop.",
+        "primary": "The club's colour",
+        "hex": "HEX {hex}",
+        "rgb": "RGB {r}, {g}, {b}",
+        "paper": "On paper it comes out a little darker than on screen: ask the print shop to match it to the logo."
+      }
     },
     "eventJson": {
       "title": "Import an event (JSON)",
