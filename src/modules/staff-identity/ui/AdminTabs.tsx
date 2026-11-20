@@ -105,6 +105,8 @@ const ICONS: Record<AdminSection, ComponentType<SvgIconProps>> = {
   // «Magazin» (§687): the shop front the members' shop card already wore (§683).
   shop: StorefrontIcon,
   staff: GroupIcon,
+  // «PR Kit» (§NNN): the swatches and the brush of a brand's kit, asked of the registry by name (§318).
+  prKit: ACTION_ICONS.prKit,
 };
 
 /**

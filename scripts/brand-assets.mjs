@@ -1,8 +1,9 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { brandAssetsLock, brandColours } from "./brand-assets-lock.mjs";
+import { brandAssetsLock, brandColours, clubConfig } from "./brand-assets-lock.mjs";
+import { KIT_DIR, KIT_PNG_WIDTH, KIT_SHAPES, inPixels, kitColours, kitFileName, kitSvg, measureLogo, parseLogoSvg } from "./brand-kit.mjs";
 
 /**
  * `yarn brand:assets` — the club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174): pdfkit
@@ -15,6 +16,9 @@ import { brandAssetsLock, brandColours } from "./brand-assets-lock.mjs";
  * each source's sha256 and those colours — which `tests/unit/theme/brand-assets-lock.test.ts` holds the
  * sources to, so a changed source without a rebuild fails the tests. `--lock-only` writes the lock alone,
  * for a change that moved nothing the rasters are drawn from.
+ *
+ * It also writes the «PR Kit»'s logo files (§NNN, `brand-kit.mjs`): the lockup and its mountains in the primary, white
+ * and black, as padded SVGs with an explicit size and 4000-pixel PNGs, in `public/brand/kit/`, locked by their sha256.
  */
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -145,6 +149,33 @@ for (const { name, crop, pad } of lockOnly ? [] : SQUARES) {
     const png = await raster.png({ compressionLevel: 9 }).toBuffer();
     await writeFile(path.join(root, `public/brand/square/${name}${suffix}.png`), png);
     console.log(`${name}${suffix}.png: ${size}x${size}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
+  }
+}
+
+/*
+  The «PR Kit»'s logo files (§NNN; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
+  can download it at any time, even the volunteers can do that»), in `public/brand/kit/`: the lockup and its mountains alone,
+  each in the palette's primary, in white and in black — an SVG whose frame is 4 % outside the drawing as measured from its own
+  path data, 200 mm wide with its height written out, and a transparent PNG 4000 pixels wide drawn from that SVG. Named from
+  the club's slug. The folder is emptied first, so a slug or a shape that changed leaves no file behind. `brand-kit.mjs` says
+  how the drawing is measured and which paths are the mountains.
+*/
+if (!lockOnly) {
+  const club = clubConfig(root);
+  const source = parseLogoSvg(await readFile(path.join(root, "public/brand/logo.svg"), "utf8"));
+  const measured = measureLogo(source, club.logo.mark.viewBox);
+  await rm(path.join(root, KIT_DIR), { recursive: true, force: true });
+  await mkdir(path.join(root, KIT_DIR), { recursive: true });
+  for (const { key: shape } of KIT_SHAPES) {
+    for (const { key: colour, hex } of kitColours(club.palette)) {
+      const svg = kitSvg(source, measured, shape, hex);
+      await writeFile(path.join(root, KIT_DIR, kitFileName(club.slug, shape, colour, "svg")), svg);
+      // Drawn from the same SVG sized in pixels (`inPixels`): KIT_PNG_WIDTH wide whatever the renderer makes of a millimetre.
+      const png = await sharp(Buffer.from(inPixels(svg, KIT_PNG_WIDTH))).png({ compressionLevel: 9 }).toBuffer();
+      await writeFile(path.join(root, KIT_DIR, kitFileName(club.slug, shape, colour, "png")), png);
+      const { width: w, height: h } = await sharp(png).metadata();
+      console.log(`${kitFileName(club.slug, shape, colour, "png")}: ${w}x${h}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
+    }
   }
 }
 

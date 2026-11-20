@@ -6,6 +6,7 @@ import AssignmentLateIcon from "@mui/icons-material/AssignmentLate";
 import BadgeIcon from "@mui/icons-material/Badge";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
+import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
 import BrushIcon from "@mui/icons-material/Brush";
 import BuildIcon from "@mui/icons-material/Build";
 import CampaignIcon from "@mui/icons-material/Campaign";
@@ -85,6 +86,7 @@ import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
+import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import ShareIcon from "@mui/icons-material/Share";
 import SpeedIcon from "@mui/icons-material/Speed";
@@ -298,6 +300,12 @@ export const PANEL_GLYPHS = {
   // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,
   importCsv: UploadFileIcon,
+  // «PR Kit» (§NNN): the club's mark on a page for «Logo», the scissors of the cut lines for «Autocolante», a screen with the
+  // play triangle for «Afiș YouTube», and «Aspect»'s own palette for «Culori» — the same subject, the club's colours.
+  prLogo: BrandingWatermarkIcon,
+  prStickers: ContentCutIcon,
+  prPoster: SmartDisplayIcon,
+  prColours: PaletteIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type PanelGlyphName = keyof typeof PANEL_GLYPHS;
