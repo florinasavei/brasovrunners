@@ -250,6 +250,33 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
     // names stay out of search snippets (§421); the page itself stays indexed.
     <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
+      {/* «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat». */}
+      {(results.separateRows ?? []).length > 0 && (
+        <Box
+          component="details"
+          open
+          aria-labelledby="results-elite-title"
+          data-testid="results-elite-section"
+          sx={{
+            mb: { xs: DENSITY.sectionGap, sm: 4 },
+            border: 2,
+            borderColor: "secondary.main",
+            borderRadius: 2,
+            px: 2,
+            "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+            ...DISCLOSURE_OPEN_ARROW,
+            "&[open]": { pb: 2 },
+          }}
+        >
+          <Box component="summary">
+            <Typography component="h2" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
+              <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+              {t("results.eliteTitle")}
+            </Typography>
+          </Box>
+          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
+        </Box>
+      )}
       <Box
         component="details"
         open
@@ -307,33 +334,6 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         </Typography>
       </Box>
 
-      {/* «Clasament elite» (§1031), a section of its own under the open one — the owner, race day: «nu e clară secțiunea … trebuie pus separat». */}
-      {(results.separateRows ?? []).length > 0 && (
-        <Box
-          component="details"
-          open
-          aria-labelledby="results-elite-title"
-          data-testid="results-elite-section"
-          sx={{
-            mt: { xs: DENSITY.sectionGap, sm: 4 },
-            border: 2,
-            borderColor: "secondary.main",
-            borderRadius: 2,
-            px: 2,
-            "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-            ...DISCLOSURE_OPEN_ARROW,
-            "&[open]": { pb: 2 },
-          }}
-        >
-          <Box component="summary">
-            <Typography component="h2" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
-              <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-              {t("results.eliteTitle")}
-            </Typography>
-          </Box>
-          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
-        </Box>
-      )}
     </Box>
   );
 }
