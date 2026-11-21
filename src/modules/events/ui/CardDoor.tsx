@@ -1,6 +1,11 @@
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
 import Box from "@mui/material/Box";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+
+/** The door's glyph (§NNN): the page, its «Clasament» (the results chip's leaderboard), the event's album (the gallery's). */
+const GLYPHS = { page: ReadMoreIcon, results: LeaderboardIcon, album: PhotoLibraryIcon } as const;
 
 /**
  * "Descrierea completă a evenimentului" on a listing card (`DECISIONS.md` §305), shared by the
@@ -18,7 +23,8 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
  * A Server Component: the glyph is rendered here, never passed as a prop to a client component
  * (the hydration defect `shared/ui/action-icons.ts` documents), and the anchor needs no island.
  */
-export default function CardDoor({ href, label }: { href: string; label: string }) {
+export default function CardDoor({ href, label, glyph = "page" }: { href: string; label: string; glyph?: keyof typeof GLYPHS }) {
+  const Glyph = GLYPHS[glyph];
   return (
     <Box
       component="a"
@@ -40,7 +46,7 @@ export default function CardDoor({ href, label }: { href: string; label: string 
         "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
       }}
     >
-      <ReadMoreIcon aria-hidden="true" sx={{ fontSize: 20 }} />
+      <Glyph aria-hidden="true" sx={{ fontSize: 20 }} />
       {label}
     </Box>
   );

@@ -1,0 +1,14 @@
+{
+  "branch": "feat/event-card-results-and-album-doors",
+  "decisionsTitle": "«Vezi clasamentul» and «Album foto» beside «Descrierea completă a evenimentului» on an event's card (amending §305 and §809)",
+  "decisionsSection": "**The owner, 2026-11-22, the day after the race:** on the race's card in «Alergări», beside «Descrierea completă a evenimentului», a door to the results and a door to the photographs.\n\n**Decision.** `EventCard` draws up to three doors in one wrapping row, each the same `CardDoor` with its own glyph:\n\n- «Descrierea completă a evenimentului», as before (§305);\n- **«Vezi clasamentul»** → the event page's `#clasament`, under the «Clasament» chip's own rule (`resultsChip`, from `eventsWithResultsChip`, §809): the results are on show;\n- **«Album foto»** → the event's album in the gallery, once an album linked to the event (`gallery_albums.event_id`) is published in the page's language — the newest when there are several (`albumSlugsByEvent`). The listing reads it once for the page from the gallery's cached read (`cachedPublishedAlbums`, which the navigation's «Galerie» already reads on every page), never per card; `PublicAlbumSummary.eventId` follows `eventTitle`'s rule, so an album of a members' or unpublished event gives no door.\n\nWhere: the listing's results-first grid, the cards ahead and the past section. Not the home page's run cards: they are upcoming runs, and the home page has its own results button.\n\n**Tests.** `tests/unit/events/featured-card.test.ts`.",
+  "changelogLine": "- **«Vezi clasamentul» and «Album foto» on the race's card** — beside «Descrierea completă a evenimentului», the first while the results are on show, the second once the event's album is published. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-041-01",
+      "text": "Given an event's card on the listing, then beside «Descrierea completă a evenimentului» it shows «Vezi clasamentul» to the page's `#clasament` exactly when its «Clasament» chip shows, and «Album foto» to the event's newest album published in that language exactly when there is one (2026-11-22, `DECISIONS.md` §NNN). Verification: unit `events/featured-card.test.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Vezi clasamentul» and «Album foto» on the race's card"
+}

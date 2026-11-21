@@ -31,10 +31,11 @@ vi.mock("next-intl/server", async () => {
 });
 
 vi.mock("@/i18n/navigation", () => {
-  const path = (href: { params?: { slug?: string } }) => `/${currentLocale}/evenimente/${href.params?.slug ?? ""}`;
+  type Href = { pathname?: string; params?: { slug?: string } };
+  const path = (href: Href) => `/${currentLocale}/${href.pathname?.startsWith("/gallery") ? "galerie" : "evenimente"}/${href.params?.slug ?? ""}`;
   return {
-    getPathname: ({ href }: { href: { params?: { slug?: string } } }) => path(href),
-    Link: ({ href, children }: { href: { params?: { slug?: string } }; children: ReactNode }) => createElement("a", { href: path(href) }, children),
+    getPathname: ({ href }: { href: Href }) => path(href),
+    Link: ({ href, children }: { href: Href; children: ReactNode }) => createElement("a", { href: path(href) }, children),
   };
 });
 
@@ -191,6 +192,45 @@ describe("§470 the featured event is a card like the others", () => {
     expect(rules).toContain("linear-gradient");
     expect(rules).not.toContain("--mui-palette-secondary-main");
     expect(chipLabels(withoutStyles(await card(race({ isSpecial: true }), RACE_WEEK)))).toContain("Ediție specială");
+  });
+});
+
+describe("§NNN the card's doors: «Vezi clasamentul» and «Album foto» beside the full description", () => {
+  const doors = (html: string) =>
+    [...withoutStyles(html).matchAll(/<a\b[^>]*href="([^"]*)"[^>]*><svg\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>([^<]*)<\/a>/g)].map(([, href, label]) => `${label} → ${href}`);
+  const doorCard = (props: { resultsChip?: boolean; albumSlug?: string | null }) =>
+    markup(createElement(EventCard, { event: race({ featured: false }), index: 0, now: NOW, ...props }));
+
+  it("draws the full description alone when the results are not on show and no album is published", async () => {
+    expect(doors(await doorCard({}))).toEqual(["Descrierea completă a evenimentului → /ro/evenimente/crosul-aniversar"]);
+  });
+
+  it("adds «Vezi clasamentul» to the page's #clasament under the chip's own rule, and «Album foto» to the event's album", async () => {
+    expect(doors(await doorCard({ resultsChip: true, albumSlug: "crosul-2026" }))).toEqual([
+      "Descrierea completă a evenimentului → /ro/evenimente/crosul-aniversar",
+      "Vezi clasamentul → /ro/evenimente/crosul-aniversar#clasament",
+      "Album foto → /ro/galerie/crosul-2026",
+    ]);
+    currentLocale = "en";
+    expect(doors(await doorCard({ resultsChip: true, albumSlug: "crosul-2026" }))).toEqual([
+      "Full event description → /en/evenimente/crosul-aniversar",
+      "See the results → /en/evenimente/crosul-aniversar#clasament",
+      "Photo album → /en/galerie/crosul-2026",
+    ]);
+  });
+
+  it("picks each event's newest published album, and none for an album the public cannot see linked", async () => {
+    const { albumSlugsByEvent } = await import("@/modules/content/gallery/repository");
+    const slugs = albumSlugsByEvent([
+      { eventId: "e1", slug: "newest" },
+      { eventId: null, slug: "free" },
+      { eventId: "e1", slug: "older" },
+      { eventId: "e2", slug: "other" },
+    ]);
+    expect([...slugs]).toEqual([
+      ["e1", "newest"],
+      ["e2", "other"],
+    ]);
   });
 });
 

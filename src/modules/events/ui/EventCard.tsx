@@ -83,6 +83,7 @@ export default async function EventCard({
   titleAs = "h2",
   resultsChip = false,
   comingCount = 0,
+  albumSlug = null,
 }: {
   /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
@@ -118,6 +119,12 @@ export default async function EventCard({
    * card of an event the page does not offer the answer to — a group run's series card never gets one, its dates do.
    */
   comingCount?: number;
+  /**
+   * «Album foto» (§NNN): the slug of the event's published album in this language, the newest when it has more than one. The listing
+   * works it out once for the whole page from the gallery's cached read (`albumSlugsByEvent`); a card never asks the database. Absent:
+   * no door.
+   */
+  albumSlug?: string | null;
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -234,9 +241,18 @@ export default async function EventCard({
 
         {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
             pentru 'descrierea completa a evenimentului'") — the same door the series card wears,
-            so the two kinds of card read alike. */}
-        <Box sx={CARD_DOOR_SX}>
+            so the two kinds of card read alike. Beside it (§NNN; the owner, 2026-11-22), the race's «Vezi clasamentul» while its
+            results are on show — the chip's own rule — and «Album foto» once the event's album is published. */}
+        <Box sx={{ ...CARD_DOOR_SX, display: "flex", flexWrap: "wrap", columnGap: 2 }}>
           <CardDoor href={page} label={tEvent("series.fullDescription")} />
+          {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" />}
+          {albumSlug && (
+            <CardDoor
+              href={getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: albumSlug } } })}
+              label={tEvent("series.photoAlbum")}
+              glyph="album"
+            />
+          )}
         </Box>
       </Box>
     </Card>
