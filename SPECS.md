@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.98-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V4.99-2026-11-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.98-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.99-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -919,6 +919,7 @@ coffee is run on nothing.
 77. Given the platform's privacy notice template, when its section 4 is read, then the public list's paragraph says in both languages that the wish to appear by name may also be told to the organizers at the race-number desk, who record it, who and when kept, the person emailed at once with the link to withdraw it at any time; no version is approved or seeded by it (2026-11-20, `DECISIONS.md` §1017). Verification: unit `legal-documents/privacy-desk-list-wish.test.ts`.
 78. Given a race whose results are published and an Administrator ticked «Toate numele în clasament», then the results on the site name every confirmed runner whatever they ticked and whatever notice they registered under, and a runner the club typed without a recorded agreement — but never a special guest the event hides, a registration not confirmed, or a marked elite or ambassador the club unticked «Apare pe site» on; the public participant list does not change, and unticked the results follow each runner's own tick again (2026-11-21, `DECISIONS.md` §1029). Verification: unit `results/public-name-reason.test.ts`, `registrations/list-choice.test.ts`; integration `results/public-section.test.ts`.
 79. Given «Toate numele în clasament» on, then every registration marked «Elită» and every line of the race's elite list is left out of the ranking as if its «Apare în clasament» were unticked — absent from the public results, positions counted without it — and the results section says «Timpul a fost notat manual.»; unticked, both are as before (2026-11-21, `DECISIONS.md` §1030). Verification: integration `results/public-section.test.ts`.
+80. Given a race whose results are on show, then the event page draws them right under the title, the home page leads with a button to them and the listing leads with the race's card even after its date; while «Toate numele în clasament» is on, the elites are ranked apart under «Clasament elite» and the heading reads «Clasament (fără cip)»; an Administrator's «Comentariu public» on a result is printed under its row with an asterisk (2026-11-21, `DECISIONS.md` §1031). Verification: integration `results/public-section.test.ts`.
 
 **Verification:** integration `privacy/public-surface.test.ts`
 
@@ -3662,6 +3663,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 234. Amends criterion 221. Given `/admin/acord`, then it says «Îl accepți la fiecare intrare în cont.» (“You accept it each time you sign in.”), «Numele tău complet» is empty and «Am citit și accept angajamentul» unticked at every sign-in, and every press that accepts is kept — one row per account, version and sign-in in `staff_team_agreement_sign_in_acceptances` (migration `0226`, expand only), with the declarations' proof and the sign-in it answers (`signed_in_at`, null for a session from before §1026), audited with the version and that sign-in and never the name —, a second press for the same sign-in writing nothing; §1006's acceptances stay as they were; «Echipa» shows the newest acceptance of the version in force from either record, and the legal list counts every one as a reliance on its version (2026-11-20, `DECISIONS.md` §1026).
 235. Given «Confirmă pentru tombolă», then it is authorized by `canTakeRaffleList` — the Organizer, the Administrator and the Superadministrator — at the action's door and again in the service: the desk's Voluntar, the Redactor, Tehnic and a member are refused `FORBIDDEN` with nothing written, and «Ziua cursei» → «Tombolă» draws the button for none of them, though every desk role reads the same rows (2026-11-20, `DECISIONS.md` §1028). Verification: integration `volunteers/raffle-confirmation.test.ts`, `volunteers/raffle-confirmation-screens.test.ts`; e2e `raffle-confirm-volunteer.spec.ts`.
 236. Given «Toate numele în clasament», then only an Administrator may set it — asserted in the service, the Organizer, Tehnic, the Redactor, a volunteer and a member refused `FORBIDDEN` with nothing written — on a race only, asked first both ways, with one `event_results.all_names_changed` audit row per change that names no runner (2026-11-21, `DECISIONS.md` §1029). Verification: integration `results/public-section.test.ts`; unit `shared/confirmed-actions.test.ts`.
+237. Given «Comentariu public», then only an Administrator may write it — asserted in the service, every other role refused `FORBIDDEN` — on a number that has a result, at most 200 characters, with one `event_results.public_note_changed` audit row that names the number and never the text (2026-11-21, `DECISIONS.md` §1031). Verification: integration `results/public-section.test.ts`.
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

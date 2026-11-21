@@ -46,7 +46,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   saveEventResultsAction: async () => null,
   deleteEventResultAction: async () => null,
   setResultsPublishedAction: async () => null,
-  setResultsAllNamesAction: async () => null,
+  setResultsAllNamesAction: async () => null, setResultPublicNoteAction: async () => null,
   setResultAgeBandsAction: async () => null,
   setResultAwardsAction: async () => null,
   resetEventResultsAction: async () => null,

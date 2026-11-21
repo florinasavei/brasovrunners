@@ -47,6 +47,7 @@ const forecastCalls: string[][] = [];
 const rsvp = { described: true, counts: {} as Record<string, number>, describedCalls: 0, countCalls: [] as string[][] };
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedUpcomingEvents: async () => upcoming,
+  cachedPastEvents: async () => [],
   cachedPublishedPages: async () => [],
   cachedRsvpDescribed: async () => {
     rsvp.describedCalls += 1;
