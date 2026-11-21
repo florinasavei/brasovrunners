@@ -911,6 +911,8 @@
     },
     "results": {
       "title": "Results",
+      "titleNoChip": "Results (no chip)",
+      "eliteTitle": "Elite results",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
@@ -12970,6 +12972,8 @@
         "bib": "Race number",
         "note": "The comment",
         "save": "Save the comment",
+        "confirmTitle": "Put the comment on the site?",
+        "confirmBody": "It shows under the runner's row in the public results.",
         "saving": "Saving…",
         "current": "Comments: {list}"
       },

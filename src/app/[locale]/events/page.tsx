@@ -191,6 +191,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // «Clasament» (§809, race results part 2): which of these races have results on show, worked out once for the page from the cached
   // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
   const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
+  const resultsFirst = pastRows.filter((event) => withResults.has(event.id) && !events.some((shown) => shown.id === event.id));
   /*
     «N vin» (§815): how many confirmed they come, for the events ahead whose page offers the answer — worked out once
     for the page from the cached notice flag and the one cached count read, never per card, and nothing read at all while no event
@@ -243,6 +244,16 @@ export default async function EventsPage({ params, query: asked }: Props) {
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
+
+      {/* «Clasament» first (§NNN — the owner, race day 2026-11-21: «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut … să fie
+          primul»): a past race whose results are on show leads the page, its card wearing the chip to `#clasament`. */}
+      {resultsFirst.length > 0 && (
+        <Box component="ul" sx={{ ...CARD_GRID_SX, mb: { xs: 2, sm: 3 } }} data-testid="listing-results-first">
+          {resultsFirst.map((event, index) => (
+            <EventCard key={event.id} event={event} index={index} now={now} resultsChip />
+          ))}
+        </Box>
+      )}
 
       <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} />
 

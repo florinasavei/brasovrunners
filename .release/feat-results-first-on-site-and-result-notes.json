@@ -1,0 +1,18 @@
+{
+  "branch": "feat/results-first-on-site-and-result-notes",
+  "decisionsTitle": "Race day: «Clasament» first on the site, «Clasament elite» apart, «Clasament (fără cip)» and «Comentariu public» on one result (amending §809, §1029)",
+  "decisionsSection": "**The owner, race day 2026-11-21, after §1029 and its elites-out amendment went live:** «trebuie să fie mai vizibil clasamentul!», «să fie primul pe site!», «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut», «afișează elitele în loc separat, să fie clasament open și clasament elite», «scrie „clasament (fără cip)”», «trebuie să pot pune comentariu … să fie vizibil că Palici a făcut 11 km în total».\n\n**Decision.**\n\n- **First on the site.** The event page draws «Clasament» right under the title (`EventPageView.tsx`), no longer after «Condiții de participare». The home page leads with one button «Vezi clasamentul: {title}» to the latest race whose results are on show (`home-content.ts`, `eventsWithResultsChip` over the upcoming rows and the five latest past ones). The listing «Alergări» leads with that past race's card, wearing its «Clasament» chip, above the events ahead (`events/page.tsx`).\n- **«Clasament elite».** While «Toate numele în clasament» is on, the rows it leaves out of the open ranking (the elites) are drawn in a table of their own under the open one, ranked among themselves by time, overall and by sex, with no category (`readPublicEventResults`'s `separateRows`); the same naming rules apply.\n- **«Clasament (fără cip)»** is the section's heading while «Toate numele» is on, beside «Timpul a fost notat manual.».\n- **«Comentariu public».** One line, at most 200 characters, an Administrator writes on the result filed under a number, on «Clasament» (`results.ts#setResultPublicNote`; FORBIDDEN otherwise, BR-REQ-060-01; `RESULT_NOTE_NO_ROW`, `RESULT_NOTE_TOO_LONG`), asked first; printed on the site under the row, an asterisk after the name. Empty takes it off. Column `event_results.public_note`, migration `0229_results_public_note` (expand only); never the staff's internal `note`. One audit row `event_results.public_note_changed` with `{ bibNumber, on }`, never the text.\n\n**Tests.** `tests/integration/results/public-section.test.ts`, `results.test.ts`, `typed-name.test.ts`.",
+  "changelogLine": "- **Clasamentul primul pe site** — under the event's title, a button on the home page and the race's card first in «Alergări»; «Clasament elite» apart, «Clasament (fără cip)», and «Comentariu public» on one result. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-039-01",
+      "text": "Given a race whose results are on show, then the event page draws them right under the title, the home page leads with a button to them and the listing leads with the race's card even after its date; while «Toate numele în clasament» is on, the elites are ranked apart under «Clasament elite» and the heading reads «Clasament (fără cip)»; an Administrator's «Comentariu public» on a result is printed under its row with an asterisk (2026-11-21, `DECISIONS.md` §NNN). Verification: integration `results/public-section.test.ts`."
+    },
+    {
+      "requirement": "BR-REQ-060-01",
+      "text": "Given «Comentariu public», then only an Administrator may write it — asserted in the service, every other role refused `FORBIDDEN` — on a number that has a result, at most 200 characters, with one `event_results.public_note_changed` audit row that names the number and never the text (2026-11-21, `DECISIONS.md` §NNN). Verification: integration `results/public-section.test.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "Race day: results first on the site, elites apart, «fără cip», a public comment on one result"
+}

@@ -105,6 +105,147 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
+  const tableOf = (list: typeof rows, tableId: string, rowTestId: string) => (
+  <Box
+    component="table"
+    id={tableId}
+    sx={{
+      width: "100%",
+      borderCollapse: "collapse",
+      // Phone: every row a block of three lines, the place at the left (the checkpoints' stack, tightened).
+      display: { xs: "block", sm: "table" },
+      "& thead": { display: { xs: "block", sm: "table-header-group" } },
+      // Hidden from the eye on a phone, read by a screen reader: the cells carry their own words there.
+      "& thead tr": {
+        position: { xs: "absolute", sm: "static" },
+        width: { xs: "1px", sm: "auto" },
+        height: { xs: "1px", sm: "auto" },
+        overflow: { xs: "hidden", sm: "visible" },
+        clipPath: { xs: "inset(50%)", sm: "none" },
+      },
+      "& tbody": { display: { xs: "block", sm: "table-row-group" } },
+      "& tbody tr": {
+        display: { xs: "grid", sm: "table-row" },
+        gridTemplateColumns: { xs: "2.5rem max-content 1fr", sm: "none" },
+        gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
+        columnGap: { xs: 1, sm: 0 },
+        borderBottom: 1,
+        borderColor: "divider",
+        py: { xs: 1, sm: 0 },
+      },
+      // The filter hides a row with the `hidden` attribute; the display above would otherwise win over the browser's own rule.
+      "& tbody tr[hidden]": { display: "none" },
+      "& th": { textAlign: "left", fontSize: "0.875rem", fontWeight: 600, color: "text.secondary", whiteSpace: "nowrap", py: 1, px: 1, borderBottom: 1, borderColor: "divider" },
+      "& td": { textAlign: "left", verticalAlign: "top", fontSize: "0.9375rem", py: { xs: 0, sm: 1 }, px: { xs: 0, sm: 1 } },
+      "& td[data-col='place']": { gridArea: "place", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "text.secondary", width: { sm: "3rem" } },
+      "& td[data-col='name']": { gridArea: "name", overflowWrap: "anywhere" },
+      "& td[data-col='number']": { gridArea: "number", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", textAlign: { sm: "right" }, width: { sm: "1%" } },
+      "& td[data-col='time']": { gridArea: "time", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" },
+      "& td[data-col='category']": { gridArea: "category", color: "text.secondary" },
+      // The column's word before the cell on a phone, where there is no header to read it from.
+      "& td[data-label]::before": { content: "attr(data-label) ' '", display: { xs: "inline", sm: "none" }, fontSize: "0.8125rem", fontWeight: 600, color: "text.secondary" },
+    }}
+  >
+    <Box component="caption" sx={SR_ONLY_SX}>
+      {t("results.caption")}
+    </Box>
+    <thead>
+      <tr>
+        <th scope="col" data-col="place">
+          {t("results.columnPlace")}
+        </th>
+        <th scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
+          <Box component="abbr" title={t("startList.columnNumberFull")} sx={{ textDecoration: "none" }}>
+            {t("startList.columnNumber")}
+          </Box>
+        </th>
+        <th scope="col" data-col="name">
+          {t("results.columnName")}
+        </th>
+        <th scope="col" data-col="time">
+          {t("results.columnTime")}
+        </th>
+        <th scope="col" data-col="category">
+          {t("results.columnCategory")}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {list.map((row) => {
+        const finished = row.status === "FINISHED";
+        return (
+          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.categoryKey ?? ""} data-status={row.status}>
+            <td data-col="place" data-testid="result-place">
+              {finished && row.positionOverall !== null ? (
+                row.positionOverall
+              ) : (
+                <>
+                  <span aria-hidden="true">{NO_VALUE}</span>
+                  <Box component="span" sx={SR_ONLY_SX}>
+                    {t("results.noPlace")}
+                  </Box>
+                </>
+              )}
+            </td>
+            <td data-col="name" data-testid="result-name">
+              {row.name !== null ? (
+                row.name
+              ) : (
+                <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+                  {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}
+                </Box>
+              )}
+              {/* «Comentariu public» (§NNN): the Administrator's line, an asterisk after the name and the words under it. */}
+              {row.publicNote !== null && (
+                <>
+                  {" *"}
+                  <Box component="span" data-testid="result-public-note" sx={{ display: "block", typography: "body2", color: "text.secondary" }}>
+                    {`* ${row.publicNote}`}
+                  </Box>
+                </>
+              )}
+            </td>
+            <td data-col="number" data-label={t("startList.columnNumber")} data-testid="result-number">
+              {numberOf(row.bibNumber)}
+            </td>
+            {/* A runner who did not finish has a word in this cell, not a time: the phone must not print «Timp» before «Abandon». */}
+            <td data-col="time" data-label={finished ? t("results.columnTime") : undefined} data-testid="result-time">
+              {finished ? (
+                <>
+                  <span>{row.gunTimeMs !== null ? formatResultTime(row.gunTimeMs) : NO_VALUE}</span>
+                  {row.chipTimeMs !== null && (
+                    <Typography component="span" variant="caption" color="text.secondary" data-testid="result-chip-time" sx={{ display: "block", fontWeight: 400 }}>
+                      {t("results.chipTime", { time: formatResultTime(row.chipTimeMs) })}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                // A runner who did not finish has no time to read: the word says how the race ended, in text, never a colour alone.
+                <span data-testid="result-status">{t(`results.status.${row.status}`)}</span>
+              )}
+            </td>
+            <td data-col="category" data-testid="result-category">
+              {row.categoryKey ? (
+                <>
+                  {categoryLabel(row.categoryKey)}
+                  {finished && row.positionCategory !== null ? ` · ${t("results.categoryPlace", { position: row.positionCategory })}` : null}
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true">{NO_VALUE}</span>
+                  <Box component="span" sx={SR_ONLY_SX}>
+                    {t("results.noCategory")}
+                  </Box>
+                </>
+              )}
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </Box>
+  );
+
   return (
     // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
     // names stay out of search snippets (§421); the page itself stays indexed.
@@ -127,7 +268,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         <Box component="summary">
           <Typography component="h2" id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
             <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-            {t("results.title")}
+            {results.manualTime ? t("results.titleNoChip") : t("results.title")}
           </Typography>
         </Box>
 
@@ -158,144 +299,17 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           />
         )}
 
-        <Box
-          component="table"
-          id={TABLE_ID}
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            // Phone: every row a block of three lines, the place at the left (the checkpoints' stack, tightened).
-            display: { xs: "block", sm: "table" },
-            "& thead": { display: { xs: "block", sm: "table-header-group" } },
-            // Hidden from the eye on a phone, read by a screen reader: the cells carry their own words there.
-            "& thead tr": {
-              position: { xs: "absolute", sm: "static" },
-              width: { xs: "1px", sm: "auto" },
-              height: { xs: "1px", sm: "auto" },
-              overflow: { xs: "hidden", sm: "visible" },
-              clipPath: { xs: "inset(50%)", sm: "none" },
-            },
-            "& tbody": { display: { xs: "block", sm: "table-row-group" } },
-            "& tbody tr": {
-              display: { xs: "grid", sm: "table-row" },
-              gridTemplateColumns: { xs: "2.5rem max-content 1fr", sm: "none" },
-              gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
-              columnGap: { xs: 1, sm: 0 },
-              borderBottom: 1,
-              borderColor: "divider",
-              py: { xs: 1, sm: 0 },
-            },
-            // The filter hides a row with the `hidden` attribute; the display above would otherwise win over the browser's own rule.
-            "& tbody tr[hidden]": { display: "none" },
-            "& th": { textAlign: "left", fontSize: "0.875rem", fontWeight: 600, color: "text.secondary", whiteSpace: "nowrap", py: 1, px: 1, borderBottom: 1, borderColor: "divider" },
-            "& td": { textAlign: "left", verticalAlign: "top", fontSize: "0.9375rem", py: { xs: 0, sm: 1 }, px: { xs: 0, sm: 1 } },
-            "& td[data-col='place']": { gridArea: "place", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "text.secondary", width: { sm: "3rem" } },
-            "& td[data-col='name']": { gridArea: "name", overflowWrap: "anywhere" },
-            "& td[data-col='number']": { gridArea: "number", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", textAlign: { sm: "right" }, width: { sm: "1%" } },
-            "& td[data-col='time']": { gridArea: "time", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" },
-            "& td[data-col='category']": { gridArea: "category", color: "text.secondary" },
-            // The column's word before the cell on a phone, where there is no header to read it from.
-            "& td[data-label]::before": { content: "attr(data-label) ' '", display: { xs: "inline", sm: "none" }, fontSize: "0.8125rem", fontWeight: 600, color: "text.secondary" },
-          }}
-        >
-          <Box component="caption" sx={SR_ONLY_SX}>
-            {t("results.caption")}
-          </Box>
-          <thead>
-            <tr>
-              <th scope="col" data-col="place">
-                {t("results.columnPlace")}
-              </th>
-              <th scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
-                <Box component="abbr" title={t("startList.columnNumberFull")} sx={{ textDecoration: "none" }}>
-                  {t("startList.columnNumber")}
-                </Box>
-              </th>
-              <th scope="col" data-col="name">
-                {t("results.columnName")}
-              </th>
-              <th scope="col" data-col="time">
-                {t("results.columnTime")}
-              </th>
-              <th scope="col" data-col="category">
-                {t("results.columnCategory")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const finished = row.status === "FINISHED";
-              return (
-                <tr key={row.bibNumber} data-testid="result-row" data-bib={row.bibNumber} data-category={row.categoryKey ?? ""} data-status={row.status}>
-                  <td data-col="place" data-testid="result-place">
-                    {finished && row.positionOverall !== null ? (
-                      row.positionOverall
-                    ) : (
-                      <>
-                        <span aria-hidden="true">{NO_VALUE}</span>
-                        <Box component="span" sx={SR_ONLY_SX}>
-                          {t("results.noPlace")}
-                        </Box>
-                      </>
-                    )}
-                  </td>
-                  <td data-col="name" data-testid="result-name">
-                    {row.name !== null ? (
-                      row.name
-                    ) : (
-                      <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                        {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}
-                      </Box>
-                    )}
-                    {/* «Comentariu public» (§NNN): the Administrator's line, an asterisk after the name and the words under it. */}
-                    {row.publicNote !== null && (
-                      <>
-                        {" *"}
-                        <Box component="span" data-testid="result-public-note" sx={{ display: "block", typography: "body2", color: "text.secondary" }}>
-                          {`* ${row.publicNote}`}
-                        </Box>
-                      </>
-                    )}
-                  </td>
-                  <td data-col="number" data-label={t("startList.columnNumber")} data-testid="result-number">
-                    {numberOf(row.bibNumber)}
-                  </td>
-                  {/* A runner who did not finish has a word in this cell, not a time: the phone must not print «Timp» before «Abandon». */}
-                  <td data-col="time" data-label={finished ? t("results.columnTime") : undefined} data-testid="result-time">
-                    {finished ? (
-                      <>
-                        <span>{row.gunTimeMs !== null ? formatResultTime(row.gunTimeMs) : NO_VALUE}</span>
-                        {row.chipTimeMs !== null && (
-                          <Typography component="span" variant="caption" color="text.secondary" data-testid="result-chip-time" sx={{ display: "block", fontWeight: 400 }}>
-                            {t("results.chipTime", { time: formatResultTime(row.chipTimeMs) })}
-                          </Typography>
-                        )}
-                      </>
-                    ) : (
-                      // A runner who did not finish has no time to read: the word says how the race ended, in text, never a colour alone.
-                      <span data-testid="result-status">{t(`results.status.${row.status}`)}</span>
-                    )}
-                  </td>
-                  <td data-col="category" data-testid="result-category">
-                    {row.categoryKey ? (
-                      <>
-                        {categoryLabel(row.categoryKey)}
-                        {finished && row.positionCategory !== null ? ` · ${t("results.categoryPlace", { position: row.positionCategory })}` : null}
-                      </>
-                    ) : (
-                      <>
-                        <span aria-hidden="true">{NO_VALUE}</span>
-                        <Box component="span" sx={SR_ONLY_SX}>
-                          {t("results.noCategory")}
-                        </Box>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Box>
+        {tableOf(rows, TABLE_ID, "result-row")}
+
+        {/* «Clasament elite» (§NNN): the elites, ranked among themselves, in a table of their own under the open one. */}
+        {results.separateRows.length > 0 && (
+          <>
+            <Typography component="h3" variant="h3" data-testid="results-elite-title" sx={{ fontSize: "1.0625rem", mt: 3, mb: 1 }}>
+              {t("results.eliteTitle")}
+            </Typography>
+            {tableOf(results.separateRows, `${TABLE_ID}-elite`, "result-elite-row")}
+          </>
+        )}
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           {t("results.note")}

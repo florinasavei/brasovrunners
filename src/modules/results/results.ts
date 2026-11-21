@@ -1957,6 +1957,8 @@ export type PublicEventResults = {
   closesAt: Date;
   /** The ages the race's categories start at (§850), so the page says each category's band in words. */
   ageBandStarts: readonly number[];
+  /** «Clasament elite» (§NNN): the elites ranked among themselves while «Toate numele» is on; empty otherwise. */
+  separateRows: PublicResultRow[];
   /** «Toate numele în clasament» is on (§1030): the page says the times were noted by hand. */
   manualTime: boolean;
 };
@@ -2049,9 +2051,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
   // An elite the Administrator left out of the ranking (§910) is not on the page at all — not a name, not «Participant #bib», not a time —
   // and the positions the page shows were counted without it (`rankingOf`).
   const onShow = rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking !== true);
-  const shown = onShow.map((row): PublicResultRow => {
+  const toPublic = (row: (typeof rows)[number], ranked: Ranked): PublicResultRow => {
     const registered = row.registrationId !== null && row.listOptOut !== null;
-    const ranked = ranking.get(row.bibNumber) as Ranked;
     return {
       bibNumber: row.bibNumber,
       name: publicResultName({
@@ -2085,8 +2086,36 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       sex: registered ? sexShown(row.registeredSex) : sexShown(row.typedSex),
       publicNote: row.publicNote,
     };
-  });
-  return { rows: sheetOrder(shown), publishedAt: event.resultsPublishedAt, closesAt: publicListClosesAt(event, options.deadlines), ageBandStarts: event.resultAgeBands, manualTime: event.resultsAllNames };
+  };
+  const shown = onShow.map((row) => toPublic(row, ranking.get(row.bibNumber) as Ranked));
+  /*
+    «Clasament elite» (§NNN — the owner, race day 2026-11-21: «afișează elitele în loc separat, să fie clasament open și clasament elite»): under
+    «Toate numele», the rows left out of the open ranking, ranked among themselves by time — overall and by sex, no category.
+  */
+  const eliteSource = event.resultsAllNames ? rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking === true) : [];
+  const sexOf = (row: (typeof rows)[number]) => (row.registrationId !== null && row.listOptOut !== null ? sexShown(row.registeredSex) : sexShown(row.typedSex));
+  const finishers = eliteSource.filter((row) => row.status === "FINISHED" && row.gunTimeMs !== null).sort((a, b) => (a.gunTimeMs ?? 0) - (b.gunTimeMs ?? 0) || a.bibNumber - b.bibNumber);
+  const overall = new Map(finishers.map((row, index) => [row.bibNumber, index + 1]));
+  const bySex = new Map<number, number>();
+  const seen = new Map<string, number>();
+  for (const row of finishers) {
+    const sex = sexOf(row);
+    if (sex === null) continue;
+    const next = (seen.get(sex) ?? 0) + 1;
+    seen.set(sex, next);
+    bySex.set(row.bibNumber, next);
+  }
+  const elites = eliteSource.map((row) =>
+    toPublic(row, { positionOverall: overall.get(row.bibNumber) ?? null, positionSex: bySex.get(row.bibNumber) ?? null, positionCategory: null, categoryKey: null }),
+  );
+  return {
+    rows: sheetOrder(shown),
+    separateRows: sheetOrder(elites),
+    publishedAt: event.resultsPublishedAt,
+    closesAt: publicListClosesAt(event, options.deadlines),
+    ageBandStarts: event.resultAgeBands,
+    manualTime: event.resultsAllNames,
+  };
 }
 
 /** How many results an event has stored, for the editor's summary line and the tasks' rows. */

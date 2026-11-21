@@ -775,7 +775,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       {/* «Comentariu public» (§NNN): one line under one result on the site — the Administrators' own, saved on its own. */}
       {mayPublish && (
         <Panel glyph="description" collapsible level={3} title={t("results.publicNote.title")} id="box-results-public-note" data-testid="results-public-note">
-          <ActionForm action={setResultPublicNoteAction} data-testid="results-public-note-form">
+          <ActionForm
+            action={setResultPublicNoteAction}
+            confirm={[{ title: t("results.publicNote.confirmTitle"), body: t("results.publicNote.confirmBody"), confirmLabel: t("results.publicNote.save"), cancelLabel: confirm.cancel }]}
+            data-testid="results-public-note-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="eventId" value={id} />
             <Stack spacing={1.5}>
