@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-bib-name-columns",
-  "decisionsTitle": "«Clasament»'s headers in the cells' order (amending §809)",
-  "decisionsSection": "**The owner, 2026-11-21:** «ai încurcat bib cu nume». On a wide screen the public results' header read «Loc · BIB · Nume» over cells drawn place, name, number: the name sat under «BIB» and the number under «Nume». The headers now follow the cells — «Loc · Nume · BIB · Timp · Categorie». The phone's stacked rows were right already (grid areas).\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
-  "changelogLine": "- **Clasament: «Nume» și «BIB» la locul lor** în capul tabelului. §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Clasament»'s headers in the cells' order"
-}

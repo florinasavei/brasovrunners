@@ -173,7 +173,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         <th scope="col" data-col="place">
           {t("results.columnPlace")}
         </th>
-        {/* In the cells' own order — place, name, number (§NNN: the owner, «ai încurcat bib cu nume»): a header over its own column. */}
+        {/* In the cells' own order — place, name, number (§1035: the owner, «ai încurcat bib cu nume»): a header over its own column. */}
         <th scope="col" data-col="name">
           {t("results.columnName")}
         </th>
