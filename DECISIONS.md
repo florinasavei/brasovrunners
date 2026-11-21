@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.03-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.04-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.03-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.04-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31994,3 +31994,11 @@ Baseline `BR-V5.02-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.03-2026-11-22`.
+
+## 1037. «Clasament»: the sex alone in «Categorie» when the birth date is missing (amending §809)
+
+**The owner, 2026-11-22:** «doar zi sexul măcar». A result with a sex but no birth date has no category (`categoryKeyOf` wants both), and the public results drew «—» in «Categorie». The cell now says «Feminin» or «Masculin» alone — no band, no place by category — and the row was already in the «Feminin» / «Masculin» filter, which reads the sex. Display only: no new category, no migration, the places by category unchanged.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.04-2026-11-22`.
