@@ -12961,6 +12961,14 @@
         "stateFromStart": "Public de la start",
         "stateOff": "Nepublic"
       },
+      "allNames": {
+        "label": "Arată numele tuturor alergătorilor confirmați, peste bifele lor",
+        "help": "Bifat, clasamentul de pe site arată și numele celor care n-au bifat că vor să apară. Lista participanților nu se schimbă. E decizia clubului: nota de confidențialitate trebuie să o spună.",
+        "confirmOnTitle": "Arăți toate numele în clasament?",
+        "confirmOnBody": "Pe site apare numele fiecărui alergător confirmat, și al celor care n-au bifat că vor să apară. Ei nu și-au dat acordul: decizia și răspunderea sunt ale clubului.",
+        "confirmOffTitle": "Revii la bifele alergătorilor?",
+        "confirmOffBody": "Numele apare din nou doar la cine a bifat sau a acceptat; ceilalți apar ca „Participant #număr”."
+      },
       "export": "Descarcă clasamentul (CSV)",
       "csvColumns": {
         "position": "Loc",
@@ -15995,6 +16003,8 @@
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
+      "resultsAllNamesOn": "Clasamentul de pe site arată acum numele tuturor alergătorilor confirmați.",
+      "resultsAllNamesOff": "Clasamentul de pe site arată din nou numele doar la cine a bifat sau a acceptat.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
       "resultsReset": "Clasamentul a fost resetat.",
       "resultsResetNothing": "Nu era nimic de resetat.",

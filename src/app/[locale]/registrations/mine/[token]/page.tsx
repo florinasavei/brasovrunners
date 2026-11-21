@@ -236,6 +236,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     resultsConsentVersion: item.resultsConsentVersion,
     firstResultsNoticeVersion: firstResults,
     firstResultsNameAskNoticeVersion: resultsAskLine,
+    resultsAllNames: item.resultsAllNames,
   });
 
   /** The declaration's line under one person (§519), or null where there is nothing to say (cancelled). */

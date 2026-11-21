@@ -23,9 +23,10 @@ const values = {
   typedNameAgreed: [true, false],
   typedDisplayName: [null, "", " ", "Ion Vasile"],
   hiddenByClub: [undefined, false, true],
+  allNames: [false, true],
 } satisfies { [K in keyof PublicNameReasonInput]-?: readonly PublicNameReasonInput[K][] };
 
-/** Every input the table above makes: 147 456 of them. */
+/** Every input the table above makes: 294 912 of them. */
 function* everyInput(): Generator<PublicNameReasonInput> {
   const keys = Object.keys(values) as (keyof typeof values)[];
   const walk = function* (index: number, partial: Partial<PublicNameReasonInput>): Generator<PublicNameReasonInput> {
@@ -69,7 +70,7 @@ describe("§985 publicNameReason is publicResultName's own rule", () => {
       if (verdict.named !== (publicResultName(input) !== null) || verdict.nameReason !== reason) throw new Error(`verdict differs on ${JSON.stringify(input)}`);
       seen.add(reason);
     }
-    expect(count).toBe(147_456);
+    expect(count).toBe(294_912);
     // The table reaches every reason, so none of them is a dead branch.
     expect([...seen].sort()).toEqual([...PUBLIC_NAME_REASONS].sort());
   });
@@ -118,6 +119,15 @@ describe("§985 each reason names its case", () => {
     expect(publicNameReason({ ...named, noticeVersion: 1, resultsNameConsent: true, resultsConsentVersion: 3, firstResultsNameAskNoticeVersion: 3 })).toBe("named");
     // A yes recorded under a notice that did not name it counts for nothing.
     expect(publicNameReason({ ...named, noticeVersion: 1, resultsNameConsent: true, resultsConsentVersion: 2, firstResultsNameAskNoticeVersion: 3 })).toBe("olderNotice");
+  });
+
+  it("under «Toate numele în clasament» (§NNN): no «olderNotice» and no «typedNoAgreement» — the club's own hide, the state and the guests still keep a name off", () => {
+    expect(publicNameReason({ ...named, noticeVersion: 1, allNames: true })).toBe("named");
+    expect(publicNameReason({ ...typed, typedNameAgreed: false, allNames: true })).toBe("named");
+    expect(publicNameReason({ ...named, ticked: false, hiddenByClub: true, allNames: true })).toBe("hiddenByClub");
+    expect(publicNameReason({ ...named, confirmed: false, allNames: true })).toBe("notConfirmed");
+    expect(publicNameReason({ ...named, hidden: true, allNames: true })).toBe("hiddenGuest");
+    expect(publicNameReason({ ...named, firstResultsNoticeVersion: null, allNames: true })).toBe("noResultsNotice");
   });
 
   it("says there is no name to show when every condition holds but the name is blank", () => {

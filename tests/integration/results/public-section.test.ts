@@ -3,7 +3,9 @@ import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { datedOrNull } from "@/modules/events/domain/dated";
@@ -85,7 +87,7 @@ const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSe
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { eventsWithResultsChip } = await import("@/modules/results/public-page");
 const { anonymousResultLabel } = await import("@/modules/results/domain/public-name");
-const { saveEventResults, setResultsPublished } = await import("@/modules/results/results");
+const { saveEventResults, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -334,6 +336,56 @@ describe("§809 «Clasament» on the event page — in English", () => {
     for (const word of ["Place", "BIB", "Name", "Time", "Category"]) expect(html).toContain(`>${word}<`);
   });
 });
+
+describe("§NNN «Toate numele în clasament» — the Administrator names every confirmed runner over their own tick", () => {
+  const names = async () => Object.fromEntries(rowsOf(await section()).map((row) => [row.bib, row.name]));
+
+  it("names the runners who did not tick and the runner the club typed — and back to the ticks when unticked", async () => {
+    await publishedRace();
+    expect(await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE)).toEqual({ changed: true });
+    expect(await names()).toEqual({ 101: "Ana Popescu", 102: "Bia Marin", 103: "Dan Ionescu", 104: "Eli Vasile", 105: "Fost Inscris", 106: "Gigi Stan", 900: "Ion Tastat" });
+    expect(await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE)).toEqual({ changed: true });
+    expect((await names())[102]).toBe("Participant #102");
+    expect((await names())[900]).toBe("Participant #900");
+  });
+
+  it("still keeps off a name the club hid («Apare pe site» on a marked elite), a hidden special guest and an unconfirmed registration", async () => {
+    await publishedRace();
+    const [bia] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 102));
+    const [dan] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 103));
+    const [eli] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 104));
+    await db.update(registrations).set({ elite: true, eliteHiddenFromSite: true }).where(eq(registrations.id, bia.id));
+    await db.update(registrations).set({ outsideCapacity: true }).where(eq(registrations.id, dan.id));
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, eli.id));
+    await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);
+    const shown = await names();
+    expect(shown[102]).toBe("Participant #102");
+    expect(shown[103]).toBe("Participant #103");
+    expect(shown[104]).toBe("Participant #104");
+    expect(shown[101]).toBe("Ana Popescu");
+  });
+
+  it("is the Administrators' alone, on a race alone, writes one audit row per change with no name, and a press that changes nothing records nothing", async () => {
+    await publishedRace();
+    for (const role of ["MODERATOR", "DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) {
+      const other = await person(db, role, `Alt ${role}`);
+      await expect(setResultsAllNames(db, other, raceId, true, AFTER_THE_RACE)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    expect((await eventRowById()).resultsAllNames).toBe(false);
+    await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);
+    expect(await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE)).toEqual({ changed: false });
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, raceId));
+    const rows = trail.filter((row) => row.action === "event_results.all_names_changed");
+    expect(rows.map((row) => [row.actorStaffUserId, row.metadataJson])).toEqual([[admin.id, { on: true }]]);
+    const groupRun = await createRace(db, { type: "GROUP_RUN" });
+    await expect(setResultsAllNames(db, admin, groupRun.id, true, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
+  });
+});
+
+async function eventRowById() {
+  const [row] = await db.select().from(events).where(eq(events.id, raceId));
+  return row;
+}
 
 describe("§809 «Clasament» is absent, with no heading and no «în curând», unless every condition holds", () => {
   it("draws nothing while the Administrator has not published", async () => {

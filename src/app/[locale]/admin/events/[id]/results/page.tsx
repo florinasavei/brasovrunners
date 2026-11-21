@@ -58,7 +58,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
+import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -738,6 +738,34 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
             <Typography variant="body2" data-testid="results-publish-admin-only">
               {t("results.publish.adminOnly")}
             </Typography>
+          )}
+          {/* «Toate numele în clasament» (§NNN): the Administrator's own switch, saved on its own and asked first both ways — it names runners who did not agree. */}
+          {mayPublish && (
+            <ActionForm
+              action={setResultsAllNamesAction}
+              confirm={[
+                {
+                  when: [{ field: "allNames", equals: "on" }],
+                  title: t("results.allNames.confirmOnTitle"),
+                  body: t("results.allNames.confirmOnBody"),
+                  confirmLabel: t("results.publish.save"),
+                  cancelLabel: confirm.cancel,
+                },
+                { title: t("results.allNames.confirmOffTitle"), body: t("results.allNames.confirmOffBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
+              ]}
+              data-testid="results-all-names-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={id} />
+              <Stack spacing={1.5}>
+                <CheckboxField name="allNames" defaultChecked={event.resultsAllNames} help={t("results.allNames.help")}>
+                  {t("results.allNames.label")}
+                </CheckboxField>
+                <Box>
+                  <GlyphSubmitButton icon="save" variant="outlined" label={t("results.publish.save")} pendingLabel={t("results.publish.saving")} />
+                </Box>
+              </Stack>
+            </ActionForm>
           )}
         </Stack>
       </Panel>

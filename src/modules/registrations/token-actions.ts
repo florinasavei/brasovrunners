@@ -787,6 +787,8 @@ export async function readRaceDayContext(secret: string, now: Date) {
      * only: nothing here or behind the page's presses reads it.
      */
     listShown: event.participantListVisibility === "NAMES" && publicListStillOpen(event, now, deadlines),
+    /** «Toate numele în clasament» on the event (§NNN): what the list's block says of the results for a person off the list. Display only. */
+    resultsAllNames: event.resultsAllNames,
     /**
      * The family marker (§543): the other people on this address at the event, names only — behind the
      * address's own link, the one place the names on it may be read (§389).
