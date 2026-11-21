@@ -911,8 +911,8 @@
     },
     "results": {
       "title": "Clasament",
-      "titleNoChip": "Clasament (fără cip)",
-      "eliteTitle": "Clasament elite",
+      "titleNoChip": "Clasament open (fără cip)",
+      "eliteTitle": "Clasament elite (fără cip)",
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",
       "until": "Rămâne pe pagină până {until}",
