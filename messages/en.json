@@ -925,6 +925,7 @@
       "columnName": "Name",
       "columnTime": "Time",
       "columnCategory": "Category",
+      "sort": {"label": "Order:", "time": "by time", "pace": "by average pace"},
       "pace": "Average pace: {pace} min/km",
       "ownDistance": "covered {km} km",
       "chipTime": "Chip time: {time}",

@@ -17,6 +17,7 @@ import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
 import { readEventResultsForPage, readResultsGates } from "../public-page";
 import { categoriesPresent, categoryGlyphOf } from "./results-filter";
+import ResultsSort from "./ResultsSort";
 import ResultsFilter from "./ResultsFilter";
 import ResultsLiveRefresh from "./ResultsLiveRefresh";
 
@@ -84,6 +85,12 @@ export default async function ResultsSection({ event }: { event: ResultsEvent })
   const gates = await readOrWhileAway(() => readResultsGates(now), null);
   if (gates !== null && !(gates.noticeDescribes && gates.termsDescribe)) return null;
   return <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={null} />;
+}
+
+/** Seconds per kilometre of a finisher with a time and a distance (§NNN), or null — what «după ritm mediu» orders by. */
+function paceSeconds(row: { status: string; gunTimeMs: number | null; distanceMeters: number | null }): number | null {
+  if (row.status !== "FINISHED" || row.gunTimeMs === null || row.distanceMeters === null || row.distanceMeters <= 0) return null;
+  return Math.round(row.gunTimeMs / 1000 / (row.distanceMeters / 1000));
 }
 
 /** Minutes and seconds per kilometre, `5:07` (§NNN): the time over the distance, rounded to the second. */
@@ -183,10 +190,10 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       </tr>
     </thead>
     <tbody>
-      {list.map((row) => {
+      {list.map((row, index) => {
         const finished = row.status === "FINISHED";
         return (
-          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status}>
+          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status} data-order={index} data-pace={paceSeconds(row) ?? undefined}>
             <td data-col="place" data-testid="result-place">
               {finished && row.positionOverall !== null ? (
                 row.positionOverall
@@ -293,6 +300,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
               {t("results.eliteTitle")}
             </Typography>
           </Box>
+          {(results.separateRows ?? []).some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={`${TABLE_ID}-elite`} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
           {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
         </Box>
       )}
@@ -345,6 +353,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           />
         )}
 
+        {rows.some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={TABLE_ID} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
         {tableOf(rows, TABLE_ID, "result-row")}
 
 
