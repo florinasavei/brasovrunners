@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.97-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V4.98-2026-11-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.97-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.98-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31912,3 +31912,20 @@ Baseline `BR-V4.96-2026-11-20`.
 Migration `0228_results_all_names` (the number may move at landing).
 
 Baseline `BR-V4.97-2026-11-21`.
+
+## 1030. «Toate numele în clasament» also leaves every elite out of the public results and says «Timpul a fost notat manual» (amending §1029 and §910)
+
+**The owner, race day 2026-11-21, after §1029 went live:** «dar vreau fără elite boss, și să se afișeze timpul cu nume și prenume pentru toți-elite dar să scriem „timpul notat manual”».
+
+**Decision.** While «Toate numele în clasament» (§1029) is on, the one switch also:
+
+- **leaves every elite out of the ranking** — every registration marked «Elită» and every line of the race's elite list — as if each one's «Apare în clasament» were unticked (§910): not on the public page at all, and every position counted without them, on the site, in the backoffice and in the files (`results.ts#loadOutOfRanking`). An ambassador is not an elite: only its own «Apare în clasament» leaves it out. The stored places are counted again in the switch's own transaction (`writeRanking`), as «Categorii de vârstă» does (§850);
+- **writes «Timpul a fost notat manual.»** under «Publicat …» on the event page's «Clasament» (`PublicEventResults.manualTime`, `ResultsSection`).
+
+The box's label and help on «Clasament» say all three. Unticked, every elite follows its own «Apare în clasament» again and the line goes.
+
+**Refused, for the day:** a second switch — the owner asked for one action.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V4.98-2026-11-21`.
