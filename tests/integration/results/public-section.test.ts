@@ -410,6 +410,8 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect(html).toContain("data-testid=\"results-elite-title\"");
     expect(html).toContain("Clasament open (fără cip)");
     expect(html).toContain("Timpul a fost notat manual.");
+    // The note about the tick says who is named: untrue while everybody is, so it is not drawn.
+    expect(html).not.toContain('data-testid="results-note"');
     await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE);
     expect(await names()).toHaveProperty("101");
   });

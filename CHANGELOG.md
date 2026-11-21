@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.03-2026-11-22
+
+- **Clasament: fără nota despre bifă cât timp «Toate numele» e pusă.** §1036.
 ## BR-V5.02-2026-11-22
 
 - **Clasament: «Nume» și «BIB» la locul lor** în capul tabelului. §1035.
