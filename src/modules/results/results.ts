@@ -121,6 +121,8 @@ type RegisteredRunner = {
   ticked: boolean;
   /** The person ticked, and the club's «Apare pe site» is what reads the tick as off (`siteHiddenByClub`): «Clasament»'s reason only (§985). */
   hiddenByClub: boolean;
+  /** The club's own «Apare pe site» unticked on the marked registration, whatever the person ticked: what «Toate numele» (§1029) still hides. */
+  clubHides: boolean;
   /**
    * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§948): the backoffice's «Clasament» and «Premii»
    * say them beside the runner, so the club sees whose result it awards. Staff-only — the public read copies neither.
@@ -154,8 +156,14 @@ type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<strin
  * «Participant #bib» wherever the ranking still counts them, as one who did not tick; ticked, the person's own answer decides, as before.
  * The public start list reads the same two columns (`registrations/repository.ts#namedOnPublicList`).
  */
-function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
-  return row.listOptOut === false && !((row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true);
+function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }, allNames = false): boolean {
+  // «Toate numele în clasament» (§1029): the club's switch stands for the person's tick on a registered row; the club's own «Apare pe site» still hides.
+  return (allNames ? row.listOptOut !== null : row.listOptOut === false) && !clubHidesFromSite(row);
+}
+
+/** An Administrator unticked «Apare pe site» on the registration while it is marked «Elită» or «Ambasador» (§910, §948) — whatever the person ticked. */
+function clubHidesFromSite(row: { elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
+  return (row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true;
 }
 
 /**
@@ -164,8 +172,8 @@ function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | nu
  * `tickedForTheSite` reads as off. Kept here, beside the tick, so the mark is read where it already was; the reason takes the boolean.
  * A person who did not tick is their own answer, whatever the club ticked; a typed row's left join reads nulls, and is never this.
  */
-function siteHiddenByClub(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
-  return row.listOptOut === false && (row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true;
+function siteHiddenByClub(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }, allNames = false): boolean {
+  return (allNames ? row.listOptOut !== null : row.listOptOut === false) && clubHidesFromSite(row);
 }
 
 type EventFacts = {
@@ -190,6 +198,8 @@ type EventFacts = {
   timezone: string;
   resultsPublished: boolean;
   resultsPublishedAt: Date | null;
+  /** «Toate numele în clasament» (§1029): every confirmed runner named in the published results, over their own tick. */
+  resultsAllNames: boolean;
   hiddenListEnabled: boolean;
   hiddenListPublic: boolean;
   /** How the event writes its race numbers (§735): «Participant #007» on the backoffice's «Pe site» line as on the page. */
@@ -230,6 +240,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,
+      resultsAllNames: events.resultsAllNames,
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
@@ -334,6 +345,7 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§910): a staff tick only hides.
       ticked: tickedForTheSite(row),
       hiddenByClub: siteHiddenByClub(row),
+      clubHides: clubHidesFromSite(row),
       elite: row.elite,
       ambassador: row.ambassador,
       checkedIn: row.checkedInAt !== null,
@@ -568,7 +580,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       // `named` — `publicResultName`'s own answer — and, from the same input, why not (§985).
       ...publicNameVerdict({
         registered: true,
-        ticked: runner.ticked,
+        // Under «Toate numele» (§1029) the tick the rule reads is the club's own hide alone (`tickedForTheSite`).
+        ticked: event.resultsAllNames ? !runner.clubHides : runner.ticked,
         displayName: runner.displayName,
         confirmed: runner.status === "CONFIRMED",
         hidden: runner.outsideCapacity && !hiddenShown,
@@ -579,7 +592,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
         resultsConsentVersion: runner.resultsConsentVersion,
         typedNameAgreed: false,
         typedDisplayName: null,
-        hiddenByClub: runner.hiddenByClub,
+        hiddenByClub: event.resultsAllNames ? runner.clubHides : runner.hiddenByClub,
+        allNames: event.resultsAllNames,
       }),
       nameAgreed: null,
       // The registration's own tick (§910): drawn so before a result is typed, and its row, once typed, ranked accordingly.
@@ -619,6 +633,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
         resultsConsentVersion: null,
         typedNameAgreed: row.nameAgreedAt !== null,
         typedDisplayName: row.displayName,
+        allNames: event.resultsAllNames,
       }),
       nameAgreed: row.nameAgreedAt !== null,
       // A separate-list elite's line left out (§910), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
@@ -1684,6 +1699,28 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
 }
 
 /**
+ * «Toate numele în clasament» (§1029; the owner, race day 2026-11-21): the Administrator's switch that names every confirmed runner in
+ * the race's published results over their own tick (`events.results_all_names`, `publicResultName`'s `allNames`). The Administrators
+ * alone (FORBIDDEN otherwise, BR-REQ-060-01), on a race only (`RESULTS_NOT_OPEN`); a press that changes nothing writes and records
+ * nothing; one audit row with the state wanted, never a name. Independent of «Clasamentul e public»: it decides whose name the page
+ * prints once the results show, and the page's cache is dropped so the next visit reads it.
+ */
+export async function setResultsAllNames<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, on: boolean, now: Date): Promise<{ changed: boolean }> {
+  if (!canPublishResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not name every runner in a race's results`);
+  assertIds(eventId);
+  const outcome = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    if (event.resultsAllNames === on) return { changed: false };
+    await tx.update(events).set({ resultsAllNames: on }).where(eq(events.id, event.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_results.all_names_changed", entityType: "event", entityId: event.id, metadata: { on }, now });
+    return { changed: true };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
+/**
  * «Categorii de vârstă» (§850): the ages the race's categories start at, saved by whoever enters results (FORBIDDEN otherwise), on a race
  * only (`RESULTS_NOT_OPEN`). `null` is the platform's bands — the column forgets the choice. The stored results are **ranked again in the
  * same transaction** (`writeRanking`), so the places by category never describe bands the race no longer has; one audit row names the
@@ -1893,6 +1930,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,
+      resultsAllNames: events.resultsAllNames,
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
@@ -1948,8 +1986,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       bibNumber: row.bibNumber,
       name: publicResultName({
         registered,
-        // The person's own tick, read as unticked under the club's «Apare pe site» unticked on a marked elite (§910).
-        ticked: tickedForTheSite(row),
+        // The person's own tick, read as unticked under the club's «Apare pe site» unticked on a marked elite (§910); under «Toate numele» (§1029), that hide alone.
+        ticked: tickedForTheSite(row, event.resultsAllNames),
         displayName: row.registeredName,
         confirmed: row.registrationStatus === "CONFIRMED",
         hidden: row.outsideCapacity === true && !hiddenShown,
@@ -1964,6 +2002,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         // name follows their own tick and never a staff mark, so until the next save re-files the row the line is «Participant #bib».
         typedNameAgreed: row.registrationId === null && row.typedNameAgreedAt !== null && runners.byBib.get(row.bibNumber)?.status !== "CONFIRMED",
         typedDisplayName: row.typedName,
+        // «Toate numele» (§1029) names a typed row too — not one whose number a confirmed registration took since (the reason above).
+        allNames: event.resultsAllNames && (row.registrationId !== null || runners.byBib.get(row.bibNumber)?.status !== "CONFIRMED"),
       }),
       status: row.status,
       gunTimeMs: row.gunTimeMs,

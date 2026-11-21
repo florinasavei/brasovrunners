@@ -340,6 +340,17 @@ export const events = pgTable(
     resultsPublishedAt: timestamp("results_published_at", { withTimezone: true }),
 
     /**
+     * «Toate numele în clasament» (§1029; the owner, race day 2026-11-21: «Trebuie să pot pune clasamentul și pe site cu nume oricum,
+     * gen să fac override la ce a bifat el la toți», asked first and choosing it): the Administrator's switch that names every
+     * confirmed runner in the published results — the club's decision over each runner's own «Vreau să apar pe lista de participanți &
+     * rezultate» and over the notice they registered under (`results/domain/public-name.ts#publicResultName`, `allNames`). It names
+     * nobody on the public participant list, and never undoes a hide of the club's own (an Administrator's «Apare pe site» unticked,
+     * §910) nor a special guest the event hides (§743). Off for every event; set on «Clasament» alone, audited. Never carried by a
+     * duplicate, a repeat or a JSON file, like the results' own switch above.
+     */
+    resultsAllNames: boolean("results_all_names").notNull().default(false),
+
+    /**
      * «Categorii de vârstă» (§850): the ages at which the race's result categories start, youngest first — `[18, 35, 45, 55]`
      * for «sub 18», «18-34», «35-44», «45-54», «55+» — read through `results/domain/age-bands.ts#ageBandStartsOf`. Null is the
      * platform's bands (the club's statistics', §787), which every race had before this column: a race that chose none ranks

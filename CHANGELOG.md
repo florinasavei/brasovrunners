@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.97-2026-11-21
+
+- **«Toate numele în clasament»** — on «Clasament» an Administrator may tick that the results on the site show the name of every confirmed runner, also of those who did not tick to appear; asked first, recorded in the trail, and the club's own hides still apply. §1029.
 ## BR-V4.96-2026-11-20
 
 - **«Confirmă pentru tombolă»** — on «Ziua cursei» → «Tombolă» and on a volunteer's page, the Organizer or an Administrator confirms a volunteer who is not confirmed for the raffle alone: they get their V number and take part, still unconfirmed as a volunteer; a minor only with the parent's or guardian's agreement ticked and how it was given (by phone, in person, in writing), kept with who decided in «Jurnal». **«Scanează» works on an iPhone too** (a QR reader in JavaScript where the browser has none), and **«Descarcă pentru random.org» writes each number with its name**. §1028.

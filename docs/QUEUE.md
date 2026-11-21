@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.97` | «Toate numele în clasament» — an Administrator names every confirmed runner in the published results (§1029) |
 | `BR-V4.96` | «Confirmă pentru tombolă» for a volunteer (a minor with the parent's agreement), «Scanează» on iPhone, names in the random.org file (§1028) |
 | `BR-V4.95` | «Finish» with a number typed records it, and a short toast says each press (§1027) |
 | `BR-V4.94` | the team's undertaking at every sign-in, every acceptance kept with the sign-in it answers (§1026) |
