@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.01-2026-11-21
+
+- **Filtrul clasamentului: doar Feminin și Masculin.** §1033.
+- **Ritm mediu și distanța parcursă** — the results on the site say each finisher's average pace; an Administrator may set one runner's own distance. §1034.
 ## BR-V5.00-2026-11-21
 
 - **«Clasament elite» apart** — its own section under «Clasament open (fără cip)». §1032.

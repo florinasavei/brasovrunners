@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.00-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V5.01-2026-11-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.00-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.01-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31954,3 +31954,27 @@ Baseline `BR-V4.99-2026-11-21`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.00-2026-11-21`.
+
+## 1033. «Clasament»'s filter: «Feminin» and «Masculin» alone (amending §809)
+
+**The owner, race day 2026-11-21:** «vreau doar feminin și masculin, atât!».
+
+**Decision.** The public results' filter offers «Toate», «Feminin» and «Masculin» — one chip per sex present, never an age band; a row is filtered by its sex (`data-category` is the row's sex). The category column and the places by category are unchanged.
+
+**Tests.** `tests/integration/results/public-section.test.ts`, `tests/e2e/race-results-public.spec.ts`.
+
+Baseline `BR-V5.01-2026-11-21`.
+
+## 1034. «Distanța parcursă» on one result and «Ritm mediu» on the public results (amending §809)
+
+**The owner, race day 2026-11-21:** «vreau pe viitor să pot scrie și total distanță parcursă și să fie by default distanța cursei și la Pălici să o modific, apoi să fie average pace».
+
+**Decision.**
+
+- **«Ritm mediu»**: under each finisher's time on the site, «Ritm mediu: m:ss min/km» — the gun time over the distance covered, rounded to the second (`ResultsSection#formatPace`). The distance is the race's own (`events.distance_meters`) unless an Administrator set the runner's.
+- **«Distanța parcursă»**: on «Clasament», a number and the kilometres, saved on their own and asked first (`results.ts#setResultDistance`; the Administrators alone, FORBIDDEN otherwise, BR-REQ-060-01; `RESULT_NOTE_NO_ROW`, `RESULT_DISTANCE_INVALID`, 1 m to 100 km). Empty puts the race's back. The site then adds «a parcurs N km» beside that runner's pace. Column `event_results.distance_meters`, migration `0230_results_distance` (expand only). One audit row `event_results.distance_changed` with `{ bibNumber, distanceMeters }`.
+- **«Ordonează: după timp / după ritm mediu»** (the owner: «Pălici trebuie să fie primul după pace average, dar nu sortat implicit»): two radios over each results table, «după timp» chosen; «după ritm mediu» only reorders the rows the server drew, by `data-pace` (`ResultsSort`, a small client island); without a script the table stays by time. Places are unchanged: by time, whatever the distance.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.01-2026-11-21`.

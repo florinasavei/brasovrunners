@@ -191,14 +191,15 @@ test.describe("§809 «Clasament» on the race's page", () => {
     // ---- The category chips: a thumb's reach, native radios, «Toate» first ------------------------------------------------------
     const chips = section.getByTestId("results-category-chip");
     await expect(chips.first()).toContainText("Toate");
-    await expect(chips).toHaveCount(5);
-    for (let index = 0; index < 5; index += 1) expect((await chips.nth(index).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
-    await section.getByRole("radio", { name: "Feminin, 40-49 ani" }).check();
-    await expect(row(page, 102)).toBeVisible();
-    for (const bib of [101, 103, 104]) await expect(row(page, bib)).toBeHidden();
-    await section.getByRole("radio", { name: "Masculin, 30-39 ani" }).check();
-    await expect(row(page, 103)).toBeVisible();
-    for (const bib of [101, 102, 104]) await expect(row(page, bib)).toBeHidden();
+    await expect(chips).toHaveCount(3);
+    for (let index = 0; index < 3; index += 1) expect((await chips.nth(index).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
+    // «Doar feminin și masculin» (§1033): one chip per sex, never a band.
+    await section.getByRole("radio", { name: "Feminin" }).check();
+    for (const bib of [101, 102]) await expect(row(page, bib)).toBeVisible();
+    for (const bib of [103, 104]) await expect(row(page, bib)).toBeHidden();
+    await section.getByRole("radio", { name: "Masculin" }).check();
+    for (const bib of [103, 104]) await expect(row(page, bib)).toBeVisible();
+    for (const bib of [101, 102]) await expect(row(page, bib)).toBeHidden();
     await section.getByRole("radio", { name: "Toate" }).check();
     for (const bib of [101, 102, 103, 104]) await expect(row(page, bib)).toBeVisible();
 
