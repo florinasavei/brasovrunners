@@ -33,6 +33,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
     state.upcomingReads += 1;
     return state.upcoming;
   },
+  cachedPastEvents: async () => [],
 }));
 vi.mock("@/modules/resilience/last-good", () => ({
   readWithLastGood: async (_key: string, read: () => Promise<unknown>) => ({ value: await read() }),

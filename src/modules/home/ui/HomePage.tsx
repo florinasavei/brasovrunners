@@ -6,6 +6,7 @@ import type { Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
+import ArrowButtonLink from "@/shared/ui/ArrowButtonLink";
 import Hero, { type HeroProps } from "./Hero";
 import NumbersBand, { type NumbersBandProps } from "./NumbersBand";
 import PhotoStrip, { type PhotoStripProps } from "./PhotoStrip";
@@ -14,6 +15,8 @@ import StepsBand, { type StepsBandProps } from "./StepsBand";
 import WhyList, { type WhyListProps } from "./WhyList";
 
 export type HomePageProps = {
+  /** The latest race whose results are on show (§1031): one button to its «Clasament», first on the page; null or left out, nothing. */
+  results?: { label: string; slug: string } | null;
   hero: HeroProps;
   /**
    * «Următoarea alergare», one listing card (§726); null when no run is ahead: the section is not
@@ -59,7 +62,7 @@ export type HomePageProps = {
 /** Out of sight, still read aloud and still in the outline (the usual clip, no `display: none`). */
 const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
-export default function HomePage({ hero, nextRun, weekly, special, steps, why, strip, numbers, show = {}, specialFirst = false, freshness }: HomePageProps) {
+export default function HomePage({ results, hero, nextRun, weekly, special, steps, why, strip, numbers, show = {}, specialFirst = false, freshness }: HomePageProps) {
   const shown = (key: HomeSectionKey) => show[key] ?? DEFAULT_SECTION_SHOWN[key];
   const headline = [hero.headline.lead, hero.headline.accent].filter(Boolean).join(" ").trim() || CLUB_NAME;
   return (
@@ -71,6 +74,9 @@ export default function HomePage({ hero, nextRun, weekly, special, steps, why, s
       )}
       {freshness && <LastGoodNotice read={freshness} />}
       <Stack spacing={{ xs: 4, md: 6 }}>
+        {results && (
+          <ArrowButtonLink href={{ pathname: "/events/[slug]", params: { slug: results.slug }, hash: "clasament" }} label={results.label} data-testid="home-results" />
+        )}
         {shown("hero") && <Hero {...hero} />}
         {shown("nextRun") && nextRun && <RunSection {...nextRun} />}
         {specialFirst && shown("special") && <RunSection {...special} />}

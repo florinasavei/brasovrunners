@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.98-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V4.99-2026-11-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.98-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.99-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31929,3 +31929,18 @@ The box's label and help on «Clasament» say all three. Unticked, every elite f
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V4.98-2026-11-21`.
+
+## 1031. Race day: «Clasament» first on the site, «Clasament elite» apart, «Clasament (fără cip)» and «Comentariu public» on one result (amending §809, §1029)
+
+**The owner, race day 2026-11-21, after §1029 and its elites-out amendment went live:** «trebuie să fie mai vizibil clasamentul!», «să fie primul pe site!», «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut», «afișează elitele în loc separat, să fie clasament open și clasament elite», «scrie „clasament (fără cip)”», «trebuie să pot pune comentariu … să fie vizibil că Palici a făcut 11 km în total».
+
+**Decision.**
+
+- **First on the site.** The event page draws «Clasament» right under the title (`EventPageView.tsx`), no longer after «Condiții de participare». The home page leads with one button «Vezi clasamentul: {title}» to the latest race whose results are on show (`home-content.ts`, `eventsWithResultsChip` over the upcoming rows and the five latest past ones). The listing «Alergări» leads with that past race's card, wearing its «Clasament» chip, above the events ahead (`events/page.tsx`).
+- **«Clasament elite».** While «Toate numele în clasament» is on, the rows it leaves out of the open ranking (the elites) are drawn in a table of their own under the open one, ranked among themselves by time, overall and by sex, with no category (`readPublicEventResults`'s `separateRows`); the same naming rules apply.
+- **«Clasament (fără cip)»** is the section's heading while «Toate numele» is on, beside «Timpul a fost notat manual.».
+- **«Comentariu public».** One line, at most 200 characters, an Administrator writes on the result filed under a number, on «Clasament» (`results.ts#setResultPublicNote`; FORBIDDEN otherwise, BR-REQ-060-01; `RESULT_NOTE_NO_ROW`, `RESULT_NOTE_TOO_LONG`), asked first; printed on the site under the row, an asterisk after the name. Empty takes it off. Column `event_results.public_note`, migration `0229_results_public_note` (expand only); never the staff's internal `note`. One audit row `event_results.public_note_changed` with `{ bibNumber, on }`, never the text.
+
+**Tests.** `tests/integration/results/public-section.test.ts`, `results.test.ts`, `typed-name.test.ts`.
+
+Baseline `BR-V4.99-2026-11-21`.

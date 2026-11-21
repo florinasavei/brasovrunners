@@ -87,7 +87,7 @@ const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSe
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { eventsWithResultsChip } = await import("@/modules/results/public-page");
 const { anonymousResultLabel } = await import("@/modules/results/domain/public-name");
-const { saveEventResults, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
+const { saveEventResults, setResultPublicNote, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -337,6 +337,31 @@ describe("§809 «Clasament» on the event page — in English", () => {
   });
 });
 
+describe("«Comentariu public» — an Administrator writes one line under one result on the site", () => {
+  it("prints the line under the row with an asterisk, takes it off when emptied, and records the number but never the text", async () => {
+    await publishedRace();
+    expect(await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "  a făcut 11 km în total  " }, AFTER_THE_RACE)).toEqual({ changed: true });
+    const html = await section();
+    expect(html).toContain('data-testid="result-public-note"');
+    expect(html).toContain("* a făcut 11 km în total");
+    expect(await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "a făcut 11 km în total" }, AFTER_THE_RACE)).toEqual({ changed: false });
+    const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "event_results.public_note_changed"));
+    expect(audits).toHaveLength(1);
+    expect(JSON.stringify(audits[0].metadataJson)).not.toContain("11 km");
+    await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "" }, AFTER_THE_RACE);
+    expect(await section()).not.toContain('data-testid="result-public-note"');
+  });
+
+  it("is the Administrators' alone, refuses a number with no result and a line past 200 characters", async () => {
+    await publishedRace();
+    for (const role of ["MODERATOR", "DEV"] as const) {
+      await expect(setResultPublicNote(db, { ...admin, role }, { eventId: raceId, bibNumber: 101, note: "x" }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    await expect(setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 777, note: "x" }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_NOTE_NO_ROW" });
+    await expect(setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "x".repeat(201) }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_NOTE_TOO_LONG" });
+  });
+});
+
 describe("§1029 «Toate numele în clasament» — the Administrator names every confirmed runner over their own tick", () => {
   const names = async () => Object.fromEntries(rowsOf(await section()).map((row) => [row.bib, row.name]));
 
@@ -358,7 +383,8 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);
     const html = await section();
     expect(Object.keys(Object.fromEntries(rowsOf(html).map((row) => [row.bib, row.name])))).not.toContain("101");
-    expect(html).not.toContain("Ana Popescu");
+    expect(html).toContain("data-testid=\"results-elite-title\"");
+    expect(html).toContain("Clasament (fără cip)");
     expect(html).toContain("Timpul a fost notat manual.");
     await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE);
     expect(await names()).toHaveProperty("101");
