@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-mobile-wrap",
-  "decisionsTitle": "«Clasament» on a phone: a long comment or pace line wraps inside the screen (amending §809)",
-  "decisionsSection": "**The owner, 2026-11-22, from a phone:** «nu se vede bine pe mobil, e cropped». A row's «Comentariu public» and its «Ritm mediu … · a parcurs N km» ran past the right edge: the phone's row grid had a `1fr` column whose minimum was the content's own width, and the time cell does not wrap. The grid's last column is `minmax(0, 1fr)`, the name and time cells take `minWidth: 0`, and the comment and the pace line wrap (`whiteSpace: normal`). The wide screen is unchanged.\n\n**Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/theme`.",
-  "changelogLine": "- **Clasament pe telefon: comentariul și ritmul se încadrează în ecran.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Clasament» on a phone: long lines wrap"
-}

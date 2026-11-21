@@ -145,7 +145,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       "& tbody": { display: { xs: "block", sm: "table-row-group" } },
       "& tbody tr": {
         display: { xs: "grid", sm: "table-row" },
-        // `minmax(0, 1fr)` and `minWidth: 0` below: a long comment or pace line wraps inside the phone's width, never past its edge (§NNN).
+        // `minmax(0, 1fr)` and `minWidth: 0` below: a long comment or pace line wraps inside the phone's width, never past its edge (§1038).
         gridTemplateColumns: { xs: "2.5rem max-content minmax(0, 1fr)", sm: "none" },
         gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
         columnGap: { xs: 1, sm: 0 },
