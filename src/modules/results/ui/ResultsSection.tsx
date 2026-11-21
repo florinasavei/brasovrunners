@@ -257,6 +257,9 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   {categoryLabel(row.categoryKey)}
                   {finished && row.positionCategory !== null ? ` · ${t("results.categoryPlace", { position: row.positionCategory })}` : null}
                 </>
+              ) : row.sex !== null ? (
+                // The sex alone, no band and no place by category, when the birth date is missing (§NNN — the owner: «doar zi sexul măcar»).
+                <span data-testid="result-category-sex">{row.sex === "FEMALE" ? t("results.sexFemale") : t("results.sexMale")}</span>
               ) : (
                 <>
                   <span aria-hidden="true">{NO_VALUE}</span>
