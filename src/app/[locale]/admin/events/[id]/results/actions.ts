@@ -10,7 +10,8 @@ import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
-import { chooseRecordedFinishTime, deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsAllNames, setResultsPublished } from "@/modules/results/results";
+import { chooseRecordedFinishTime, deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsAllNames, setResultPublicNote,
+  setResultsPublished } from "@/modules/results/results";
 import { CHOICE_BOX, EXTRA_ROWS, postedResultRows, readChosenTime, RESULTS_ALERT_ANCHOR, resultLineAnchor } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -239,6 +240,19 @@ export async function setResultsAllNamesAction(_previous: FormOutcome | null, fo
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? "resultsAllNamesOn" : "resultsAllNamesOff" });
+}
+
+/** «Comentariu public» (§1031): one number and one line, saved on their own; empty takes the line off. */
+export async function setResultPublicNoteAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let outcome: { changed: boolean };
+  try {
+    const actor = await requireStaff();
+    outcome = await setResultPublicNote(getDb(), actor, { eventId: eventIdOf(form), bibNumber: Number(field(form, "bibNumber")), note: field(form, "publicNote") }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return refused(error, form);
+  }
+  return backToPage(form, { saved: outcome.changed ? "resultPublicNoteSaved" : "resultsPublicUnchanged" });
 }
 
 /**

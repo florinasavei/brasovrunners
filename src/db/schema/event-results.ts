@@ -67,6 +67,11 @@ export const eventResults = pgTable(
     gunTimeMs: integer("gun_time_ms"),
     chipTimeMs: integer("chip_time_ms"),
     note: text("note"),
+    /**
+     * «Comentariu public» (§1031 — the owner, race day 2026-11-21: «trebuie să pot pune comentariu»): a line the Administrator writes on one
+     * result, printed under the row on the site with an asterisk. Null is none. Never the internal `note` above, which stays the staff's.
+     */
+    publicNote: text("public_note"),
     positionOverall: integer("position_overall"),
     positionSex: integer("position_sex"),
     positionCategory: integer("position_category"),

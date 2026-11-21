@@ -455,8 +455,8 @@ describe("§808 the public read: a name only for a registered runner who ticked"
     await published();
     const result = await readPublicEventResults(db, raceId, options);
     const keys = new Set(result?.rows.flatMap((row) => Object.keys(row)));
-    expect([...keys].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "gunTimeMs", "name", "positionCategory", "positionOverall", "positionSex", "sex", "status"]);
-    expect(JSON.stringify(result)).not.toMatch(/secret|example\.org|@|registrationId|note/i);
+    expect([...keys].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "gunTimeMs", "name", "positionCategory", "positionOverall", "positionSex", "publicNote", "sex", "status"]);
+    expect(JSON.stringify(result)).not.toMatch(/secret|example\.org|@|registrationId|"note"/i);
   });
 
   it("follows the runner's tick at once: withdrawing it takes the name off the next read", async () => {

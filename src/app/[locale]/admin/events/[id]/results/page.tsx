@@ -58,7 +58,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
+import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultPublicNoteAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -235,6 +235,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const nobodyNamed = [...view.registered, ...view.typed].some((runner) => runner.nameReason === "noResultsNotice");
   const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
   // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
+  // «Comentariu public» (§1031): the lines written so far, by number, so the Administrator sees what the site prints.
+  const publicNotes = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.publicNote ? [`#${runner.bibNumber}: ${runner.result.publicNote}`] : []));
   const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
   const namedOnSite = onSite.filter((runner) => runner.named).length;
   const valuesOf = (runner: ResultRunner) => ({
@@ -769,6 +771,35 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           )}
         </Stack>
       </Panel>
+
+      {/* «Comentariu public» (§1031): one line under one result on the site — the Administrators' own, saved on its own. */}
+      {mayPublish && (
+        <Panel glyph="description" collapsible level={3} title={t("results.publicNote.title")} id="box-results-public-note" data-testid="results-public-note">
+          <ActionForm
+            action={setResultPublicNoteAction}
+            confirm={[{ title: t("results.publicNote.confirmTitle"), body: t("results.publicNote.confirmBody"), confirmLabel: t("results.publicNote.save"), cancelLabel: confirm.cancel }]}
+            data-testid="results-public-note-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={id} />
+            <Stack spacing={1.5}>
+              <Typography variant="body2" color="text.secondary">
+                {t("results.publicNote.help")}
+              </Typography>
+              <RecallField name="bibNumber" label={t("results.publicNote.bib")} size="small" required inputMode="numeric" sx={{ maxWidth: 200 }} />
+              <RecallField name="publicNote" label={t("results.publicNote.note")} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+              <Box>
+                <GlyphSubmitButton icon="save" variant="outlined" label={t("results.publicNote.save")} pendingLabel={t("results.publicNote.saving")} />
+              </Box>
+              {publicNotes.length > 0 && (
+                <Typography variant="body2" data-testid="results-public-notes">
+                  {t("results.publicNote.current", { list: publicNotes.join(" · ") })}
+                </Typography>
+              )}
+            </Stack>
+          </ActionForm>
+        </Panel>
+      )}
 
       {/* «Istoricul sosirilor» (§986): every write of the race's results — the line's presses, duplicates and undos, this page's saves, «Start» — newest first, with who. */}
       <Panel glyph="history" collapsible level={3} title={t("results.history.title")} aside={t(`results.history.count.${countForm(history.lines.length, locale)}`, { count: String(history.lines.length) })} id="box-results-history" data-testid="results-history">

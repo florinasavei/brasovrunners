@@ -911,6 +911,8 @@
     },
     "results": {
       "title": "Results",
+      "titleNoChip": "Results (no chip)",
+      "eliteTitle": "Elite results",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
@@ -2883,6 +2885,8 @@
       "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
       "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
+      "RESULT_NOTE_TOO_LONG": "The comment is too long: 200 characters at most.",
+      "RESULT_NOTE_NO_ROW": "No result has this number. Write the race number of the results row.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
       "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
@@ -12962,6 +12966,17 @@
         "stateFromStart": "Public from the start",
         "stateOff": "Not public"
       },
+      "publicNote": {
+        "title": "Public comment on a result",
+        "help": "It shows under the runner's row in the results on the site, with an asterisk. Empty, the comment goes.",
+        "bib": "Race number",
+        "note": "The comment",
+        "save": "Save the comment",
+        "confirmTitle": "Put the comment on the site?",
+        "confirmBody": "It shows under the runner's row in the public results.",
+        "saving": "Saving…",
+        "current": "Comments: {list}"
+      },
       "allNames": {
         "label": "Show the name of every confirmed runner, over their own ticks — without the elites, with “The times were noted by hand”",
         "help": "Ticked, the site shows everyone's name, without the elites, and says “The times were noted by hand.” The participant list does not change. The club's decision: the privacy notice must say so.",
@@ -16004,6 +16019,7 @@
       "resultsPublished": "The results are now public on the event's page.",
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
+      "resultPublicNoteSaved": "The comment is saved: it shows under the row in the results on the site.",
       "resultsAllNamesOn": "The results on the site now show the name of every confirmed runner.",
       "resultsAllNamesOff": "The results on the site again show a name only for whoever ticked or agreed.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
@@ -16315,6 +16331,7 @@
     }
   },
   "Home": {
+    "results": "See the results: {title}",
     "meta": {
       "title": "{club} — group runs",
       "description": "The club's group runs and special events, with the next run and the weather at the start."

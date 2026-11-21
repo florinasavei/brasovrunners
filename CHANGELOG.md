@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.99-2026-11-21
+
+- **Clasamentul primul pe site** — under the event's title, a button on the home page and the race's card first in «Alergări»; «Clasament elite» apart, «Clasament (fără cip)», and «Comentariu public» on one result. §1031.
 ## BR-V4.98-2026-11-21
 
 - **«Toate numele în clasament» fără elite** — the same tick also leaves every elite out of the results on the site and writes «Timpul a fost notat manual.» §1030.
