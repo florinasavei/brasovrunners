@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.00` | «Clasament elite» a section of its own (§1032) |
 | `BR-V4.99` | Race day: results first on the site, elites apart, «fără cip», a public comment on one result (§1031) |
 | `BR-V4.98` | «Toate numele în clasament» leaves the elites out and says the times were noted by hand (§1030) |
 | `BR-V4.97` | «Toate numele în clasament» — an Administrator names every confirmed runner in the published results (§1029) |
