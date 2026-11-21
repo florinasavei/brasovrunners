@@ -267,7 +267,7 @@ export default async function EventPageView({
       </Typography>
 
       {/* «Clasament» (§809), under `#clasament`, right under the title once published — the owner, race day 2026-11-21: «trebuie să fie
-          mai vizibil clasamentul!» (§NNN); it was after the participation rules. Nothing at all while the results are not public. */}
+          mai vizibil clasamentul!» (§1031); it was after the participation rules. Nothing at all while the results are not public. */}
       {dated && !membersOnly && visit && <ResultsSection event={dated} />}
 
       {/* The description, in the slot the editor's order implies (§187): the long one when it has
@@ -496,7 +496,7 @@ export default async function EventPageView({
           describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
           conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
           the public cache. Nor a members' event (§552): the results are a public disclosure, and this page is not public. */}
-      {/* «Clasament» moved up, right under the title (§NNN). */}
+      {/* «Clasament» moved up, right under the title (§1031). */}
 
       {/* «Confirmă prezența (opțional)» (§811) and «Cine vine (N)» — `#vin` and `#cine-vine`, two closed bars together, the LAST thing on the
           event page (§825 amended; the owner, 2026-10-20: «adică trebuie să fie ultima chestie de pe site»): after the route, the checkpoints,

@@ -132,7 +132,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
     : null;
 
   /*
-    «Clasament» first on the site (§NNN — the owner, race day 2026-11-21: «să fie primul pe site!»): the latest race whose results are on
+    «Clasament» first on the site (§1031 — the owner, race day 2026-11-21: «să fie primul pe site!»): the latest race whose results are on
     show, as the listing's chip decides it (`eventsWithResultsChip`), as one button above everything else. Nothing while the database is away.
   */
   const recentPast = await readOrWhileAway(() => cachedPastEvents(locale, now, 5), [] as PublicEvent[]);

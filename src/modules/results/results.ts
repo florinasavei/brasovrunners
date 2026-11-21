@@ -492,7 +492,7 @@ export type ResultRunner = {
     gunTimeMs: number | null;
     chipTimeMs: number | null;
     note: string | null;
-    /** «Comentariu public» (§NNN), or null. */
+    /** «Comentariu public» (§1031), or null. */
     publicNote: string | null;
     positionOverall: number | null;
     positionSex: number | null;
@@ -1738,11 +1738,11 @@ export async function setResultsAllNames<T extends Record<string, unknown>>(db: 
   return outcome;
 }
 
-/** The longest «Comentariu public» a result takes (§NNN): a sentence, not a story. */
+/** The longest «Comentariu public» a result takes (§1031): a sentence, not a story. */
 export const RESULT_PUBLIC_NOTE_MAX = 200;
 
 /**
- * «Comentariu public» (§NNN — the owner, race day 2026-11-21: «trebuie să pot pune comentariu … să fie vizibil că Palici a făcut 11 km în total»):
+ * «Comentariu public» (§1031 — the owner, race day 2026-11-21: «trebuie să pot pune comentariu … să fie vizibil că Palici a făcut 11 km în total»):
  * one line the Administrator writes on the result filed under a number, printed under its row on the site. The Administrators alone
  * (FORBIDDEN otherwise, BR-REQ-060-01), on a race only (`RESULTS_NOT_OPEN`), on a number that has a result (`RESULT_NOTE_NO_ROW`); empty
  * takes it off; longer than `RESULT_PUBLIC_NOTE_MAX` is refused (`RESULT_NOTE_TOO_LONG`). One audit row with the number, never the text;
@@ -1945,7 +1945,7 @@ export type PublicResultRow = {
   categoryKey: string | null;
   /** The sex, from the registration or the typed row; null without one. */
   sex: SexChoice | null;
-  /** «Comentariu public» (§NNN): the Administrator's line under the row, or null. */
+  /** «Comentariu public» (§1031): the Administrator's line under the row, or null. */
   publicNote: string | null;
 };
 
@@ -1957,7 +1957,7 @@ export type PublicEventResults = {
   closesAt: Date;
   /** The ages the race's categories start at (§850), so the page says each category's band in words. */
   ageBandStarts: readonly number[];
-  /** «Clasament elite» (§NNN): the elites ranked among themselves while «Toate numele» is on; empty otherwise. */
+  /** «Clasament elite» (§1031): the elites ranked among themselves while «Toate numele» is on; empty otherwise. */
   separateRows: PublicResultRow[];
   /** «Toate numele în clasament» is on (§1030): the page says the times were noted by hand. */
   manualTime: boolean;
@@ -2089,7 +2089,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
   };
   const shown = onShow.map((row) => toPublic(row, ranking.get(row.bibNumber) as Ranked));
   /*
-    «Clasament elite» (§NNN — the owner, race day 2026-11-21: «afișează elitele în loc separat, să fie clasament open și clasament elite»): under
+    «Clasament elite» (§1031 — the owner, race day 2026-11-21: «afișează elitele în loc separat, să fie clasament open și clasament elite»): under
     «Toate numele», the rows left out of the open ranking, ranked among themselves by time — overall and by sex, no category.
   */
   const eliteSource = event.resultsAllNames ? rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking === true) : [];

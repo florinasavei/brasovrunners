@@ -242,7 +242,7 @@ export async function setResultsAllNamesAction(_previous: FormOutcome | null, fo
   return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? "resultsAllNamesOn" : "resultsAllNamesOff" });
 }
 
-/** «Comentariu public» (§NNN): one number and one line, saved on their own; empty takes the line off. */
+/** «Comentariu public» (§1031): one number and one line, saved on their own; empty takes the line off. */
 export async function setResultPublicNoteAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let outcome: { changed: boolean };
   try {

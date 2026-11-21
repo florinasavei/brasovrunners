@@ -235,7 +235,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const nobodyNamed = [...view.registered, ...view.typed].some((runner) => runner.nameReason === "noResultsNotice");
   const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
   // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
-  // «Comentariu public» (§NNN): the lines written so far, by number, so the Administrator sees what the site prints.
+  // «Comentariu public» (§1031): the lines written so far, by number, so the Administrator sees what the site prints.
   const publicNotes = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.publicNote ? [`#${runner.bibNumber}: ${runner.result.publicNote}`] : []));
   const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
   const namedOnSite = onSite.filter((runner) => runner.named).length;
@@ -772,7 +772,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
-      {/* «Comentariu public» (§NNN): one line under one result on the site — the Administrators' own, saved on its own. */}
+      {/* «Comentariu public» (§1031): one line under one result on the site — the Administrators' own, saved on its own. */}
       {mayPublish && (
         <Panel glyph="description" collapsible level={3} title={t("results.publicNote.title")} id="box-results-public-note" data-testid="results-public-note">
           <ActionForm

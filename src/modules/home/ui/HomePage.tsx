@@ -15,7 +15,7 @@ import StepsBand, { type StepsBandProps } from "./StepsBand";
 import WhyList, { type WhyListProps } from "./WhyList";
 
 export type HomePageProps = {
-  /** The latest race whose results are on show (§NNN): one button to its «Clasament», first on the page; null or left out, nothing. */
+  /** The latest race whose results are on show (§1031): one button to its «Clasament», first on the page; null or left out, nothing. */
   results?: { label: string; slug: string } | null;
   hero: HeroProps;
   /**

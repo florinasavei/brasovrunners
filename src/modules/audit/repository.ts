@@ -868,7 +868,7 @@ export type AuditAction =
    * runner in the published results over their own tick — `{ on }`; never a name.
    */
   | "event_results.all_names_changed"
-  /** «Comentariu public» on «Clasament» (§NNN), entity `event`: an Administrator wrote, changed or took off the line under one result — `{ bibNumber, on }`; never the text. */
+  /** «Comentariu public» on «Clasament» (§1031), entity `event`: an Administrator wrote, changed or took off the line under one result — `{ bibNumber, on }`; never the text. */
   | "event_results.public_note_changed"
   /** «Categorii de vârstă» saved on «Clasament» (§850), entity `event`: the ages the bands start at (null for the platform's) and how many stored rows were ranked again. */
   | "event_results.categories_changed"

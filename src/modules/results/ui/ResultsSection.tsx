@@ -195,7 +195,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}
                 </Box>
               )}
-              {/* «Comentariu public» (§NNN): the Administrator's line, an asterisk after the name and the words under it. */}
+              {/* «Comentariu public» (§1031): the Administrator's line, an asterisk after the name and the words under it. */}
               {row.publicNote !== null && (
                 <>
                   {" *"}
@@ -301,7 +301,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
 
         {tableOf(rows, TABLE_ID, "result-row")}
 
-        {/* «Clasament elite» (§NNN): the elites, ranked among themselves, in a table of their own under the open one. */}
+        {/* «Clasament elite» (§1031): the elites, ranked among themselves, in a table of their own under the open one. */}
         {results.separateRows.length > 0 && (
           <>
             <Typography component="h3" variant="h3" data-testid="results-elite-title" sx={{ fontSize: "1.0625rem", mt: 3, mb: 1 }}>

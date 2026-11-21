@@ -245,7 +245,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
-      {/* «Clasament» first (§NNN — the owner, race day 2026-11-21: «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut … să fie
+      {/* «Clasament» first (§1031 — the owner, race day 2026-11-21: «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut … să fie
           primul»): a past race whose results are on show leads the page, its card wearing the chip to `#clasament`. */}
       {resultsFirst.length > 0 && (
         <Box component="ul" sx={{ ...CARD_GRID_SX, mb: { xs: 2, sm: 3 } }} data-testid="listing-results-first">
