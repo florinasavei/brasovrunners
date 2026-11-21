@@ -12964,7 +12964,7 @@
       },
       "allNames": {
         "label": "Arată numele tuturor alergătorilor confirmați, peste bifele lor — fără elite, cu „Timpul a fost notat manual”",
-        "help": "Bifat, clasamentul de pe site arată și numele celor care n-au bifat că vor să apară, lasă afară elitele (ca și cum le-ai debifa «Apare în clasament») și scrie „Timpul a fost notat manual.” Lista participanților nu se schimbă. E decizia clubului: nota de confidențialitate trebuie să o spună.",
+        "help": "Bifat, site-ul arată numele tuturor, fără elite, și scrie „Timpul a fost notat manual.” Lista participanților nu se schimbă. E decizia clubului: nota de confidențialitate trebuie să o spună.",
         "confirmOnTitle": "Arăți toate numele în clasament?",
         "confirmOnBody": "Pe site apare numele fiecărui alergător confirmat, și al celor care n-au bifat că vor să apară. Ei nu și-au dat acordul: decizia și răspunderea sunt ale clubului.",
         "confirmOffTitle": "Revii la bifele alergătorilor?",
