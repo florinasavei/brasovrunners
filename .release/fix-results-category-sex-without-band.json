@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-category-sex-without-band",
-  "decisionsTitle": "«Clasament»: the sex alone in «Categorie» when the birth date is missing (amending §809)",
-  "decisionsSection": "**The owner, 2026-11-22:** «doar zi sexul măcar». A result with a sex but no birth date has no category (`categoryKeyOf` wants both), and the public results drew «—» in «Categorie». The cell now says «Feminin» or «Masculin» alone — no band, no place by category — and the row was already in the «Feminin» / «Masculin» filter, which reads the sex. Display only: no new category, no migration, the places by category unchanged.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
-  "changelogLine": "- **Clasament: sexul la «Categorie» când lipsește data nașterii.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Clasament»: the sex alone in «Categorie» without a birth date"
-}
