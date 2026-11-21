@@ -358,9 +358,12 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         {tableOf(rows, TABLE_ID, "result-row")}
 
 
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          {t("results.note")}
-        </Typography>
+        {/* The note about the tick (§808) says who is named — untrue while «Toate numele» names everybody, so it is not drawn then (§1036: the owner, «partea asta nu mai are sens»). */}
+        {!results.manualTime && (
+          <Typography variant="body2" color="text.secondary" data-testid="results-note" sx={{ mt: 2 }}>
+            {t("results.note")}
+          </Typography>
+        )}
       </Box>
 
     </Box>
