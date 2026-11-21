@@ -252,6 +252,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     resultsConsentVersion: one.resultsConsentVersion,
     firstResultsNoticeVersion: firstResults,
     firstResultsNameAskNoticeVersion: resultsAskLine,
+    resultsAllNames: live?.resultsAllNames === true,
   });
   /*
     «Completează-ți datele» (§905): for each person still registered whose registration lacks an answer the public

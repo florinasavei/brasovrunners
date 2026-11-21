@@ -3259,6 +3259,7 @@ function blankEventRow(now: Date): EditableEvent {
     rsvpAskEnabled: true,
     resultsPublished: false,
     resultsPublishedAt: null,
+    resultsAllNames: false,
     resultAgeBands: null,
     awardPlaces: 3,
     awardCategories: true,

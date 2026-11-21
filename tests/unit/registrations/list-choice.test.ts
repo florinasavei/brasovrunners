@@ -21,6 +21,7 @@ const values = {
   resultsConsentVersion: [null, 1, 2, 3],
   firstResultsNoticeVersion: [null, 2],
   firstResultsNameAskNoticeVersion: [null, 2, 3],
+  resultsAllNames: [undefined, false, true],
 } satisfies { [K in keyof ListChoiceFacts]-?: readonly ListChoiceFacts[K][] };
 
 function* everyFact(): Generator<ListChoiceFacts> {
@@ -43,15 +44,20 @@ function* everyFact(): Generator<ListChoiceFacts> {
  *   registration recorded that notice or a later one, or — an older notice's runner — said yes since to «Vreau să apar cu numele în
  *   clasament» under a notice at or above the first that named it (§879);
  * - off the list, the public list prints «Participant (nume ascuns)» for a confirmed registration — never for one on «Lista de
- *   invitați speciali», which it does not draw at all off the list (§743) — and only while the event shows its list (§186, §421).
+ *   invitați speciali», which it does not draw at all off the list (§743) — and only while the event shows its list (§186, §421);
+ * - under the club's «Toate numele în clasament» (§1029) the results print every confirmed runner's name: a listed one's whatever the
+ *   notice, and off the list the sentence never says «nici în clasament».
  */
 function expected(facts: ListChoiceFacts): ListChoiceState {
   const race = facts.eventType === "RACE";
+  const allNames = facts.resultsAllNames === true;
   if (!facts.listed) {
-    if (facts.confirmed && !facts.outsideCapacity && facts.listShown) return race ? "notListedCountedWithResults" : "notListedCounted";
-    return race ? "notListedWithResults" : "notListed";
+    const notRanked = race && !allNames;
+    if (facts.confirmed && !facts.outsideCapacity && facts.listShown) return notRanked ? "notListedCountedWithResults" : "notListedCounted";
+    return notRanked ? "notListedWithResults" : "notListed";
   }
   if (!race || facts.firstResultsNoticeVersion === null) return "listed";
+  if (allNames) return "listedWithResults";
   const underResults = facts.privacyNoticeVersion >= facts.firstResultsNoticeVersion;
   const askedSince =
     facts.resultsNameConsent &&
@@ -85,7 +91,7 @@ describe("BR-REQ-039-01 the list's block says where the name stands, and only wh
       seen.add(state);
       if (state !== expected(facts)) throw new Error(`${JSON.stringify(facts)}: ${state}, expected ${expected(facts)}`);
     }
-    expect(count).toBe(2 * 2 * 2 * 2 * 5 * 3 * 2 * 4 * 2 * 3);
+    expect(count).toBe(2 * 2 * 2 * 2 * 5 * 3 * 2 * 4 * 2 * 3 * 3);
     expect([...seen].sort()).toEqual([...LIST_CHOICE_STATES].sort());
   });
 
@@ -102,6 +108,15 @@ describe("BR-REQ-039-01 the list's block says where the name stands, and only wh
     expect(listChoiceState({ ...older, resultsNameConsent: true, resultsConsentVersion: 2, firstResultsNameAskNoticeVersion: 3 })).toBe("listed");
     // A yes the page did not read the line for (nobody on it said yes) is a no.
     expect(listChoiceState({ ...older, resultsNameConsent: false, resultsConsentVersion: 3, firstResultsNameAskNoticeVersion: null })).toBe("listed");
+  });
+
+  it("under the club's «Toate numele în clasament» (§1029): names the results for an older notice's runner, and never says «nici în clasament» off the list", () => {
+    expect(listChoiceState({ ...underResults, privacyNoticeVersion: 1, resultsAllNames: true })).toBe("listedWithResults");
+    expect(listChoiceState({ ...underResults, listed: false, resultsAllNames: true })).toBe("notListedCounted");
+    expect(listChoiceState({ ...underResults, listed: false, listShown: false, resultsAllNames: true })).toBe("notListed");
+    expect(listChoiceState({ ...underResults, listed: false, listShown: false })).toBe("notListedWithResults");
+    // Still no results line while no notice describes them.
+    expect(listChoiceState({ ...underResults, firstResultsNoticeVersion: null, resultsAllNames: true })).toBe("listed");
   });
 
   it("names only the list while no notice describes the results, and on every event that takes none", () => {

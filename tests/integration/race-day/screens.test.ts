@@ -72,6 +72,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   saveEventResultsAction: vi.fn(),
   deleteEventResultAction: vi.fn(),
   setResultsPublishedAction: vi.fn(),
+  setResultsAllNamesAction: vi.fn(),
   setResultAgeBandsAction: vi.fn(),
   setResultAwardsAction: vi.fn(),
   resetEventResultsAction: vi.fn(),

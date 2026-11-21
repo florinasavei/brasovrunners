@@ -21,6 +21,10 @@ import { publicResultName } from "@/modules/results/domain/public-name";
  * draws no row: there the sentence says only that the name is not on the list, with «și nici în clasament» on a race, where it is
  * true whatever the notices say.
  *
+ * Under the club's «Toate numele în clasament» (§1029, `events.results_all_names`) the results print the name whatever the person
+ * ticked: a ticked person's block says «și în clasament» by the same rule, asked with `allNames`, and an unticked one's says only that
+ * the name is not on the list — never «nici în clasament», which the published results would contradict.
+ *
  * Pure, so both pages and the test read one answer.
  */
 export const LIST_CHOICE_STATES = [
@@ -61,6 +65,8 @@ export type ListChoiceFacts = {
    * no registration it draws said yes: a no is never named by it, as `holdsResultsNameConsent` reads it.
    */
   firstResultsNameAskNoticeVersion: number | null;
+  /** «Toate numele în clasament» on the event (§1029): the results name every confirmed runner, whatever they ticked. Absent is off. */
+  resultsAllNames?: boolean;
 };
 
 /** Whether the block names the results at all — its heading and «nici în clasament»: only on an event that takes them (§808). */
@@ -73,10 +79,13 @@ const SHOWN_AND_CONFIRMED = { registered: true, ticked: true, confirmed: true, h
 
 export function listChoiceState(facts: ListChoiceFacts): ListChoiceState {
   const results = listChoiceNamesResults(facts.eventType);
+  const allNames = facts.resultsAllNames === true;
   if (!facts.listed) {
+    // «…și nici în clasament» only while the results follow the person's tick: never under the club's «Toate numele» (§1029).
+    const notRanked = results && !allNames;
     // The row the public list prints in place of the name: the confirmed inside the places, where the list is drawn (§186, §743).
-    if (facts.confirmed && !facts.outsideCapacity && facts.listShown) return results ? "notListedCountedWithResults" : "notListedCounted";
-    return results ? "notListedWithResults" : "notListed";
+    if (facts.confirmed && !facts.outsideCapacity && facts.listShown) return notRanked ? "notListedCountedWithResults" : "notListedCounted";
+    return notRanked ? "notListedWithResults" : "notListed";
   }
   if (!results) return "listed";
   const named = publicResultName({
@@ -86,6 +95,7 @@ export function listChoiceState(facts: ListChoiceFacts): ListChoiceState {
     resultsNameConsent: facts.resultsNameConsent,
     resultsConsentVersion: facts.resultsConsentVersion,
     firstResultsNameAskNoticeVersion: facts.firstResultsNameAskNoticeVersion,
+    allNames,
   });
   return named === null ? "listed" : "listedWithResults";
 }

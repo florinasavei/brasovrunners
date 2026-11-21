@@ -122,6 +122,8 @@ export type MyRegistration = {
    * where the published results would print the name.
    */
   eventType: string;
+  /** «Toate numele în clasament» on the event (§1029): the results name every confirmed runner, whatever they ticked. Display only. */
+  resultsAllNames: boolean;
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
   /**
@@ -185,6 +187,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventTimezone: events.timezone,
       eventStatus: events.eventStatus,
       eventType: events.type,
+      resultsAllNames: events.resultsAllNames,
       // Whether the event's public list is drawn now (§1016): its switch, and its end for the club's days after it (§421).
       participantListVisibility: events.participantListVisibility,
       eventEndsAt: events.endsAt,

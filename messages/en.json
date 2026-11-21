@@ -12961,6 +12961,14 @@
         "stateFromStart": "Public from the start",
         "stateOff": "Not public"
       },
+      "allNames": {
+        "label": "Show the name of every confirmed runner, over their own ticks",
+        "help": "Ticked, the results on the site also show the names of those who did not tick that they want to appear. The participant list does not change. The club's decision: the privacy notice must say so.",
+        "confirmOnTitle": "Show every name in the results?",
+        "confirmOnBody": "The site shows the name of every confirmed runner, also of those who did not tick that they want to appear. They did not agree: the decision and the responsibility are the club's.",
+        "confirmOffTitle": "Back to the runners' own ticks?",
+        "confirmOffBody": "A name shows again only for whoever ticked or agreed; the others show as “Participant #number”."
+      },
       "export": "Download the results (CSV)",
       "csvColumns": {
         "position": "Place",
@@ -15995,6 +16003,8 @@
       "resultsPublished": "The results are now public on the event's page.",
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
+      "resultsAllNamesOn": "The results on the site now show the name of every confirmed runner.",
+      "resultsAllNamesOff": "The results on the site again show a name only for whoever ticked or agreed.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
       "resultsReset": "The results were reset.",
       "resultsResetNothing": "There was nothing to reset.",

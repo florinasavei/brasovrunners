@@ -62,21 +62,32 @@ export type PublicNameInput = {
   typedNameAgreed: boolean;
   /** A runner typed by hand: the name the club typed; null for a registered one, whose registration's `displayName` answers. */
   typedDisplayName: string | null | undefined;
+  /**
+   * «Toate numele în clasament» (§1029, `events.results_all_names`): the Administrator's switch that names every runner over their own
+   * answer. While it is on, `ticked` carries **only the club's own hide** — false when an Administrator unticked «Apare pe site» on a
+   * marked registration (§910), true otherwise, whatever the person ticked (`results.ts#tickedForTheSite`) — and neither the notice the
+   * registration was made under nor a staff-recorded agreement is asked. Every other condition stands: a results notice approved, a
+   * confirmed registration, a special guest the event hides, a name to show. Absent or false: the rule above, as before.
+   */
+  allNames?: boolean;
 };
 
 export function publicResultName(runner: PublicNameInput): string | null {
+  const allNames = runner.allNames === true;
   if (!runner.registered) {
-    // The staff-recorded agreement of a runner typed by hand: under a notice that describes the results, with a name to show.
-    if (!runner.typedNameAgreed || runner.firstResultsNoticeVersion === null) return null;
+    // The staff-recorded agreement of a runner typed by hand — or the club's «Toate numele» — under a notice that describes the results, with a name to show.
+    if ((!runner.typedNameAgreed && !allNames) || runner.firstResultsNoticeVersion === null) return null;
     const typed = runner.typedDisplayName?.trim();
     return typed ? typed : null;
   }
   if (!runner.ticked || !runner.confirmed || runner.hidden) return null;
   if (runner.firstResultsNoticeVersion === null) return null;
-  const registeredUnderResults = runner.noticeVersion !== null && runner.noticeVersion >= runner.firstResultsNoticeVersion;
-  // An older notice's runner who asked since, under a notice that named the tick (§879); withdrawn, the flag is false.
-  const askedSince = holdsResultsNameConsent(runner, runner.firstResultsNameAskNoticeVersion);
-  if (!registeredUnderResults && !askedSince) return null;
+  if (!allNames) {
+    const registeredUnderResults = runner.noticeVersion !== null && runner.noticeVersion >= runner.firstResultsNoticeVersion;
+    // An older notice's runner who asked since, under a notice that named the tick (§879); withdrawn, the flag is false.
+    const askedSince = holdsResultsNameConsent(runner, runner.firstResultsNameAskNoticeVersion);
+    if (!registeredUnderResults && !askedSince) return null;
+  }
   const name = runner.displayName?.trim();
   return name ? name : null;
 }
