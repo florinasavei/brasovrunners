@@ -494,6 +494,8 @@ export type ResultRunner = {
     note: string | null;
     /** «Comentariu public» (§1031), or null. */
     publicNote: string | null;
+    /** «Distanța parcursă» (§1034): the runner's own metres, or null for the race's. */
+    distanceMeters: number | null;
     positionOverall: number | null;
     positionSex: number | null;
     positionCategory: number | null;
@@ -534,6 +536,7 @@ function resultOf(row: EventResultRow, ranked: Ranked, staffNames: ReadonlyMap<s
     chipTimeMs: row.chipTimeMs,
     note: row.note,
     publicNote: row.publicNote,
+    distanceMeters: row.distanceMeters,
     positionOverall: ranked.positionOverall,
     positionSex: ranked.positionSex,
     positionCategory: ranked.positionCategory,
@@ -1738,6 +1741,53 @@ export async function setResultsAllNames<T extends Record<string, unknown>>(db: 
   return outcome;
 }
 
+/** The longest «Distanța parcursă» a result takes (§1034), in metres: a hundred kilometres. */
+export const RESULT_DISTANCE_MAX_METERS = 100_000;
+
+/**
+ * «Distanța parcursă» (§1034 — the owner, race day 2026-11-21): the metres the runner filed under a number covered, when it differs from the
+ * race's own; null puts the race's back. The Administrators alone (FORBIDDEN otherwise, BR-REQ-060-01), on a race (`RESULTS_NOT_OPEN`), on a
+ * number that has a result (`RESULT_NOTE_NO_ROW`), between 1 m and `RESULT_DISTANCE_MAX_METERS` (`RESULT_DISTANCE_INVALID`). One audit row
+ * `event_results.distance_changed` with `{ bibNumber, distanceMeters }`; a save that changes nothing writes nothing. The page's pace reads it.
+ */
+export async function setResultDistance<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; bibNumber: number; distanceMeters: number | null },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  if (!canPublishResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not set a result's distance`);
+  assertIds(request.eventId);
+  const meters = request.distanceMeters;
+  if (meters !== null && (!Number.isInteger(meters) || meters <= 0 || meters > RESULT_DISTANCE_MAX_METERS)) {
+    throw new DomainError("RESULT_DISTANCE_INVALID", "the distance cannot be stored", ["distanceKm"]);
+  }
+  if (!Number.isInteger(request.bibNumber) || request.bibNumber <= 0) throw new DomainError("RESULT_NOTE_NO_ROW", "no result under that number", ["bibNumber"]);
+  const outcome = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    const [row] = await tx
+      .select({ id: eventResults.id, distanceMeters: eventResults.distanceMeters })
+      .from(eventResults)
+      .where(and(eq(eventResults.eventId, event.id), eq(eventResults.bibNumber, request.bibNumber)))
+      .limit(1);
+    if (!row) throw new DomainError("RESULT_NOTE_NO_ROW", "no result under that number", ["bibNumber"]);
+    if (row.distanceMeters === meters) return { changed: false };
+    await tx.update(eventResults).set({ distanceMeters: meters, updatedAt: now, updatedByStaffUserId: actor.id }).where(eq(eventResults.id, row.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_results.distance_changed",
+      entityType: "event",
+      entityId: event.id,
+      metadata: { bibNumber: request.bibNumber, distanceMeters: meters },
+      now,
+    });
+    return { changed: true };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
 /** The longest «Comentariu public» a result takes (§1031): a sentence, not a story. */
 export const RESULT_PUBLIC_NOTE_MAX = 200;
 
@@ -1946,7 +1996,10 @@ export type PublicResultRow = {
   /** The sex, from the registration or the typed row; null without one. */
   sex: SexChoice | null;
   /** «Comentariu public» (§1031): the Administrator's line under the row, or null. */
-  publicNote: string | null;
+  publicNote: string | null;  /** «Distanța parcursă» (§1034): the metres this runner covered — the race's own unless an Administrator set one —, or null without either. */
+  distanceMeters: number | null;
+  /** The distance is the runner's own, set by an Administrator, not the race's. */
+  ownDistance: boolean;
 };
 
 export type PublicEventResults = {
@@ -2002,6 +2055,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,
       resultsAllNames: events.resultsAllNames,
+      distanceMeters: events.distanceMeters,
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
       raceNumberFormat: RACE_NUMBER_FORMAT,
@@ -2043,6 +2097,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       gunTimeMs: eventResults.gunTimeMs,
       chipTimeMs: eventResults.chipTimeMs,
       publicNote: eventResults.publicNote,
+      distanceMeters: eventResults.distanceMeters,
     })
     .from(eventResults)
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
@@ -2085,6 +2140,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       categoryKey: ranked.categoryKey,
       sex: registered ? sexShown(row.registeredSex) : sexShown(row.typedSex),
       publicNote: row.publicNote,
+      distanceMeters: row.distanceMeters ?? found.distanceMeters ?? null,
+      ownDistance: row.distanceMeters !== null,
     };
   };
   const shown = onShow.map((row) => toPublic(row, ranking.get(row.bibNumber) as Ranked));

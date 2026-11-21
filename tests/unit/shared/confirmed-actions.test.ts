@@ -300,7 +300,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteEventResultAction: [],
   setResultsPublishedAction: [],
   // «Toate numele în clasament» (§1029): names on the site every runner who did not agree — asked both ways.
-  setResultsAllNamesAction: [], setResultPublicNoteAction: [],
+  setResultsAllNamesAction: [], setResultPublicNoteAction: [], setResultDistanceAction: [],
   // «Resetează clasamentul» (§997): every result of the race and the gun given, wiped before the start — nothing to undo it with.
   resetEventResultsAction: [],
   // «Folosește» under a line's «Timpi la sosire» (§1012): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».

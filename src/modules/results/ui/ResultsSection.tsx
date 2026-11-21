@@ -17,6 +17,7 @@ import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
 import { readEventResultsForPage, readResultsGates } from "../public-page";
 import { categoriesPresent, categoryGlyphOf } from "./results-filter";
+import ResultsSort from "./ResultsSort";
 import ResultsFilter from "./ResultsFilter";
 import ResultsLiveRefresh from "./ResultsLiveRefresh";
 
@@ -86,6 +87,23 @@ export default async function ResultsSection({ event }: { event: ResultsEvent })
   return <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={null} />;
 }
 
+/** Seconds per kilometre of a finisher with a time and a distance (§1034), or null — what «după ritm mediu» orders by. */
+function paceSeconds(row: { status: string; gunTimeMs: number | null; distanceMeters: number | null }): number | null {
+  if (row.status !== "FINISHED" || row.gunTimeMs === null || row.distanceMeters === null || row.distanceMeters <= 0) return null;
+  return Math.round(row.gunTimeMs / 1000 / (row.distanceMeters / 1000));
+}
+
+/** Minutes and seconds per kilometre, `5:07` (§1034): the time over the distance, rounded to the second. */
+function formatPace(gunTimeMs: number, meters: number): string {
+  const secondsPerKm = Math.round(gunTimeMs / 1000 / (meters / 1000));
+  return `${Math.floor(secondsPerKm / 60)}:${String(secondsPerKm % 60).padStart(2, "0")}`;
+}
+
+/** A distance in kilometres in the reader's language, one decimal at most: `11`, `8,8`. */
+function formatKm(meters: number, locale: string): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "ro-RO", { maximumFractionDigits: 1 }).format(meters / 1000);
+}
+
 async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { from: Date; until: Date } | null) {
   const results = await readEventResultsForPage(event, now);
   if (!results || results.rows.length === 0) return null;
@@ -96,7 +114,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const categoryLabel = await categoryLabeller(locale, results.ageBandStarts);
 
   const { rows } = results;
-  const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
+  // The filter's chips: «Feminin» and «Masculin» alone — the owner, race day 2026-11-21: «vreau doar feminin și masculin, atât!» (§1033).
+  const categories = categoriesPresent(rows.map((row) => row.sex)).map((key) => ({ key, label: key === "FEMALE" ? t("results.sexFemale") : t("results.sexMale"), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
   // Ticked before the race (§985), the results have been on the page since its start, not since the tick.
   const shownSince = resultsShownSince(results.publishedAt, event.startsAt);
@@ -171,10 +190,10 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       </tr>
     </thead>
     <tbody>
-      {list.map((row) => {
+      {list.map((row, index) => {
         const finished = row.status === "FINISHED";
         return (
-          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.categoryKey ?? ""} data-status={row.status}>
+          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status} data-order={index} data-pace={paceSeconds(row) ?? undefined}>
             <td data-col="place" data-testid="result-place">
               {finished && row.positionOverall !== null ? (
                 row.positionOverall
@@ -216,6 +235,13 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   {row.chipTimeMs !== null && (
                     <Typography component="span" variant="caption" color="text.secondary" data-testid="result-chip-time" sx={{ display: "block", fontWeight: 400 }}>
                       {t("results.chipTime", { time: formatResultTime(row.chipTimeMs) })}
+                    </Typography>
+                  )}
+                  {/* «Ritm mediu» (§1034): the gun time over the distance covered — the race's, or the runner's own when an Administrator set one. */}
+                  {row.gunTimeMs !== null && row.distanceMeters !== null && row.distanceMeters > 0 && (
+                    <Typography component="span" variant="caption" color="text.secondary" data-testid="result-pace" sx={{ display: "block", fontWeight: 400 }}>
+                      {t("results.pace", { pace: formatPace(row.gunTimeMs, row.distanceMeters) })}
+                      {row.ownDistance ? ` · ${t("results.ownDistance", { km: formatKm(row.distanceMeters, locale) })}` : null}
                     </Typography>
                   )}
                 </>
@@ -274,6 +300,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
               {t("results.eliteTitle")}
             </Typography>
           </Box>
+          {(results.separateRows ?? []).some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={`${TABLE_ID}-elite`} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
           {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
         </Box>
       )}
@@ -326,6 +353,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           />
         )}
 
+        {rows.some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={TABLE_ID} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
         {tableOf(rows, TABLE_ID, "result-row")}
 
 

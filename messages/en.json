@@ -912,6 +912,8 @@
     "results": {
       "title": "Results",
       "titleNoChip": "Open results (no chip)",
+      "sexFemale": "Women",
+      "sexMale": "Men",
       "eliteTitle": "Elite results (no chip)",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
@@ -923,6 +925,9 @@
       "columnName": "Name",
       "columnTime": "Time",
       "columnCategory": "Category",
+      "sort": {"label": "Order:", "time": "by time", "pace": "by average pace"},
+      "pace": "Average pace: {pace} min/km",
+      "ownDistance": "covered {km} km",
       "chipTime": "Chip time: {time}",
       "categoryPlace": "place {position}",
       "noCategory": "No category",
@@ -2885,6 +2890,7 @@
       "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
       "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
+      "RESULT_DISTANCE_INVALID": "The distance must be a number of kilometres, between 0.001 and 100.",
       "RESULT_NOTE_TOO_LONG": "The comment is too long: 200 characters at most.",
       "RESULT_NOTE_NO_ROW": "No result has this number. Write the race number of the results row.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
@@ -12966,6 +12972,14 @@
         "stateFromStart": "Public from the start",
         "stateOff": "Not public"
       },
+      "distance": {
+        "help": "The distance one runner covered, when it differs from the race's (e.g. 11 for 11 km). Empty, the race's distance is back. The site's average pace is worked out from it.",
+        "km": "Distance (km)",
+        "save": "Save the distance",
+        "confirmTitle": "Change the runner's distance?",
+        "confirmBody": "Their average pace on the site is worked out from the new distance.",
+        "current": "Distances: {list}"
+      },
       "publicNote": {
         "title": "Public comment on a result",
         "help": "It shows under the runner's row in the results on the site, with an asterisk. Empty, the comment goes.",
@@ -16019,6 +16033,7 @@
       "resultsPublished": "The results are now public on the event's page.",
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
+      "resultDistanceSaved": "The distance is saved: the site's average pace uses it.",
       "resultPublicNoteSaved": "The comment is saved: it shows under the row in the results on the site.",
       "resultsAllNamesOn": "The results on the site now show the name of every confirmed runner.",
       "resultsAllNamesOff": "The results on the site again show a name only for whoever ticked or agreed.",
