@@ -1,0 +1,9 @@
+{
+  "branch": "fix/results-note-hidden-under-all-names",
+  "decisionsTitle": "«Clasament»'s note about the tick is not drawn while «Toate numele» is on (amending §808)",
+  "decisionsSection": "**The owner, 2026-11-21:** «atunci partea asta nu mai are sens» — the sentence under the results saying a name shows only for whoever ticked «Vreau să apar pe lista de participanți & rezultate». While «Toate numele în clasament» is on it is untrue, so it is not drawn; unticked, it is back.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
+  "changelogLine": "- **Clasament: fără nota despre bifă cât timp «Toate numele» e pusă.** §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "«Clasament»'s note about the tick hidden under «Toate numele»"
+}
