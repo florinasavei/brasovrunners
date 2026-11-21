@@ -911,8 +911,8 @@
     },
     "results": {
       "title": "Results",
-      "titleNoChip": "Results (no chip)",
-      "eliteTitle": "Elite results",
+      "titleNoChip": "Open results (no chip)",
+      "eliteTitle": "Elite results (no chip)",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
