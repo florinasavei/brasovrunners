@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.99-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V5.00-2026-11-21 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V4.99-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.00-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 

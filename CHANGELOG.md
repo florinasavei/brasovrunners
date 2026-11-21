@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.00-2026-11-21
+
+- **«Clasament elite» apart** — its own section under «Clasament open (fără cip)». §1032.
 ## BR-V4.99-2026-11-21
 
 - **Clasamentul primul pe site** — under the event's title, a button on the home page and the race's card first in «Alergări»; «Clasament elite» apart, «Clasament (fără cip)», and «Comentariu public» on one result. §1031.

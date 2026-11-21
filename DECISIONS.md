@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.99-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V5.00-2026-11-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.99-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.00-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31944,3 +31944,13 @@ Baseline `BR-V4.98-2026-11-21`.
 **Tests.** `tests/integration/results/public-section.test.ts`, `results.test.ts`, `typed-name.test.ts`.
 
 Baseline `BR-V4.99-2026-11-21`.
+
+## 1032. «Clasament elite» a section of its own, «Clasament open (fără cip)» its heading (amending §1031)
+
+**The owner, race day 2026-11-21, once §1031 was live:** «nu e clară secțiunea … trebuie pus separat».
+
+**Decision.** The elites' table is no longer an `h3` inside «Clasament»: it is a fold of its own under it, with its own `h2` «Clasament elite (fără cip)» and a stronger border, FIRST — «vreau să fie TOP!» — above the open one, which reads «Clasament open (fără cip)» while «Toate numele» is on. The page also reads a cached answer from before §1031 (no `separateRows`) as no elites rather than failing.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.00-2026-11-21`.
