@@ -914,6 +914,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
+      "manualTime": "The times were noted by hand.",
       "live": "Updates itself every 30 seconds.",
       "caption": "The race results: first those who finished, in order of arrival, then those who did not.",
       "columnPlace": "Place",
@@ -12962,8 +12963,8 @@
         "stateOff": "Not public"
       },
       "allNames": {
-        "label": "Show the name of every confirmed runner, over their own ticks",
-        "help": "Ticked, the results on the site also show the names of those who did not tick that they want to appear. The participant list does not change. The club's decision: the privacy notice must say so.",
+        "label": "Show the name of every confirmed runner, over their own ticks — without the elites, with “The times were noted by hand”",
+        "help": "Ticked, the results on the site also show the names of those who did not tick that they want to appear, leave the elites out (as if each one's «In the results» were unticked) and say “The times were noted by hand.” The participant list does not change. The club's decision: the privacy notice must say so.",
         "confirmOnTitle": "Show every name in the results?",
         "confirmOnBody": "The site shows the name of every confirmed runner, also of those who did not tick that they want to appear. They did not agree: the decision and the responsibility are the club's.",
         "confirmOffTitle": "Back to the runners' own ticks?",

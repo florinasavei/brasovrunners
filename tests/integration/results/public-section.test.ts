@@ -349,12 +349,27 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect((await names())[900]).toBe("Participant #900");
   });
 
-  it("still keeps off a name the club hid («Apare pe site» on a marked elite), a hidden special guest and an unconfirmed registration", async () => {
+  it("leaves every elite out of the page — a registration marked «Elită», whatever its ticks — and says the times were noted by hand; unticked, both come back", async () => {
+    await publishedRace();
+    const [ana] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 101));
+    await db.update(registrations).set({ elite: true }).where(eq(registrations.id, ana.id));
+    expect(await names()).toHaveProperty("101");
+    expect(await section()).not.toContain("Timpul a fost notat manual.");
+    await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);
+    const html = await section();
+    expect(Object.keys(Object.fromEntries(rowsOf(html).map((row) => [row.bib, row.name])))).not.toContain("101");
+    expect(html).not.toContain("Ana Popescu");
+    expect(html).toContain("Timpul a fost notat manual.");
+    await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE);
+    expect(await names()).toHaveProperty("101");
+  });
+
+  it("still keeps off a name the club hid («Apare pe site» on a marked ambassador), a hidden special guest and an unconfirmed registration", async () => {
     await publishedRace();
     const [bia] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 102));
     const [dan] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 103));
     const [eli] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 104));
-    await db.update(registrations).set({ elite: true, eliteHiddenFromSite: true }).where(eq(registrations.id, bia.id));
+    await db.update(registrations).set({ ambassador: true, eliteHiddenFromSite: true }).where(eq(registrations.id, bia.id));
     await db.update(registrations).set({ outsideCapacity: true }).where(eq(registrations.id, dan.id));
     await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, eli.id));
     await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);

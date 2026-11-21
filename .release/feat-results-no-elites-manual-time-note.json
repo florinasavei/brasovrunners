@@ -1,0 +1,14 @@
+{
+  "branch": "feat/results-no-elites-manual-time-note",
+  "decisionsTitle": "«Toate numele în clasament» also leaves every elite out of the public results and says «Timpul a fost notat manual» (amending §1029 and §910)",
+  "decisionsSection": "**The owner, race day 2026-11-21, after §1029 went live:** «dar vreau fără elite boss, și să se afișeze timpul cu nume și prenume pentru toți-elite dar să scriem „timpul notat manual”».\n\n**Decision.** While «Toate numele în clasament» (§1029) is on, the one switch also:\n\n- **leaves every elite out of the ranking** — every registration marked «Elită» and every line of the race's elite list — as if each one's «Apare în clasament» were unticked (§910): not on the public page at all, and every position counted without them, on the site, in the backoffice and in the files (`results.ts#loadOutOfRanking`). An ambassador is not an elite: only its own «Apare în clasament» leaves it out. The stored places are counted again in the switch's own transaction (`writeRanking`), as «Categorii de vârstă» does (§850);\n- **writes «Timpul a fost notat manual.»** under «Publicat …» on the event page's «Clasament» (`PublicEventResults.manualTime`, `ResultsSection`).\n\nThe box's label and help on «Clasament» say all three. Unticked, every elite follows its own «Apare în clasament» again and the line goes.\n\n**Refused, for the day:** a second switch — the owner asked for one action.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
+  "changelogLine": "- **«Toate numele în clasament» fără elite** — the same tick also leaves every elite out of the results on the site and writes «Timpul a fost notat manual.» §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-039-01",
+      "text": "Given «Toate numele în clasament» on, then every registration marked «Elită» and every line of the race's elite list is left out of the ranking as if its «Apare în clasament» were unticked — absent from the public results, positions counted without it — and the results section says «Timpul a fost notat manual.»; unticked, both are as before (2026-11-21, `DECISIONS.md` §NNN). Verification: integration `results/public-section.test.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Toate numele în clasament» leaves the elites out and says the times were noted by hand"
+}
