@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.02-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.03-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.02-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.03-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31986,3 +31986,11 @@ Baseline `BR-V5.01-2026-11-21`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.02-2026-11-22`.
+
+## 1036. «Clasament»'s note about the tick is not drawn while «Toate numele» is on (amending §808)
+
+**The owner, 2026-11-21:** «atunci partea asta nu mai are sens» — the sentence under the results saying a name shows only for whoever ticked «Vreau să apar pe lista de participanți & rezultate». While «Toate numele în clasament» is on it is untrue, so it is not drawn; unticked, it is back.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.03-2026-11-22`.
