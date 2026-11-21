@@ -263,7 +263,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
  */
 async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ out: OutOfRanking; lines: EliteLine[] }> {
   // «Toate numele în clasament» (§1029) leaves every elite out — the owner, race day: «vreau fără elite» —: every registration marked
-  // «Elită» and every line of the elite list, as if each one's «Apare în clasament» were unticked (§NNN).
+  // «Elită» and every line of the elite list, as if each one's «Apare în clasament» were unticked (§1030).
   const [flags] = await db.select({ allNames: events.resultsAllNames }).from(events).where(eq(events.id, eventId)).limit(1);
   const everyElite = flags?.allNames === true;
   const [hidden, lines] = await Promise.all([
@@ -1725,7 +1725,7 @@ export async function setResultsAllNames<T extends Record<string, unknown>>(db: 
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
     if (event.resultsAllNames === on) return { changed: false };
     await tx.update(events).set({ resultsAllNames: on }).where(eq(events.id, event.id));
-    // The switch also leaves every elite out of the ranking (§NNN): the stored places are counted again, as «Categorii de vârstă» does.
+    // The switch also leaves every elite out of the ranking (§1030): the stored places are counted again, as «Categorii de vârstă» does.
     const stored = await loadStored(tx, eventId, true);
     if (stored.length > 0) await writeRanking(tx, { ...event, resultsAllNames: on }, await loadRegisteredRunners(tx, eventId), stored);
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_results.all_names_changed", entityType: "event", entityId: event.id, metadata: { on }, now });
@@ -1905,7 +1905,7 @@ export type PublicEventResults = {
   closesAt: Date;
   /** The ages the race's categories start at (§850), so the page says each category's band in words. */
   ageBandStarts: readonly number[];
-  /** «Toate numele în clasament» is on (§NNN): the page says the times were noted by hand. */
+  /** «Toate numele în clasament» is on (§1030): the page says the times were noted by hand. */
   manualTime: boolean;
 };
 
