@@ -337,7 +337,7 @@ describe("§809 «Clasament» on the event page — in English", () => {
   });
 });
 
-describe("§NNN «Toate numele în clasament» — the Administrator names every confirmed runner over their own tick", () => {
+describe("§1029 «Toate numele în clasament» — the Administrator names every confirmed runner over their own tick", () => {
   const names = async () => Object.fromEntries(rowsOf(await section()).map((row) => [row.bib, row.name]));
 
   it("names the runners who did not tick and the runner the club typed — and back to the ticks when unticked", async () => {

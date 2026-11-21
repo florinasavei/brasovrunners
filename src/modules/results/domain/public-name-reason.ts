@@ -47,7 +47,7 @@ export function publicNameReason(runner: PublicNameReasonInput): PublicNameReaso
   if (!runner.confirmed) return "notConfirmed";
   if (runner.hidden) return "hiddenGuest";
   const registeredUnderResults = runner.noticeVersion !== null && runner.noticeVersion >= runner.firstResultsNoticeVersion;
-  // Under the club's «Toate numele» (§NNN) the notice is not asked.
+  // Under the club's «Toate numele» (§1029) the notice is not asked.
   if (runner.allNames !== true && !registeredUnderResults && !holdsResultsNameConsent(runner, runner.firstResultsNameAskNoticeVersion)) return "olderNotice";
   // Every condition above holds and still no name: the name itself is blank.
   return "noName";

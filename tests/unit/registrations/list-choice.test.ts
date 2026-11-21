@@ -45,7 +45,7 @@ function* everyFact(): Generator<ListChoiceFacts> {
  *   clasament» under a notice at or above the first that named it (§879);
  * - off the list, the public list prints «Participant (nume ascuns)» for a confirmed registration — never for one on «Lista de
  *   invitați speciali», which it does not draw at all off the list (§743) — and only while the event shows its list (§186, §421);
- * - under the club's «Toate numele în clasament» (§NNN) the results print every confirmed runner's name: a listed one's whatever the
+ * - under the club's «Toate numele în clasament» (§1029) the results print every confirmed runner's name: a listed one's whatever the
  *   notice, and off the list the sentence never says «nici în clasament».
  */
 function expected(facts: ListChoiceFacts): ListChoiceState {
@@ -110,7 +110,7 @@ describe("BR-REQ-039-01 the list's block says where the name stands, and only wh
     expect(listChoiceState({ ...older, resultsNameConsent: false, resultsConsentVersion: 3, firstResultsNameAskNoticeVersion: null })).toBe("listed");
   });
 
-  it("under the club's «Toate numele în clasament» (§NNN): names the results for an older notice's runner, and never says «nici în clasament» off the list", () => {
+  it("under the club's «Toate numele în clasament» (§1029): names the results for an older notice's runner, and never says «nici în clasament» off the list", () => {
     expect(listChoiceState({ ...underResults, privacyNoticeVersion: 1, resultsAllNames: true })).toBe("listedWithResults");
     expect(listChoiceState({ ...underResults, listed: false, resultsAllNames: true })).toBe("notListedCounted");
     expect(listChoiceState({ ...underResults, listed: false, listShown: false, resultsAllNames: true })).toBe("notListed");

@@ -864,7 +864,7 @@ export type AuditAction =
   | "event_results.unpublished"
   | "event_results.exported"
   /**
-   * «Toate numele în clasament» (§NNN), entity `event`: an Administrator ticked or unticked the switch that names every confirmed
+   * «Toate numele în clasament» (§1029), entity `event`: an Administrator ticked or unticked the switch that names every confirmed
    * runner in the published results over their own tick — `{ on }`; never a name.
    */
   | "event_results.all_names_changed"

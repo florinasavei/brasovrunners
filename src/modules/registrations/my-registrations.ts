@@ -122,7 +122,7 @@ export type MyRegistration = {
    * where the published results would print the name.
    */
   eventType: string;
-  /** «Toate numele în clasament» on the event (§NNN): the results name every confirmed runner, whatever they ticked. Display only. */
+  /** «Toate numele în clasament» on the event (§1029): the results name every confirmed runner, whatever they ticked. Display only. */
   resultsAllNames: boolean;
   resultsNameConsent: boolean;
   resultsConsentVersion: number;

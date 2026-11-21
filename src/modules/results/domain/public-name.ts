@@ -63,7 +63,7 @@ export type PublicNameInput = {
   /** A runner typed by hand: the name the club typed; null for a registered one, whose registration's `displayName` answers. */
   typedDisplayName: string | null | undefined;
   /**
-   * «Toate numele în clasament» (§NNN, `events.results_all_names`): the Administrator's switch that names every runner over their own
+   * «Toate numele în clasament» (§1029, `events.results_all_names`): the Administrator's switch that names every runner over their own
    * answer. While it is on, `ticked` carries **only the club's own hide** — false when an Administrator unticked «Apare pe site» on a
    * marked registration (§910), true otherwise, whatever the person ticked (`results.ts#tickedForTheSite`) — and neither the notice the
    * registration was made under nor a staff-recorded agreement is asked. Every other condition stands: a results notice approved, a

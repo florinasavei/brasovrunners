@@ -21,7 +21,7 @@ import { publicResultName } from "@/modules/results/domain/public-name";
  * draws no row: there the sentence says only that the name is not on the list, with «și nici în clasament» on a race, where it is
  * true whatever the notices say.
  *
- * Under the club's «Toate numele în clasament» (§NNN, `events.results_all_names`) the results print the name whatever the person
+ * Under the club's «Toate numele în clasament» (§1029, `events.results_all_names`) the results print the name whatever the person
  * ticked: a ticked person's block says «și în clasament» by the same rule, asked with `allNames`, and an unticked one's says only that
  * the name is not on the list — never «nici în clasament», which the published results would contradict.
  *
@@ -65,7 +65,7 @@ export type ListChoiceFacts = {
    * no registration it draws said yes: a no is never named by it, as `holdsResultsNameConsent` reads it.
    */
   firstResultsNameAskNoticeVersion: number | null;
-  /** «Toate numele în clasament» on the event (§NNN): the results name every confirmed runner, whatever they ticked. Absent is off. */
+  /** «Toate numele în clasament» on the event (§1029): the results name every confirmed runner, whatever they ticked. Absent is off. */
   resultsAllNames?: boolean;
 };
 
@@ -81,7 +81,7 @@ export function listChoiceState(facts: ListChoiceFacts): ListChoiceState {
   const results = listChoiceNamesResults(facts.eventType);
   const allNames = facts.resultsAllNames === true;
   if (!facts.listed) {
-    // «…și nici în clasament» only while the results follow the person's tick: never under the club's «Toate numele» (§NNN).
+    // «…și nici în clasament» only while the results follow the person's tick: never under the club's «Toate numele» (§1029).
     const notRanked = results && !allNames;
     // The row the public list prints in place of the name: the confirmed inside the places, where the list is drawn (§186, §743).
     if (facts.confirmed && !facts.outsideCapacity && facts.listShown) return notRanked ? "notListedCountedWithResults" : "notListedCounted";

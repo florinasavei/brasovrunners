@@ -187,7 +187,7 @@ it is the authority, this is the summary):
     random.org's List Randomizer, so random.org receives the names. The notice in force does not name it. Ask the lawyer for
     one sentence in the raffle paragraph (random.org, the draw, names and numbers), then approve the notice again
     (`SETUP.md` §47); until then, keep the random.org screen off the livestream.
-29. **Ask the lawyer about «Toate numele în clasament»** (§NNN, 2026-11-21). On «Clasament» an Administrator may now
+29. **Ask the lawyer about «Toate numele în clasament»** (§1029, 2026-11-21). On «Clasament» an Administrator may now
     name every confirmed runner in the published results, also those who did not tick «Vreau să apar pe lista de
     participanți & rezultate» — the owner's choice on race day, told that those runners did not agree. The approved
     privacy notice and the registration form say a name shows only for whoever ticked. Ask the lawyer for the basis

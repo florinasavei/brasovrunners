@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.96-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.97-2026-11-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.96-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.97-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31886,3 +31886,29 @@ Baseline `BR-V4.95-2026-11-20`.
 Migration `0227_volunteer_raffle_confirmation` (the number may move at landing). One new dependency: `jsqr` 1.4.0, exact.
 
 Baseline `BR-V4.96-2026-11-20`.
+
+## 1029. «Toate numele în clasament»: an Administrator names every confirmed runner in a race's published results over their own tick (amending §808, §910 and §1016)
+
+**The owner, race day 2026-11-21:** «vreau dintr-o acțiune simplă, pentru clasament, să-i pot afișa pe toți», «normal la clasament apar toți, chiar și fără acord GDPR», then «Trebuie să pot pune clasamentul și pe site cu nume oricum, gen să fac override la ce a bifat el la toți». Asked first — told that the runners who did not tick «Vreau să apar pe lista de participanți & rezultate» read on the form that their name shows only if they tick, that the approved privacy notice says the same, and offered the desk's «Cu nume» (§1017) instead — the owner chose the switch.
+
+**What was there.** §808's one rule (`results/domain/public-name.ts#publicResultName`): a published result carries a name only for a confirmed runner who ticked, registered under a notice that describes the results (or asked since, §879), not a special guest the event hides; a runner the club typed only with an agreement a staff member recorded (§810). §910's Administrator ticks only ever hide.
+
+**Decision.**
+
+- **«Arată numele tuturor alergătorilor confirmați, peste bifele lor»** — a box and one «Salvează» on «Clasament»'s «Pe pagina evenimentului» card, under «Clasamentul e public», drawn for the Administrators alone and asserted again in the service (`results.ts#setResultsAllNames`, `canPublishResults`; FORBIDDEN otherwise, BR-REQ-060-01), on a race alone (`RESULTS_NOT_OPEN`). Asked first both ways: on, «Ei nu și-au dat acordul: decizia și răspunderea sunt ale clubului»; off, that the others show again as «Participant #număr». One audit row per change, `event_results.all_names_changed` with `{ on }`, never a name; a press that changes nothing writes nothing. The public cache is dropped, as the publish tick drops it.
+- **The column** `events.results_all_names`, boolean, false (migration `0228_results_all_names`, expand only): never carried by a duplicate, a repeat or a JSON file, like `results_published`.
+- **The rule** (`publicResultName`'s `allNames`): while on, a registered runner is named whatever they ticked and whatever notice they registered under, and a runner the club typed is named without a recorded agreement — not one whose number a confirmed registration took since. Every other condition stands: a notice that describes the results, a confirmed registration, a special guest the event hides stays nameless (§743), and the club's own «Apare pe site» unticked on a marked elite or ambassador still hides (§910). Results are still published only by «Clasamentul e public», under its own gates. «Clasament»'s «Pe site: …» line and its reason (§985) read the same input, so the backoffice shows what the site shows.
+- **The runner's own pages** («Gestionează înscrierea», «Înscrierile mele», §1016): while the switch is on, a runner off the list reads only that their name is not on the list — never «nici în clasament», which the results would contradict; a ticked runner under an older notice reads «și în clasament».
+- **Unchanged:** the public participant list (§32, §143) — the switch names nobody there; every runner's own tick and its record; the CSV export.
+
+**Legal texts.** None is edited. The approved privacy notice and the form promise a name in the results only to whoever ticked; the switch goes beyond that promise by the club's decision. `docs/OWNER-TODO.md` item 29 asks the lawyer for the basis and the notice's sentence.
+
+**Refused.** Ticking everybody's box: it would forge each person's answer and its record. The switch on the participant list. A switch that also undoes the club's own hides.
+
+**Not done.** Hiding one runner who objects while the switch is on: untick it and everybody is back to their own tick.
+
+**Tests.** `tests/unit/results/public-name-reason.test.ts` (every combination, now with `allNames`), `tests/unit/registrations/list-choice.test.ts`, `tests/integration/results/public-section.test.ts`; `confirmed-actions.test.ts` lists the new press.
+
+Migration `0228_results_all_names` (the number may move at landing).
+
+Baseline `BR-V4.97-2026-11-21`.

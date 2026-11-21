@@ -121,7 +121,7 @@ describe("§985 each reason names its case", () => {
     expect(publicNameReason({ ...named, noticeVersion: 1, resultsNameConsent: true, resultsConsentVersion: 2, firstResultsNameAskNoticeVersion: 3 })).toBe("olderNotice");
   });
 
-  it("under «Toate numele în clasament» (§NNN): no «olderNotice» and no «typedNoAgreement» — the club's own hide, the state and the guests still keep a name off", () => {
+  it("under «Toate numele în clasament» (§1029): no «olderNotice» and no «typedNoAgreement» — the club's own hide, the state and the guests still keep a name off", () => {
     expect(publicNameReason({ ...named, noticeVersion: 1, allNames: true })).toBe("named");
     expect(publicNameReason({ ...typed, typedNameAgreed: false, allNames: true })).toBe("named");
     expect(publicNameReason({ ...named, ticked: false, hiddenByClub: true, allNames: true })).toBe("hiddenByClub");

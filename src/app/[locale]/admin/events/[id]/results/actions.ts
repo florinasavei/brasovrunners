@@ -225,7 +225,7 @@ export async function setResultsPublishedAction(_previous: FormOutcome | null, f
 }
 
 /**
- * «Toate numele în clasament» (§NNN): the Administrator's tick (a box and one button, never a toggle), saved on its own with its own
+ * «Toate numele în clasament» (§1029): the Administrator's tick (a box and one button, never a toggle), saved on its own with its own
  * audit row, as «Clasamentul e public» is. The state the box shows is the state wanted; the service asserts the role again.
  */
 export async function setResultsAllNamesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

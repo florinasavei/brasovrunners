@@ -739,7 +739,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               {t("results.publish.adminOnly")}
             </Typography>
           )}
-          {/* «Toate numele în clasament» (§NNN): the Administrator's own switch, saved on its own and asked first both ways — it names runners who did not agree. */}
+          {/* «Toate numele în clasament» (§1029): the Administrator's own switch, saved on its own and asked first both ways — it names runners who did not agree. */}
           {mayPublish && (
             <ActionForm
               action={setResultsAllNamesAction}
