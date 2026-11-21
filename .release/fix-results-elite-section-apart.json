@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-elite-section-apart",
-  "decisionsTitle": "«Clasament elite» a section of its own, «Clasament open (fără cip)» its heading (amending §1031)",
-  "decisionsSection": "**The owner, race day 2026-11-21, once §1031 was live:** «nu e clară secțiunea … trebuie pus separat».\n\n**Decision.** The elites' table is no longer an `h3` inside «Clasament»: it is a fold of its own under it, with its own `h2` «Clasament elite (fără cip)» and a stronger border, FIRST — «vreau să fie TOP!» — above the open one, which reads «Clasament open (fără cip)» while «Toate numele» is on. The page also reads a cached answer from before §1031 (no `separateRows`) as no elites rather than failing.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
-  "changelogLine": "- **«Clasament elite» apart** — its own section under «Clasament open (fără cip)». §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Clasament elite» a section of its own"
-}
