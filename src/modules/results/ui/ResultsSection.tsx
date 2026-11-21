@@ -135,6 +135,12 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           {line}
         </Typography>
 
+        {results.manualTime && (
+          <Typography variant="body2" color="text.secondary" data-testid="results-manual-time" sx={{ pb: 1 }}>
+            {t("results.manualTime")}
+          </Typography>
+        )}
+
         {/* While the race runs (§985): the clock, with its line, under «Publicat …». */}
         {live && <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={t("results.live")} />}
 
