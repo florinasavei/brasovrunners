@@ -280,16 +280,16 @@ describe("§809 «Clasament» on the event page — in Romanian", () => {
     expect(html).toMatch(/<details[^>]*\sopen/);
   });
 
-  it("offers the filter: a chip per category present with «Toate» first, and a numeric box named for the number", async () => {
+  it("offers the filter: a chip per sex present («doar feminin și masculin») with «Toate» first, and a numeric box named for the number", async () => {
     await publishedRace();
     const html = await section();
     expect(html).toContain('data-testid="results-filter"');
     const chips = [...html.matchAll(/data-testid="results-category-chip"[^>]*>[\s\S]*?<\/label>/g)].map((match) => match[0].replace(/<[^>]+>/g, "").replace(/^[^>]*>/, "").trim());
-    expect(chips).toEqual(["Toate", "Feminin, 30-39 ani", "Feminin, 40-49 ani", "Feminin, 50-59 ani", "Masculin, 30-39 ani"]);
+    expect(chips).toEqual(["Toate", "Feminin", "Masculin"]);
     expect(html).toMatch(/type="radio"/);
     // Each chip wears a glyph before its words, like the listing's (the sex of the category; «Toate» a group).
     const chipHtml = [...html.matchAll(/data-testid="results-category-chip"[^>]*>[\s\S]*?<\/label>/g)].map((match) => match[0]);
-    expect(chipHtml).toHaveLength(5);
+    expect(chipHtml).toHaveLength(3);
     for (const chip of chipHtml) expect(chip).toMatch(/<svg[^>]*aria-hidden="true"/);
     expect(html).toContain("Caută după număr");
     expect(html).toMatch(/inputMode="numeric"|inputmode="numeric"/);

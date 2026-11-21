@@ -912,6 +912,8 @@
     "results": {
       "title": "Clasament",
       "titleNoChip": "Clasament open (fără cip)",
+      "sexFemale": "Feminin",
+      "sexMale": "Masculin",
       "eliteTitle": "Clasament elite (fără cip)",
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",

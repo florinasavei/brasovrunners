@@ -912,6 +912,8 @@
     "results": {
       "title": "Results",
       "titleNoChip": "Open results (no chip)",
+      "sexFemale": "Women",
+      "sexMale": "Men",
       "eliteTitle": "Elite results (no chip)",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",

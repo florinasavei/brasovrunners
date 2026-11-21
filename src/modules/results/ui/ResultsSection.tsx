@@ -96,7 +96,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const categoryLabel = await categoryLabeller(locale, results.ageBandStarts);
 
   const { rows } = results;
-  const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
+  // The filter's chips: «Feminin» and «Masculin» alone — the owner, race day 2026-11-21: «vreau doar feminin și masculin, atât!» (§NNN).
+  const categories = categoriesPresent(rows.map((row) => row.sex)).map((key) => ({ key, label: key === "FEMALE" ? t("results.sexFemale") : t("results.sexMale"), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
   // Ticked before the race (§985), the results have been on the page since its start, not since the tick.
   const shownSince = resultsShownSince(results.publishedAt, event.startsAt);
@@ -174,7 +175,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       {list.map((row) => {
         const finished = row.status === "FINISHED";
         return (
-          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.categoryKey ?? ""} data-status={row.status}>
+          <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status}>
             <td data-col="place" data-testid="result-place">
               {finished && row.positionOverall !== null ? (
                 row.positionOverall
