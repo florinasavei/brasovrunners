@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.01-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V5.02-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.01-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.02-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31978,3 +31978,11 @@ Baseline `BR-V5.01-2026-11-21`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.01-2026-11-21`.
+
+## 1035. «Clasament»'s headers in the cells' order (amending §809)
+
+**The owner, 2026-11-21:** «ai încurcat bib cu nume». On a wide screen the public results' header read «Loc · BIB · Nume» over cells drawn place, name, number: the name sat under «BIB» and the number under «Nume». The headers now follow the cells — «Loc · Nume · BIB · Timp · Categorie». The phone's stacked rows were right already (grid areas).
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.02-2026-11-22`.

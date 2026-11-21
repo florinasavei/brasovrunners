@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.02` | «Clasament»'s headers in the cells' order (§1035) |
 | `BR-V5.01` | «Clasament»'s filter: Feminin and Masculin alone (§1033) · «Ritm mediu» on the results, «Distanța parcursă» on one result (§1034) |
 | `BR-V5.00` | «Clasament elite» a section of its own (§1032) |
 | `BR-V4.99` | Race day: results first on the site, elites apart, «fără cip», a public comment on one result (§1031) |
