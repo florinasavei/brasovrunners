@@ -480,6 +480,8 @@ export type ResultRunner = {
     gunTimeMs: number | null;
     chipTimeMs: number | null;
     note: string | null;
+    /** «Comentariu public» (§NNN), or null. */
+    publicNote: string | null;
     positionOverall: number | null;
     positionSex: number | null;
     positionCategory: number | null;
@@ -519,6 +521,7 @@ function resultOf(row: EventResultRow, ranked: Ranked, staffNames: ReadonlyMap<s
     gunTimeMs: row.gunTimeMs,
     chipTimeMs: row.chipTimeMs,
     note: row.note,
+    publicNote: row.publicNote,
     positionOverall: ranked.positionOverall,
     positionSex: ranked.positionSex,
     positionCategory: ranked.positionCategory,
@@ -1720,6 +1723,53 @@ export async function setResultsAllNames<T extends Record<string, unknown>>(db: 
   return outcome;
 }
 
+/** The longest «Comentariu public» a result takes (§NNN): a sentence, not a story. */
+export const RESULT_PUBLIC_NOTE_MAX = 200;
+
+/**
+ * «Comentariu public» (§NNN — the owner, race day 2026-11-21: «trebuie să pot pune comentariu … să fie vizibil că Palici a făcut 11 km în total»):
+ * one line the Administrator writes on the result filed under a number, printed under its row on the site. The Administrators alone
+ * (FORBIDDEN otherwise, BR-REQ-060-01), on a race only (`RESULTS_NOT_OPEN`), on a number that has a result (`RESULT_NOTE_NO_ROW`); empty
+ * takes it off; longer than `RESULT_PUBLIC_NOTE_MAX` is refused (`RESULT_NOTE_TOO_LONG`). One audit row with the number, never the text;
+ * a save that changes nothing writes nothing.
+ */
+export async function setResultPublicNote<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; bibNumber: number; note: string },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  if (!canPublishResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not write a result's public note`);
+  assertIds(request.eventId);
+  const note = request.note.replace(/\s+/gu, " ").trim();
+  if (note.length > RESULT_PUBLIC_NOTE_MAX) throw new DomainError("RESULT_NOTE_TOO_LONG", "the public note is too long", ["publicNote"]);
+  if (!Number.isInteger(request.bibNumber) || request.bibNumber <= 0) throw new DomainError("RESULT_NOTE_NO_ROW", "no result under that number", ["bibNumber"]);
+  const outcome = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    const [row] = await tx
+      .select({ id: eventResults.id, publicNote: eventResults.publicNote })
+      .from(eventResults)
+      .where(and(eq(eventResults.eventId, event.id), eq(eventResults.bibNumber, request.bibNumber)))
+      .limit(1);
+    if (!row) throw new DomainError("RESULT_NOTE_NO_ROW", "no result under that number", ["bibNumber"]);
+    const next = note === "" ? null : note;
+    if (row.publicNote === next) return { changed: false };
+    await tx.update(eventResults).set({ publicNote: next, updatedAt: now, updatedByStaffUserId: actor.id }).where(eq(eventResults.id, row.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_results.public_note_changed",
+      entityType: "event",
+      entityId: event.id,
+      metadata: { bibNumber: request.bibNumber, on: next !== null },
+      now,
+    });
+    return { changed: true };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
 /**
  * «Categorii de vârstă» (§850): the ages the race's categories start at, saved by whoever enters results (FORBIDDEN otherwise), on a race
  * only (`RESULTS_NOT_OPEN`). `null` is the platform's bands — the column forgets the choice. The stored results are **ranked again in the
@@ -1880,6 +1930,8 @@ export type PublicResultRow = {
   categoryKey: string | null;
   /** The sex, from the registration or the typed row; null without one. */
   sex: SexChoice | null;
+  /** «Comentariu public» (§NNN): the Administrator's line under the row, or null. */
+  publicNote: string | null;
 };
 
 export type PublicEventResults = {
@@ -1971,6 +2023,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       status: eventResults.status,
       gunTimeMs: eventResults.gunTimeMs,
       chipTimeMs: eventResults.chipTimeMs,
+      publicNote: eventResults.publicNote,
     })
     .from(eventResults)
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
@@ -2013,6 +2066,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       positionCategory: ranked.positionCategory,
       categoryKey: ranked.categoryKey,
       sex: registered ? sexShown(row.registeredSex) : sexShown(row.typedSex),
+      publicNote: row.publicNote,
     };
   });
   return { rows: sheetOrder(shown), publishedAt: event.resultsPublishedAt, closesAt: publicListClosesAt(event, options.deadlines), ageBandStarts: event.resultAgeBands };

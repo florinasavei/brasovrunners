@@ -2882,6 +2882,8 @@
       "RESULTS_IMPORT_INVALID": "Fișierul CSV nu poate fi citit: {where}{problem}. Nimic nu s-a importat.",
       "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_TERMS": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi din șablon, în «Documente legale»; «Sarcini» spune cum.",
+      "RESULT_NOTE_TOO_LONG": "Comentariul are prea multe caractere: cel mult 200.",
+      "RESULT_NOTE_NO_ROW": "Nu e niciun rezultat cu acest număr. Scrie numărul de concurs al rândului din clasament.",
       "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
       "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
       "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi.",
@@ -12961,6 +12963,15 @@
         "stateFromStart": "Public de la start",
         "stateOff": "Nepublic"
       },
+      "publicNote": {
+        "title": "Comentariu public la un rezultat",
+        "help": "Apare sub rândul alergătorului în clasamentul de pe site, cu o steluță. Gol, comentariul dispare.",
+        "bib": "Numărul de concurs",
+        "note": "Comentariul",
+        "save": "Salvează comentariul",
+        "saving": "Se salvează…",
+        "current": "Comentarii puse: {list}"
+      },
       "allNames": {
         "label": "Arată numele tuturor alergătorilor confirmați, peste bifele lor",
         "help": "Bifat, clasamentul de pe site arată și numele celor care n-au bifat că vor să apară. Lista participanților nu se schimbă. E decizia clubului: nota de confidențialitate trebuie să o spună.",
@@ -16003,6 +16014,7 @@
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
+      "resultPublicNoteSaved": "Comentariul s-a salvat: apare sub rând în clasamentul de pe site.",
       "resultsAllNamesOn": "Clasamentul de pe site arată acum numele tuturor alergătorilor confirmați.",
       "resultsAllNamesOff": "Clasamentul de pe site arată din nou numele doar la cine a bifat sau a acceptat.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
@@ -16314,6 +16326,7 @@
     }
   },
   "Home": {
+    "results": "Vezi clasamentul: {title}",
     "meta": {
       "title": "{club} — alergări de grup",
       "description": "Alergările de grup ale clubului și evenimentele speciale, cu următoarea alergare și vremea la start."

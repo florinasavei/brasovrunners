@@ -87,7 +87,7 @@ const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSe
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { eventsWithResultsChip } = await import("@/modules/results/public-page");
 const { anonymousResultLabel } = await import("@/modules/results/domain/public-name");
-const { saveEventResults, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
+const { saveEventResults, setResultPublicNote, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -334,6 +334,31 @@ describe("§809 «Clasament» on the event page — in English", () => {
     expect(html).toContain("I want to appear on the participants &amp; results list");
     expect(html).toContain("Search by number");
     for (const word of ["Place", "BIB", "Name", "Time", "Category"]) expect(html).toContain(`>${word}<`);
+  });
+});
+
+describe("«Comentariu public» — an Administrator writes one line under one result on the site", () => {
+  it("prints the line under the row with an asterisk, takes it off when emptied, and records the number but never the text", async () => {
+    await publishedRace();
+    expect(await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "  a făcut 11 km în total  " }, AFTER_THE_RACE)).toEqual({ changed: true });
+    const html = await section();
+    expect(html).toContain('data-testid="result-public-note"');
+    expect(html).toContain("* a făcut 11 km în total");
+    expect(await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "a făcut 11 km în total" }, AFTER_THE_RACE)).toEqual({ changed: false });
+    const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "event_results.public_note_changed"));
+    expect(audits).toHaveLength(1);
+    expect(JSON.stringify(audits[0].metadata)).not.toContain("11 km");
+    await setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "" }, AFTER_THE_RACE);
+    expect(await section()).not.toContain('data-testid="result-public-note"');
+  });
+
+  it("is the Administrators' alone, refuses a number with no result and a line past 200 characters", async () => {
+    await publishedRace();
+    for (const role of ["MODERATOR", "DEV"] as const) {
+      await expect(setResultPublicNote(db, { ...admin, role }, { eventId: raceId, bibNumber: 101, note: "x" }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    await expect(setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 777, note: "x" }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_NOTE_NO_ROW" });
+    await expect(setResultPublicNote(db, admin, { eventId: raceId, bibNumber: 101, note: "x".repeat(201) }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_NOTE_TOO_LONG" });
   });
 });
 

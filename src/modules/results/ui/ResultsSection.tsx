@@ -241,6 +241,15 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                         {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}
                       </Box>
                     )}
+                    {/* «Comentariu public» (§NNN): the Administrator's line, an asterisk after the name and the words under it. */}
+                    {row.publicNote !== null && (
+                      <>
+                        {" *"}
+                        <Box component="span" data-testid="result-public-note" sx={{ display: "block", typography: "body2", color: "text.secondary" }}>
+                          {`* ${row.publicNote}`}
+                        </Box>
+                      </>
+                    )}
                   </td>
                   <td data-col="number" data-label={t("startList.columnNumber")} data-testid="result-number">
                     {numberOf(row.bibNumber)}

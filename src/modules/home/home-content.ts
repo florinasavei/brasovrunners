@@ -6,7 +6,8 @@ import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import type { PublicEvent } from "@/modules/events/repository";
 import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
-import { cachedPublishedPages, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedPastEvents, cachedPublishedPages, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { eventsWithResultsChip } from "@/modules/results/public-page";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { readPublicComing } from "@/modules/rsvp/public-page";
@@ -130,7 +131,17 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
     ? { id: "next-run", title: t("nextRun.title"), intro: null, cards: [cardOf(sections.next.id, nextMembers)], now, more: null }
     : null;
 
+  /*
+    «Clasament» first on the site (§NNN — the owner, race day 2026-11-21: «să fie primul pe site!»): the latest race whose results are on
+    show, as the listing's chip decides it (`eventsWithResultsChip`), as one button above everything else. Nothing while the database is away.
+  */
+  const recentPast = await readOrWhileAway(() => cachedPastEvents(locale, now, 5), [] as PublicEvent[]);
+  const candidates = [...upcoming, ...recentPast];
+  const withResults = await readOrWhileAway(() => eventsWithResultsChip(candidates, now), new Set<string>() as ReadonlySet<string>);
+  const resultsEvent = candidates.filter((event) => withResults.has(event.id)).sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())[0];
+
   const props: HomePageProps = {
+    results: resultsEvent ? { label: t("results", { title: resultsEvent.title }), slug: resultsEvent.slug } : null,
     hero: {
       headline: splitHeadline(lines.headline ?? t("hero.headline")),
       subline: lines.subline ?? t("hero.subline"),
