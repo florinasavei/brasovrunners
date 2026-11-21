@@ -10,7 +10,7 @@ import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
-import { chooseRecordedFinishTime, deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsAllNames, setResultPublicNote,
+import { chooseRecordedFinishTime, deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsAllNames, setResultPublicNote, setResultDistance,
   setResultsPublished } from "@/modules/results/results";
 import { CHOICE_BOX, EXTRA_ROWS, postedResultRows, readChosenTime, RESULTS_ALERT_ANCHOR, resultLineAnchor } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
@@ -240,6 +240,22 @@ export async function setResultsAllNamesAction(_previous: FormOutcome | null, fo
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? "resultsAllNamesOn" : "resultsAllNamesOff" });
+}
+
+/** «Distanța parcursă» (§NNN): one number and the kilometres, saved on their own; empty puts the race's distance back. */
+export async function setResultDistanceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const typed = field(form, "distanceKm").replace(",", ".").trim();
+  const km = typed === "" ? null : Number(typed);
+  let outcome: { changed: boolean };
+  try {
+    const actor = await requireStaff();
+    const meters = km === null ? null : Number.isFinite(km) ? Math.round(km * 1000) : -1;
+    outcome = await setResultDistance(getDb(), actor, { eventId: eventIdOf(form), bibNumber: Number(field(form, "bibNumber")), distanceMeters: meters }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return refused(error, form);
+  }
+  return backToPage(form, { saved: outcome.changed ? "resultDistanceSaved" : "resultsPublicUnchanged" });
 }
 
 /** «Comentariu public» (§1031): one number and one line, saved on their own; empty takes the line off. */

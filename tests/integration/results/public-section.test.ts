@@ -87,7 +87,7 @@ const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSe
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { eventsWithResultsChip } = await import("@/modules/results/public-page");
 const { anonymousResultLabel } = await import("@/modules/results/domain/public-name");
-const { saveEventResults, setResultPublicNote, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
+const { saveEventResults, setResultDistance, setResultPublicNote, setResultsAllNames, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -334,6 +334,29 @@ describe("§809 «Clasament» on the event page — in English", () => {
     expect(html).toContain("I want to appear on the participants &amp; results list");
     expect(html).toContain("Search by number");
     for (const word of ["Place", "BIB", "Name", "Time", "Category"]) expect(html).toContain(`>${word}<`);
+  });
+});
+
+describe("«Distanța parcursă» and «Ritm mediu» — the pace from the race's distance, or a runner's own", () => {
+  it("prints each finisher's average pace from the race's distance, and from the runner's own once an Administrator sets it", async () => {
+    await publishedRace();
+    await db.update(events).set({ distanceMeters: 10_000 }).where(eq(events.id, raceId));
+    let html = await section();
+    expect(html).toContain('data-testid="result-pace"');
+    expect(html).not.toContain("a parcurs");
+    expect(await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: 11_000 }, AFTER_THE_RACE)).toEqual({ changed: true });
+    html = await section();
+    expect(html).toContain("a parcurs 11 km");
+    expect(await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: 11_000 }, AFTER_THE_RACE)).toEqual({ changed: false });
+    await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: null }, AFTER_THE_RACE);
+    expect(await section()).not.toContain("a parcurs");
+  });
+
+  it("is the Administrators' alone and refuses a distance it cannot store", async () => {
+    await publishedRace();
+    await expect(setResultDistance(db, { ...admin, role: "MODERATOR" }, { eventId: raceId, bibNumber: 101, distanceMeters: 11_000 }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: 0 }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_DISTANCE_INVALID" });
+    await expect(setResultDistance(db, admin, { eventId: raceId, bibNumber: 777, distanceMeters: 5_000 }, AFTER_THE_RACE)).rejects.toMatchObject({ code: "RESULT_NOTE_NO_ROW" });
   });
 });
 

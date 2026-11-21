@@ -92,6 +92,7 @@ export type DomainErrorCode =
   | "RESULTS_NOT_OPEN"
   | "RESULT_NOTE_TOO_LONG"
   | "RESULT_NOTE_NO_ROW"
+  | "RESULT_DISTANCE_INVALID"
   // The «Categorii de vârstă» box of a race's results cannot be read (§850): the sentence names what is wrong; nothing was saved.
   | "RESULTS_AGE_BANDS"
   // «Cronometrare» (§850, §986): the number pressed at the line belongs to no confirmed registration and no line of the race's elite

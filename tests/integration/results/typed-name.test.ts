@@ -277,7 +277,7 @@ describe("§810 the public read: a typed runner is named only while the staff's 
     const result = await readPublicEventResults(db, raceId, options);
     expect(result?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[900, "Ion Vasile"], [901, null]]);
     // Nothing else of the read changed: the same keys, no agreement, no actor, no moment.
-    expect([...new Set(result?.rows.flatMap((row) => Object.keys(row)))].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "gunTimeMs", "name", "positionCategory", "positionOverall", "positionSex", "publicNote", "sex", "status"]);
+    expect([...new Set(result?.rows.flatMap((row) => Object.keys(row)))].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "distanceMeters", "gunTimeMs", "name", "ownDistance", "positionCategory", "positionOverall", "positionSex", "publicNote", "sex", "status"]);
     expect(JSON.stringify(result)).not.toMatch(/nameAgreed|Maria|agreed/i);
   });
 

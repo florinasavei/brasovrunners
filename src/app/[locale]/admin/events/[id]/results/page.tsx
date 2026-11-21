@@ -58,7 +58,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultPublicNoteAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
+import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultDistanceAction, setResultPublicNoteAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -236,6 +236,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
   // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
   // «Comentariu public» (§1031): the lines written so far, by number, so the Administrator sees what the site prints.
+  // «Distanța parcursă» (§NNN): the runners' own distances so far, by number.
+  const distances = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.distanceMeters ? [`#${runner.bibNumber}: ${runner.result.distanceMeters / 1000} km`] : []));
   const publicNotes = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.publicNote ? [`#${runner.bibNumber}: ${runner.result.publicNote}`] : []));
   const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
   const namedOnSite = onSite.filter((runner) => runner.named).length;
@@ -794,6 +796,30 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               {publicNotes.length > 0 && (
                 <Typography variant="body2" data-testid="results-public-notes">
                   {t("results.publicNote.current", { list: publicNotes.join(" · ") })}
+                </Typography>
+              )}
+            </Stack>
+          </ActionForm>
+          {/* «Distanța parcursă» (§NNN): one runner's own distance, the race's by default; the site's pace reads it. */}
+          <ActionForm
+            action={setResultDistanceAction}
+            confirm={[{ title: t("results.distance.confirmTitle"), body: t("results.distance.confirmBody"), confirmLabel: t("results.distance.save"), cancelLabel: confirm.cancel }]}
+            data-testid="results-distance-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={id} />
+            <Stack spacing={1.5} sx={{ mt: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t("results.distance.help")}
+              </Typography>
+              <RecallField name="bibNumber" label={t("results.publicNote.bib")} size="small" required inputMode="numeric" sx={{ maxWidth: 200 }} />
+              <RecallField name="distanceKm" label={t("results.distance.km")} size="small" inputMode="decimal" sx={{ maxWidth: 200 }} />
+              <Box>
+                <GlyphSubmitButton icon="save" variant="outlined" label={t("results.distance.save")} pendingLabel={t("results.publicNote.saving")} />
+              </Box>
+              {distances.length > 0 && (
+                <Typography variant="body2" data-testid="results-distances">
+                  {t("results.distance.current", { list: distances.join(" · ") })}
                 </Typography>
               )}
             </Stack>

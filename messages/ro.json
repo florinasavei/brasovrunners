@@ -925,6 +925,8 @@
       "columnName": "Nume",
       "columnTime": "Timp",
       "columnCategory": "Categorie",
+      "pace": "Ritm mediu: {pace} min/km",
+      "ownDistance": "a parcurs {km} km",
       "chipTime": "Timp cip: {time}",
       "categoryPlace": "loc {position}",
       "noCategory": "Fără categorie",
@@ -2887,6 +2889,7 @@
       "RESULTS_IMPORT_INVALID": "Fișierul CSV nu poate fi citit: {where}{problem}. Nimic nu s-a importat.",
       "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_TERMS": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi din șablon, în «Documente legale»; «Sarcini» spune cum.",
+      "RESULT_DISTANCE_INVALID": "Distanța trebuie să fie un număr de kilometri, între 0,001 și 100.",
       "RESULT_NOTE_TOO_LONG": "Comentariul are prea multe caractere: cel mult 200.",
       "RESULT_NOTE_NO_ROW": "Nu e niciun rezultat cu acest număr. Scrie numărul de concurs al rândului din clasament.",
       "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
@@ -12968,6 +12971,14 @@
         "stateFromStart": "Public de la start",
         "stateOff": "Nepublic"
       },
+      "distance": {
+        "help": "Distanța parcursă de un alergător, dacă e alta decât a cursei (de ex. 11 pentru 11 km). Gol, revine distanța cursei. Ritmul mediu de pe site se calculează din ea.",
+        "km": "Distanța (km)",
+        "save": "Salvează distanța",
+        "confirmTitle": "Schimbi distanța alergătorului?",
+        "confirmBody": "Ritmul lui mediu de pe site se calculează din distanța nouă.",
+        "current": "Distanțe puse: {list}"
+      },
       "publicNote": {
         "title": "Comentariu public la un rezultat",
         "help": "Apare sub rândul alergătorului în clasamentul de pe site, cu o steluță. Gol, comentariul dispare.",
@@ -16021,6 +16032,7 @@
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
+      "resultDistanceSaved": "Distanța s-a salvat: ritmul mediu de pe site o folosește.",
       "resultPublicNoteSaved": "Comentariul s-a salvat: apare sub rând în clasamentul de pe site.",
       "resultsAllNamesOn": "Clasamentul de pe site arată acum numele tuturor alergătorilor confirmați.",
       "resultsAllNamesOff": "Clasamentul de pe site arată din nou numele doar la cine a bifat sau a acceptat.",

@@ -72,6 +72,11 @@ export const eventResults = pgTable(
      * result, printed under the row on the site with an asterisk. Null is none. Never the internal `note` above, which stays the staff's.
      */
     publicNote: text("public_note"),
+    /**
+     * «Distanța parcursă» (§NNN — the owner, race day 2026-11-21: «să pot scrie și total distanță parcursă … by default distanța cursei … apoi
+     * să fie average pace»): the metres this runner covered, set by an Administrator when it differs from the race's; null is the race's own.
+     */
+    distanceMeters: integer("distance_meters"),
     positionOverall: integer("position_overall"),
     positionSex: integer("position_sex"),
     positionCategory: integer("position_category"),

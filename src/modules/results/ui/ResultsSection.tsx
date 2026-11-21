@@ -86,6 +86,17 @@ export default async function ResultsSection({ event }: { event: ResultsEvent })
   return <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={null} />;
 }
 
+/** Minutes and seconds per kilometre, `5:07` (§NNN): the time over the distance, rounded to the second. */
+function formatPace(gunTimeMs: number, meters: number): string {
+  const secondsPerKm = Math.round(gunTimeMs / 1000 / (meters / 1000));
+  return `${Math.floor(secondsPerKm / 60)}:${String(secondsPerKm % 60).padStart(2, "0")}`;
+}
+
+/** A distance in kilometres in the reader's language, one decimal at most: `11`, `8,8`. */
+function formatKm(meters: number, locale: string): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "ro-RO", { maximumFractionDigits: 1 }).format(meters / 1000);
+}
+
 async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { from: Date; until: Date } | null) {
   const results = await readEventResultsForPage(event, now);
   if (!results || results.rows.length === 0) return null;
@@ -217,6 +228,13 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   {row.chipTimeMs !== null && (
                     <Typography component="span" variant="caption" color="text.secondary" data-testid="result-chip-time" sx={{ display: "block", fontWeight: 400 }}>
                       {t("results.chipTime", { time: formatResultTime(row.chipTimeMs) })}
+                    </Typography>
+                  )}
+                  {/* «Ritm mediu» (§NNN): the gun time over the distance covered — the race's, or the runner's own when an Administrator set one. */}
+                  {row.gunTimeMs !== null && row.distanceMeters !== null && row.distanceMeters > 0 && (
+                    <Typography component="span" variant="caption" color="text.secondary" data-testid="result-pace" sx={{ display: "block", fontWeight: 400 }}>
+                      {t("results.pace", { pace: formatPace(row.gunTimeMs, row.distanceMeters) })}
+                      {row.ownDistance ? ` · ${t("results.ownDistance", { km: formatKm(row.distanceMeters, locale) })}` : null}
                     </Typography>
                   )}
                 </>
