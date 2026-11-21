@@ -494,7 +494,7 @@ export type ResultRunner = {
     note: string | null;
     /** «Comentariu public» (§1031), or null. */
     publicNote: string | null;
-    /** «Distanța parcursă» (§NNN): the runner's own metres, or null for the race's. */
+    /** «Distanța parcursă» (§1034): the runner's own metres, or null for the race's. */
     distanceMeters: number | null;
     positionOverall: number | null;
     positionSex: number | null;
@@ -1741,11 +1741,11 @@ export async function setResultsAllNames<T extends Record<string, unknown>>(db: 
   return outcome;
 }
 
-/** The longest «Distanța parcursă» a result takes (§NNN), in metres: a hundred kilometres. */
+/** The longest «Distanța parcursă» a result takes (§1034), in metres: a hundred kilometres. */
 export const RESULT_DISTANCE_MAX_METERS = 100_000;
 
 /**
- * «Distanța parcursă» (§NNN — the owner, race day 2026-11-21): the metres the runner filed under a number covered, when it differs from the
+ * «Distanța parcursă» (§1034 — the owner, race day 2026-11-21): the metres the runner filed under a number covered, when it differs from the
  * race's own; null puts the race's back. The Administrators alone (FORBIDDEN otherwise, BR-REQ-060-01), on a race (`RESULTS_NOT_OPEN`), on a
  * number that has a result (`RESULT_NOTE_NO_ROW`), between 1 m and `RESULT_DISTANCE_MAX_METERS` (`RESULT_DISTANCE_INVALID`). One audit row
  * `event_results.distance_changed` with `{ bibNumber, distanceMeters }`; a save that changes nothing writes nothing. The page's pace reads it.
@@ -1996,7 +1996,7 @@ export type PublicResultRow = {
   /** The sex, from the registration or the typed row; null without one. */
   sex: SexChoice | null;
   /** «Comentariu public» (§1031): the Administrator's line under the row, or null. */
-  publicNote: string | null;  /** «Distanța parcursă» (§NNN): the metres this runner covered — the race's own unless an Administrator set one —, or null without either. */
+  publicNote: string | null;  /** «Distanța parcursă» (§1034): the metres this runner covered — the race's own unless an Administrator set one —, or null without either. */
   distanceMeters: number | null;
   /** The distance is the runner's own, set by an Administrator, not the race's. */
   ownDistance: boolean;

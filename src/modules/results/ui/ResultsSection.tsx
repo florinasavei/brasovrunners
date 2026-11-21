@@ -87,13 +87,13 @@ export default async function ResultsSection({ event }: { event: ResultsEvent })
   return <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={null} />;
 }
 
-/** Seconds per kilometre of a finisher with a time and a distance (§NNN), or null — what «după ritm mediu» orders by. */
+/** Seconds per kilometre of a finisher with a time and a distance (§1034), or null — what «după ritm mediu» orders by. */
 function paceSeconds(row: { status: string; gunTimeMs: number | null; distanceMeters: number | null }): number | null {
   if (row.status !== "FINISHED" || row.gunTimeMs === null || row.distanceMeters === null || row.distanceMeters <= 0) return null;
   return Math.round(row.gunTimeMs / 1000 / (row.distanceMeters / 1000));
 }
 
-/** Minutes and seconds per kilometre, `5:07` (§NNN): the time over the distance, rounded to the second. */
+/** Minutes and seconds per kilometre, `5:07` (§1034): the time over the distance, rounded to the second. */
 function formatPace(gunTimeMs: number, meters: number): string {
   const secondsPerKm = Math.round(gunTimeMs / 1000 / (meters / 1000));
   return `${Math.floor(secondsPerKm / 60)}:${String(secondsPerKm % 60).padStart(2, "0")}`;
@@ -114,7 +114,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const categoryLabel = await categoryLabeller(locale, results.ageBandStarts);
 
   const { rows } = results;
-  // The filter's chips: «Feminin» and «Masculin» alone — the owner, race day 2026-11-21: «vreau doar feminin și masculin, atât!» (§NNN).
+  // The filter's chips: «Feminin» and «Masculin» alone — the owner, race day 2026-11-21: «vreau doar feminin și masculin, atât!» (§1033).
   const categories = categoriesPresent(rows.map((row) => row.sex)).map((key) => ({ key, label: key === "FEMALE" ? t("results.sexFemale") : t("results.sexMale"), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
   // Ticked before the race (§985), the results have been on the page since its start, not since the tick.
@@ -237,7 +237,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                       {t("results.chipTime", { time: formatResultTime(row.chipTimeMs) })}
                     </Typography>
                   )}
-                  {/* «Ritm mediu» (§NNN): the gun time over the distance covered — the race's, or the runner's own when an Administrator set one. */}
+                  {/* «Ritm mediu» (§1034): the gun time over the distance covered — the race's, or the runner's own when an Administrator set one. */}
                   {row.gunTimeMs !== null && row.distanceMeters !== null && row.distanceMeters > 0 && (
                     <Typography component="span" variant="caption" color="text.secondary" data-testid="result-pace" sx={{ display: "block", fontWeight: 400 }}>
                       {t("results.pace", { pace: formatPace(row.gunTimeMs, row.distanceMeters) })}

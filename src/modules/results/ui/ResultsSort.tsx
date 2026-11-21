@@ -6,7 +6,7 @@ import { useId, useState } from "react";
 import { FILTER_OPTION_SX } from "@/modules/events/ui/filter-chip-sx";
 
 /**
- * «Ordonează» (§NNN — the owner, race day 2026-11-21: «Pălici trebuie să fie primul după pace average, dar nu sortat implicit»): two radios
+ * «Ordonează» (§1034 — the owner, race day 2026-11-21: «Pălici trebuie să fie primul după pace average, dar nu sortat implicit»): two radios
  * over one results table, «după timp» first and chosen, «după ritm mediu» the other. It only moves the `<tr>`s the server drew — by their
  * `data-pace` (seconds per kilometre; a row without one goes last, in its first order) or back to `data-order` — and never draws or
  * removes one. Without a script the table stays as the server ordered it, by time.

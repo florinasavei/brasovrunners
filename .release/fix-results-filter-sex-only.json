@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-filter-sex-only",
-  "decisionsTitle": "«Clasament»'s filter: «Feminin» and «Masculin» alone (amending §809)",
-  "decisionsSection": "**The owner, race day 2026-11-21:** «vreau doar feminin și masculin, atât!».\n\n**Decision.** The public results' filter offers «Toate», «Feminin» and «Masculin» — one chip per sex present, never an age band; a row is filtered by its sex (`data-category` is the row's sex). The category column and the places by category are unchanged.\n\n**Tests.** `tests/integration/results/public-section.test.ts`, `tests/e2e/race-results-public.spec.ts`.",
-  "changelogLine": "- **Filtrul clasamentului: doar Feminin și Masculin.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Clasament»'s filter: Feminin and Masculin alone"
-}

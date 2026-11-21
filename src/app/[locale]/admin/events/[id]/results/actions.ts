@@ -242,7 +242,7 @@ export async function setResultsAllNamesAction(_previous: FormOutcome | null, fo
   return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? "resultsAllNamesOn" : "resultsAllNamesOff" });
 }
 
-/** «Distanța parcursă» (§NNN): one number and the kilometres, saved on their own; empty puts the race's distance back. */
+/** «Distanța parcursă» (§1034): one number and the kilometres, saved on their own; empty puts the race's distance back. */
 export async function setResultDistanceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const typed = field(form, "distanceKm").replace(",", ".").trim();
   const km = typed === "" ? null : Number(typed);

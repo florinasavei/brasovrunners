@@ -193,7 +193,7 @@ test.describe("§809 «Clasament» on the race's page", () => {
     await expect(chips.first()).toContainText("Toate");
     await expect(chips).toHaveCount(3);
     for (let index = 0; index < 3; index += 1) expect((await chips.nth(index).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
-    // «Doar feminin și masculin» (§NNN): one chip per sex, never a band.
+    // «Doar feminin și masculin» (§1033): one chip per sex, never a band.
     await section.getByRole("radio", { name: "Feminin" }).check();
     for (const bib of [101, 102]) await expect(row(page, bib)).toBeVisible();
     for (const bib of [103, 104]) await expect(row(page, bib)).toBeHidden();

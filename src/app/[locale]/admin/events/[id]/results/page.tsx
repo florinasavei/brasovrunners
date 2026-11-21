@@ -236,7 +236,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
   // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
   // «Comentariu public» (§1031): the lines written so far, by number, so the Administrator sees what the site prints.
-  // «Distanța parcursă» (§NNN): the runners' own distances so far, by number.
+  // «Distanța parcursă» (§1034): the runners' own distances so far, by number.
   const distances = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.distanceMeters ? [`#${runner.bibNumber}: ${runner.result.distanceMeters / 1000} km`] : []));
   const publicNotes = [...view.registered, ...view.typed].flatMap((runner) => (runner.result?.publicNote ? [`#${runner.bibNumber}: ${runner.result.publicNote}`] : []));
   const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
@@ -800,7 +800,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               )}
             </Stack>
           </ActionForm>
-          {/* «Distanța parcursă» (§NNN): one runner's own distance, the race's by default; the site's pace reads it. */}
+          {/* «Distanța parcursă» (§1034): one runner's own distance, the race's by default; the site's pace reads it. */}
           <ActionForm
             action={setResultDistanceAction}
             confirm={[{ title: t("results.distance.confirmTitle"), body: t("results.distance.confirmBody"), confirmLabel: t("results.distance.save"), cancelLabel: confirm.cancel }]}

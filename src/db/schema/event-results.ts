@@ -73,7 +73,7 @@ export const eventResults = pgTable(
      */
     publicNote: text("public_note"),
     /**
-     * «Distanța parcursă» (§NNN — the owner, race day 2026-11-21: «să pot scrie și total distanță parcursă … by default distanța cursei … apoi
+     * «Distanța parcursă» (§1034 — the owner, race day 2026-11-21: «să pot scrie și total distanță parcursă … by default distanța cursei … apoi
      * să fie average pace»): the metres this runner covered, set by an Administrator when it differs from the race's; null is the race's own.
      */
     distanceMeters: integer("distance_meters"),
