@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.97-2026-11-21 -->
+<!-- PROJECT_BASELINE: BR-V4.98-2026-11-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.97-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.98-2026-11-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -918,6 +918,7 @@ coffee is run on nothing.
 76. Given the race-day desk, when a desk role presses a runner's eye «Anonim» and confirms the question naming the person, then the person's own `list_opt_out` becomes false as their own doors set it, one `registration.list_consent_changed` audit row records `{ from, to, via: "DESK" }` with the staff member as the actor and never the name, and one `LIST_CONSENT_RECORDED` email is queued to the registration's address carrying the `LIST_CONSENT` link that takes the name off in one press; «Cu nume» → «Anonim» the same way, audited, with no email; the same wish twice writes nothing; a member is refused at the action and the service, and a cancelled or expired row, an address never confirmed and an event completed or cancelled are refused, nothing written; a name the Administrator hid with «Apare pe site» stays hidden (2026-11-20, `DECISIONS.md` §1017). Verification: integration `registrations/desk-list-wish.test.ts`, `db/list-consent-recorded-migration.test.ts`, unit `staff/list-wish-role.test.ts`.
 77. Given the platform's privacy notice template, when its section 4 is read, then the public list's paragraph says in both languages that the wish to appear by name may also be told to the organizers at the race-number desk, who record it, who and when kept, the person emailed at once with the link to withdraw it at any time; no version is approved or seeded by it (2026-11-20, `DECISIONS.md` §1017). Verification: unit `legal-documents/privacy-desk-list-wish.test.ts`.
 78. Given a race whose results are published and an Administrator ticked «Toate numele în clasament», then the results on the site name every confirmed runner whatever they ticked and whatever notice they registered under, and a runner the club typed without a recorded agreement — but never a special guest the event hides, a registration not confirmed, or a marked elite or ambassador the club unticked «Apare pe site» on; the public participant list does not change, and unticked the results follow each runner's own tick again (2026-11-21, `DECISIONS.md` §1029). Verification: unit `results/public-name-reason.test.ts`, `registrations/list-choice.test.ts`; integration `results/public-section.test.ts`.
+79. Given «Toate numele în clasament» on, then every registration marked «Elită» and every line of the race's elite list is left out of the ranking as if its «Apare în clasament» were unticked — absent from the public results, positions counted without it — and the results section says «Timpul a fost notat manual.»; unticked, both are as before (2026-11-21, `DECISIONS.md` §1030). Verification: integration `results/public-section.test.ts`.
 
 **Verification:** integration `privacy/public-surface.test.ts`
 
