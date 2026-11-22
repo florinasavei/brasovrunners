@@ -12951,6 +12951,15 @@
       "save": "Save all the results",
       "saving": "Saving…",
       "slow": "A long list of results takes a few seconds. Do not press again.",
+      "confirmSave": {
+        "title": "Save the results?",
+        "one": "One line changes. The places are worked out again as it saves.",
+        "few": "{count} lines change. The places are worked out again as it saves.",
+        "other": "{count} lines change. The places are worked out again as it saves.",
+        "confirm": "Save",
+        "more": "and {count} more",
+        "agreed": "Agreement to the name"
+      },
       "delete": "Delete",
       "deleteFor": "Delete the result: {runner}",
       "deleteTitle": "Delete the result?",

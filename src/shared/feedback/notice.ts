@@ -430,6 +430,12 @@ export type ConfirmSpec = {
    */
   changedFields?: ChangedFields;
   /**
+   * The rows the press changes, one line each with the boxes changed in it (§1047, «Salvează tot clasamentul»): a form of many
+   * rows, each box named `<row>.<box>`, compared with every row as the page drew it (`resolveChangedRows`). The body counts them
+   * and the lines name them. Nothing changed, no question: the press goes to the server, which says nothing changed.
+   */
+  changedRows?: ChangedRows;
+  /**
    * A box the reader ticks in the dialog before its confirm button answers (§888): the relay tick of a
    * one-press move from the internal list onto the official waiting list, «Confirm că această persoană mi-a
    * cerut să o înscriu…» (§33, binding). `field` is a hidden input of the form, posted empty as drawn; the
@@ -612,6 +618,62 @@ export function resolveChangedFields(spec: ConfirmSpec, valueOf: (field: string)
   if (names.length === 0) return null;
   const fields = names.map((field) => changed.labels[field]).join(changed.separator);
   return { ...spec, changedFields: undefined, body: spec.body.split("{fields}").join(fields) };
+}
+
+/**
+ * `ConfirmSpec.changedRows` (§1047; the owner, 2026-11-22, of «Salvează tot clasamentul»: «să confirm modificările salvate»): every row
+ * as the page drew it, the boxes compared with their words, how a row the page did not draw is named, and the body's three forms.
+ */
+export type ChangedRows = {
+  /** Each row the page drew: its key (`r[101]`), how the question names it (`#101 Ana Pop`), and its boxes' values as drawn. */
+  rows: readonly { key: string; label: string; was: Readonly<Record<string, string>> }[];
+  /** The boxes compared, by the short name after the row's key, each with its word, in the line's order: `{ time: "Timp" }`. */
+  boxes: Readonly<Record<string, string>>;
+  /**
+   * A posted row the page drew none of — a line added in the browser — is compared with empty boxes and named by this, each `{box}`
+   * its posted value (`#{bib} {name}`); `newFallback` when that leaves nothing but a `#`.
+   */
+  newLabel: string;
+  newFallback: string;
+  /** How a line's boxes are joined: `, `. */
+  separator: string;
+  /** The body's three forms, each with `{count}`, the rows changed. */
+  forms: Readonly<Record<CountForm, string>>;
+  locale: string;
+  /** At most this many lines; then `more`, with `{count}` the rows left unnamed. */
+  max: number;
+  more: string;
+};
+
+/**
+ * The dialog with its body counting the rows the press changes and a line per row — `#210 Ingrid Mutter: Timp, Stare` — or `null`
+ * when no row moved, and the caller lets the press through unasked. A box compares trimmed, as the server reads it; a box not posted
+ * (an unticked tick) is empty. A drawn row none of whose boxes is posted is not on the form, and never named. A spec without it,
+ * unchanged.
+ */
+export function resolveChangedRows(spec: ConfirmSpec, valueOf: (field: string) => string | null, names: Iterable<string>): ConfirmSpec | null {
+  const changed = spec.changedRows;
+  if (!changed) return spec;
+  const boxes = Object.keys(changed.boxes);
+  const rows = new Map(changed.rows.map((row) => [row.key, row]));
+  const added: string[] = [];
+  for (const name of names) {
+    const dot = name.lastIndexOf(".");
+    const key = name.slice(0, dot);
+    if (dot > 0 && boxes.includes(name.slice(dot + 1)) && !rows.has(key) && !added.includes(key)) added.push(key);
+  }
+  const posted = (key: string, box: string) => (valueOf(`${key}.${box}`) ?? "").trim();
+  const lines: string[] = [];
+  for (const { key, label, was } of [...changed.rows, ...added.map((key) => ({ key, label: "", was: {} as Readonly<Record<string, string>> }))]) {
+    if (!boxes.some((box) => valueOf(`${key}.${box}`) !== null)) continue;
+    const moved = boxes.filter((box) => posted(key, box) !== (was[box] ?? "").trim());
+    if (moved.length === 0) continue;
+    const named = rows.has(key) ? label : changed.newLabel.replace(/\{(\w+)\}/g, (_, box: string) => posted(key, box)).replace(/\s+/g, " ").trim();
+    lines.push(`${/^#?$/.test(named) ? changed.newFallback : named}: ${moved.map((box) => changed.boxes[box]).join(changed.separator)}`);
+  }
+  if (lines.length === 0) return null;
+  const shown = lines.length > changed.max ? [...lines.slice(0, changed.max), changed.more.replace("{count}", String(lines.length - changed.max))] : lines;
+  return { ...spec, changedRows: undefined, body: changed.forms[countForm(lines.length, changed.locale)].replace("{count}", String(lines.length)), lines: shown };
 }
 
 /** `ConfirmSpec.choice`: the hidden field both answers set, and the quiet answer's words. */

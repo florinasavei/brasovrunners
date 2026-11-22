@@ -12951,6 +12951,15 @@
       "save": "Salvează tot clasamentul",
       "saving": "Se salvează…",
       "slow": "Un clasament mare durează câteva secunde. Nu apăsa din nou.",
+      "confirmSave": {
+        "title": "Salvezi clasamentul?",
+        "one": "Se schimbă un rând. Locurile se calculează din nou la salvare.",
+        "few": "Se schimbă {count} rânduri. Locurile se calculează din nou la salvare.",
+        "other": "Se schimbă {count} de rânduri. Locurile se calculează din nou la salvare.",
+        "confirm": "Salvează",
+        "more": "și încă {count}",
+        "agreed": "Acordul pentru nume"
+      },
       "delete": "Șterge",
       "deleteFor": "Șterge rezultatul: {runner}",
       "deleteTitle": "Ștergi rezultatul?",

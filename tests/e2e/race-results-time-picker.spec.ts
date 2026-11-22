@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
+import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -211,6 +212,8 @@ test.describe("§999 «Timp» and «Timp cip», picked or typed", () => {
     await layoutHolds(page);
     await timeBox(page, 103).fill("4730");
     await timeBox(page, 103).press("Enter");
+    // Enter presses the form's own save, which asks first (§NNN), naming the rows it changes.
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 3 rezultate", { timeout: 30_000 });
     await hydrated(page);
 

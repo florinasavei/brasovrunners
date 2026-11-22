@@ -516,7 +516,10 @@ export type ResultRunner = {
 
 export type EventResultsView = {
   event: EventFacts;
-  /** Registered runners with a race number — the elites first, then the checked-in, then by number — each with its result when it has one. */
+  /**
+   * Registered runners with a race number — the finishers first, by time (§1047), then the elites, then the checked-in, then by number —
+   * each with its result when it has one.
+   */
   registered: ResultRunner[];
   /** Rows no registration holds the number of: typed by hand, or left nameless by an erased registration's. */
   typed: ResultRunner[];
@@ -528,6 +531,11 @@ export type EventResultsView = {
   ageBandStarts: readonly number[];
   ageBandsCustom: boolean;
 };
+
+/** A line's place in «Clasament»'s order (§1047): a «Sosit»'s time, or null for a line with none — no result, no time, another state. */
+function finishTimeOf(runner: ResultRunner): number | null {
+  return runner.result?.status === "FINISHED" ? runner.result.gunTimeMs : null;
+}
 
 /** A stored row as the page and the file show it: its own times and note, **the positions and the category read from the live answers** (`rankingOf`), and who last wrote it. */
 function resultOf(row: EventResultRow, ranked: Ranked, staffNames: ReadonlyMap<string, string>): NonNullable<ResultRunner["result"]> {
@@ -627,8 +635,14 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       lineFingerprint: resultLineFingerprint(row),
     });
   }
-  // The elites first — the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
-  registered.sort((a, b) => Number(b.elite) - Number(a.elite) || Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
+  // The finishers first, by time, fastest first — the owner, 2026-11-22: «trebuie să fie ordonați după clasament, efectiv după timp
+  // crescător» (§1047), the elites out of the ranking among them by their own time —; then everybody else as before the race: the elites —
+  // the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
+  registered.sort((a, b) => {
+    const [timeA, timeB] = [finishTimeOf(a), finishTimeOf(b)];
+    if (timeA !== null || timeB !== null) return timeA === null ? 1 : timeB === null ? -1 : timeA - timeB || a.bibNumber - b.bibNumber;
+    return Number(b.elite) - Number(a.elite) || Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber;
+  });
 
   const typed: ResultRunner[] = [...index.freeByBib.values()]
     .filter((row) => !taken.has(row.id) && !heldBibs.has(row.bibNumber))
