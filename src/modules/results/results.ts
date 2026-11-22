@@ -16,6 +16,7 @@ import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import type { RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
+import { stravaActivityUrl } from "@/modules/registrations/social-links";
 import { canEnterResults, canPublishResults, canRecordFinishes, canResetResults } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -1999,6 +2000,11 @@ export type PublicResultRow = {
    * **and recorded as having agreed** (§810); null otherwise, and the page says «Participant #bib» (`anonymousResultLabel`).
    */
   name: string | null;
+  /**
+   * «Activitatea ta pe Strava» (§1048): the runner's own link, `https://www.strava.com/activities/<id>` — only on a registered runner's
+   * row that `name` names; null otherwise.
+   */
+  stravaActivityUrl: string | null;
   status: ResultStatus;
   gunTimeMs: number | null;
   chipTimeMs: number | null;
@@ -2112,6 +2118,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       chipTimeMs: eventResults.chipTimeMs,
       publicNote: eventResults.publicNote,
       distanceMeters: eventResults.distanceMeters,
+      // «Activitatea ta pe Strava» (§1048): read for a row the page names, and printed only there.
+      stravaActivityUrl: registrations.stravaActivityUrl,
     })
     .from(eventResults)
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
@@ -2122,7 +2130,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
   const onShow = rows.filter((row) => ranking.get(row.bibNumber)?.outOfRanking !== true);
   const toPublic = (row: (typeof rows)[number], ranked: Ranked): PublicResultRow => {
     const registered = row.registrationId !== null && row.listOptOut !== null;
-    return {
+    const published: PublicResultRow = {
       bibNumber: row.bibNumber,
       name: publicResultName({
         registered,
@@ -2145,6 +2153,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         // «Toate numele» (§1029) names a typed row too — not one whose number a confirmed registration took since (the reason above).
         allNames: event.resultsAllNames && (row.registrationId !== null || runners.byBib.get(row.bibNumber)?.status !== "CONFIRMED"),
       }),
+      stravaActivityUrl: null,
       status: row.status,
       gunTimeMs: row.gunTimeMs,
       chipTimeMs: row.chipTimeMs,
@@ -2157,6 +2166,9 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       distanceMeters: row.distanceMeters ?? found.distanceMeters ?? null,
       ownDistance: row.distanceMeters !== null,
     };
+    // The runner's own link (§1048), only on a registered runner's row the rule above names — on a «Participant #bib» row it would say who
+    // that is —, and only a strava.com activity, checked again rather than trusted from the row.
+    return { ...published, stravaActivityUrl: registered && published.name !== null ? stravaActivityUrl(row.stravaActivityUrl) : null };
   };
   const shown = onShow.map((row) => toPublic(row, ranking.get(row.bibNumber) as Ranked));
   /*

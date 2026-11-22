@@ -932,6 +932,7 @@
       "pace": "Ritm mediu: {pace} min/km",
       "ownDistance": "a parcurs aproximativ {km} km",
       "chipTime": "Timp cip: {time}",
+      "stravaActivity": "Cursa lui {name} pe Strava",
       "categoryPlace": "loc {position}",
       "noCategory": "Fără categorie",
       "noPlace": "Fără loc",
@@ -1821,6 +1822,7 @@
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
           "results_name_consent_changed": "Alegerea pentru numele în clasament schimbată de participant",
+          "strava_activity_changed": "Linkul către activitatea Strava pus sau scos de participant",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
@@ -14781,6 +14783,19 @@
       "changed": "Am salvat alegerea ta pentru clasament.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou.",
       "otherAdult": "Acordul de a apărea cu numele în clasament îl dă doar persoana, din linkul înscrierii ei. De aici îl poți doar retrage."
+    },
+    "stravaActivity": {
+      "title": "Activitatea ta pe Strava",
+      "intro": "Linkul activității tale de la cursă apare în clasamentul publicat, lângă numele tău — doar dacă numele tău apare acolo.",
+      "label": "Linkul activității pe Strava",
+      "help": "Adresa paginii activității, de forma strava.com/activities/123456. Linkul strava.app.link din aplicație nu merge: deschide-l în browser și copiază adresa paginii.",
+      "save": "Salvează linkul",
+      "saving": "Se salvează…",
+      "remove": "Scoate linkul",
+      "changed": "Am salvat linkul activității.",
+      "invalid": "Linkul nu e al unei activități de pe strava.com. Copiază adresa paginii activității, de forma strava.com/activities/123456.",
+      "failed": "Nu am putut salva linkul. Încearcă din nou.",
+      "otherAdult": "Linkul îl pune doar persoana, din linkul înscrierii ei. De aici îl poți doar scoate."
     },
     "complete": {
       "title": "Completează-ți datele",

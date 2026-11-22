@@ -30,6 +30,22 @@ export function publicStravaUrl(value: string | null | undefined): string | null
   return profile ? `https://www.strava.com/${profile[1]}/${profile[2]}` : null;
 }
 
+/**
+ * One activity on strava.com itself (§1048, «Activitatea ta pe Strava»): with or without the scheme and `www.`, anything after the
+ * number — `/overview`, a share query — dropped. Never the app's `strava.app.link` share links: a public page never prints a
+ * redirector beside a runner's name (§500), so the runner is told to open it and copy the strava.com address.
+ */
+const STRAVA_ACTIVITY = /^(?:https?:\/\/)?(?:www\.)?strava\.com\/activities\/(\d{1,20})(?:[/?#]\S*)?$/i;
+
+/**
+ * A Strava activity normalised to `https://www.strava.com/activities/<id>`, or null for anything else. The registration page writes
+ * only this; the public results check again rather than trust the row, as `publicStravaUrl` does.
+ */
+export function stravaActivityUrl(value: string | null | undefined): string | null {
+  const activity = value ? STRAVA_ACTIVITY.exec(value.trim()) : null;
+  return activity ? `https://www.strava.com/activities/${activity[1]}` : null;
+}
+
 /** The Instagram profile a public page may link, or null — the username's shape checked again, as above. */
 export function publicInstagramUrl(handle: string | null | undefined): string | null {
   return handle && INSTAGRAM_HANDLE.test(handle) ? instagramProfileUrl(handle) : null;
