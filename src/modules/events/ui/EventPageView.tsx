@@ -65,6 +65,11 @@ import type { PreviewDoor } from "./registration-door";
 import ShareLinks from "./ShareLinks";
 import EventFeedbackButton from "@/modules/feedback/ui/EventFeedbackButton";
 import ResultsSection from "@/modules/results/ui/ResultsSection";
+import { readEventResultsForPage } from "@/modules/results/public-page";
+import { cachedPublishedAlbums } from "@/modules/public-cache/reads";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import AlbumGrid from "@/app/[locale]/gallery/AlbumGrid";
+import EventTabs, { type EventTabLinks, EventTabPanel } from "./EventTabs";
 import StartList from "./StartList";
 import { readStartListCount } from "./start-list-head";
 
@@ -199,6 +204,20 @@ export default async function EventPageView({
     : dated && !membersOnly && visit && event.eventStatus === "SCHEDULED" && dated.startsAt.getTime() > now.getTime()
       ? await readStartListCount(dated).then((count) => (count !== null && count > 0 ? { count, href: "#start-list-title" } : null))
       : null;
+  /*
+    The tabs (§1049): «Clasament» once the published results have a row — the section's own read (`readEventResultsForPage`, the public
+    cache, so the section below reads it again for nothing) —, «Galerie foto» with a published album of this event (the gallery's own
+    cached list, filtered here). A visit's page only, never a members' event (§552) or the preview before saving (§579); while the
+    database is away, neither.
+  */
+  const resultsTab =
+    dated && !membersOnly && visit ? ((await readOrWhileAway(() => readEventResultsForPage(dated, now), null))?.rows.length ?? 0) > 0 : false;
+  const albums = visit && !membersOnly ? (await readOrWhileAway(() => cachedPublishedAlbums(locale), [])).filter((album) => album.eventId === event.id) : [];
+  const tabs: EventTabLinks = [
+    { key: "descriere", label: t("tabs.descriere") },
+    ...(resultsTab ? [{ key: "clasament" as const, label: t("tabs.clasament") }] : []),
+    ...(albums.length > 0 ? [{ key: "galerie" as const, label: t("tabs.galerie") }] : []),
+  ];
   return (
     <>
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
@@ -266,250 +285,270 @@ export default async function EventPageView({
         {event.title}
       </Typography>
 
-      {/* «Clasament» (§809), under `#clasament`, right under the title once published — the owner, race day 2026-11-21: «trebuie să fie
-          mai vizibil clasamentul!» (§1031); it was after the participation rules. Nothing at all while the results are not public. */}
-      {dated && !membersOnly && visit && <ResultsSection event={dated} />}
-
-      {/* The description, in the slot the editor's order implies (§187): the long one when it has
-          words, the summary otherwise, and then a wordless long description's picture. Shared
-          with the preview so the two cannot show it in different places. */}
-      <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
-
-      <Divider sx={{ my: { xs: DENSITY.gapSm, sm: 3 } }} />
-      {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
-          the address under the place. */}
-      <EventFacts event={event} now={now} stacked weather={weather} whoComes={whoComes} />
-
-      {/* The photographs notice and the group run's self-declaration were here, under the facts;
-          since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
-
-      {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
-      {/* In the preview before saving (§579) the draft's door, its button disabled. */}
-      <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
-
-      {/* «Cine vine (N)» of a race (§32, §250; moved up by §825 — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
-          list, right under the registration card — it was under «Condiții de participare», near the bottom. (A turn-up event's two bars are the last thing on the page, since 2026-10-20.)
-          Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
-          event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
-          the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
-      {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
-
-      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768), right under «Cine vine» (the owner, 2026-11-03: «ar trebui
-          să fie mai sus un pic, fix sub cine vine»; it was after the programme): one line and one button to the volunteers' own
-          page — the form is no longer here. A visit's page only, and only where that page would answer 200 (the page decides,
-          from the one read both share) — the preview before saving reads no public cache and takes no name. */}
-      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
-
-      {/* «Înscrie-te la tombolă» (§984): one calm link while the raffle's sign-up is open — the page decides, from the one gate. */}
-      {visit?.raffle && !membersOnly && <RaffleCallout slug={slug} />}
-
-      {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
-          ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card
-          asks, from the public cache, and draws nothing otherwise). A visit's page only; never on a members' event, never in the preview before saving. */}
-      {visit?.volunteersList && !membersOnly && (
-        <VolunteersList eventId={event.id} locale={locale} startsAt={event.startsAt} offerOpen={visit.volunteersList.offerOpen} now={now} />
-      )}
-
-      {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
-          and the notice that describes it is approved. A corrected address is timed from the
-          render the person is correcting, not from the redirect. */}
-      {visit?.interestBox && (
-        <RegistrationInterestForm
-          locale={locale}
-          slug={slug}
-          renderedAt={visit.interestRenderedAt}
-          outcome={visit.interestOutcome}
-        />
-      )}
-
-      {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
-      {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
-        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
-          <RegistrationSteps
-            folded
-            reminderHoursBefore={event.reminderHoursBefore}
-            // The waiting list's step speaks of a full event, places counted (`0`): the organizers' words while none reaches the line by itself (§908).
-            byItself={offersByItself(event, 0)}
-            settings={preview?.steps}
-            window={
-              (() => {
-                // "Confirm a week before" only while that week is ahead (§104).
-                const w = dated && confirmationWindow(dated);
-                return dated && w && w.opensAt.getTime() > now.getTime()
-                  ? {
-                      opensDays: event.confirmationOpensDaysBefore,
-                      deadlineDays: event.confirmationDeadlineDaysBefore,
-                      // «Eliberează singur locurile nesemnate la termen» (§914): the unsigned place goes at the deadline.
-                      releases: event.releasesUnsignedAtDeadline === true && windowDeadlineOf(dated) !== null,
-                    }
-                  : null;
-              })()
-            }
-          />
-        </Box>
-      )}
-
-      {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
-      <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
-        <ShareLinks
-          url={eventPageUrl(env.APP_BASE_URL, locale, slug)}
-          title={event.title}
-          imageHref={`/${locale}/events/${slug}/share-image`}
-          fileName={instagramFileName(slug)}
-          // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
-          shareable={!membersOnly}
-          calendar={
-            dated && calendarEntry ? {
-              // A members' file is the twin's, per request (§552): the static one reads the public row alone.
-              icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
-              // The event's own five doors (§767): Google's and the two Outlooks' add links, built from `calendarEntry`.
-              googleUrl: googleCalendarUrl(calendarEntry, { locale, t }),
-              outlookUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "personal"),
-              outlookWorkUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "work"),
-              // The file's address to copy (§674): not for a members' event, whose file opens only with a member's session.
-              fileAddress: membersOnly ? undefined : eventCalendarFileUrl(env.APP_BASE_URL, locale, slug),
-            } : undefined
-          }
-        />
-      </Box>
-
-      {/* The address is not repeated here: it is the second line of "Unde" in the facts above
-          (§356), under the place's name, which is the one link to the map. */}
-
-      {/* "Traseul" (§387), under `#route`: the route / training description with the route's own
-          links first — the route link, the GPX, the map. The facts' route row points here. Not
-          between the facts and the registration button, which stays where a phone finds it; the
-          first section after them. Nothing at all when this language has no description. */}
-      <EventRoute
-        descriptionJson={event.routeDescriptionJson}
-        links={event.links}
-        routeUrl={event.routeUrl}
-        routeMaps={event.routeMaps}
-        routeGpx={event.routeGpx}
-        locale={locale}
-        heading={t("routeSection")}
-        openRouteLabel={t("openRoute")}
-        kindLabels={linkKindLabels}
-        mapWords={t.raw("routeMaps") as RouteMapWords}
-        profile={
-          // «Arată profilul traseului pe pagină» (§802, §805): the chart needs the club's tick as well as a GPX that parses.
-          elevation && event.showRouteProfile !== false
-            ? {
-                data: elevation,
-                // The route's length as the club typed it: the chart spans it, so a pin's kilometre and the line agree.
-                distanceMeters: event.distanceMeters ?? null,
-                markers: profileMarkers(checkpoints, locale),
-                words: t.raw("profile") as ElevationProfileWords,
-              }
-            : null
-        }
-      />
-
-      {/* «Puncte pe traseu» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
-          what there is and the cut-off of each point, and the finish when the event has a time limit.
-          Nothing at all when the club has put none. */}
-      <EventCheckpoints
-        checkpoints={withCutoffClocks(checkpoints, dated)}
-        finish={dated ? checkpointFinish(dated) : { km: null, limit: null, minutes: null }}
-        locale={locale}
-      />
-
-      {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
-          because most of them are the route again — the GPX, a map — and before the programme.
-          With a route section, the GPX and the map are drawn there instead (§387). Nothing at all
-          when the event has none left to show. */}
-      <EventLinks
-        links={event.links}
-        locale={locale}
-        heading={t("links.heading")}
-        kindLabels={linkKindLabels}
-        routeSection={hasRouteSection(event, isStorageConfigured())}
-      />
-
-      {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
-      <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
+      {/* «Clasament» (§809) under the title while it has no row yet: nothing to see — at most the silent clock that refreshes the page
+          while the race runs (§985). Once it has rows it is the «Clasament» tab below (§1049). */}
+      {dated && !membersOnly && visit && !resultsTab && <ResultsSection event={dated} />}
 
       {/*
-        «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
-        rules, the minimum age (§505), the photographs notice and a group run's self-declaration, in that order, under one
-        fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
-        is on all of them (§421), so the fold is never empty.
-
-        A native `<details>` in the start list's outlined shape (`StartList`), working without
-        JavaScript; its title is a real `h2` inside the `<summary>`, so it stays in a screen
-        reader's list of headings while the fold is shut (§336), and the parts under it are
-        `h3`s. The emails, the calendar entry and the registration form link `#rules`, and a group
-        run's page is reached at `#declaratie`: a full navigation to either opens the fold through
-        the browser's own ancestor-details reveal, and `OpenFoldFromHash` (§336, the backoffice's
-        island, mounted here too) opens it for the browsers that do not and for the registration
-        form's client-side link, which never runs that algorithm.
+        «Descriere | Clasament | Galerie foto» (§1049; the owner, 2026-11-22: «aici vreau așa: tab-uri: Descriere, Clasament și Galerie
+        Foto»): everything below the title is «Descriere», the tab the page opens on; «Clasament» only once the published results have
+        a row, «Galerie foto» only with a published album of this event — the album's card, a link to its page. With the description
+        alone there is no row of tabs and the page is as it was.
       */}
-      <Box component="section" aria-labelledby="conditions-title" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
-        <Box
-          component="details"
-          id="conditions"
-          data-testid="conditions-fold"
-          sx={PUBLIC_FOLD_SX}
-        >
-          <Box component="summary">
-            <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-              <GavelIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-              {t("conditions.heading")}
-            </Typography>
-          </Box>
+      <EventTabs tabs={tabs}>
+        <EventTabPanel tab="descriere" tabs={tabs} label={t("tabs.label")}>
+          {/* The description, in the slot the editor's order implies (§187): the long one when it has
+              words, the summary otherwise, and then a wordless long description's picture. Shared
+              with the preview so the two cannot show it in different places. */}
+          <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
-          {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
-          {!isRichTextEmpty(readRichText(event.rulesJson)) && (
-            <Box component="section" id="rules" aria-labelledby="rules-title" sx={{ mt: 1 }}>
-              <Typography component="h3" id="rules-title" variant="h3" sx={{ fontSize: "1.0625rem", mb: 1 }}>
-                {t("rules")}
-              </Typography>
-              <RichText body={event.rulesJson} />
+          <Divider sx={{ my: { xs: DENSITY.gapSm, sm: 3 } }} />
+          {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
+              the address under the place. */}
+          <EventFacts event={event} now={now} stacked weather={weather} whoComes={whoComes} />
+
+          {/* The photographs notice and the group run's self-declaration were here, under the facts;
+              since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
+
+          {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
+          {/* In the preview before saving (§579) the draft's door, its button disabled. */}
+          <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
+
+          {/* «Cine vine (N)» of a race (§32, §250; moved up by §825 — the owner, 2026-10-19: «am citit în „zig-zag" și am sărit peste secțiune»): the public
+              list, right under the registration card — it was under «Condiții de participare», near the bottom. (A turn-up event's two bars are the last thing on the page, since 2026-10-20.)
+              Nothing at all unless this event publishes one (BR-REQ-039-01); nobody registers before the date is announced (§533), so an undated
+              event has no list; nor a members' event (§552), where the public list would be a public disclosure on a page that is not public; nor
+              the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
+          {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
+
+          {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768), right under «Cine vine» (the owner, 2026-11-03: «ar trebui
+              să fie mai sus un pic, fix sub cine vine»; it was after the programme): one line and one button to the volunteers' own
+              page — the form is no longer here. A visit's page only, and only where that page would answer 200 (the page decides,
+              from the one read both share) — the preview before saving reads no public cache and takes no name. */}
+          {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
+
+          {/* «Înscrie-te la tombolă» (§984): one calm link while the raffle's sign-up is open — the page decides, from the one gate. */}
+          {visit?.raffle && !membersOnly && <RaffleCallout slug={slug} />}
+
+          {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
+              ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card
+              asks, from the public cache, and draws nothing otherwise). A visit's page only; never on a members' event, never in the preview before saving. */}
+          {visit?.volunteersList && !membersOnly && (
+            <VolunteersList eventId={event.id} locale={locale} startsAt={event.startsAt} offerOpen={visit.volunteersList.offerOpen} now={now} />
+          )}
+
+          {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
+              and the notice that describes it is approved. A corrected address is timed from the
+              render the person is correcting, not from the redirect. */}
+          {visit?.interestBox && (
+            <RegistrationInterestForm
+              locale={locale}
+              slug={slug}
+              renderedAt={visit.interestRenderedAt}
+              outcome={visit.interestOutcome}
+            />
+          )}
+
+          {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
+          {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
+            <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
+              <RegistrationSteps
+                folded
+                reminderHoursBefore={event.reminderHoursBefore}
+                // The waiting list's step speaks of a full event, places counted (`0`): the organizers' words while none reaches the line by itself (§908).
+                byItself={offersByItself(event, 0)}
+                settings={preview?.steps}
+                window={
+                  (() => {
+                    // "Confirm a week before" only while that week is ahead (§104).
+                    const w = dated && confirmationWindow(dated);
+                    return dated && w && w.opensAt.getTime() > now.getTime()
+                      ? {
+                          opensDays: event.confirmationOpensDaysBefore,
+                          deadlineDays: event.confirmationDeadlineDaysBefore,
+                          // «Eliberează singur locurile nesemnate la termen» (§914): the unsigned place goes at the deadline.
+                          releases: event.releasesUnsignedAtDeadline === true && windowDeadlineOf(dated) !== null,
+                        }
+                      : null;
+                  })()
+                }
+              />
             </Box>
           )}
 
-          {/* The minimum age (§505; §329, §410): set in the editor's «Regulamentul» for every type,
-              so it is read here with the rules rather than as a row of the facts. Nothing for no
-              minimum where nobody registers here. */}
-          <EventAgeRule event={event} />
+          {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
+          <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
+            <ShareLinks
+              url={eventPageUrl(env.APP_BASE_URL, locale, slug)}
+              title={event.title}
+              imageHref={`/${locale}/events/${slug}/share-image`}
+              fileName={instagramFileName(slug)}
+              // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
+              shareable={!membersOnly}
+              calendar={
+                dated && calendarEntry ? {
+                  // A members' file is the twin's, per request (§552): the static one reads the public row alone.
+                  icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
+                  // The event's own five doors (§767): Google's and the two Outlooks' add links, built from `calendarEntry`.
+                  googleUrl: googleCalendarUrl(calendarEntry, { locale, t }),
+                  outlookUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "personal"),
+                  outlookWorkUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "work"),
+                  // The file's address to copy (§674): not for a members' event, whose file opens only with a member's session.
+                  fileAddress: membersOnly ? undefined : eventCalendarFileUrl(env.APP_BASE_URL, locale, slug),
+                } : undefined
+              }
+            />
+          </Box>
 
-          {/* A group run's safety rules (§556): the essentials the optional declaration names, for
-              everybody who comes, signed or not — above the declaration. Nothing on any other type. */}
-          <GroupRunSafetyRules event={event} />
+          {/* The address is not repeated here: it is the second line of "Unde" in the facts above
+              (§356), under the place's name, which is the one link to the map. */}
 
-          {/* Photographs are a legitimate-interest processing, so every event page — not only the
-              gallery — says how to object (§323; the photographs amendment's item 6). */}
-          <EventPhotosNotice />
+          {/* "Traseul" (§387), under `#route`: the route / training description with the route's own
+              links first — the route link, the GPX, the map. The facts' route row points here. Not
+              between the facts and the registration button, which stays where a phone finds it; the
+              first section after them. Nothing at all when this language has no description. */}
+          <EventRoute
+            descriptionJson={event.routeDescriptionJson}
+            links={event.links}
+            routeUrl={event.routeUrl}
+            routeMaps={event.routeMaps}
+            routeGpx={event.routeGpx}
+            locale={locale}
+            heading={t("routeSection")}
+            openRouteLabel={t("openRoute")}
+            kindLabels={linkKindLabels}
+            mapWords={t.raw("routeMaps") as RouteMapWords}
+            profile={
+              // «Arată profilul traseului pe pagină» (§802, §805): the chart needs the club's tick as well as a GPX that parses.
+              elevation && event.showRouteProfile !== false
+                ? {
+                    data: elevation,
+                    // The route's length as the club typed it: the chart spans it, so a pin's kilometre and the line agree.
+                    distanceMeters: event.distanceMeters ?? null,
+                    markers: profileMarkers(checkpoints, locale),
+                    words: t.raw("profile") as ElevationProfileWords,
+                  }
+                : null
+            }
+          />
 
-          {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
-              organizer offered it and the club has approved the text of its surface. */}
-          {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
-          {/* Nothing to sign for while the date is to be announced (§533). */}
-          {/* Not in the preview before saving (§579): the offer reads the approved texts through the public cache. */}
-          {dated && visit && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={visit.declaratie} />}
-        </Box>
-        <OpenFoldFromHash />
-      </Box>
+          {/* «Puncte pe traseu» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
+              what there is and the cut-off of each point, and the finish when the event has a time limit.
+              Nothing at all when the club has put none. */}
+          <EventCheckpoints
+            checkpoints={withCutoffClocks(checkpoints, dated)}
+            finish={dated ? checkpointFinish(dated) : { km: null, limit: null, minutes: null }}
+            locale={locale}
+          />
 
-      {/* «Clasament» (§809, race results part 2), under `#clasament`, after the participation rules (the start list is above, since §825): a race's published results, and
-          nothing at all — no heading, no «în curând» — unless the Administrator published them, the notice and the terms in force
-          describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
-          conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
-          the public cache. Nor a members' event (§552): the results are a public disclosure, and this page is not public. */}
-      {/* «Clasament» moved up, right under the title (§1031). */}
+          {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
+              because most of them are the route again — the GPX, a map — and before the programme.
+              With a route section, the GPX and the map are drawn there instead (§387). Nothing at all
+              when the event has none left to show. */}
+          <EventLinks
+            links={event.links}
+            locale={locale}
+            heading={t("links.heading")}
+            kindLabels={linkKindLabels}
+            routeSection={hasRouteSection(event, isStorageConfigured())}
+          />
 
-      {/* «Confirmă prezența (opțional)» (§811) and «Cine vine (N)» — `#vin` and `#cine-vine`, two closed bars together, the LAST thing on the
-          event page (§825 amended; the owner, 2026-10-20: «adică trebuie să fie ultima chestie de pe site»): after the route, the checkpoints,
-          the links, the programme, the volunteers, «Condiții de participare» and the results, whatever the event fills in — just before the
-          footer. Only while the page decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a
-          members' event (§552). Both are handed the one read. The facts' «N vin · vezi cine» and the calendar and email links reach them by
-          their anchors, wherever they stand. */}
-      {visit?.rsvpBox && !membersOnly && (
-        <>
-          <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
-          <RsvpCount eventId={event.id} rsvps={rsvpsRead} />
-        </>
-      )}
+          {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
+          <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
+
+          {/*
+            «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
+            rules, the minimum age (§505), the photographs notice and a group run's self-declaration, in that order, under one
+            fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
+            is on all of them (§421), so the fold is never empty.
+
+            A native `<details>` in the start list's outlined shape (`StartList`), working without
+            JavaScript; its title is a real `h2` inside the `<summary>`, so it stays in a screen
+            reader's list of headings while the fold is shut (§336), and the parts under it are
+            `h3`s. The emails, the calendar entry and the registration form link `#rules`, and a group
+            run's page is reached at `#declaratie`: a full navigation to either opens the fold through
+            the browser's own ancestor-details reveal, and `OpenFoldFromHash` (§336, the backoffice's
+            island, mounted here too) opens it for the browsers that do not and for the registration
+            form's client-side link, which never runs that algorithm.
+          */}
+          <Box component="section" aria-labelledby="conditions-title" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
+            <Box
+              component="details"
+              id="conditions"
+              data-testid="conditions-fold"
+              sx={PUBLIC_FOLD_SX}
+            >
+              <Box component="summary">
+                <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+                  <GavelIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                  {t("conditions.heading")}
+                </Typography>
+              </Box>
+
+              {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
+              {!isRichTextEmpty(readRichText(event.rulesJson)) && (
+                <Box component="section" id="rules" aria-labelledby="rules-title" sx={{ mt: 1 }}>
+                  <Typography component="h3" id="rules-title" variant="h3" sx={{ fontSize: "1.0625rem", mb: 1 }}>
+                    {t("rules")}
+                  </Typography>
+                  <RichText body={event.rulesJson} />
+                </Box>
+              )}
+
+              {/* The minimum age (§505; §329, §410): set in the editor's «Regulamentul» for every type,
+                  so it is read here with the rules rather than as a row of the facts. Nothing for no
+                  minimum where nobody registers here. */}
+              <EventAgeRule event={event} />
+
+              {/* A group run's safety rules (§556): the essentials the optional declaration names, for
+                  everybody who comes, signed or not — above the declaration. Nothing on any other type. */}
+              <GroupRunSafetyRules event={event} />
+
+              {/* Photographs are a legitimate-interest processing, so every event page — not only the
+                  gallery — says how to object (§323; the photographs amendment's item 6). */}
+              <EventPhotosNotice />
+
+              {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
+                  organizer offered it and the club has approved the text of its surface. */}
+              {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
+              {/* Nothing to sign for while the date is to be announced (§533). */}
+              {/* Not in the preview before saving (§579): the offer reads the approved texts through the public cache. */}
+              {dated && visit && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={visit.declaratie} />}
+            </Box>
+            <OpenFoldFromHash />
+          </Box>
+
+          {/* «Clasament» (§809, race results part 2), under `#clasament`, after the participation rules (the start list is above, since §825): a race's published results, and
+              nothing at all — no heading, no «în curând» — unless the Administrator published them, the notice and the terms in force
+              describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
+              conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
+              the public cache. Nor a members' event (§552): the results are a public disclosure, and this page is not public. */}
+          {/* «Clasament» moved up, right under the title (§1031). */}
+
+          {/* «Confirmă prezența (opțional)» (§811) and «Cine vine (N)» — `#vin` and `#cine-vine`, two closed bars together, the LAST thing on the
+              event page (§825 amended; the owner, 2026-10-20: «adică trebuie să fie ultima chestie de pe site»): after the route, the checkpoints,
+              the links, the programme, the volunteers, «Condiții de participare» and the results, whatever the event fills in — just before the
+              footer. Only while the page decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a
+              members' event (§552). Both are handed the one read. The facts' «N vin · vezi cine» and the calendar and email links reach them by
+              their anchors, wherever they stand. */}
+          {visit?.rsvpBox && !membersOnly && (
+            <>
+              <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} rsvps={rsvpsRead} />
+              <RsvpCount eventId={event.id} rsvps={rsvpsRead} />
+            </>
+          )}
+        </EventTabPanel>
+        {dated && resultsTab && (
+          <EventTabPanel tab="clasament" tabs={tabs} label={t("tabs.label")}>
+            <ResultsSection event={dated} inTab />
+          </EventTabPanel>
+        )}
+        {albums.length > 0 && (
+          <EventTabPanel tab="galerie" tabs={tabs} label={t("tabs.label")}>
+            <AlbumGrid albums={Promise.resolve(albums)} />
+          </EventTabPanel>
+        )}
+      </EventTabs>
     </>
   );
 }

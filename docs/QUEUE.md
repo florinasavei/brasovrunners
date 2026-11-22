@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.16` | The event page's tabs «Descriere | Clasament | Galerie foto» (§1049) |
 | `BR-V5.15` | «Activitatea ta pe Strava»: the runner's own link beside their name in the published results (§1048) |
 | `BR-V5.14` | «Clasament»: the save floats at the top and asks with the rows it changes; the lines by time (§1047) |
 | `BR-V5.13` | «PR Kit»: the white logo's ground tick, transparent or on the club's colour (§1046) |

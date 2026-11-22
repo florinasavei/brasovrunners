@@ -110,6 +110,8 @@ async function textsNameResults(): Promise<boolean> {
 const resultsUrl = (eventId: string) => `/ro/admin/events/${eventId}/results`;
 const publicUrl = (slug: string) => `/ro/evenimente/${slug}`;
 const row = (page: Page, bib: number) => page.locator(`[data-testid="result-row"][data-bib="${bib}"]`);
+/** «Clasament» is a tab of the race's page (§1049): the page opens on «Descriere», and the tab brings the results forward. */
+const openResultsTab = (page: Page, timeout = 15_000) => page.locator('[data-testid="event-tab"][data-tab="clasament"]:visible').click({ timeout });
 
 /** Every request the page makes from now on, and those to its own address — what `router.refresh()` asks. */
 function recordRequests(page: Page, slug: string): { all: string[]; refreshes: () => number } {
@@ -195,6 +197,7 @@ test.describe("§985 «Clasament» public from the start, and live while the rac
       await page.clock.install();
       await page.goto(publicUrl(slug));
       await hydrated(page);
+      await openResultsTab(page);
       const section = page.getByTestId("results-section");
       await expect(section).toBeVisible();
       await expect(section.getByTestId("results-live")).toHaveText("Se actualizează singur la 30 de secunde.");
@@ -279,6 +282,8 @@ test.describe("§985 «Clasament» public from the start, and live while the rac
       await expect(page.getByTestId("results-section")).toHaveCount(0);
       await page.clock.fastForward(30_000);
       await page.clock.resume();
+      // The first row brings the row of tabs (§1049); the page stays on «Descriere» until the visitor opens «Clasament».
+      await openResultsTab(page, 30_000);
       const section = page.getByTestId("results-section");
       await expect(section).toBeVisible({ timeout: 30_000 });
       await expect(row(page, 101).getByTestId("result-name")).toHaveText(`Ana Popescu ${tag}`);
@@ -329,6 +334,7 @@ test.describe("§985 «Clasament» public from the start, and live while the rac
       // The page's clock reaches the start it was drawn with: it refreshes, and the ranking is there, live, in the same document.
       await page.clock.fastForward(31 * 60_000);
       await page.clock.resume();
+      await openResultsTab(page, 45_000);
       const section = page.getByTestId("results-section");
       await expect(section).toBeVisible({ timeout: 45_000 });
       await expect(row(page, 101).getByTestId("result-name")).toHaveText(`Ana Popescu ${tag}`);

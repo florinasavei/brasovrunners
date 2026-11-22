@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { fragmentId, openFoldsAround } from "./fold";
+import { fragmentId, openFoldsAround, showTabsAround } from "./fold";
 
 /**
  * Opens the backoffice fold the address's `#fragment` names (`DECISIONS.md` §336): a link to
@@ -20,6 +20,10 @@ import { fragmentId, openFoldsAround } from "./fold";
  * `<a>`, a full load the arrival run answers. The two delayed re-runs after arrival stop at the reader's
  * first wheel, touch, pointer press or key, so a reader who scrolls on is never pulled back. Everything else about a fold
  * stays a `<details>` that works with JavaScript off.
+ *
+ * The event page's tabs (§1049, `events/ui/EventTabs.tsx`) are brought forward the same way: the tab that holds the fragment's target
+ * (`showTabsAround`) — `#clasament` from the listing's card or the home page, `#rules` from an email — and, when the address loses its
+ * fragment (Back to the page's own address), the page's first tab again.
  */
 export default function OpenFoldFromHash() {
   const pathname = usePathname();
@@ -27,13 +31,17 @@ export default function OpenFoldFromHash() {
     // `pressed`: the reader pressed a link to this fragment, so the target comes into view even if nothing needed opening.
     const reveal = (pressed: boolean) => {
       const id = fragmentId(window.location.hash);
-      if (!id) return;
+      // No fragment: every tab box back to its first tab, which its CSS shows without a choice.
+      if (!id) {
+        document.querySelectorAll("[data-tabs][data-tab-active]").forEach((box) => box.removeAttribute("data-tab-active"));
+        return;
+      }
       const target = document.getElementById(id);
       if (!target) return;
-      // Scrolled when something opened (a fold that opened above the target may have moved it), when a
+      // Scrolled when something opened (a fold or a tab that opened above the target may have moved it), when a
       // link to it was pressed, or when it is off the screen — a load of `?eventId=…#panel`
       // can leave the page at the top on a phone (§740). A target already in view is left alone.
-      const opened = openFoldsAround(target) > 0;
+      const opened = openFoldsAround(target) + showTabsAround(target) > 0;
       const box = target.getBoundingClientRect();
       if (opened || pressed || box.top < 0 || box.top >= window.innerHeight) target.scrollIntoView({ block: "start" });
     };
