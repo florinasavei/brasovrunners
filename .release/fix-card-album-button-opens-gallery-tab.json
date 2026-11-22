@@ -1,9 +1,0 @@
-{
-  "branch": "fix/card-album-button-opens-gallery-tab",
-  "decisionsTitle": "The card's «Album foto» opens the event page's «Galerie foto» tab (amending §1039)",
-  "decisionsSection": "**The owner, 2026-11-22:** «butonul ăsta trebuie să mă ducă la „Galerie foto”… nu la ultimul album». An event has several albums (one per photographer and part of the race); the card's «Album foto» opened the newest alone. It now opens the event's page at `#galerie`, the «Galerie foto» tab that lists every published album of the event. The card still draws the button only while the event has a published album.\n\n**Tests.** `tests/unit/events/featured-card.test.ts`.",
-  "changelogLine": "- **Cardul cursei: «Album foto» deschide tab-ul «Galerie foto», cu toate albumele.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "The card's «Album foto» opens the «Galerie foto» tab"
-}
