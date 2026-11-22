@@ -926,6 +926,7 @@
       "columnPlace": "Loc",
       "columnName": "Nume",
       "columnTime": "Timp",
+      "columnTimeIndicative": "Timp (orientativ)",
       "columnCategory": "Categorie",
       "sort": {"label": "Ordonează:", "time": "după timp", "pace": "după ritm mediu"},
       "pace": "Ritm mediu: {pace} min/km",

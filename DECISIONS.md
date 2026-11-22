@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.10-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.11-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.10-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.11-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32070,3 +32070,11 @@ Baseline `BR-V5.09-2026-11-22`.
 **Tests.** `tests/unit/events`, `tests/integration/events`.
 
 Baseline `BR-V5.10-2026-11-22`.
+
+## 1044. «Timp (orientativ)» while the times were noted by hand (amending §809)
+
+**The owner, 2026-11-22:** «la clasament, musai să scriem la timp, în paranteză, „(orientativ)”». While «Toate numele în clasament» is on — the switch that already says «Timpul a fost notat manual.» — the public results' time column reads «Timp (orientativ)», on a wide screen in its header and on a phone before each time. Otherwise it reads «Timp», as before.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.11-2026-11-22`.
