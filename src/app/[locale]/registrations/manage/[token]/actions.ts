@@ -13,6 +13,7 @@ import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason"
 import { setPromoConsentFromManageLink } from "@/modules/registrations/promo-consent";
 import { reconfirmFromManageLink } from "@/modules/registrations/reconfirmation";
 import { setResultsNameConsentFromManageLink } from "@/modules/registrations/results-consent";
+import { setStravaActivityFromManageLink, STRAVA_ACTIVITY_INVALID } from "@/modules/registrations/strava-activity";
 import { checkInSelf, completeAnswersFromManageLink, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { answersRefusalParam, readPostedAnswers } from "@/modules/registrations/complete-answers";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
@@ -148,6 +149,28 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
     redirect(result.ok ? `${path}?results=1${who}#results` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?results=0${who}#results`);
+    throw error;
+  }
+}
+
+/**
+ * «Activitatea ta pe Strava» from the participant's own link (§NNN), per person like the switches above: read, not spent. The box's
+ * text as typed — empty takes the link off. Back at `#strava` with `strava=1` saved, `i` not a strava.com activity, `0` refused.
+ */
+export async function setStravaActivityFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  // «Scoate linkul» posts `remove`; «Salvează linkul» the box.
+  const typed = form.get("remove") === "1" ? "" : String(form.get("stravaActivity") ?? "");
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await setStravaActivityFromManageLink(getDb(), token, typed, new Date(), person);
+    redirect(result.ok ? `${path}?strava=1${who}#strava` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?strava=${error.code === "VALIDATION_ERROR" && error.fields.includes(STRAVA_ACTIVITY_INVALID) ? "i" : "0"}${who}#strava`);
     throw error;
   }
 }

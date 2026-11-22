@@ -12,6 +12,7 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -72,6 +73,7 @@ import {
   setListConsentFromManageAction,
   setPromoConsentFromManageAction,
   setResultsNameConsentFromManageAction,
+  setStravaActivityFromManageAction,
   withdrawFromManageAction,
 } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -105,6 +107,8 @@ type Props = {
     reconfirm?: string;
     /** The raffle card's outcome (§984): 1 signed up, w withdrawn, a the rules' tick missing, 0 refused. */
     raffle?: string;
+    /** «Activitatea ta pe Strava»'s outcome (§NNN): 1 saved, i not a strava.com activity, 0 refused. */
+    strava?: string;
   }>;
 };
 
@@ -133,7 +137,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused, reconfirm, raffle } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused, reconfirm, raffle, strava } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -655,6 +659,68 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       {t("resultsName.help")}
                     </Typography>
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
+                )}
+
+                {/*
+                  «Activitatea ta pe Strava» (§NNN): the person's own link to their race on Strava, printed in the published results beside a
+                  name they print. Asked of a confirmed runner from the race's start; a link already written is always offered the way out.
+                  Another adult's row offers only that: the link is theirs (§421). The token is read, never spent; one write and an audit
+                  row without the link.
+                */}
+                {(one.stravaActivityUrl !== null || (live?.stravaActivityAsked === true && one.status === "CONFIRMED")) && (
+                  <Box id={one.own ? "strava" : undefined} sx={{ mb: 2 }} data-testid="manage-strava-activity">
+                    {!family && (
+                      <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                        {t("stravaActivity.title")}
+                      </Typography>
+                    )}
+                    {answered && strava === "1" && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        {t("stravaActivity.changed")}
+                      </Alert>
+                    )}
+                    {answered && (strava === "i" || strava === "0") && (
+                      <Alert severity="warning" sx={{ mb: 2 }} data-testid="manage-strava-activity-refused">
+                        {t(strava === "i" ? "stravaActivity.invalid" : "stravaActivity.failed")}
+                      </Alert>
+                    )}
+                    <Typography sx={{ mb: 1.5 }}>{t("stravaActivity.intro")}</Typography>
+                    <form action={setStravaActivityFromManageAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="registrationId" value={one.id} />
+                      {one.anotherAdult ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="manage-strava-activity-other-adult">
+                          {t("stravaActivity.otherAdult")}
+                        </Typography>
+                      ) : (
+                        <>
+                          <TextField
+                            name="stravaActivity"
+                            type="url"
+                            label={t("stravaActivity.label")}
+                            defaultValue={one.stravaActivityUrl ?? ""}
+                            placeholder="https://www.strava.com/activities/…"
+                            helperText={t("stravaActivity.help")}
+                            fullWidth
+                            slotProps={{ htmlInput: { inputMode: "url", autoComplete: "off", spellCheck: false, maxLength: 300, "data-testid": "manage-strava-activity-box" } }}
+                          />
+                          <Box sx={{ mt: 1.5 }}>
+                            <SubmitButton label={t("stravaActivity.save")} pendingLabel={t("stravaActivity.saving")} size="medium">
+                              <SaveIcon />
+                            </SubmitButton>
+                          </Box>
+                        </>
+                      )}
+                      {one.stravaActivityUrl !== null && (
+                        <Button type="submit" name="remove" value="1" variant="text" color="inherit" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 1 }} data-testid="manage-strava-activity-remove">
+                          <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          {t("stravaActivity.remove")}
+                        </Button>
+                      )}
+                    </form>
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}

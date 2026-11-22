@@ -18,6 +18,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { publicListStillOpen, selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { findEventForRegistrationById, findEventNotificationDetails } from "@/modules/events/repository";
+import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   describeActionLink,
@@ -789,6 +790,11 @@ export async function readRaceDayContext(secret: string, now: Date) {
     listShown: event.participantListVisibility === "NAMES" && publicListStillOpen(event, now, deadlines),
     /** «Toate numele în clasament» on the event (§1029): what the list's block says of the results for a person off the list. Display only. */
     resultsAllNames: event.resultsAllNames,
+    /**
+     * «Activitatea ta pe Strava» is asked (§NNN): a race not cancelled, from its start — before it there is no activity to link. The
+     * write asks its own gate again (`strava-activity.ts`); this only decides whether the card is drawn.
+     */
+    stravaActivityAsked: !eventCancelled && eventTakesResults(event.type) && event.startsAt.getTime() <= now.getTime(),
     /**
      * The family marker (§543): the other people on this address at the event, names only — behind the
      * address's own link, the one place the names on it may be read (§389).

@@ -455,7 +455,7 @@ describe("§808 the public read: a name only for a registered runner who ticked"
     await published();
     const result = await readPublicEventResults(db, raceId, options);
     const keys = new Set(result?.rows.flatMap((row) => Object.keys(row)));
-    expect([...keys].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "distanceMeters", "gunTimeMs", "name", "ownDistance", "positionCategory", "positionOverall", "positionSex", "publicNote", "sex", "status"]);
+    expect([...keys].sort()).toEqual(["bibNumber", "categoryKey", "chipTimeMs", "distanceMeters", "gunTimeMs", "name", "ownDistance", "positionCategory", "positionOverall", "positionSex", "publicNote", "sex", "status", "stravaActivityUrl"]);
     expect(JSON.stringify(result)).not.toMatch(/secret|example\.org|@|registrationId|"note"/i);
   });
 

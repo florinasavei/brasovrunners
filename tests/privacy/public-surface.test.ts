@@ -640,6 +640,13 @@ describe("§810 what a race's public results may contain — a name only for a r
     expect(code).toMatch(/typedNameAgreed: [^,]*row\.typedNameAgreedAt !== null/);
   });
 
+  it("lets a runner's Strava activity reach a row only beside a name the rule gave, and only as a strava.com activity (§NNN)", () => {
+    const code = publicReadCode();
+    // «Activitatea ta pe Strava»: the link names its athlete, so a «Participant #bib» row never carries it — read once, behind the name.
+    expect(code.match(/row\.stravaActivityUrl/g) ?? [], "the link is read once").toHaveLength(1);
+    expect(code).toContain("stravaActivityUrl: registered && published.name !== null ? stravaActivityUrl(row.stravaActivityUrl) : null");
+  });
+
   it("returns a null name for a typed runner nobody recorded an agreement for, and the typed name only for one with the record", async () => {
     const [race] = await db
       .insert(events)
