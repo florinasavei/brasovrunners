@@ -926,6 +926,7 @@
       "columnPlace": "Place",
       "columnName": "Name",
       "columnTime": "Time",
+      "columnTimeIndicative": "Time (indicative)",
       "columnCategory": "Category",
       "sort": {"label": "Order:", "time": "by time", "pace": "by average pace"},
       "pace": "Average pace: {pace} min/km",
