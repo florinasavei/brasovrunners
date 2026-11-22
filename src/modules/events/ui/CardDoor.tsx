@@ -23,7 +23,7 @@ const GLYPHS = { page: ReadMoreIcon, results: LeaderboardIcon, album: PhotoLibra
  * A Server Component: the glyph is rendered here, never passed as a prop to a client component
  * (the hydration defect `shared/ui/action-icons.ts` documents), and the anchor needs no island.
  */
-export default function CardDoor({ href, label, glyph = "page" }: { href: string; label: string; glyph?: keyof typeof GLYPHS }) {
+export default function CardDoor({ href, label, glyph = "page", button = false }: { href: string; label: string; glyph?: keyof typeof GLYPHS; button?: boolean }) {
   const Glyph = GLYPHS[glyph];
   return (
     <Box
@@ -43,6 +43,10 @@ export default function CardDoor({ href, label, glyph = "page" }: { href: string
         color: "primary.main",
         textDecoration: "none",
         "&:hover": { textDecoration: "underline" },
+        // «Vezi clasamentul» and «Album foto» as real buttons (§NNN — the owner: «nu trebuie să fie pill-uri, ci butoane», on a row of their own).
+        ...(button
+          ? { px: 2, mx: 0, py: 1, borderRadius: 1, bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.dark", textDecoration: "none" } }
+          : {}),
         "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
       }}
     >

@@ -1,0 +1,9 @@
+{
+  "branch": "fix/event-card-results-album-buttons",
+  "decisionsTitle": "The card's «Vezi clasamentul» and «Album foto» as buttons on a row of their own (amending §1039)",
+  "decisionsSection": "**The owner, 2026-11-22:** «trebuie să fie mult mai vizibile și diferite și pe alt rând … nu trebuie să fie pill-uri, ci butoane». The card's door «Descrierea completă a evenimentului» stays a link; under it, on a row of their own, «Vezi clasamentul» (while the results are on show) and «Album foto» (once the album is published) are filled buttons in the primary colour (`CardDoor`'s `button`), each a 44-pixel target. Nothing else on the card changes.\n\n**Tests.** `tests/unit/events`, `tests/integration/events`.",
+  "changelogLine": "- **Cardul cursei: «Vezi clasamentul» și «Album foto» ca butoane, pe rând separat.** §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "The card's «Vezi clasamentul» and «Album foto» as buttons"
+}

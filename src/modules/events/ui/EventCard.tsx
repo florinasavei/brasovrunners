@@ -243,17 +243,23 @@ export default async function EventCard({
             pentru 'descrierea completa a evenimentului'") — the same door the series card wears,
             so the two kinds of card read alike. Beside it (§1039; the owner, 2026-11-22), the race's «Vezi clasamentul» while its
             results are on show — the chip's own rule — and «Album foto» once the event's album is published. */}
-        <Box sx={{ ...CARD_DOOR_SX, display: "flex", flexWrap: "wrap", columnGap: 2 }}>
+        <Box sx={CARD_DOOR_SX}>
           <CardDoor href={page} label={tEvent("series.fullDescription")} />
-          {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" />}
-          {albumSlug && (
-            <CardDoor
-              href={getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: albumSlug } } })}
-              label={tEvent("series.photoAlbum")}
-              glyph="album"
-            />
-          )}
         </Box>
+        {/* «Vezi clasamentul» and «Album foto» as buttons, on a row of their own under the door (§NNN). */}
+        {(resultsChip || albumSlug) && (
+          <Box data-testid="card-buttons" sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+            {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" button />}
+            {albumSlug && (
+              <CardDoor
+                href={getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: albumSlug } } })}
+                label={tEvent("series.photoAlbum")}
+                glyph="album"
+                button
+              />
+            )}
+          </Box>
+        )}
       </Box>
     </Card>
   );
