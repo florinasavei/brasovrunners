@@ -1552,8 +1552,15 @@
     {
       "idx": 221,
       "version": "7",
-      "when": 1795355017289,
-      "tag": "0231_gallery_external_url",
+      "when": 1795354738743,
+      "tag": "0231_registration_strava_activity",
+      "breakpoints": true
+    },
+    {
+      "idx": 222,
+      "version": "7",
+      "when": 1795362129689,
+      "tag": "0232_gallery_external_url",
       "breakpoints": true
     }
   ]

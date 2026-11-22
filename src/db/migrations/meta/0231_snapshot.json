@@ -1,5 +1,5 @@
 {
-  "id": "670841e6-315f-42b1-9f58-df7b3c4564ca",
+  "id": "cafd444d-0240-4469-a0d2-9c40e8938371",
   "prevId": "2d392aa7-83f4-4e64-97fb-bb60634e78b2",
   "version": "7",
   "dialect": "postgresql",
@@ -7222,12 +7222,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "external_url": {
-          "name": "external_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "taken_on": {
           "name": "taken_on",
           "type": "timestamp with time zone",
@@ -10184,6 +10178,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "strava_activity_url": {
+          "name": "strava_activity_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "list_opt_out": {
           "name": "list_opt_out",
