@@ -11,6 +11,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -189,6 +190,8 @@ export const GLYPHS = {
   // «N vin» on an upcoming turn-up event's card (§815): the group of people the page's own fold «Cine vine (N)» draws (`RsvpCount`) — the
   // same glyph for the same number. Always beside its word.
   coming: GroupsIcon,
+  // «Album foto» on the event's page and an album's «Vezi pozele pe Google Photos» (§1050): the gallery's own picture stack. Beside its word.
+  album: PhotoLibraryIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

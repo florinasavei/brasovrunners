@@ -46,6 +46,15 @@ export const albumFieldsSchema = z
         (value) => value === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
         "the event must be chosen from the list",
       ),
+    /** «Link Google Photos» (§1050): an `https://` address, or "" for none. */
+    externalUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .refine((value) => value === "" || /^https:\/\/\S+$/.test(value), "the link must be a whole address that starts with https://")
+      .transform((value) => (value === "" ? null : value))
+      .optional()
+      .transform((value) => value ?? null),
     /* Both languages in one save; the optional description is both or neither (§354, §315). */
     translations: z
       .object(
