@@ -125,6 +125,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
   // «Clasament elite» has no «Loc» column (the owner, 2026-11-22: «nu mai afișa coloana de „Loc” pentru elite»): `withPlace` false.
+  // «Timp (orientativ)» while the times were noted by hand (§NNN — the owner: «la timp, în paranteză, „(orientativ)”»).
+  const timeWord = results.manualTime ? t("results.columnTimeIndicative") : t("results.columnTime");
   const tableOf = (list: typeof rows, tableId: string, rowTestId: string, withPlace = true) => (
   <Box
     component="table"
@@ -190,7 +192,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           </Box>
         </th>
         <th scope="col" data-col="time">
-          {t("results.columnTime")}
+          {timeWord}
         </th>
         <th scope="col" data-col="category">
           {t("results.columnCategory")}
@@ -238,7 +240,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
               {numberOf(row.bibNumber)}
             </td>
             {/* A runner who did not finish has a word in this cell, not a time: the phone must not print «Timp» before «Abandon». */}
-            <td data-col="time" data-label={finished ? t("results.columnTime") : undefined} data-testid="result-time">
+            <td data-col="time" data-label={finished ? timeWord : undefined} data-testid="result-time">
               {finished ? (
                 <>
                   <span>{row.gunTimeMs !== null ? formatResultTime(row.gunTimeMs) : NO_VALUE}</span>

@@ -414,6 +414,7 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect(html).toContain("data-testid=\"results-elite-title\"");
     expect(html).toContain("Clasament open (introdus manual)");
     expect(html).toContain("Timpul a fost notat manual.");
+    expect(html).toContain("Timp (orientativ)");
     // «Clasament elite» has no «Loc» column (§1042 — the owner: «nu mai afișa coloana de „Loc” pentru elite»); the open one keeps it.
     const openAt = html.indexOf("Clasament open (introdus manual)");
     const elites = html.slice(html.indexOf('data-testid="results-elite-section"'), openAt);
