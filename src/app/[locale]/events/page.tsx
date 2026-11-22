@@ -41,7 +41,8 @@ import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import type { listUpcomingEvents, PublicEvent, PublicEventPage } from "@/modules/events/repository";
-import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUndatedEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedPublishedAlbums, cachedUndatedEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { albumSlugsByEvent } from "@/modules/content/gallery/repository";
 
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -192,6 +193,9 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
   const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
   const resultsFirst = pastRows.filter((event) => withResults.has(event.id) && !events.some((shown) => shown.id === event.id));
+  // «Album foto» (§1039): each event's published album, from the gallery's one cached read — the navigation's «Galerie» reads it on every
+  // page already — and nothing while the database is away.
+  const albums = await readOrWhileAway(async () => albumSlugsByEvent(await cachedPublishedAlbums(locale)), new Map<string, string>());
   /*
     «N vin» (§815): how many confirmed they come, for the events ahead whose page offers the answer — worked out once
     for the page from the cached notice flag and the one cached count read, never per card, and nothing read at all while no event
@@ -250,12 +254,12 @@ export default async function EventsPage({ params, query: asked }: Props) {
       {resultsFirst.length > 0 && (
         <Box component="ul" sx={CARD_GRID_SX} data-testid="listing-results-first">
           {resultsFirst.map((event, index) => (
-            <EventCard key={event.id} event={event} index={index} now={now} resultsChip />
+            <EventCard key={event.id} event={event} index={index} now={now} resultsChip albumSlug={albums.get(event.id)} />
           ))}
         </Box>
       )}
 
-      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} />
+      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} albums={albums} />
 
       {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
       <UndatedEvents rows={undatedShown} now={now} />
@@ -271,6 +275,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
         keep={layout === "list" ? { view: "list" } : {}}
         carry={listingFilterQuery(filter, "upcoming")}
         withResults={withResults}
+        albums={albums}
       />
 
       {/* The club's legal name and CIF in plain sight on the site's first page, as on «Contact»: Google for
@@ -438,6 +443,7 @@ async function ListingBody({
   undatedBelow = false,
   withResults,
   coming,
+  albums,
 }: Listing & {
   /** The filters the address names (§413), the same the panel was given. */
   filter: ListingFilter;
@@ -449,6 +455,8 @@ async function ListingBody({
   withResults: ReadonlySet<string>;
   /** «N vin» (§815): the events ahead whose page offers «Confirmă prezența (opțional)», with how many confirmed they come. */
   coming: ReadonlyMap<string, number>;
+  /** «Album foto» (§1039): each event's published album slug (`albumSlugsByEvent`). */
+  albums: ReadonlyMap<string, string>;
 }) {
   const t = await getTranslations("Events");
   const filtered = activeFilterCount(filter) > 0;
@@ -501,6 +509,7 @@ async function ListingBody({
           featured={{ raceWeekDays }}
           seriesDates={seriesOf(featured)}
           comingCount={coming.get(featured.id) ?? 0}
+          albumSlug={albums.get(featured.id)}
         />
       )}
       {/* A series is the series card, a single date the event's (§113, §366): one component, the one the home page draws (§726). */}
@@ -514,6 +523,7 @@ async function ListingBody({
           seriesDates={seriesOf(series.members[0])}
           resultsChip={series.members.length === 1 && withResults.has(series.members[0].id)}
           comingCount={series.members.length === 1 ? (coming.get(series.members[0].id) ?? 0) : 0}
+          albumSlug={series.members.length === 1 ? albums.get(series.members[0].id) : undefined}
         />
       ))}
     </Box>

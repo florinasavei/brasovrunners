@@ -34,6 +34,7 @@ function album(overrides: Partial<PublicAlbumSummary>): PublicAlbumSummary {
     coverWidth: null,
     coverHeight: null,
     eventTitle: null,
+    eventId: null,
     ...overrides,
   };
 }

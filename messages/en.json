@@ -599,7 +599,9 @@
       "lastLabel": "Last:",
       "allDatesCount": "Upcoming dates ({count})",
       "pastDatesCount": "The dates ({count})",
-      "fullDescription": "Full event description"
+      "fullDescription": "Full event description",
+      "seeResults": "See the results",
+      "photoAlbum": "Photo album"
     },
     "route": "Route",
     "routeSection": "The route",
