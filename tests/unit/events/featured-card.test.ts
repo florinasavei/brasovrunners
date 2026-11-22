@@ -195,7 +195,7 @@ describe("§470 the featured event is a card like the others", () => {
   });
 });
 
-describe("§NNN the card's doors: «Vezi clasamentul» and «Album foto» beside the full description", () => {
+describe("§1039 the card's doors: «Vezi clasamentul» and «Album foto» beside the full description", () => {
   const doors = (html: string) =>
     [...withoutStyles(html).matchAll(/<a\b[^>]*href="([^"]*)"[^>]*><svg\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>([^<]*)<\/a>/g)].map(([, href, label]) => `${label} → ${href}`);
   const doorCard = (props: { resultsChip?: boolean; albumSlug?: string | null }) =>

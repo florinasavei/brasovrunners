@@ -41,12 +41,12 @@ export type PublicAlbumSummary = {
   coverHeight: number | null;
   /** The linked event's title in this locale while published there; null for a free album (§434). */
   eventTitle: string | null;
-  /** That event's id under the same rule as `eventTitle` — null unless its title is shown — for the card's «Album foto» (§NNN). */
+  /** That event's id under the same rule as `eventTitle` — null unless its title is shown — for the card's «Album foto» (§1039). */
   eventId: string | null;
 };
 
 /**
- * Each event's album, by the event's id (§NNN): the newest when it has more than one — `listPublishedAlbums` is newest first, so the
+ * Each event's album, by the event's id (§1039): the newest when it has more than one — `listPublishedAlbums` is newest first, so the
  * first one seen wins. What the listing hands its cards as «Album foto».
  */
 export function albumSlugsByEvent(albums: readonly Pick<PublicAlbumSummary, "eventId" | "slug">[]): Map<string, string> {

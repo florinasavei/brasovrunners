@@ -193,7 +193,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
   const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
   const resultsFirst = pastRows.filter((event) => withResults.has(event.id) && !events.some((shown) => shown.id === event.id));
-  // «Album foto» (§NNN): each event's published album, from the gallery's one cached read — the navigation's «Galerie» reads it on every
+  // «Album foto» (§1039): each event's published album, from the gallery's one cached read — the navigation's «Galerie» reads it on every
   // page already — and nothing while the database is away.
   const albums = await readOrWhileAway(async () => albumSlugsByEvent(await cachedPublishedAlbums(locale)), new Map<string, string>());
   /*
@@ -455,7 +455,7 @@ async function ListingBody({
   withResults: ReadonlySet<string>;
   /** «N vin» (§815): the events ahead whose page offers «Confirmă prezența (opțional)», with how many confirmed they come. */
   coming: ReadonlyMap<string, number>;
-  /** «Album foto» (§NNN): each event's published album slug (`albumSlugsByEvent`). */
+  /** «Album foto» (§1039): each event's published album slug (`albumSlugsByEvent`). */
   albums: ReadonlyMap<string, string>;
 }) {
   const t = await getTranslations("Events");

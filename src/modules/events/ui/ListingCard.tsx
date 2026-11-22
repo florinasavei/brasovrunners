@@ -22,7 +22,7 @@ export type ListingCardProps = {
   resultsChip?: boolean;
   /** «N vin» (§815): how many confirmed they come to a single date the page offers the answer to (`EventCard`'s `comingCount`). A series card never wears it: its dates do. */
   comingCount?: number;
-  /** «Album foto» (§NNN): a single date's published album slug (`EventCard`'s `albumSlug`). A series card never wears it. */
+  /** «Album foto» (§1039): a single date's published album slug (`EventCard`'s `albumSlug`). A series card never wears it. */
   albumSlug?: string | null;
 };
 

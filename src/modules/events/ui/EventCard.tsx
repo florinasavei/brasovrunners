@@ -120,7 +120,7 @@ export default async function EventCard({
    */
   comingCount?: number;
   /**
-   * «Album foto» (§NNN): the slug of the event's published album in this language, the newest when it has more than one. The listing
+   * «Album foto» (§1039): the slug of the event's published album in this language, the newest when it has more than one. The listing
    * works it out once for the whole page from the gallery's cached read (`albumSlugsByEvent`); a card never asks the database. Absent:
    * no door.
    */
@@ -241,7 +241,7 @@ export default async function EventCard({
 
         {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
             pentru 'descrierea completa a evenimentului'") — the same door the series card wears,
-            so the two kinds of card read alike. Beside it (§NNN; the owner, 2026-11-22), the race's «Vezi clasamentul» while its
+            so the two kinds of card read alike. Beside it (§1039; the owner, 2026-11-22), the race's «Vezi clasamentul» while its
             results are on show — the chip's own rule — and «Album foto» once the event's album is published. */}
         <Box sx={{ ...CARD_DOOR_SX, display: "flex", flexWrap: "wrap", columnGap: 2 }}>
           <CardDoor href={page} label={tEvent("series.fullDescription")} />

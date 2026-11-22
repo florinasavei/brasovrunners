@@ -4,7 +4,7 @@ import ReadMoreIcon from "@mui/icons-material/ReadMore";
 import Box from "@mui/material/Box";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
-/** The door's glyph (§NNN): the page, its «Clasament» (the results chip's leaderboard), the event's album (the gallery's). */
+/** The door's glyph (§1039): the page, its «Clasament» (the results chip's leaderboard), the event's album (the gallery's). */
 const GLYPHS = { page: ReadMoreIcon, results: LeaderboardIcon, album: PhotoLibraryIcon } as const;
 
 /**

@@ -92,7 +92,7 @@ export default async function PastEvents({
   carry?: Record<string, string | string[]>;
   /** The events whose «Clasament» is on show (§809, `eventsWithResultsChip`), worked out once for the page: their cards wear the chip. */
   withResults?: ReadonlySet<string>;
-  /** «Album foto» (§NNN): each event's published album slug (`albumSlugsByEvent`), read once for the page. */
+  /** «Album foto» (§1039): each event's published album slug (`albumSlugsByEvent`), read once for the page. */
   albums?: ReadonlyMap<string, string>;
 }) {
   const filtered = activeFilterCount(filter) > 0;
