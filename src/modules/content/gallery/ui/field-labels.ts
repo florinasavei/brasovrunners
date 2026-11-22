@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 /** The label of every box on the album form, by the `name` it posts, for the refusal summary (§315). */
 export async function albumFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin.gallery");
-  const labels: Record<string, string> = { takenOn: t("fields.takenOn"), eventId: t("fields.event") };
+  const labels: Record<string, string> = { takenOn: t("fields.takenOn"), eventId: t("fields.event"), externalUrl: t("fields.externalUrl") };
   for (const locale of routing.locales) {
     const language = t(`language.${locale}`);
     for (const field of ["title", "slug"] as const) {

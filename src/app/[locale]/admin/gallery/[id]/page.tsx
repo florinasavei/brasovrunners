@@ -287,6 +287,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
             <AlbumFieldsForm
               takenOn={album.takenOn.toISOString().slice(0, 10)}
               eventId={album.eventId}
+              externalUrl={album.externalUrl}
               events={events}
               translations={translations}
               slugLocked={album.publishedAt !== null}

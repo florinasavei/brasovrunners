@@ -1,3 +1,5 @@
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -90,7 +92,7 @@ export default async function AlbumPage({ params }: Props) {
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
         {/* An album published before its photos (§1041) says they are coming, never «0 fotografii». */}
         {formatCalendarDay(album.takenOn, { locale, style: "long" })} ·{" "}
-        {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : t("comingSoon")}
+        {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : album.externalUrl ? t("onGooglePhotos") : t("comingSoon")}
         {album.event && (
           <>
             {" · "}
@@ -102,6 +104,16 @@ export default async function AlbumPage({ params }: Props) {
         <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, maxWidth: "60rem" }}>
           {album.description}
         </Typography>
+      )}
+
+      {/* «Link Google Photos» (§NNN): the photos where they live, one big button, in a new tab. */}
+      {album.externalUrl && (
+        <Box sx={{ mb: 3 }}>
+          <Button component="a" href={album.externalUrl} target="_blank" rel="noopener noreferrer" variant="contained" size="large" data-testid="album-external-link">
+            <PhotoLibraryIcon aria-hidden sx={{ mr: 1 }} />
+            {t("openExternal")}
+          </Button>
+        </Box>
       )}
 
       <Box

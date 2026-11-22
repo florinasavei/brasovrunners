@@ -81,6 +81,7 @@ export async function createAlbum<T extends Record<string, unknown>>(
       .values({
         takenOn: fields.takenOn,
         eventId: fields.eventId,
+        externalUrl: fields.externalUrl,
         createdByStaffUserId: input.actor.id,
         updatedByStaffUserId: input.actor.id,
         createdAt: now,
@@ -119,6 +120,7 @@ export async function saveAlbum<T extends Record<string, unknown>>(
       .set({
         takenOn: fields.takenOn,
         eventId: fields.eventId,
+        externalUrl: fields.externalUrl,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,

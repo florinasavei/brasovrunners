@@ -61,7 +61,7 @@ export default async function AlbumGrid({ albums: pending }: { albums: Promise<P
                   )}
                   <Typography variant="body2" color="text.secondary">
                     {formatCalendarDay(album.takenOn, { locale, style: "long" })} ·{" "}
-                    {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : t("comingSoon")}
+                    {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : album.externalUrl ? t("onGooglePhotos") : t("comingSoon")}
                   </Typography>
                 </CardContent>
               </CardLink>

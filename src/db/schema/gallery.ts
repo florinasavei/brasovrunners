@@ -63,6 +63,11 @@ export const galleryAlbums = pgTable(
 
     /** The event the photos are from, when they are; the album page links back to it. */
     eventId: uuid("event_id").references(() => events.id, { onDelete: "set null" }),
+    /**
+     * «Link Google Photos» (§NNN — the owner, 2026-11-22: «sunt poze pe Google Photos … vor fi vreo 7 albume»): the album's photos where
+     * they live, an `https://` address; the gallery's card and the album's page open it. Null: the photos are here, or none yet.
+     */
+    externalUrl: text("external_url"),
     /** When the photos were taken — what the public list orders by. */
     takenOn: timestamp("taken_on", { withTimezone: true }).notNull(),
     /** The photo the listing shows; null until one is chosen or the first is uploaded. */
