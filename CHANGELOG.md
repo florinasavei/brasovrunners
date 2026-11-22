@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.13-2026-11-22
+
+- **PR Kit: bifa «Cu fundal în culoarea clubului»** pe logo-ul alb: nebifat, previzualizarea pe tablă de șah și fișierele transparente; bifat, SVG, PNG și PDF alb pe culoarea clubului. §1046.
 ## BR-V5.12-2026-11-22
 
 - **Clasament: de ce timpii sunt orientativi; în «Alergări», cursa cu clasament e primul card din același grid.** §1045.

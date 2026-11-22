@@ -9,13 +9,17 @@ import {
   KIT_PUBLIC_PATH,
   LOGO_FORMATS,
   LOGO_INK_GROUND,
-  type LogoFormat,
+  type LogoGround,
+  type LogoInk,
+  type LogoShape,
   logoFileName,
+  logoGrounds,
   logoVariants,
   rgbOf,
   shownAddress,
   type StickerSheetKey,
 } from "@/modules/pr-kit/domain/kit";
+import LogoTile, { type LogoTileFace } from "@/modules/pr-kit/ui/LogoTile";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -44,9 +48,6 @@ const SHEET_GROUPS: ReadonlyArray<{ words: "withCode" | "logoOnly"; sheets: read
   { words: "logoOnly", sheets: ["logo-12", "logo-24", "logo-40", "logo-12-primary"] },
 ];
 
-/** A download's glyph: the PDF's own for a PDF, the arrow for a file to save. */
-const FORMAT_ICON = { svg: "download", png: "download", pdf: "pdf" } as const satisfies Record<LogoFormat, string>;
-
 /** A link a thumb must hit (BR-REQ-041-01 criterion 6). */
 const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
 
@@ -57,8 +58,8 @@ const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
  * again by every route a link below leads to (`modules/pr-kit/http.ts`, BR-REQ-060-01). The team's undertaking (§1006) stands
  * in front of it as in front of every page: `requireStaff` sends a colleague who owes it there.
  *
- * Nothing here writes: every link is a GET that hands a file out. The logo's tiles show the kit's own SVGs, each on the ground
- * it is meant for, read straight from the public `/brand/kit/` — the club's public logo, open to anybody, which the logo route
+ * Nothing here writes: every link is a GET that hands a file out. The logo's tiles (`LogoTile`) show the kit's own SVGs — the
+ * white one on a checkerboard, or on the club's colour with its tick (§1046) — read straight from the public `/brand/kit/` — the club's public logo, open to anybody, which the logo route
  * hands out only as an attachment under its slug name; the sticker sheets and the poster are drawn on request. The poster is
  * offered only while the club's YouTube address is set (`CLUB_YOUTUBE_URL`); until then one line says where it is set.
  */
@@ -72,6 +73,25 @@ export default async function PrKitPage({ params }: Props) {
   const t = await getTranslations("Admin");
   const youtube = env.CLUB_YOUTUBE_URL;
   const [red, green, blue] = rgbOf(PALETTE.primary);
+  /**
+   * A tile on one ground: its name, its picture and its three files. Transparent, the white one lies on the checkerboard (§1046)
+   * and the others on white, the ground they are meant for; on the club's colour, the white one's own `-on-primary` files.
+   */
+  const face = (shape: LogoShape, ink: LogoInk, ground: LogoGround): LogoTileFace => {
+    const words = { shape: t(`prKit.logo.shape.${shape}`), ink: t(`prKit.logo.ink.${ink}`) };
+    const name = ground === "primary" ? t("prKit.logo.tileOnPrimary", words) : t("prKit.logo.tile", words);
+    return {
+      name,
+      preview: `${KIT_PUBLIC_PATH}/${logoFileName(shape, ink, "svg", undefined, ground)}`,
+      ground: ground === "primary" ? LOGO_INK_GROUND.white : ink === "white" ? null : LOGO_INK_GROUND[ink],
+      downloads: LOGO_FORMATS.map((format) => ({
+        format,
+        href: `/api/admin/pr-kit/logo/${logoFileName(shape, ink, format, undefined, ground)}`,
+        text: t(`prKit.logo.format.${format}`),
+        label: t("prKit.logo.download", { name, format: t(`prKit.logo.format.${format}`) }),
+      })),
+    };
+  };
 
   return (
     <Stack spacing={3} data-testid="pr-kit">
@@ -86,36 +106,15 @@ export default async function PrKitPage({ params }: Props) {
 
       <Panel glyph="prLogo" title={t("prKit.logo.title")} intro={t("prKit.logo.intro")} introMore={t("prKit.logo.introMore")} id="logo" data-testid="pr-kit-logo">
         <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" } }}>
-          {logoVariants().map(({ shape, ink }) => {
-            const name = t("prKit.logo.tile", { shape: t(`prKit.logo.shape.${shape}`), ink: t(`prKit.logo.ink.${ink}`) });
-            return (
-              <Box key={`${shape}-${ink}`} data-testid="pr-kit-logo-tile" data-shape={shape} data-ink={ink} sx={{ minWidth: 0 }}>
-                {/* The variant on the ground it is meant for: the white one on the club's colour, the others on white. */}
-                <Box sx={{ bgcolor: LOGO_INK_GROUND[ink], border: 1, borderColor: "divider", borderRadius: 1, p: 2, aspectRatio: "5 / 2", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Box component="img" src={`${KIT_PUBLIC_PATH}/${logoFileName(shape, ink, "svg")}`} alt={name} sx={{ display: "block", width: "100%", height: "100%", objectFit: "contain" }} />
-                </Box>
-                <Typography variant="body2" sx={{ mt: 1, fontWeight: 500 }}>
-                  {name}
-                </Typography>
-                <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 1 }}>
-                  {LOGO_FORMATS.map((format) => (
-                    <GlyphButton
-                      key={format}
-                      icon={FORMAT_ICON[format]}
-                      href={`/api/admin/pr-kit/logo/${logoFileName(shape, ink, format)}`}
-                      variant="outlined"
-                      size="small"
-                      sx={TARGET_SX}
-                      aria-label={t("prKit.logo.download", { name, format: t(`prKit.logo.format.${format}`) })}
-                      data-testid={`pr-kit-logo-${format}`}
-                    >
-                      {t(`prKit.logo.format.${format}`)}
-                    </GlyphButton>
-                  ))}
-                </Stack>
-              </Box>
-            );
-          })}
+          {logoVariants().map(({ shape, ink }) => (
+            <LogoTile
+              key={`${shape}-${ink}`}
+              shape={shape}
+              ink={ink}
+              face={face(shape, ink, "none")}
+              onPrimary={logoGrounds(ink).includes("primary") ? { face: face(shape, ink, "primary"), tick: t("prKit.logo.onPrimary") } : undefined}
+            />
+          ))}
         </Box>
       </Panel>
 

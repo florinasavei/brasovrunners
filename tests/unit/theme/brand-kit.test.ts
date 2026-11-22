@@ -11,6 +11,7 @@ import {
   inPixels,
   kitColours,
   kitFileName,
+  kitGrounds,
   kitSvg,
   measureLogo,
   paddedFrame,
@@ -114,6 +115,46 @@ describe("BR-REQ-101-01 §1015 the kit's committed files", () => {
         for (let at = 0; at < data.length; at += 4) if (data[at + 3] === 255) opaque.add(`#${data.subarray(at, at + 3).toString("hex")}`);
         expect([...opaque]).toEqual([hex]);
       });
+    }
+  }
+
+  // §1046: the white also on the club's colour — the same SVG with a rectangle of the primary filling its frame, and its PNG
+  // opaque from edge to edge.
+  const primaryHex = kitColours(club.palette).find(({ key }: { key: string }) => key === "primary")?.hex ?? "no primary";
+  for (const shape of ["lockup", "mountains"] as const) {
+    for (const { key: ink, hex } of kitColours(club.palette)) {
+      for (const ground of kitGrounds(ink).filter((candidate: string) => candidate === "primary")) {
+        const svgName = kitFileName(club.slug, shape, ink, "svg", ground);
+        const pngName = kitFileName(club.slug, shape, ink, "png", ground);
+        const svg = readFileSync(path.join(ROOT, KIT_DIR, svgName), "utf8").replace(/\r\n/g, "\n");
+
+        it(`${svgName} is the ${ink} file with the frame filled in ${primaryHex}`, () => {
+          expect(svg, "the lockup or the palette changed since the kit was built — run yarn brand:assets").toBe(kitSvg(source, measured, shape, hex, primaryHex));
+          const viewBox = /viewBox="([^"]+)"/.exec(svg)?.[1] ?? "";
+          const [x, y, width, height] = viewBox.split(" ");
+          expect(svg).toContain(`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${primaryHex}"/>`);
+          // The drawing is the transparent file's, byte for byte, but for the rectangle.
+          expect(svg.replace(/\n {2}<rect [^>]*\/>/, "")).toBe(readFileSync(path.join(ROOT, KIT_DIR, kitFileName(club.slug, shape, ink, "svg")), "utf8").replace(/\r\n/g, "\n"));
+        });
+
+        it(`${pngName}: ${KIT_PNG_WIDTH} pixels wide, opaque everywhere, ${primaryHex} at the corners and ${hex} in the drawing`, async () => {
+          const { data, info } = await sharp(path.join(ROOT, KIT_DIR, pngName)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+          expect(info.width).toBe(KIT_PNG_WIDTH);
+          const [, , frameWidth, frameHeight] = paddedFrame(measured[shape].drawing);
+          expect(info.height).toBe(Math.round((KIT_PNG_WIDTH * frameHeight) / frameWidth));
+          let seeThrough = 0;
+          let inked = 0;
+          for (let at = 0; at < data.length; at += 4) {
+            if (data[at + 3] !== 255) seeThrough += 1;
+            if (`#${data.subarray(at, at + 3).toString("hex")}` === hex) inked += 1;
+          }
+          expect(seeThrough, "no pixel left transparent").toBe(0);
+          expect(inked, "the drawing in its ink").toBeGreaterThan(0);
+          for (const at of [0, (info.width - 1) * 4, (info.height - 1) * info.width * 4, data.length - 4]) {
+            expect(`#${data.subarray(at, at + 3).toString("hex")}`, `corner at ${at}`).toBe(primaryHex);
+          }
+        });
+      }
     }
   }
 

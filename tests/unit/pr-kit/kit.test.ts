@@ -6,6 +6,7 @@ import {
   kitColours,
   kitFileName,
   kitFiles,
+  kitGrounds,
 } from "../../../scripts/brand-kit.mjs";
 import {
   KIT_MARGIN,
@@ -16,6 +17,8 @@ import {
   LOGO_INKS,
   LOGO_SHAPES,
   logoFileName,
+  logoFiles,
+  logoGrounds,
   logoVariants,
   parseLogoFile,
   posterFileName,
@@ -54,15 +57,24 @@ describe("§1015 the PR kit's files and names", () => {
     expect(posterFileName("ro")).toBe(`${CLUB_SLUG}-youtube-poster-a4-ro.pdf`);
     // Another slug, another name: nothing of this club's is written in.
     expect(logoFileName("lockup", "primary", "svg", "someclub")).toBe("someclub-logo-primary.svg");
+    // §1046: the white on the club's colour, with the stickers' «on-primary» word.
+    expect(logoFileName("lockup", "white", "png", undefined, "primary")).toBe(`${CLUB_SLUG}-logo-white-on-primary-4000px.png`);
+    expect(logoFileName("mountains", "white", "pdf", "someclub", "primary")).toBe("someclub-mountains-white-on-primary.pdf");
     expect(stickerFileName("logo-12-primary", "someclub")).toBe("someclub-stickers-logo-12-per-sheet-on-primary.pdf");
   });
 
   it("names the SVGs and PNGs exactly as the script writes them, and shares its margin and its PNG width", () => {
     const written = kitFiles(CLUB_SLUG).map(({ name }) => name).sort();
-    const named = logoVariants()
-      .flatMap(({ shape, ink }) => (["svg", "png"] as const).map((format) => logoFileName(shape, ink, format)))
+    const named = logoFiles()
+      .flatMap(({ shape, ink, ground }) => (["svg", "png"] as const).map((format) => logoFileName(shape, ink, format, undefined, ground)))
       .sort();
     expect(named).toEqual(written);
+    // §1046: the white alone also comes on the club's colour, in the app as in the script.
+    for (const ink of LOGO_INKS) expect([...logoGrounds(ink)], ink).toEqual(kitGrounds(ink));
+    expect(logoFiles().filter(({ ground }) => ground === "primary")).toEqual([
+      { shape: "lockup", ink: "white", ground: "primary" },
+      { shape: "mountains", ink: "white", ground: "primary" },
+    ]);
     expect(KIT_SHAPES.map(({ key }) => key)).toEqual([...LOGO_SHAPES]);
     expect(kitFileName(CLUB_SLUG, "mountains", "black", "svg")).toBe(logoFileName("mountains", "black", "svg"));
     expect(KIT_MARGIN).toBe(SCRIPT_MARGIN);
@@ -77,9 +89,11 @@ describe("§1015 the PR kit's files and names", () => {
   });
 
   it("reads a download's name back to what it names, and nothing else", () => {
-    for (const { shape, ink } of logoVariants()) {
-      for (const format of LOGO_FORMATS) expect(parseLogoFile(logoFileName(shape, ink, format))).toEqual({ shape, ink, format });
+    for (const { shape, ink, ground } of logoFiles()) {
+      for (const format of LOGO_FORMATS) expect(parseLogoFile(logoFileName(shape, ink, format, undefined, ground))).toEqual({ shape, ink, ground, format });
     }
+    // Only the white comes on the club's colour.
+    for (const name of [`${CLUB_SLUG}-logo-black-on-primary.svg`, `${CLUB_SLUG}-logo-primary-on-primary-4000px.png`]) expect(parseLogoFile(name), name).toBeNull();
     for (const name of ["", "logo.svg", "../../club/club.json", `${CLUB_SLUG}-logo-primary.svg/..`, `${CLUB_SLUG}-logo-red.svg`, `${CLUB_SLUG}-logo-primary.png`]) {
       expect(parseLogoFile(name), name).toBeNull();
     }

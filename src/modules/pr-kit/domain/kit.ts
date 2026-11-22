@@ -7,7 +7,7 @@ import { CLUB_SLUG, PR_KIT_COLOURS } from "@/theme/brand";
  *
  * - **The logo**: two shapes — the whole lockup, and its mountains alone — each in three inks, each as an SVG and a PNG
  *   (`yarn brand:assets` writes them into `public/brand/kit/`, `scripts/brand-kit.mjs`) and a PDF drawn on request from the
- *   same paths.
+ *   same paths; transparent, and the white one on the club's colour as well (`LOGO_GROUNDS`).
  * - **The sticker sheets**: six A4 PDFs drawn on request — two with a code to the site, four with the logo alone
  *   (`sheets.ts` holds their geometry).
  * - **The YouTube poster**: one A4 PDF drawn on request, its code to the club's channel, only while `CLUB_YOUTUBE_URL` is set.
@@ -46,21 +46,42 @@ export const LOGO_INK_HEX: Record<LogoInk, string> = PR_KIT_COLOURS.ink;
 /** The ground each ink is drawn on: white under the primary and the black, the primary under the white. */
 export const LOGO_INK_GROUND: Record<LogoInk, string> = { primary: PR_KIT_COLOURS.paper, white: PR_KIT_COLOURS.ink.primary, black: PR_KIT_COLOURS.paper };
 
-/** One logo file: `<slug>-logo-primary.svg`, `<slug>-mountains-white-4000px.png`, `<slug>-logo-black.pdf`. */
-export function logoFileName(shape: LogoShape, ink: LogoInk, format: LogoFormat, slug: string = CLUB_SLUG): string {
-  return `${slug}-${SHAPE_WORD[shape]}-${ink}${format === "png" ? `-${KIT_PNG_WIDTH}px` : ""}.${format}`;
+/**
+ * The ground a logo file is drawn on (§1046; the owner, 2026-11-22, on the white tile shown on the club's colour: «trebe să fie
+ * ceva bifă pt fundal, e confusing»): `none` — transparent, every ink's file — or `primary`, the club's colour filling the
+ * frame, which the white ink alone also comes on. `scripts/brand-kit.mjs`'s `kitGrounds` says the same.
+ */
+export const LOGO_GROUNDS = ["none", "primary"] as const;
+export type LogoGround = (typeof LOGO_GROUNDS)[number];
+
+/** The grounds an ink's files come on: every ink transparent, the white on the club's colour as well. */
+export function logoGrounds(ink: LogoInk): readonly LogoGround[] {
+  return ink === "white" ? LOGO_GROUNDS : ["none"];
 }
 
-/** Every logo download, shape by shape and ink by ink, in the page's order. */
+/**
+ * One logo file: `<slug>-logo-primary.svg`, `<slug>-mountains-white-4000px.png`, `<slug>-logo-black.pdf`, and on the club's
+ * colour `<slug>-logo-white-on-primary.svg` — the stickers' `-on-primary` word.
+ */
+export function logoFileName(shape: LogoShape, ink: LogoInk, format: LogoFormat, slug: string = CLUB_SLUG, ground: LogoGround = "none"): string {
+  return `${slug}-${SHAPE_WORD[shape]}-${ink}${ground === "primary" ? "-on-primary" : ""}${format === "png" ? `-${KIT_PNG_WIDTH}px` : ""}.${format}`;
+}
+
+/** Every logo tile, shape by shape and ink by ink, in the page's order. */
 export function logoVariants(): Array<{ shape: LogoShape; ink: LogoInk }> {
   return LOGO_SHAPES.flatMap((shape) => LOGO_INKS.map((ink) => ({ shape, ink })));
 }
 
+/** Every logo download: each tile's shape and ink on each of its grounds. */
+export function logoFiles(): Array<{ shape: LogoShape; ink: LogoInk; ground: LogoGround }> {
+  return logoVariants().flatMap(({ shape, ink }) => logoGrounds(ink).map((ground) => ({ shape, ink, ground })));
+}
+
 /** A logo download's address path segment back to what it names, or null for anything else: the route's one parser. */
-export function parseLogoFile(name: string, slug: string = CLUB_SLUG): { shape: LogoShape; ink: LogoInk; format: LogoFormat } | null {
-  for (const { shape, ink } of logoVariants()) {
+export function parseLogoFile(name: string, slug: string = CLUB_SLUG): { shape: LogoShape; ink: LogoInk; ground: LogoGround; format: LogoFormat } | null {
+  for (const { shape, ink, ground } of logoFiles()) {
     for (const format of LOGO_FORMATS) {
-      if (logoFileName(shape, ink, format, slug) === name) return { shape, ink, format };
+      if (logoFileName(shape, ink, format, slug, ground) === name) return { shape, ink, ground, format };
     }
   }
   return null;
