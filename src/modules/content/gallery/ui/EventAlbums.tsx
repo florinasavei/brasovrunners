@@ -10,7 +10,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { DENSITY } from "@/theme/density";
 
 /**
- * «Album foto» on the event's page (§NNN — the owner, 2026-11-22: «sunt poze pe Google Photos … vor fi vreo 7 albume … cum am zis și cu
+ * «Album foto» on the event's page (§1047 — the owner, 2026-11-22: «sunt poze pe Google Photos … vor fi vreo 7 albume … cum am zis și cu
  * clasament»), under `#album-foto`, right under «Clasament»: one button per published album linked to this event, newest first — to the
  * album's «Link Google Photos» in a new tab when it has one, else to the album's own page. Nothing at all without an album, and nothing
  * while the database is away (a button is not worth a page). Reads the gallery's cached list, never a query of its own.

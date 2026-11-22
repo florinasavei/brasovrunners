@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { albumFieldsSchema } from "@/modules/content/gallery/fields";
 
-/** «Link Google Photos» (§NNN): an album's photos where they live — an `https://` address, or none. */
+/** «Link Google Photos» (§1047): an album's photos where they live — an `https://` address, or none. */
 const base = {
   takenOn: "2026-11-21",
   eventId: "",

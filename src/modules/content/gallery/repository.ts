@@ -43,7 +43,7 @@ export type PublicAlbumSummary = {
   eventTitle: string | null;
   /** That event's id under the same rule as `eventTitle` — null unless its title is shown — for the card's «Album foto» (§1039). */
   eventId: string | null;
-  /** «Link Google Photos» (§NNN): where the photos live, or null. */
+  /** «Link Google Photos» (§1047): where the photos live, or null. */
   externalUrl: string | null;
 };
 

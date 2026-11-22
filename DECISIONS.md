@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.13-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.14-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.13-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.14-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32105,3 +32105,18 @@ Baseline `BR-V5.12-2026-11-22`.
 **Tests.** `tests/unit/pr-kit/kit.test.ts`, `tests/unit/pr-kit/logo-tile.test.ts`, `tests/unit/theme/brand-kit.test.ts`, `tests/integration/pr-kit/pr-kit.test.ts`, `tests/fork/pr-kit.test.ts`.
 
 Baseline `BR-V5.13-2026-11-22`.
+
+## 1047. «Link Google Photos» on an album, and «Album foto» on the event's page under «Clasament» (amending §1039, §1041)
+
+**The owner, 2026-11-22:** «sunt poze pe Google Photos … vor fi vreo 7 albume! deci trebuie o pagină de galerie foto … cum am zis și cu clasament».
+
+**Decision.**
+
+- **«Link Google Photos»** — an album's optional `https://` address where its photos live (`gallery_albums.external_url`, migration `0231_gallery_external_url`, expand only), on the album's form in «Galerie foto». The photos stay on Google Photos; nothing is copied.
+- **The album's page** shows one big button «Vezi pozele pe Google Photos», opening it in a new tab; an album with a link and no photo here says «pe Google Photos» instead of «Pozele vin în curând» (§1041), on its page and its card in «Galerie foto».
+- **«Album foto» on the event's page**, under `#album-foto`, right under «Clasament»: one button per published album linked to the event, newest first — to its Google Photos link, else to the album's page (`EventAlbums`, from the gallery's cached list). Nothing without an album.
+- **The card's «Album foto»** (§1039) now opens the event's page at `#album-foto`, so one door serves however many albums.
+
+**Tests.** `tests/unit/content/gallery-external-url.test.ts`, `tests/unit/events/featured-card.test.ts`, `tests/integration/cms`.
+
+Baseline `BR-V5.14-2026-11-22`.

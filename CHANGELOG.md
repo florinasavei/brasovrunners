@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.14-2026-11-22
+
+- **Albume pe Google Photos** — an album may link its Google Photos album; the event's page lists its albums under «Clasament», and the card's «Album foto» opens them. §1047.
 ## BR-V5.13-2026-11-22
 
 - **PR Kit: bifa «Cu fundal în culoarea clubului»** pe logo-ul alb: nebifat, previzualizarea pe tablă de șah și fișierele transparente; bifat, SVG, PNG și PDF alb pe culoarea clubului. §1046.
