@@ -10912,7 +10912,7 @@
       "logo": {
         "title": "Logo",
         "intro": "SVG sau PDF pentru tipografie, PNG pentru Word, Canva sau rețele.",
-        "introMore": "Albul e pentru fundaluri închise sau fotografii, negrul pentru tipar într-o singură culoare. PNG-ul are 4000 px lățime și fundal transparent (tabla de șah din previzualizare). Albul îl poți lua și pe culoarea clubului: bifa de sub el.",
+        "introMore": "Albul e pentru fundaluri închise sau fotografii, negrul pentru tipar într-o culoare. PNG-ul are 4000 px și fundal transparent; albul vine și pe culoarea clubului, cu bifa de sub el.",
         "shape": {
           "lockup": "Logo complet",
           "mountains": "Doar munții"
