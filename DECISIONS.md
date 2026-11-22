@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.04-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.05-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.04-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.05-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32002,3 +32002,11 @@ Baseline `BR-V5.03-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.04-2026-11-22`.
+
+## 1038. «Clasament» on a phone: a long comment or pace line wraps inside the screen (amending §809)
+
+**The owner, 2026-11-22, from a phone:** «nu se vede bine pe mobil, e cropped». A row's «Comentariu public» and its «Ritm mediu … · a parcurs N km» ran past the right edge: the phone's row grid had a `1fr` column whose minimum was the content's own width, and the time cell does not wrap. The grid's last column is `minmax(0, 1fr)`, the name and time cells take `minWidth: 0`, and the comment and the pace line wrap (`whiteSpace: normal`). The wide screen is unchanged.
+
+**Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/theme`.
+
+Baseline `BR-V5.05-2026-11-22`.

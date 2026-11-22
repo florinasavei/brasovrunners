@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.05-2026-11-22
+
+- **Clasament pe telefon: comentariul și ritmul se încadrează în ecran.** §1038.
 ## BR-V5.04-2026-11-22
 
 - **Clasament: sexul la «Categorie» când lipsește data nașterii.** §1037.
