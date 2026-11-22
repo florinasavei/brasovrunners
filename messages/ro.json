@@ -913,10 +913,10 @@
     },
     "results": {
       "title": "Clasament",
-      "titleNoChip": "Clasament open (fără cip)",
+      "titleNoChip": "Clasament open (introdus manual)",
       "sexFemale": "Feminin",
       "sexMale": "Masculin",
-      "eliteTitle": "Clasament elite (fără cip)",
+      "eliteTitle": "Clasament elite (introdus manual)",
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",
       "until": "Rămâne pe pagină până {until}",

@@ -913,10 +913,10 @@
     },
     "results": {
       "title": "Results",
-      "titleNoChip": "Open results (no chip)",
+      "titleNoChip": "Open results (entered by hand)",
       "sexFemale": "Women",
       "sexMale": "Men",
-      "eliteTitle": "Elite results (no chip)",
+      "eliteTitle": "Elite results (entered by hand)",
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",

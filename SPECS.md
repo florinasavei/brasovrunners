@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.06-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.07-2026-11-22 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V5.06-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.07-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -922,6 +922,7 @@ coffee is run on nothing.
 79. Given «Toate numele în clasament» on, then every registration marked «Elită» and every line of the race's elite list is left out of the ranking as if its «Apare în clasament» were unticked — absent from the public results, positions counted without it — and the results section says «Timpul a fost notat manual.»; unticked, both are as before (2026-11-21, `DECISIONS.md` §1030). Verification: integration `results/public-section.test.ts`.
 80. Given a race whose results are on show, then the event page draws them right under the title, the home page leads with a button to them and the listing leads with the race's card even after its date; while «Toate numele în clasament» is on, the elites are ranked apart under «Clasament elite» and the heading reads «Clasament (fără cip)»; an Administrator's «Comentariu public» on a result is printed under its row with an asterisk (2026-11-21, `DECISIONS.md` §1031). Verification: integration `results/public-section.test.ts`.
 81. Given a race with a distance and published results, then each finisher's row says the average pace (gun time over distance, min/km); given an Administrator set a runner's own distance, then that row's pace reads it and says «a parcurs N km», and cleared, the race's distance is back (2026-11-21, `DECISIONS.md` §1034). Verification: integration `results/public-section.test.ts`.
+82. Amends criterion 80. Given a race whose results are on show while «Toate numele în clasament» is on, then the open ranking's heading reads «Clasament open (introdus manual)» and the elites' «Clasament elite (introdus manual)» — in English «Open results (entered by hand)» and «Elite results (entered by hand)» (2026-11-22, `DECISIONS.md` §1040). Verification: integration `results/public-section.test.ts`.
 
 **Verification:** integration `privacy/public-surface.test.ts`
 
