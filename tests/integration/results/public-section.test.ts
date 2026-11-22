@@ -408,7 +408,7 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     const html = await section();
     expect(Object.keys(Object.fromEntries(rowsOf(html).map((row) => [row.bib, row.name])))).not.toContain("101");
     expect(html).toContain("data-testid=\"results-elite-title\"");
-    expect(html).toContain("Clasament open (fără cip)");
+    expect(html).toContain("Clasament open (introdus manual)");
     expect(html).toContain("Timpul a fost notat manual.");
     // The note about the tick says who is named: untrue while everybody is, so it is not drawn.
     expect(html).not.toContain('data-testid="results-note"');
