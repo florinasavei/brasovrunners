@@ -1,0 +1,9 @@
+{
+  "branch": "fix/results-timing-explanation",
+  "decisionsTitle": "Why the times are indicative, under «Clasament»; the race with results leads the listing in the cards' own grid (amending §1031)",
+  "decisionsSection": "**The owner, 2026-11-22:** «scrie și o scurtă explicație: cronometrarea s-a făcut orientativ pentru a putea premia primii alergători, e posibil ca după să existe erori, mai ales în grupurile care au venit împreună», and of the listing: «sunt prea lipite cardurile … să rămână primul încă câteva luni, dar pe același rând ca și celelalte».\n\n**Decision.**\n\n- While «Toate numele» is on, the line under «Clasament» reads «Timpul a fost notat manual. Cronometrarea s-a făcut orientativ, ca să putem premia primii alergători; pot exista erori, mai ales la grupurile care au sosit împreună.»\n- On «Alergări», a past race whose results are on show is the first card of the cards' own grid (`ListingBody`'s `leading`), no longer a grid of its own pressed against it. It leads as long as its results are on show: the public list's period after the race (§421).\n\n**Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/events/featured-card.test.ts`.",
+  "changelogLine": "- **Clasament: de ce timpii sunt orientativi; în «Alergări», cursa cu clasament e primul card din același grid.** §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "Why the times are indicative; the race with results leads in the cards' own grid"
+}
