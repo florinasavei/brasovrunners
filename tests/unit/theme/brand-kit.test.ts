@@ -118,7 +118,7 @@ describe("BR-REQ-101-01 §1015 the kit's committed files", () => {
     }
   }
 
-  // §NNN: the white also on the club's colour — the same SVG with a rectangle of the primary filling its frame, and its PNG
+  // §1046: the white also on the club's colour — the same SVG with a rectangle of the primary filling its frame, and its PNG
   // opaque from edge to edge.
   const primaryHex = kitColours(club.palette).find(({ key }: { key: string }) => key === "primary")?.hex ?? "no primary";
   for (const shape of ["lockup", "mountains"] as const) {

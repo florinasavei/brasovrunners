@@ -43,7 +43,7 @@ export function kitColours(palette) {
 }
 
 /**
- * The grounds a colour's files come on (§NNN): `none`, transparent, for every colour; `primary`, the palette's primary filling
+ * The grounds a colour's files come on (§1046): `none`, transparent, for every colour; `primary`, the palette's primary filling
  * the frame, under the white as well — the white logo ready for a page or a post on the club's colour. The app's
  * `logoGrounds` (`src/modules/pr-kit/domain/kit.ts`) says the same.
  */
@@ -386,7 +386,7 @@ export function inPixels(svg, width) {
 /**
  * One kit SVG: the shape's paths in one colour, the frame 4 % outside the measured drawing, 200 mm wide and as tall as
  * the frame's proportion — written the same way every time, so its hash moves only when the artwork or the colour does.
- * With `groundHex`, a rectangle of that colour fills the whole frame under the drawing (§NNN, the white on the primary).
+ * With `groundHex`, a rectangle of that colour fills the whole frame under the drawing (§1046, the white on the primary).
  */
 export function kitSvg(source, measured, shape, hex, groundHex = null) {
   const { paths } = measured[shape];

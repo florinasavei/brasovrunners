@@ -8,7 +8,7 @@ import { readLogoVector } from "./logo-vector";
  * The logo as a vector PDF (§1015): one page exactly the size of the kit's SVG — 200 mm wide, as tall as its frame — and on it
  * the SVG's own paths, drawn by pdfkit's `doc.path()` under the file's translation, in the ink's colour, the margin around the
  * drawing kept. Nothing else on the page and no background: a print shop places it as it would the SVG. The white one is white
- * on a white page — it is meant for a dark ground — unless it is asked on the club's colour (§NNN, `ground: "primary"`): then
+ * on a white page — it is meant for a dark ground — unless it is asked on the club's colour (§1046, `ground: "primary"`): then
  * the whole page is that colour first, as the `-on-primary` SVG's rectangle fills its frame.
  */
 export async function renderLogoPdf(input: { shape: LogoShape; ink: LogoInk; ground?: LogoGround; generatedAt: Date }): Promise<Buffer> {

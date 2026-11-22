@@ -57,7 +57,7 @@ describe("§1015 the PR kit's files and names", () => {
     expect(posterFileName("ro")).toBe(`${CLUB_SLUG}-youtube-poster-a4-ro.pdf`);
     // Another slug, another name: nothing of this club's is written in.
     expect(logoFileName("lockup", "primary", "svg", "someclub")).toBe("someclub-logo-primary.svg");
-    // §NNN: the white on the club's colour, with the stickers' «on-primary» word.
+    // §1046: the white on the club's colour, with the stickers' «on-primary» word.
     expect(logoFileName("lockup", "white", "png", undefined, "primary")).toBe(`${CLUB_SLUG}-logo-white-on-primary-4000px.png`);
     expect(logoFileName("mountains", "white", "pdf", "someclub", "primary")).toBe("someclub-mountains-white-on-primary.pdf");
     expect(stickerFileName("logo-12-primary", "someclub")).toBe("someclub-stickers-logo-12-per-sheet-on-primary.pdf");
@@ -69,7 +69,7 @@ describe("§1015 the PR kit's files and names", () => {
       .flatMap(({ shape, ink, ground }) => (["svg", "png"] as const).map((format) => logoFileName(shape, ink, format, undefined, ground)))
       .sort();
     expect(named).toEqual(written);
-    // §NNN: the white alone also comes on the club's colour, in the app as in the script.
+    // §1046: the white alone also comes on the club's colour, in the app as in the script.
     for (const ink of LOGO_INKS) expect([...logoGrounds(ink)], ink).toEqual(kitGrounds(ink));
     expect(logoFiles().filter(({ ground }) => ground === "primary")).toEqual([
       { shape: "lockup", ink: "white", ground: "primary" },

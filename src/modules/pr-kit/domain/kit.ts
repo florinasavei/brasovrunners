@@ -47,7 +47,7 @@ export const LOGO_INK_HEX: Record<LogoInk, string> = PR_KIT_COLOURS.ink;
 export const LOGO_INK_GROUND: Record<LogoInk, string> = { primary: PR_KIT_COLOURS.paper, white: PR_KIT_COLOURS.ink.primary, black: PR_KIT_COLOURS.paper };
 
 /**
- * The ground a logo file is drawn on (§NNN; the owner, 2026-11-22, on the white tile shown on the club's colour: «trebe să fie
+ * The ground a logo file is drawn on (§1046; the owner, 2026-11-22, on the white tile shown on the club's colour: «trebe să fie
  * ceva bifă pt fundal, e confusing»): `none` — transparent, every ink's file — or `primary`, the club's colour filling the
  * frame, which the white ink alone also comes on. `scripts/brand-kit.mjs`'s `kitGrounds` says the same.
  */

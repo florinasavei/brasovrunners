@@ -157,7 +157,7 @@ for (const { name, crop, pad } of lockOnly ? [] : SQUARES) {
   can download it at any time, even the volunteers can do that»), in `public/brand/kit/`: the lockup and its mountains alone,
   each in the palette's primary, in white and in black — an SVG whose frame is 4 % outside the drawing as measured from its own
   path data, 200 mm wide with its height written out, and a transparent PNG 4000 pixels wide drawn from that SVG; the white one
-  also on the primary, the frame filled (§NNN, `kitGrounds`). Named from
+  also on the primary, the frame filled (§1046, `kitGrounds`). Named from
   the club's slug. The folder is emptied first, so a slug or a shape that changed leaves no file behind. `brand-kit.mjs` says
   how the drawing is measured and which paths are the mountains.
 */

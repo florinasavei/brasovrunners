@@ -209,7 +209,7 @@ describe("BR-REQ-060-01 §1015 the «PR Kit» page", () => {
         expect(html).toContain(`src="/brand/kit/${logoFileName(shape, ink, "svg")}"`);
         for (const format of LOGO_FORMATS) expect(html).toContain(`href="/api/admin/pr-kit/logo/${logoFileName(shape, ink, format)}"`);
       }
-      // §NNN: the two white tiles carry the tick, unticked on arrival — transparent files, the picture on the checkerboard.
+      // §1046: the two white tiles carry the tick, unticked on arrival — transparent files, the picture on the checkerboard.
       expect(html.match(/data-testid="pr-kit-logo-ground"/g)).toHaveLength(2);
       expect(html.match(/data-ink="white" data-ground="none"/g)).toHaveLength(2);
       expect(html.match(/<label\b/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
@@ -333,7 +333,7 @@ describe("§1015 the files", () => {
       const pdfName = logoFileName(shape, ink, "pdf", undefined, ground);
       const rects = vi.spyOn(PDFDocument.prototype, "rect");
       const response = await logo(pdfName);
-      // §NNN: on the club's colour the whole page is filled first; transparent, nothing but the logo is drawn.
+      // §1046: on the club's colour the whole page is filled first; transparent, nothing but the logo is drawn.
       const filled = rects.mock.calls.map((call) => call.map(Number));
       rects.mockRestore();
       if (ground === "primary") {

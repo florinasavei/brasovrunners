@@ -7,7 +7,7 @@ import { kitFilePath } from "@/modules/pr-kit/logo-vector";
 
 /**
  * «PR Kit» → «Logo» (§1015): one logo file, by its own name — `GET /api/admin/pr-kit/logo/<slug>-logo-primary.svg`, `…-4000px.png`
- * or `….pdf`, the lockup or the mountains, in the primary, white or black — the white also `-on-primary` (§NNN). The SVG and the PNG are the files `yarn brand:assets`
+ * or `….pdf`, the lockup or the mountains, in the primary, white or black — the white also `-on-primary` (§1046). The SVG and the PNG are the files `yarn brand:assets`
  * wrote (`public/brand/kit/`), handed out as they are; the PDF is drawn here from the same SVG's paths (`logo-pdf.ts`). Any other
  * name is not found — the name is matched whole against the kit's list, so it never reaches the disk as a path.
  *

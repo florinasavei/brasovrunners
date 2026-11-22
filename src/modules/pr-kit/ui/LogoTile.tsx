@@ -33,7 +33,7 @@ const CHECKERBOARD_SX = {
 
 /**
  * One logo tile of «PR Kit» (§1015): the picture, its name, and an SVG, a PNG and a PDF of it. The white one carries a tick
- * (§NNN; the owner, 2026-11-22, of the white tile drawn on the club's colour: «nu știam de ce are fundal albastru, trebe să fie
+ * (§1046; the owner, 2026-11-22, of the white tile drawn on the club's colour: «nu știam de ce are fundal albastru, trebe să fie
  * ceva bifă pt fundal, e confusing») — unticked, the picture lies on a checkerboard and the three files are transparent;
  * ticked, the picture and the three files are on the club's colour. What the tile shows is what it hands out.
  *

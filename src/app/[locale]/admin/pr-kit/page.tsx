@@ -59,7 +59,7 @@ const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
  * in front of it as in front of every page: `requireStaff` sends a colleague who owes it there.
  *
  * Nothing here writes: every link is a GET that hands a file out. The logo's tiles (`LogoTile`) show the kit's own SVGs — the
- * white one on a checkerboard, or on the club's colour with its tick (§NNN) — read straight from the public `/brand/kit/` — the club's public logo, open to anybody, which the logo route
+ * white one on a checkerboard, or on the club's colour with its tick (§1046) — read straight from the public `/brand/kit/` — the club's public logo, open to anybody, which the logo route
  * hands out only as an attachment under its slug name; the sticker sheets and the poster are drawn on request. The poster is
  * offered only while the club's YouTube address is set (`CLUB_YOUTUBE_URL`); until then one line says where it is set.
  */
@@ -74,7 +74,7 @@ export default async function PrKitPage({ params }: Props) {
   const youtube = env.CLUB_YOUTUBE_URL;
   const [red, green, blue] = rgbOf(PALETTE.primary);
   /**
-   * A tile on one ground: its name, its picture and its three files. Transparent, the white one lies on the checkerboard (§NNN)
+   * A tile on one ground: its name, its picture and its three files. Transparent, the white one lies on the checkerboard (§1046)
    * and the others on white, the ground they are meant for; on the club's colour, the white one's own `-on-primary` files.
    */
   const face = (shape: LogoShape, ink: LogoInk, ground: LogoGround): LogoTileFace => {
