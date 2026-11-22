@@ -250,7 +250,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
       {/* «Clasament» first (§1031): a past race whose results are on show leads the page — in the cards' own grid, the first card of its
-          row (§NNN — the owner: «să rămână primul … dar pe același rând ca și celelalte»), never a grid of its own pressed against it. */}
+          row (§1045 — the owner: «să rămână primul … dar pe același rând ca și celelalte»), never a grid of its own pressed against it. */}
       <ListingBody leading={resultsFirst} events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} albums={albums} />
 
       {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
