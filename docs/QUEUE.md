@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.10` | The card's «Vezi clasamentul» and «Album foto» as buttons (§1043) |
 | `BR-V5.09` | «Clasament» one fold; elites without «Loc»; «a parcurs aproximativ» (§1042) |
 | `BR-V5.08` | An album published before its photos says «Pozele vin în curând» (§1041) |
 | `BR-V5.07` | «Clasament»'s headings say «introdus manual» instead of «fără cip» (§1040) |

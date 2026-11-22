@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.09-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.10-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.09-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.10-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32062,3 +32062,11 @@ Baseline `BR-V5.08-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.09-2026-11-22`.
+
+## 1043. The card's «Vezi clasamentul» and «Album foto» as buttons on a row of their own (amending §1039)
+
+**The owner, 2026-11-22:** «trebuie să fie mult mai vizibile și diferite și pe alt rând … nu trebuie să fie pill-uri, ci butoane». The card's door «Descrierea completă a evenimentului» stays a link; under it, on a row of their own, «Vezi clasamentul» (while the results are on show) and «Album foto» (once the album is published) are filled buttons in the primary colour (`CardDoor`'s `button`), each a 44-pixel target. Nothing else on the card changes.
+
+**Tests.** `tests/unit/events`, `tests/integration/events`.
+
+Baseline `BR-V5.10-2026-11-22`.

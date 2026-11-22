@@ -246,7 +246,7 @@ export default async function EventCard({
         <Box sx={CARD_DOOR_SX}>
           <CardDoor href={page} label={tEvent("series.fullDescription")} />
         </Box>
-        {/* «Vezi clasamentul» and «Album foto» as buttons, on a row of their own under the door (§NNN). */}
+        {/* «Vezi clasamentul» and «Album foto» as buttons, on a row of their own under the door (§1043). */}
         {(resultsChip || albumSlug) && (
           <Box data-testid="card-buttons" sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
             {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" button />}

@@ -43,7 +43,7 @@ export default function CardDoor({ href, label, glyph = "page", button = false }
         color: "primary.main",
         textDecoration: "none",
         "&:hover": { textDecoration: "underline" },
-        // «Vezi clasamentul» and «Album foto» as real buttons (§NNN — the owner: «nu trebuie să fie pill-uri, ci butoane», on a row of their own).
+        // «Vezi clasamentul» and «Album foto» as real buttons (§1043 — the owner: «nu trebuie să fie pill-uri, ci butoane», on a row of their own).
         ...(button
           ? { px: 2, mx: 0, py: 1, borderRadius: 1, bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.dark", textDecoration: "none" } }
           : {}),
