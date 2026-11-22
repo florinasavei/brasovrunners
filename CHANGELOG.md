@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.09-2026-11-22
+
+- **Clasament: o singură secțiune pliabilă** (deschisă), **«Clasament elite» fără coloana «Loc»** și **«a parcurs aproximativ 10,7 km»**. §1042.
 ## BR-V5.08-2026-11-22
 
 - **Un album se poate publica și gol** — scrie «Pozele vin în curând» până urci pozele, așa că link-ul lui merge de la început. §1041.
