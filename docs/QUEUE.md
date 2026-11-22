@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.14` | «Clasament»: the save floats at the top and asks with the rows it changes; the lines by time (§1047) |
 | `BR-V5.13` | «PR Kit»: the white logo's ground tick, transparent or on the club's colour (§1046) |
 | `BR-V5.12` | Why the times are indicative; the race with results leads in the cards' own grid (§1045) |
 | `BR-V5.11` | «Timp (orientativ)» on hand-noted results (§1044) |

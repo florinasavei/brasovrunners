@@ -124,6 +124,7 @@ test.describe("§809 «Clasament» on the race's page", () => {
     await page.locator('[name="r[103].time"]').fill("47:30");
     await page.locator('[name="r[104].status"]').selectOption("DNF");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 4 rezultate", { timeout: 30_000 });
 
     // ---- Not published: no heading, no sentence, no number, on the page of the race ---------------------------------------------
