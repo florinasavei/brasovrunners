@@ -370,9 +370,16 @@ describe("§825 amended (the owner, 2026-10-20): the two turn-up folds are the l
       expect(index, section).toBeGreaterThan(-1);
       expect(index, section).toBeLessThan(folds);
     }
-    // ... and after the folds only the closing of their own fragment and of the page remain.
+    // ... and after the folds only the closing of their own fragment and of the «Descriere» tab remain (§NNN): the page's other tabs,
+    // «Clasament» and «Galerie foto», are panels of their own, one shown at a time, and draw none of the sections above.
     const tail = source.slice(source.indexOf("<RsvpCount ", folds));
-    expect(tail.replace(/<RsvpCount[^>]*\/>/, "").replace(/\s+/g, "")).toBe("</>)}</>);}");
+    const description = tail.slice(0, tail.indexOf("</EventTabPanel>"));
+    expect(description.replace(/<RsvpCount[^>]*\/>/, "").replace(/\s+/g, "")).toBe("</>)}");
+    const otherTabs = tail.slice(tail.indexOf("</EventTabPanel>"));
+    for (const section of ["<RsvpBox", "<EventCheckpoints", "<VolunteerCallout", "<VolunteersList", "<StartList", "conditions-fold", "<EventRoute"]) {
+      expect(otherTabs, section).not.toContain(section);
+    }
+    expect(otherTabs.replace(/\s+/g, "")).toMatch(/<\/EventTabs><\/>\);}$/);
   });
 
   it("keeps both anchors where the facts' link, the calendar and the email point: #vin on the card and #cine-vine on the fold", async () => {

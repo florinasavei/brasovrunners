@@ -75,6 +75,29 @@ export function openFoldsAround(node: FoldNode | null): number {
   return opened;
 }
 
+/** An element as `showTabsAround` reads it — a real element in the browser, a plain object in a test. */
+export type TabNode = { parentElement: TabNode | null; getAttribute(name: string): string | null; setAttribute(name: string, value: string): void };
+
+/**
+ * Brings forward every tab panel from `node` up, and says how many tab boxes it changed (§NNN, the event page's «Descriere | Clasament |
+ * Galerie foto», `events/ui/EventTabs.tsx`): a panel is a child marked `data-tab-panel="<key>"` of a box marked `data-tabs`, and the
+ * box's `data-tab-active` names the panel the page's CSS shows. The CSS shows the panel the address's fragment names on its own, before
+ * any script (`:target`); this answers what `:target` never sees — a client-side navigation to `…#clasament` — the way
+ * `openFoldsAround` answers it for a fold.
+ */
+export function showTabsAround(node: TabNode | null): number {
+  let shown = 0;
+  for (let current = node; current; current = current.parentElement) {
+    const key = current.getAttribute("data-tab-panel");
+    const box = current.parentElement;
+    if (key !== null && box && box.getAttribute("data-tabs") !== null && box.getAttribute("data-tab-active") !== key) {
+      box.setAttribute("data-tab-active", key);
+      shown += 1;
+    }
+  }
+  return shown;
+}
+
 /**
  * The event a box dispatches — bubbling — to have the language tab that holds it brought forward
  * (§350). `ActionForm` sends it from a box the browser refused and from the box a refusal's link

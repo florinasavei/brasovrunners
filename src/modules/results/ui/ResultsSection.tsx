@@ -73,12 +73,12 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "resu
  * window's start and end (`resultsLiveInstants`): a copy made before the race is made again at its start, and one made during it is
  * made again at its end, without the island.
  */
-export default async function ResultsSection({ event }: { event: ResultsEvent }) {
+export default async function ResultsSection({ event, inTab = false }: { event: ResultsEvent; /** In the page's «Clasament» tab (§NNN): the tab's panel is `#clasament`, so the section is not, and sits right under the tabs. */ inTab?: boolean }) {
   const now = new Date();
   const holds = resultsLiveInstants(event, now);
   if (holds.length > 0) await holdPageUntil(holds, now);
   const live = resultsLiveRefreshWindow(event, now);
-  const section = await readOrWhileAway(() => resultsSectionOrThrow(event, now, live), null);
+  const section = await readOrWhileAway(() => resultsSectionOrThrow(event, now, live, inTab), null);
   if (section !== null || live === null) return section;
   // Before the window's end and nothing drawn: the clock alone, with no line — unless the texts in force no longer describe the results,
   // when no result saved could show. Read as the section reads them (cached); while the database is away, the clock stays.
@@ -104,7 +104,7 @@ function formatKm(meters: number, locale: string): string {
   return new Intl.NumberFormat(locale === "en" ? "en-GB" : "ro-RO", { maximumFractionDigits: 1 }).format(meters / 1000);
 }
 
-async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { from: Date; until: Date } | null) {
+async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { from: Date; until: Date } | null, inTab: boolean) {
   const results = await readEventResultsForPage(event, now);
   if (!results || results.rows.length === 0) return null;
 
@@ -385,7 +385,13 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   return (
     // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
     // names stay out of search snippets (§421); the page itself stays indexed.
-    <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
+    <Box
+      component="section"
+      id={inTab ? undefined : "clasament"}
+      data-nosnippet=""
+      data-testid="results-section"
+      sx={inTab ? undefined : { mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}
+    >
       {wrapped ? (
         // The whole «Clasament» one fold, open on arrival (§1042 — the owner, 2026-11-22: «toată secțiunea de „Clasament” trebuie să fie
         // collapsible», «așa e greu de urmărit și de dat scroll pe toată pagina»). No frame of its own: the tables keep a phone's width.

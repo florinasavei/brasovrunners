@@ -261,6 +261,12 @@
     "pastCountOfType": "Past — {type} ({count})"
   },
   "Event": {
+    "tabs": {
+      "label": "Sections of the page",
+      "descriere": "Description",
+      "clasament": "Results",
+      "galerie": "Photo gallery"
+    },
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
     "previewDoor": "preview",
