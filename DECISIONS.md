@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.05-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.06-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.05-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.06-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32010,3 +32010,19 @@ Baseline `BR-V5.04-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/theme`.
 
 Baseline `BR-V5.05-2026-11-22`.
+
+## 1039. «Vezi clasamentul» and «Album foto» beside «Descrierea completă a evenimentului» on an event's card (amending §305 and §809)
+
+**The owner, 2026-11-22, the day after the race:** on the race's card in «Alergări», beside «Descrierea completă a evenimentului», a door to the results and a door to the photographs.
+
+**Decision.** `EventCard` draws up to three doors in one wrapping row, each the same `CardDoor` with its own glyph:
+
+- «Descrierea completă a evenimentului», as before (§305);
+- **«Vezi clasamentul»** → the event page's `#clasament`, under the «Clasament» chip's own rule (`resultsChip`, from `eventsWithResultsChip`, §809): the results are on show;
+- **«Album foto»** → the event's album in the gallery, once an album linked to the event (`gallery_albums.event_id`) is published in the page's language — the newest when there are several (`albumSlugsByEvent`). The listing reads it once for the page from the gallery's cached read (`cachedPublishedAlbums`, which the navigation's «Galerie» already reads on every page), never per card; `PublicAlbumSummary.eventId` follows `eventTitle`'s rule, so an album of a members' or unpublished event gives no door.
+
+Where: the listing's results-first grid, the cards ahead and the past section. Not the home page's run cards: they are upcoming runs, and the home page has its own results button.
+
+**Tests.** `tests/unit/events/featured-card.test.ts`.
+
+Baseline `BR-V5.06-2026-11-22`.

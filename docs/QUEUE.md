@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.06` | «Vezi clasamentul» and «Album foto» on the race's card (§1039) |
 | `BR-V5.05` | «Clasament» on a phone: long lines wrap (§1038) |
 | `BR-V5.04` | «Clasament»: the sex alone in «Categorie» without a birth date (§1037) |
 | `BR-V5.03` | «Clasament»'s note about the tick hidden under «Toate numele» (§1036) |

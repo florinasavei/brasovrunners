@@ -41,7 +41,19 @@ export type PublicAlbumSummary = {
   coverHeight: number | null;
   /** The linked event's title in this locale while published there; null for a free album (§434). */
   eventTitle: string | null;
+  /** That event's id under the same rule as `eventTitle` — null unless its title is shown — for the card's «Album foto» (§1039). */
+  eventId: string | null;
 };
+
+/**
+ * Each event's album, by the event's id (§1039): the newest when it has more than one — `listPublishedAlbums` is newest first, so the
+ * first one seen wins. What the listing hands its cards as «Album foto».
+ */
+export function albumSlugsByEvent(albums: readonly Pick<PublicAlbumSummary, "eventId" | "slug">[]): Map<string, string> {
+  const slugs = new Map<string, string>();
+  for (const album of albums) if (album.eventId && !slugs.has(album.eventId)) slugs.set(album.eventId, album.slug);
+  return slugs;
+}
 
 function urlsFor(keyPrefix: string) {
   const storage = getStorage();
@@ -78,6 +90,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
       coverHeight: cover.height,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
       eventTitle: publishedEventTitle(locale),
+      eventId: galleryAlbums.eventId,
     })
     .from(galleryAlbums)
     .innerJoin(
@@ -99,6 +112,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     photoCount: Number(row.photoCount),
     ...coverOf(row),
     eventTitle: row.eventTitle ?? null,
+    eventId: row.eventTitle ? row.eventId : null,
   }));
 }
 
@@ -172,6 +186,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
     photoCount: photos.length,
     ...coverOf(row),
     eventTitle: event?.title ?? null,
+    eventId: event ? row.eventId : null,
     photos,
     event,
   };
