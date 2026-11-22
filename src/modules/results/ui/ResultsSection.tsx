@@ -285,7 +285,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   </Box>
   );
 
-  // With the elites apart, both tables sit in one «Clasament» fold and their own headings step down to h3 (§NNN).
+  // With the elites apart, both tables sit in one «Clasament» fold and their own headings step down to h3 (§1042).
   const wrapped = (results.separateRows ?? []).length > 0;
 
   // «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat».
@@ -385,7 +385,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     // names stay out of search snippets (§421); the page itself stays indexed.
     <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
       {wrapped ? (
-        // The whole «Clasament» one fold, open on arrival (§NNN — the owner, 2026-11-22: «toată secțiunea de „Clasament” trebuie să fie
+        // The whole «Clasament» one fold, open on arrival (§1042 — the owner, 2026-11-22: «toată secțiunea de „Clasament” trebuie să fie
         // collapsible», «așa e greu de urmărit și de dat scroll pe toată pagina»). No frame of its own: the tables keep a phone's width.
         <Box component="details" open aria-labelledby="results-all-title" data-testid="results-fold" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 }, ...DISCLOSURE_OPEN_ARROW }}>
           <Box component="summary">

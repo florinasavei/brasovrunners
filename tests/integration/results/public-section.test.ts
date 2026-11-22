@@ -414,13 +414,13 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect(html).toContain("data-testid=\"results-elite-title\"");
     expect(html).toContain("Clasament open (introdus manual)");
     expect(html).toContain("Timpul a fost notat manual.");
-    // «Clasament elite» has no «Loc» column (§NNN — the owner: «nu mai afișa coloana de „Loc” pentru elite»); the open one keeps it.
+    // «Clasament elite» has no «Loc» column (§1042 — the owner: «nu mai afișa coloana de „Loc” pentru elite»); the open one keeps it.
     const openAt = html.indexOf("Clasament open (introdus manual)");
     const elites = html.slice(html.indexOf('data-testid="results-elite-section"'), openAt);
     expect(elites).toContain('data-testid="result-elite-row"');
     expect(elites).not.toContain('data-col="place"');
     expect(html.slice(openAt)).toContain('data-col="place"');
-    // With the elites apart, the whole «Clasament» is one fold, open on arrival, the two tables' headings under its h2 (§NNN).
+    // With the elites apart, the whole «Clasament» is one fold, open on arrival, the two tables' headings under its h2 (§1042).
     expect(html).toMatch(/<details[^>]*open=""[^>]*data-testid="results-fold"/);
     expect(html).toMatch(/<h2[^>]*data-testid="results-all-title"[^>]*>[\s\S]*?Clasament<\/h2>/);
     expect(html).toMatch(/<h3[^>]*id="results-elite-title"/);
