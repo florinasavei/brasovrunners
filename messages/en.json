@@ -10912,7 +10912,7 @@
       "logo": {
         "title": "Logo",
         "intro": "SVG or PDF for a print shop, PNG for Word, Canva or social media.",
-        "introMore": "White is for dark backgrounds or photos, black for one-colour printing. The PNG is 4000 px wide on a transparent background.",
+        "introMore": "White is for dark backgrounds or photos, black for one-colour printing. The PNG is 4000 px wide on a transparent background (the checkerboard in the preview). The white one also comes on the club's colour: tick the box under it.",
         "shape": {
           "lockup": "Full logo",
           "mountains": "Mountains only"
@@ -10923,6 +10923,8 @@
           "black": "black"
         },
         "tile": "{shape} · {ink}",
+        "tileOnPrimary": "{shape} · {ink} on the club's colour",
+        "onPrimary": "On the club's colour",
         "format": {
           "svg": "SVG",
           "png": "PNG",

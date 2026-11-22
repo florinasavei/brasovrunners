@@ -42,17 +42,31 @@ export function kitColours(palette) {
   ];
 }
 
-/** A kit file's name: the club's slug first, so a download says whose logo it is — `<slug>-logo-primary.svg`. */
-export function kitFileName(slug, shape, colour, format) {
-  const word = KIT_SHAPES.find((candidate) => candidate.key === shape)?.word;
-  if (!word) throw new Error(`brand-kit: no shape "${shape}"`);
-  return `${slug}-${word}-${colour}${format === "png" ? `-${KIT_PNG_WIDTH}px` : ""}.${format}`;
+/**
+ * The grounds a colour's files come on (§NNN): `none`, transparent, for every colour; `primary`, the palette's primary filling
+ * the frame, under the white as well — the white logo ready for a page or a post on the club's colour. The app's
+ * `logoGrounds` (`src/modules/pr-kit/domain/kit.ts`) says the same.
+ */
+export function kitGrounds(colour) {
+  return colour === "white" ? ["none", "primary"] : ["none"];
 }
 
-/** Every file the kit holds, in a stable order: two shapes × three colours × SVG and PNG. */
+/**
+ * A kit file's name: the club's slug first, so a download says whose logo it is — `<slug>-logo-primary.svg`; on the club's
+ * colour `<slug>-logo-white-on-primary.svg`.
+ */
+export function kitFileName(slug, shape, colour, format, ground = "none") {
+  const word = KIT_SHAPES.find((candidate) => candidate.key === shape)?.word;
+  if (!word) throw new Error(`brand-kit: no shape "${shape}"`);
+  return `${slug}-${word}-${colour}${ground === "primary" ? "-on-primary" : ""}${format === "png" ? `-${KIT_PNG_WIDTH}px` : ""}.${format}`;
+}
+
+/** Every file the kit holds, in a stable order: two shapes × three colours × their grounds × SVG and PNG. */
 export function kitFiles(slug) {
   return KIT_SHAPES.flatMap(({ key: shape }) =>
-    ["primary", "white", "black"].flatMap((colour) => ["svg", "png"].map((format) => ({ shape, colour, format, name: kitFileName(slug, shape, colour, format) }))),
+    ["primary", "white", "black"].flatMap((colour) =>
+      kitGrounds(colour).flatMap((ground) => ["svg", "png"].map((format) => ({ shape, colour, ground, format, name: kitFileName(slug, shape, colour, format, ground) }))),
+    ),
   );
 }
 
@@ -372,10 +386,12 @@ export function inPixels(svg, width) {
 /**
  * One kit SVG: the shape's paths in one colour, the frame 4 % outside the measured drawing, 200 mm wide and as tall as
  * the frame's proportion — written the same way every time, so its hash moves only when the artwork or the colour does.
+ * With `groundHex`, a rectangle of that colour fills the whole frame under the drawing (§NNN, the white on the primary).
  */
-export function kitSvg(source, measured, shape, hex) {
+export function kitSvg(source, measured, shape, hex, groundHex = null) {
   const { paths } = measured[shape];
   const frame = paddedFrame(measured[shape].drawing);
+  const [fx, fy, fw, fh] = frame.map((value) => decimal(value));
   const heightMm = (KIT_WIDTH_MM * frame[3]) / frame[2];
   const body = paths
     .map((index) => {
@@ -386,7 +402,8 @@ export function kitSvg(source, measured, shape, hex) {
   const open = source.transform === null ? `  <g fill="${hex}">` : `  <g transform="${source.transform}" fill="${hex}">`;
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${KIT_WIDTH_MM}mm" height="${decimal(heightMm, 2)}mm" viewBox="${frame.map((value) => decimal(value)).join(" ")}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${KIT_WIDTH_MM}mm" height="${decimal(heightMm, 2)}mm" viewBox="${[fx, fy, fw, fh].join(" ")}">`,
+    ...(groundHex === null ? [] : [`  <rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" fill="${groundHex}"/>`]),
     open,
     body,
     "  </g>",
