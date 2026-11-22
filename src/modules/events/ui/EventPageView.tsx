@@ -65,7 +65,6 @@ import type { PreviewDoor } from "./registration-door";
 import ShareLinks from "./ShareLinks";
 import EventFeedbackButton from "@/modules/feedback/ui/EventFeedbackButton";
 import ResultsSection from "@/modules/results/ui/ResultsSection";
-import EventAlbums from "@/modules/content/gallery/ui/EventAlbums";
 import StartList from "./StartList";
 import { readStartListCount } from "./start-list-head";
 
@@ -270,8 +269,6 @@ export default async function EventPageView({
       {/* «Clasament» (§809), under `#clasament`, right under the title once published — the owner, race day 2026-11-21: «trebuie să fie
           mai vizibil clasamentul!» (§1031); it was after the participation rules. Nothing at all while the results are not public. */}
       {dated && !membersOnly && visit && <ResultsSection event={dated} />}
-      {/* «Album foto» (§NNN), right under «Clasament»: the event's albums, each a button to its photos. */}
-      {!membersOnly && visit && <EventAlbums eventId={event.id} />}
 
       {/* The description, in the slot the editor's order implies (§187): the long one when it has
           words, the summary otherwise, and then a wordless long description's picture. Shared
