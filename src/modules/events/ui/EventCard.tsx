@@ -252,8 +252,7 @@ export default async function EventCard({
             {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" button />}
             {albumSlug && (
               <CardDoor
-                // The event's albums sit together under its «Clasament» (§1047): one door, however many albums.
-              href={`${page}#album-foto`}
+                href={getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: albumSlug } } })}
                 label={tEvent("series.photoAlbum")}
                 glyph="album"
                 button
