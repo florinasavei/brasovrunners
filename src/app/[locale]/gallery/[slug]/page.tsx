@@ -1,5 +1,9 @@
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
-import Button from "@mui/material/Button";
+import ButtonLink from "@/shared/ui/ButtonLink";
+import { GLYPHS } from "@/modules/events/ui/glyphs";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
+
+const AlbumIcon = GLYPHS.album;
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -109,10 +113,10 @@ export default async function AlbumPage({ params }: Props) {
       {/* «Link Google Photos» (§1047): the photos where they live, one big button, in a new tab. */}
       {album.externalUrl && (
         <Box sx={{ mb: 3 }}>
-          <Button component="a" href={album.externalUrl} target="_blank" rel="noopener noreferrer" variant="contained" size="large" data-testid="album-external-link">
-            <PhotoLibraryIcon aria-hidden sx={{ mr: 1 }} />
+          <ButtonLink href={album.externalUrl as never} target="_blank" rel="noopener noreferrer" variant="contained" size="large" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="album-external-link">
+            <AlbumIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("openExternal")}
-          </Button>
+          </ButtonLink>
         </Box>
       )}
 
