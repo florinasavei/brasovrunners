@@ -305,6 +305,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   resetEventResultsAction: [],
   // «Folosește» under a line's «Timpi la sosire» (§1012): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
   chooseRecordedTimeAction: [],
+  // «Salvează tot clasamentul» (§NNN; the owner, 2026-11-22: «să confirm modificările salvate»): the question names the rows the save
+  // changes; nothing changed, nothing asked. The import and «Adaugă un alergător neînscris», the form's other two buttons, never ask.
+  saveEventResultsAction: [],
 };
 
 /**
@@ -315,7 +318,6 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Adaugă pe lista de elită» (§895), as the internal list's «Adaugă» (§854): a name written down to print on a bib.
   addEliteEntryAction: "writes one name onto the race's elite list, undone by its «Șterge» (which asks); it registers nobody, sends nothing and changes no count",
   previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
-  saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
   // «Categorii de vârstă» (§850): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
   setResultAgeBandsAction: "an editorial save of the race's age groups, undone by saving the old ages (or an empty box) again; it tells nobody, deletes nothing and only ranks the saved results again",
   // «Premii» (§850): a setting of the card alone, undone by saving the old values again; nothing of the results moves.

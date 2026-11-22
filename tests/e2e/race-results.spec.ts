@@ -160,6 +160,11 @@ test.describe("§808 a race's results", () => {
 
     // ---- One save, refused on the line that has no name, with every box kept ------------------------------------------
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    // It asks first (§NNN), naming the rows it changes: the three registered ones the import filled and the new line, by its number.
+    const question = page.getByRole("dialog", { name: "Salvezi clasamentul?" });
+    await expect(question).toContainText("Se schimbă 4 rânduri");
+    await expect(question.getByTestId("confirm-lines")).toContainText("#555: Nr.");
+    await confirmDialog(page, "Salvezi clasamentul?");
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
     await expect(refusal).toContainText("#555");
@@ -173,6 +178,7 @@ test.describe("§808 a race's results", () => {
     await expect(agreed).not.toBeChecked();
     await agreed.check();
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(refusal).toContainText("ai bifat că a acceptat să apară cu numele");
     // The refusal gives the tick back as it was posted, with the other boxes.
     await expect(agreed).toBeChecked();
@@ -181,6 +187,8 @@ test.describe("§808 a race's results", () => {
     // ---- …then the name is written, and the one save writes the lot ----------------------------------------------------
     await page.locator('[name="n[0].name"]').fill("Ion Vasile");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await expect(question.getByTestId("confirm-lines")).toContainText("#555 Ion Vasile: Nr., Nume");
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 4 rezultate", { timeout: 30_000 });
     await expect(page).toHaveURL(new RegExp(`/results$`));
     await hydrated(page);
@@ -202,8 +210,9 @@ test.describe("§808 a race's results", () => {
     await expect(page.getByTestId("results-summary")).toContainText("Sosiți: 3");
     await expect(page.getByTestId("results-summary")).toContainText("Abandon: 1");
 
-    // ---- A save of what was drawn changes nothing --------------------------------------------------------------------
+    // ---- A save of what was drawn changes nothing — and asks nothing ----------------------------------------------------
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("toast-live")).toContainText("Nimic de schimbat în clasament", { timeout: 30_000 });
 
     // ---- The row's own delete asks first, and the others' places follow --------------------------------------------------
@@ -282,6 +291,7 @@ test.describe("§808 a race's results", () => {
     await page.locator('[name="r[102].status"]').selectOption("");
     await timeBox(page, 101).fill("48:30");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 1 rezultat", { timeout: 30_000 });
     await expect(placeOf(page, 101)).toContainText("1");
   });
