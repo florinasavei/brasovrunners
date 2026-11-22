@@ -40,7 +40,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await expect(page).toHaveURL(/\/admin\/gallery\/[0-9a-f-]{36}/);
     editorUrl = page.url();
 
-    // Not publishable yet: no photo.
+    // No photo yet: the page says so, and that it can be published anyway (§NNN).
     await expect(page.getByText("Albumul nu are nicio fotografie")).toBeVisible();
 
     // The quality beside the button (§414, four levels since §437): the recommendation until

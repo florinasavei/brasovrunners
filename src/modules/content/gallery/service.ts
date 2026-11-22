@@ -146,7 +146,10 @@ export async function saveAlbum<T extends Record<string, unknown>>(
   return saved;
 }
 
-/** The editorial workflow (§11.2); an album with no photo cannot be published. */
+/**
+ * The editorial workflow (§11.2). An album with no photo may be published (§NNN): its page and its
+ * card say «Pozele vin în curând» until the first one is uploaded.
+ */
 export async function transitionAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; expectedVersion: number; to: EditorialStatus; now?: Date },
@@ -163,16 +166,6 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
         `role ${input.actor.role} may not move an album from ${current.editorialStatus} to ${input.to}`,
       );
     }
-    if (input.to === "PUBLISHED") {
-      const [{ count }] = await tx
-        .select({ count: sql<number>`count(*)` })
-        .from(galleryItems)
-        .where(eq(galleryItems.albumId, input.albumId));
-      if (Number(count) === 0) {
-        throw new DomainError("VALIDATION_ERROR", "an album needs at least one photo before it is published");
-      }
-    }
-
     const [updated] = await tx
       .update(galleryAlbums)
       .set({

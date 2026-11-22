@@ -68,4 +68,11 @@ describe("the gallery's album cards (§434)", () => {
     // The free card has the title and the date line only: two text lines, never a third.
     expect(freeCard.match(/<p /g)?.length ?? 0).toBe(eventCard.match(/<p /g)!.length - 1);
   });
+
+  it("§NNN says the photos are coming on an album published before its first one, never «0 fotografii»", async () => {
+    const html = renderToStaticMarkup(await AlbumGrid({ albums: Promise.resolve([album({ photoCount: 0 })]) }));
+    expect(html).toContain("Pozele vin în curând");
+    expect(html).not.toContain("0 fotografii");
+    expect(html).not.toContain("<img");
+  });
 });

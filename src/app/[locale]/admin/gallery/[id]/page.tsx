@@ -97,7 +97,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
         <Chip size="small" variant="outlined" label={t("editor.version", { version: album.version })} />
       </Stack>
 
-      {/* Said before the publish button: an album with no photo cannot go live. */}
+      {/* Said before the publish button: an album with no photo goes live saying «Pozele vin în curând» (§NNN). */}
       {photos.length === 0 && <Alert severity="info">{t("gallery.noPhotosYet")}</Alert>}
 
       {transitions.length > 0 && (

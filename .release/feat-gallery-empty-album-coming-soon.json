@@ -1,0 +1,14 @@
+{
+  "branch": "feat/gallery-empty-album-coming-soon",
+  "decisionsTitle": "An album may be published before its first photo, saying «Pozele vin în curând» (amending BR-REQ-054-01 criterion 4)",
+  "decisionsSection": "**The owner, 2026-11-22, the day after the race:** the thank-you email to the participants links the race's album, and the link must work before the photos are gathered — «Vreau» to an album published empty that says «Pozele vin în curând». Until now `transitionAlbum` refused PUBLISHED to an album with no photo, so the link was a 404.\n\n**Decision.** The refusal is gone: an album with no photo goes through the same editorial workflow and goes live. While it has none, the gallery's card and the album's page say «Pozele vin în curând» («Photos coming soon») where they said «N fotografii», the card draws no cover, and the page's grid is empty. The first upload is the cover, as before, and the album's address does not change. The backoffice says so before the publish button («Albumul nu are nicio fotografie. Îl poți publica și așa: …») and in the gallery's intro. No migration.\n\n**Tests.** `tests/integration/cms/gallery.test.ts`, `tests/unit/content/gallery-album-grid.test.ts`.",
+  "changelogLine": "- **Un album se poate publica și gol** — scrie «Pozele vin în curând» până urci pozele, așa că link-ul lui merge de la început. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-054-01",
+      "text": "Amends criterion 4. Given an album with no photo, when it is published, then it goes live like any other: the gallery lists it with no cover and «Pozele vin în curând» in place of the count, its page says the same with no photo, and a photo uploaded later becomes its cover and shows at the same address (2026-11-22, `DECISIONS.md` §NNN). Verification: integration `cms/gallery.test.ts`, unit `content/gallery-album-grid.test.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "An album published before its photos says «Pozele vin în curând»"
+}
