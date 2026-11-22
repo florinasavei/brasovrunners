@@ -938,6 +938,7 @@
       "pace": "Average pace: {pace} min/km",
       "ownDistance": "covered about {km} km",
       "chipTime": "Chip time: {time}",
+      "stravaActivity": "{name}'s race on Strava",
       "categoryPlace": "place {position}",
       "noCategory": "No category",
       "noPlace": "No place",
@@ -1827,6 +1828,7 @@
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
           "results_name_consent_changed": "Choice to appear by name in the results changed by the participant",
+          "strava_activity_changed": "Link to the Strava activity added or removed by the participant",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
@@ -12955,6 +12957,15 @@
       "save": "Save all the results",
       "saving": "Saving…",
       "slow": "A long list of results takes a few seconds. Do not press again.",
+      "confirmSave": {
+        "title": "Save the results?",
+        "one": "One line changes. The places are worked out again as it saves.",
+        "few": "{count} lines change. The places are worked out again as it saves.",
+        "other": "{count} lines change. The places are worked out again as it saves.",
+        "confirm": "Save",
+        "more": "and {count} more",
+        "agreed": "Agreement to the name"
+      },
       "delete": "Delete",
       "deleteFor": "Delete the result: {runner}",
       "deleteTitle": "Delete the result?",
@@ -14778,6 +14789,19 @@
       "changed": "Your choice for the results is saved.",
       "failed": "We could not save your choice. Try again.",
       "otherAdult": "Only the person gives the consent to appear by name in the results, from their own registration's link. From here you can only withdraw it."
+    },
+    "stravaActivity": {
+      "title": "Your race on Strava",
+      "intro": "The link to your activity from the race shows in the published results, beside your name — only if your name shows there.",
+      "label": "Link to the activity on Strava",
+      "help": "The activity page's address, like strava.com/activities/123456. The app's strava.app.link does not work: open it in a browser and copy the page's address.",
+      "save": "Save the link",
+      "saving": "Saving…",
+      "remove": "Remove the link",
+      "changed": "The link to your activity is saved.",
+      "invalid": "The link is not an activity on strava.com. Copy the activity page's address, like strava.com/activities/123456.",
+      "failed": "We could not save the link. Try again.",
+      "otherAdult": "Only the person adds the link, from their own registration's link. From here you can only remove it."
     },
     "complete": {
       "title": "Complete your details",

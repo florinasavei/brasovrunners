@@ -280,6 +280,11 @@ export type AuditAction =
    */
   | "registration.results_name_consent_changed"
   /**
+   * «Activitatea ta pe Strava» written or taken off by the runner from their own manage link (§1048, `registrations/strava-activity.ts`):
+   * `to` — `set` or `cleared` — and the door. Never the link, which names its athlete.
+   */
+  | "registration.strava_activity_changed"
+  /**
    * «Da, vin la cursă» pressed on the registration's own manage page, answering «Cere reconfirmarea» (the decision «Cere
    * reconfirmarea», `registrations/reconfirmation.ts`): no staff actor, the door and how many asks it answered — once,
    * a second press writes nothing. Never a name.

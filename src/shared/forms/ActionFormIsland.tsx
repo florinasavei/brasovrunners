@@ -18,6 +18,7 @@ import {
   resolveAlso,
   resolveBodyCount,
   resolveChangedFields,
+  resolveChangedRows,
   resolveEmailCount,
   resolvePlaceChanges,
   tickAnswer,
@@ -378,8 +379,11 @@ export default function ActionFormIsland({
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     };
+    // A form of many rows (§1047, «Salvează tot clasamentul»): the rows the press changes, a line each; none changed, nothing to ask.
+    const rowed = resolveChangedRows(named, valueOf, data.keys());
+    if (!rowed) return unasked();
     // The event editor's place settings (§914): each change and what it does; none changed, a dialog only for them asks nothing.
-    const placed = resolvePlaceChanges(named, valueOf);
+    const placed = resolvePlaceChanges(rowed, valueOf);
     if (!placed) return unasked();
     event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384); the lines of a typed list counted.

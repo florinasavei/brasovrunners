@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.15-2026-11-22
+
+- **Linkul către activitatea Strava**: din pagina înscrierii, alergătorul își pune linkul activității de la cursă (`strava.com/activities/…`) și clasamentul publicat îl arată cu iconița Strava lângă numele lui — doar acolo unde numele apare. Migrarea 0231. §1048.
+## BR-V5.14-2026-11-22
+
+- **Clasament: «Salvează tot clasamentul» stă sus, plutind sub antet, și întreabă înainte**, numind rândurile pe care le schimbă («#210 Ingrid Mutter: Timp, Stare»); fără schimbări, salvează fără întrebare. Alergătorii înscriși apar în ordinea clasamentului: întâi sosiții, după timp crescător. §1047.
 ## BR-V5.13-2026-11-22
 
 - **PR Kit: bifa «Cu fundal în culoarea clubului»** pe logo-ul alb: nebifat, previzualizarea pe tablă de șah și fișierele transparente; bifat, SVG, PNG și PDF alb pe culoarea clubului. §1046.
