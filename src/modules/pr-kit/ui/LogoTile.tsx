@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
+import type { Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -22,14 +23,14 @@ const FORMAT_ICON = { svg: "download", png: "download", pdf: "pdf" } as const;
 const TARGET_SX = { minHeight: 44, minWidth: 44 } as const;
 
 /**
- * Transparency as drawing programs show it: a checkerboard, here in two middle greys so the white logo stands out on it
- * (a light board, the usual one, would hide it).
+ * Transparency as drawing programs show it: a checkerboard, here in the theme's two middle greys so the white logo stands out
+ * on it (a light board, the usual one, would hide it).
  */
-const CHECKERBOARD_SX = {
-  backgroundColor: "#8f8f8f",
-  backgroundImage: "repeating-conic-gradient(#a6a6a6 0% 25%, transparent 0% 50%)",
+const CHECKERBOARD_SX = (theme: Theme) => ({
+  backgroundColor: theme.palette.grey[600],
+  backgroundImage: `repeating-conic-gradient(${theme.palette.grey[500]} 0% 25%, transparent 0% 50%)`,
   backgroundSize: "20px 20px",
-} as const;
+});
 
 /**
  * One logo tile of «PR Kit» (§1015): the picture, its name, and an SVG, a PNG and a PDF of it. The white one carries a tick
@@ -60,17 +61,19 @@ export default function LogoTile({
   return (
     <Box data-testid="pr-kit-logo-tile" data-shape={shape} data-ink={ink} data-ground={ticked ? "primary" : "none"} sx={{ minWidth: 0 }}>
       <Box
-        sx={{
-          ...(shown.ground === null ? CHECKERBOARD_SX : { bgcolor: shown.ground }),
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 1,
-          p: 2,
-          aspectRatio: "5 / 2",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        sx={[
+          shown.ground === null ? CHECKERBOARD_SX : { bgcolor: shown.ground },
+          {
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+            p: 2,
+            aspectRatio: "5 / 2",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        ]}
       >
         <Box component="img" src={shown.preview} alt={shown.name} sx={{ display: "block", width: "100%", height: "100%", objectFit: "contain" }} />
       </Box>
