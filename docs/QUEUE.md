@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.08` | An album published before its photos says «Pozele vin în curând» (§1041) |
 | `BR-V5.07` | «Clasament»'s headings say «introdus manual» instead of «fără cip» (§1040) |
 | `BR-V5.06` | «Vezi clasamentul» and «Album foto» on the race's card (§1039) |
 | `BR-V5.05` | «Clasament» on a phone: long lines wrap (§1038) |

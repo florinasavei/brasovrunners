@@ -147,7 +147,7 @@ export async function saveAlbum<T extends Record<string, unknown>>(
 }
 
 /**
- * The editorial workflow (§11.2). An album with no photo may be published (§NNN): its page and its
+ * The editorial workflow (§11.2). An album with no photo may be published (§1041): its page and its
  * card say «Pozele vin în curând» until the first one is uploaded.
  */
 export async function transitionAlbum<T extends Record<string, unknown>>(

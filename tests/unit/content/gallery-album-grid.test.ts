@@ -69,7 +69,7 @@ describe("the gallery's album cards (§434)", () => {
     expect(freeCard.match(/<p /g)?.length ?? 0).toBe(eventCard.match(/<p /g)!.length - 1);
   });
 
-  it("§NNN says the photos are coming on an album published before its first one, never «0 fotografii»", async () => {
+  it("§1041 says the photos are coming on an album published before its first one, never «0 fotografii»", async () => {
     const html = renderToStaticMarkup(await AlbumGrid({ albums: Promise.resolve([album({ photoCount: 0 })]) }));
     expect(html).toContain("Pozele vin în curând");
     expect(html).not.toContain("0 fotografii");

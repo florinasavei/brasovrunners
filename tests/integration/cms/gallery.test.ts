@@ -29,7 +29,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * derives `STORAGE_MODE=fake`).
  *
  * What is protected: a photo is two objects and two rows and the first one is the cover; an
- * album with no photo can be published and reads as having none (§NNN); a public query sees only published albums in its
+ * album with no photo can be published and reads as having none (§1041); a public query sees only published albums in its
  * own locale; removing a photo or an album removes its objects; and the roles.
  */
 describe("BR-REQ-054-01 the photo gallery", () => {
@@ -91,7 +91,7 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     expect(published.publishedAt).not.toBeNull();
   });
 
-  it("§NNN publishes an album with no photo yet: it is listed with none and no cover, and a photo added later shows", async () => {
+  it("§1041 publishes an album with no photo yet: it is listed with none and no cover, and a photo added later shows", async () => {
     const draft = await createAlbum(db, { actor: editor, fields: FIELDS });
     const reviewed = await transitionAlbum(db, { actor: editor, albumId: draft.id, expectedVersion: draft.version, to: "IN_REVIEW" });
     const published = await transitionAlbum(db, { actor: editor, albumId: draft.id, expectedVersion: reviewed.version, to: "PUBLISHED" });
