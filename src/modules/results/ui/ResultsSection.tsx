@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { PublicEvent } from "@/modules/events/repository";
+import StartListSocials from "@/modules/events/ui/StartListSocials";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
@@ -220,7 +221,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
             )}
             <td data-col="name" data-testid="result-name">
               {row.name !== null ? (
-                row.name
+                <>
+                  {row.name}
+                  {/* «Activitatea ta pe Strava» (§1048): the runner's own link, beside a name the page prints — the read gives it only there. */}
+                  <StartListSocials stravaActivity={row.stravaActivityUrl} stravaLabel={t("results.stravaActivity", { name: row.name })} />
+                </>
               ) : (
                 <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
                   {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}

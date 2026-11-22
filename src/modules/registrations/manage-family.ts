@@ -59,6 +59,8 @@ export type ManagedPerson = {
   /** «Vreau să apar cu numele în clasament» (§879): the answer of an older notice's runner, and the notice it was given under. */
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
+  /** «Activitatea ta pe Strava» (§1048): the person's own link, `https://www.strava.com/activities/<id>`, or null. */
+  stravaActivityUrl: string | null;
   /** The birth date, read only so a minor's row never says a partner may receive it (§570). */
   birthDate: string | null;
   /**
@@ -115,6 +117,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       privacyNoticeVersion: registrations.privacyNoticeVersion,
       resultsNameConsent: registrations.resultsNameConsent,
       resultsConsentVersion: registrations.resultsConsentVersion,
+      stravaActivityUrl: registrations.stravaActivityUrl,
       birthDate: registrations.birthDate,
       // What `missingAnswers` reads (§905): the answers themselves never leave this function.
       source: registrations.source,
@@ -189,6 +192,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     privacyNoticeVersion: row.privacyNoticeVersion,
     resultsNameConsent: row.resultsNameConsent,
     resultsConsentVersion: row.resultsConsentVersion,
+    stravaActivityUrl: row.stravaActivityUrl,
     birthDate: row.birthDate,
     anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
