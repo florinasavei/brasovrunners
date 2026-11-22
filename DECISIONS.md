@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.06-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.07-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.06-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.07-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32026,3 +32026,11 @@ Where: the listing's results-first grid, the cards ahead and the past section. N
 **Tests.** `tests/unit/events/featured-card.test.ts`.
 
 Baseline `BR-V5.06-2026-11-22`.
+
+## 1040. «Clasament open (introdus manual)» and «Clasament elite (introdus manual)» instead of «(fără cip)» (amending §1031, §1032)
+
+**The owner, 2026-11-22, answering a runner who asked how the ranking was made:** «În loc de „fără cip” scriem „introdus manual”». The two headings say how the ranking was made rather than what was missing: «Clasament open (introdus manual)» and «Clasament elite (introdus manual)»; in English «Open results (entered by hand)» and «Elite results (entered by hand)». Nothing else changes: the headings show under the same rule, and «Timpul a fost notat manual.» stays beside them.
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.07-2026-11-22`.
