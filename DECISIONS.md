@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.11-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.12-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.11-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.12-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32078,3 +32078,16 @@ Baseline `BR-V5.10-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.11-2026-11-22`.
+
+## 1045. Why the times are indicative, under «Clasament»; the race with results leads the listing in the cards' own grid (amending §1031)
+
+**The owner, 2026-11-22:** «scrie și o scurtă explicație: cronometrarea s-a făcut orientativ pentru a putea premia primii alergători, e posibil ca după să existe erori, mai ales în grupurile care au venit împreună», and of the listing: «sunt prea lipite cardurile … să rămână primul încă câteva luni, dar pe același rând ca și celelalte».
+
+**Decision.**
+
+- While «Toate numele» is on, the line under «Clasament» reads «Timpul a fost notat manual. Cronometrarea s-a făcut orientativ, ca să putem premia primii alergători; pot exista erori, mai ales la grupurile care au sosit împreună.»
+- On «Alergări», a past race whose results are on show is the first card of the cards' own grid (`ListingBody`'s `leading`), no longer a grid of its own pressed against it. It leads as long as its results are on show: the public list's period after the race (§421).
+
+**Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/events/featured-card.test.ts`.
+
+Baseline `BR-V5.12-2026-11-22`.
