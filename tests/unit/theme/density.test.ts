@@ -289,6 +289,9 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "mb", step: "gapSm", sm: 3, xsBefore: 3, count: 2 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "my", step: "gapSm", sm: 3, xsBefore: 3 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
+  // The event page's tabs (§NNN): the gap above a panel and under its row of tabs, the page's own one step.
+  { file: "src/modules/events/ui/EventTabs.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventTabs.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/EventPageView.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mb", step: "gapXs", sm: 0, xsBefore: 1 },
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1.5, xsBefore: 1.5 }, // §480: one step tighter on a phone, the event page

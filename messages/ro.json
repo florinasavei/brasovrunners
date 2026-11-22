@@ -261,6 +261,12 @@
     "pastCountOfType": "Din trecut — {type} ({count})"
   },
   "Event": {
+    "tabs": {
+      "label": "Secțiunile paginii",
+      "descriere": "Descriere",
+      "clasament": "Clasament",
+      "galerie": "Galerie foto"
+    },
     "backToEvents": "Înapoi la alergări",
     "editInBackoffice": "Editează",
     "previewDoor": "previzualizare",
