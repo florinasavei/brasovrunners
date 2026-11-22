@@ -252,7 +252,8 @@ export default async function EventCard({
             {resultsChip && <CardDoor href={`${page}#clasament`} label={tEvent("series.seeResults")} glyph="results" button />}
             {albumSlug && (
               <CardDoor
-                href={getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: albumSlug } } })}
+                // The event page's «Galerie foto» tab, every album of the event — never the newest alone (§NNN — the owner: «nu la ultimul album»).
+                href={`${page}#galerie`}
                 label={tEvent("series.photoAlbum")}
                 glyph="album"
                 button
