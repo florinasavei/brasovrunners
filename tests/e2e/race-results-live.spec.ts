@@ -132,6 +132,7 @@ async function saveLine(admin: Page, eventId: string, fill: (page: Page) => Prom
   await hydrated(admin);
   await fill(admin);
   await admin.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+  await confirmDialog(admin, "Salvezi clasamentul?");
   await expect(admin.getByTestId("toast-live")).toContainText("Am salvat 1 rezultat", { timeout: 30_000 });
 }
 

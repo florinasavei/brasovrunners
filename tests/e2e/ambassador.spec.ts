@@ -200,6 +200,7 @@ test.describe("§948 «Ambasador» beside «Elită»", () => {
     await page.locator('[name="r[302].time"]').fill("0:41:00");
     await page.locator('[name="r[303].time"]').fill("0:38:00");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await confirmDialog(page, "Salvezi clasamentul?");
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 3 rezultate", { timeout: 30_000 });
     await hydrated(page);
     // Whose result it is, beside the name; no place, «în afara clasamentului» in its stead.

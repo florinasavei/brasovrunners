@@ -27,7 +27,7 @@ import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/fi
 import { recordedTimesOffered, shownFinishTime } from "@/modules/results/domain/recorded-times";
 import { readRecordedFinishTimes } from "@/modules/results/recorded-times";
 import { plannedGunOf, readEventResults, type ResultRunner } from "@/modules/results/results";
-import { CHOICE_BOX, CHOOSE_TIME_FORM_ID, chosenTimeValue, RESULTS_ALERT_ANCHOR } from "@/modules/results/rows";
+import { CHOICE_BOX, CHOOSE_TIME_FORM_ID, chosenTimeValue, RESULTS_ALERT_ANCHOR, registeredRowKey, typedRowKey } from "@/modules/results/rows";
 import {
   DELETE_RESULT_FORM_ID,
   type PlaceView,
@@ -58,6 +58,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
+import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 import { chooseRecordedTimeAction, deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultDistanceAction, setResultPublicNoteAction, setResultsAllNamesAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
@@ -87,8 +88,10 @@ const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
  * a page of their own under the event like its bibs and its messages — the event editor is long enough, and its «Înscrieri» card links here.
  *
- * ONE form, ONE «Salvează tot clasamentul» (§791's model): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the
- * boxes and save nothing; then a line for every registered runner who holds a race number (the elites first, then the checked in), each with «Timp», «Status»,
+ * ONE form, ONE «Salvează tot clasamentul» (§791's model) — at the form's top, floating under the site header, and asking first with the
+ * rows it changes (§1047): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the
+ * boxes and save nothing; then a line for every registered runner who holds a race number (the finishers by time, then the elites,
+ * then the checked in — §1047), each with «Timp», «Status»,
  * «Timp cip» and «Notă», and the position the last save gave; then the runners the club types by hand. Each line's «Șterge» is the page's
  * one small form beside, asked first. The Administrator's tick «Clasamentul e public pe pagina evenimentului» is a form of its own: the
  * disclosure has its own gate (the privacy notice in force must describe the results) and its own audit row, and does not ride on a save.
@@ -326,6 +329,45 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     recorded: recordedOf(runner, `#${runner.bibNumber} ${runner.name ?? ""}`.trim()),
   }));
 
+  // «Salvează tot clasamentul» asks first (§1047; the owner, 2026-11-22: «să confirm modificările salvate»): the rows the press changes,
+  // each with its boxes, compared in the browser with every line as drawn here; nothing changed, it saves unasked. The import and
+  // «Adaugă un alergător neînscris» post another `intent` and never ask.
+  const saveQuestion: ConfirmSpec = {
+    when: [{ field: "intent", equals: "save" }],
+    title: t("results.confirmSave.title"),
+    body: "",
+    confirmLabel: t("results.confirmSave.confirm"),
+    cancelLabel: confirm.cancel,
+    changedRows: {
+      rows: [
+        ...registered.map((line) => ({ key: registeredRowKey(line.bibNumber), label: `#${line.bibNumber} ${line.name}`.trim(), was: line.values })),
+        ...typed.map((line, index) => ({
+          key: typedRowKey(index),
+          label: `#${line.values.bib} ${line.values.name}`.trim(),
+          was: { ...line.values, agreed: line.agreed ? "on" : "" },
+        })),
+      ],
+      boxes: {
+        bib: words.bib,
+        name: words.name,
+        sex: words.sex,
+        birthDate: words.birthDate,
+        time: words.time,
+        status: words.status,
+        chip: words.chip,
+        note: words.note,
+        agreed: t("results.confirmSave.agreed"),
+      },
+      newLabel: "#{bib} {name}",
+      newFallback: words.typedRow,
+      separator: ", ",
+      forms: { one: t("results.confirmSave.one"), few: t("results.confirmSave.few", { count: "{count}" }), other: t("results.confirmSave.other", { count: "{count}" }) },
+      locale,
+      max: 30,
+      more: t("results.confirmSave.more", { count: "{count}" }),
+    },
+  };
+
   // ---- The refusal summary's labels, by the unindexed name of a box (`fieldLabelOf`) ------------------------------
   const labels: Record<string, string> = { importText: t("results.import.textLabel") };
   for (const kind of ["r", "n"] as const) {
@@ -479,7 +521,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           form, so nothing it draws is the form's. */}
       <ClockPickerHost words={{ help: t("results.picker.help"), ok: t("results.picker.ok"), cancel: t("results.picker.cancel") }}>
         {/* The one form of the page: the import box, the registered runners' lines, the typed ones and the one «Salvează tot clasamentul». */}
-        <ActionForm action={saveEventResultsAction} scope="results" messages={boxes} data-testid="results-form">
+        <ActionForm action={saveEventResultsAction} scope="results" messages={boxes} confirm={saveQuestion} data-testid="results-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={id} />
           {/* What the stored rows were when the page was drawn: a form older than another session's save is refused, not written over it. */}
@@ -487,6 +529,14 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {/* The default of the form: Enter in a box saves, and never imports — the import button below comes first in the page. */}
           <Box component="button" type="submit" name="intent" value="save" tabIndex={-1} aria-hidden="true" sx={{ ...VISUALLY_HIDDEN, opacity: 0 }} />
           <Stack spacing={2}>
+            {/* The one «Salvează tot clasamentul», at the top of the form and floating under the site header while the lines scroll (§1047;
+                the owner, 2026-11-22: «trebuie să fie sus floating»): sticky inside the form, so it leaves with the last line. */}
+            <Box
+              sx={{ position: "sticky", top: { xs: HEADER_CLEARANCE_PX.xs, sm: HEADER_CLEARANCE_PX.sm }, zIndex: 3, bgcolor: "background.paper", py: 1, borderBottom: 1, borderColor: "divider" }}
+              data-testid="results-save-bar"
+            >
+              <GlyphSubmitButton icon="save" name="intent" value="save" label={t("results.save")} pendingLabel={t("results.saving")} slowHint={t("results.slow")} />
+            </Box>
             <Panel glyph="importCsv" collapsible level={3} title={t("results.import.title")} aside={t("results.import.aside")} id="box-results-import" data-testid="results-import">
               <Stack spacing={1.5}>
                 <Typography variant="body2" color="text.secondary">
@@ -541,10 +591,6 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
                 <TypedResultLines lines={typed} words={words} />
               </Stack>
             </Panel>
-
-            <Box>
-              <GlyphSubmitButton icon="save" name="intent" value="save" label={t("results.save")} pendingLabel={t("results.saving")} slowHint={t("results.slow")} />
-            </Box>
           </Stack>
         </ActionForm>
       </ClockPickerHost>
