@@ -7710,7 +7710,7 @@
       "title": "Photo gallery",
       "create": "New album",
       "createHelp": "The album's details first, then the photos — uploaded on the album's page, straight from a phone.",
-      "intro": "The club's albums. An album is on the site once it is published and has at least one photo.",
+      "intro": "The club's albums. An album is on the site once it is published; until its photos are uploaded, the site says “Photos coming soon”.",
       "empty": "No album yet.",
       "backToList": "← All albums",
       "edit": "Open the album",
@@ -7725,7 +7725,7 @@
       "deleteAlbumTitle": "Delete the album?",
       "deleteAlbumBody": "\"{title}\" and its links go. The photographs stay in the picture library.",
       "readOnly": "Your role can see the albums but not change them.",
-      "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
+      "noPhotosYet": "The album has no photo. You can publish it anyway: the site says “Photos coming soon” until the photos are uploaded.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
       "uploadHelp": "JPEG, PNG or WebP; the first becomes the cover. Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
@@ -15197,6 +15197,7 @@
     "empty": "No published albums yet.",
     "backToGallery": "← All albums",
     "photoCount": "{count} photos",
+    "comingSoon": "Photos coming soon",
     "photoAlt": "Photo {n} of {total}: {title}"
   },
   "Picture": {

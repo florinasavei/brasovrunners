@@ -7710,7 +7710,7 @@
       "title": "Galerie foto",
       "create": "Album nou",
       "createHelp": "Întâi datele albumului, apoi fotografiile — se încarcă pe pagina albumului, direct de pe telefon.",
-      "intro": "Albumele clubului. Un album apare pe site când e publicat și are cel puțin o fotografie.",
+      "intro": "Albumele clubului. Un album apare pe site când e publicat; până urci pozele, pe site scrie „Pozele vin în curând”.",
       "empty": "Nu există niciun album încă.",
       "backToList": "← Toate albumele",
       "edit": "Deschide albumul",
@@ -7725,7 +7725,7 @@
       "deleteAlbumTitle": "Ștergi albumul?",
       "deleteAlbumBody": "„{title}” și legăturile lui dispar. Pozele rămân în biblioteca de poze.",
       "readOnly": "Rolul tău poate vedea albumele, dar nu le poate modifica.",
-      "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
+      "noPhotosYet": "Albumul nu are nicio fotografie. Îl poți publica și așa: pe site scrie „Pozele vin în curând” până urci pozele.",
       "photos": "Fotografii ({count})",
       "upload": "Încarcă fotografii",
       "uploadHelp": "JPEG, PNG sau WebP; prima devine coperta. Nu încărca un portret sau o fotografie în care un copil apare în prim-plan fără acordul scris al persoanei, respectiv cererea scrisă a părintelui (păstrează e-mailul). Cine cere să fie scos: ștergi fotografia în cel mult o lună.",
@@ -15197,6 +15197,7 @@
     "empty": "Nu există încă albume publicate.",
     "backToGallery": "← Toate albumele",
     "photoCount": "{count} fotografii",
+    "comingSoon": "Pozele vin în curând",
     "photoAlt": "Fotografia {n} din {total}: {title}"
   },
   "Picture": {
