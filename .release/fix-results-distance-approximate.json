@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-distance-approximate",
-  "decisionsTitle": "A runner's own distance reads «a parcurs aproximativ N km» (amending §1034)",
-  "decisionsSection": "**The owner, 2026-11-22:** «aici zic „a parcurs aproximativ”» — under Viorel Pălici's pace in «Clasament elite», whose 10,7 km was estimated, not measured. The line under a result with a runner's own «Distanța parcursă» reads «a parcurs aproximativ {km} km» («covered about {km} km»); nothing else changes.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
-  "changelogLine": "- **Clasament: «a parcurs aproximativ 10,7 km»** sub ritmul mediu al cuiva cu distanța lui. §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«a parcurs aproximativ N km» under a runner's own distance"
-}

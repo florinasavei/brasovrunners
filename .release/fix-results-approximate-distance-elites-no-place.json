@@ -1,0 +1,9 @@
+{
+  "branch": "fix/results-approximate-distance-elites-no-place",
+  "decisionsTitle": "«a parcurs aproximativ N km», and «Clasament elite» without its «Loc» column (amending §1032, §1034)",
+  "decisionsSection": "**The owner, 2026-11-22, on the race's results:**\n\n- «aici zic „a parcurs aproximativ”» — under Viorel Pălici's pace in «Clasament elite», whose 10,7 km was estimated, not measured. The line under a result with a runner's own «Distanța parcursă» reads «a parcurs aproximativ {km} km» («covered about {km} km»).\n- «nu mai afișa coloana de „Loc” pentru elite» — the elites' table draws no «Loc» column: no header on a wide screen, no place at the left of a phone's three lines. The rows keep their order (by time, or by pace with the sort); the open table keeps its «Loc».\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
+  "changelogLine": "- **Clasament: «a parcurs aproximativ 10,7 km»**, and **«Clasament elite» fără coloana «Loc»**. §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "«a parcurs aproximativ N km»; «Clasament elite» without «Loc»"
+}

@@ -124,7 +124,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
-  const tableOf = (list: typeof rows, tableId: string, rowTestId: string) => (
+  // «Clasament elite» has no «Loc» column (the owner, 2026-11-22: «nu mai afișa coloana de „Loc” pentru elite»): `withPlace` false.
+  const tableOf = (list: typeof rows, tableId: string, rowTestId: string, withPlace = true) => (
   <Box
     component="table"
     id={tableId}
@@ -146,8 +147,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       "& tbody tr": {
         display: { xs: "grid", sm: "table-row" },
         // `minmax(0, 1fr)` and `minWidth: 0` below: a long comment or pace line wraps inside the phone's width, never past its edge (§1038).
-        gridTemplateColumns: { xs: "2.5rem max-content minmax(0, 1fr)", sm: "none" },
-        gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
+        gridTemplateColumns: { xs: withPlace ? "2.5rem max-content minmax(0, 1fr)" : "max-content minmax(0, 1fr)", sm: "none" },
+        gridTemplateAreas: {
+          xs: withPlace ? '"place name name" "place number time" "place category category"' : '"name name" "number time" "category category"',
+          sm: "none",
+        },
         columnGap: { xs: 1, sm: 0 },
         borderBottom: 1,
         borderColor: "divider",
@@ -171,9 +175,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     </Box>
     <thead>
       <tr>
-        <th scope="col" data-col="place">
-          {t("results.columnPlace")}
-        </th>
+        {withPlace && (
+          <th scope="col" data-col="place">
+            {t("results.columnPlace")}
+          </th>
+        )}
         {/* In the cells' own order — place, name, number (§1035: the owner, «ai încurcat bib cu nume»): a header over its own column. */}
         <th scope="col" data-col="name">
           {t("results.columnName")}
@@ -196,18 +202,20 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         const finished = row.status === "FINISHED";
         return (
           <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status} data-order={index} data-pace={paceSeconds(row) ?? undefined}>
-            <td data-col="place" data-testid="result-place">
-              {finished && row.positionOverall !== null ? (
-                row.positionOverall
-              ) : (
-                <>
-                  <span aria-hidden="true">{NO_VALUE}</span>
-                  <Box component="span" sx={SR_ONLY_SX}>
-                    {t("results.noPlace")}
-                  </Box>
-                </>
-              )}
-            </td>
+            {withPlace && (
+              <td data-col="place" data-testid="result-place">
+                {finished && row.positionOverall !== null ? (
+                  row.positionOverall
+                ) : (
+                  <>
+                    <span aria-hidden="true">{NO_VALUE}</span>
+                    <Box component="span" sx={SR_ONLY_SX}>
+                      {t("results.noPlace")}
+                    </Box>
+                  </>
+                )}
+              </td>
+            )}
             <td data-col="name" data-testid="result-name">
               {row.name !== null ? (
                 row.name
@@ -306,7 +314,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
             </Typography>
           </Box>
           {(results.separateRows ?? []).some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={`${TABLE_ID}-elite`} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
-          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
+          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row", false)}
         </Box>
       )}
       <Box

@@ -410,6 +410,12 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect(html).toContain("data-testid=\"results-elite-title\"");
     expect(html).toContain("Clasament open (introdus manual)");
     expect(html).toContain("Timpul a fost notat manual.");
+    // «Clasament elite» has no «Loc» column (§NNN — the owner: «nu mai afișa coloana de „Loc” pentru elite»); the open one keeps it.
+    const openAt = html.indexOf("Clasament open (introdus manual)");
+    const elites = html.slice(html.indexOf('data-testid="results-elite-section"'), openAt);
+    expect(elites).toContain('data-testid="result-elite-row"');
+    expect(elites).not.toContain('data-col="place"');
+    expect(html.slice(openAt)).toContain('data-col="place"');
     // The note about the tick says who is named: untrue while everybody is, so it is not drawn.
     expect(html).not.toContain('data-testid="results-note"');
     await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE);
