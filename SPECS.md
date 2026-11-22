@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.07-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.09-2026-11-22 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V5.07-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.09-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2843,6 +2843,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 26. Given a picture in the home page's photo strip, when the pictures page or the orphan sweep looks for its uses, then it is used «Pe pagina principală» while it is in the strip — the page on or off, the strip shown or not — and no longer once it is taken out (2026-10-11, `DECISIONS.md` §717). Verification: integration `appearance/home-page.test.ts`.
 27. Given a stored picture set as the picture of an event's «Planul voluntarilor», when the orphan sweep runs or the pictures page's delete is pressed, then the picture is kept and the delete is refused, and the pictures page lists it as used by that event's plan («Planul voluntarilor: {title}», reference kind `volunteerPlan`) — never as a picture of the event, so «Din galerie» gives it no chip and «Acest eveniment» does not offer it; once it is taken off the plan and used nowhere else, the list says so and the sweep deletes its row and its files after its seven days (2026-11-16, `DECISIONS.md` §952).
 28. Amends criterion 27. Given a stored picture on any event's «Poze și hărți» — or still named by the retired column of the release before —, when the orphan sweep runs or the pictures page's delete is pressed, then the picture is kept and the delete is refused, and the pictures page lists it once as used by that event's plan («Planul voluntarilor: {title}»); once every plan lets go of it, the sweep deletes it after its seven days (2026-11-18, `DECISIONS.md` §978).
+29. Amends criterion 4. Given an album with no photo, when it is published, then it goes live like any other: the gallery lists it with no cover and «Pozele vin în curând» in place of the count, its page says the same with no photo, and a photo uploaded later becomes its cover and shows at the same address (2026-11-22, `DECISIONS.md` §1041). Verification: integration `cms/gallery.test.ts`, unit `content/gallery-album-grid.test.ts`.
 
 **Verification:** unit `media/images.test.ts`; integration `cms/gallery.test.ts`; e2e `gallery.spec.ts`
 

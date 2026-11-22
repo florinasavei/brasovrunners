@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.07-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.09-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.07-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.09-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32034,3 +32034,31 @@ Baseline `BR-V5.06-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`.
 
 Baseline `BR-V5.07-2026-11-22`.
+
+## 1041. An album may be published before its first photo, saying «Pozele vin în curând» (amending BR-REQ-054-01 criterion 4)
+
+**The owner, 2026-11-22, the day after the race:** the thank-you email to the participants links the race's album, and the link must work before the photos are gathered — «Vreau» to an album published empty that says «Pozele vin în curând». Until now `transitionAlbum` refused PUBLISHED to an album with no photo, so the link was a 404.
+
+**Decision.** The refusal is gone: an album with no photo goes through the same editorial workflow and goes live. While it has none, the gallery's card and the album's page say «Pozele vin în curând» («Photos coming soon») where they said «N fotografii», the card draws no cover, and the page's grid is empty. The first upload is the cover, as before, and the album's address does not change. The backoffice says so before the publish button («Albumul nu are nicio fotografie. Îl poți publica și așa: …») and in the gallery's intro. No migration.
+
+**Tests.** `tests/integration/cms/gallery.test.ts`, `tests/unit/content/gallery-album-grid.test.ts`.
+
+Baseline `BR-V5.08-2026-11-22`.
+
+## 1042. «Clasament» one fold around both tables, «Clasament elite» without «Loc», and «a parcurs aproximativ N km» (amending §1031, §1032, §1034)
+
+**The owner, 2026-11-22, on the race's results:**
+
+- «toată secțiunea de „Clasament” trebuie să fie collapsible» — «așa e greu de urmărit și de dat scroll pe toată pagina». Asked whether it opens shut or open, he chose **open**; asked whether «Despre / Clasament / Album foto» tabs as separate pages come now, he chose the fold alone for now.
+- «nu mai afișa coloana de „Loc” pentru elite».
+- «aici zic „a parcurs aproximativ”» — under Viorel Pălici's pace, whose 10,7 km was estimated, not measured.
+
+**Decision.**
+
+- While the elites are ranked apart, the whole «Clasament» is one native `<details>`, **open** on arrival, with an `h2` «Clasament» in its summary and no frame of its own, so the tables inside keep a phone's width; «Clasament elite» and «Clasament open (introdus manual)» stay folds of their own inside it, their headings stepping down to `h3`. With no elites apart the one table is the fold, as before.
+- The elites' table draws no «Loc» column: no header on a wide screen, no place at the left of a phone's three lines. The rows keep their order (by time, or by pace with the sort); the open table keeps its «Loc».
+- The line under a result with a runner's own «Distanța parcursă» reads «a parcurs aproximativ {km} km» («covered about {km} km»).
+
+**Tests.** `tests/integration/results/public-section.test.ts`.
+
+Baseline `BR-V5.09-2026-11-22`.

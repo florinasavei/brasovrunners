@@ -124,7 +124,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
-  const tableOf = (list: typeof rows, tableId: string, rowTestId: string) => (
+  // «Clasament elite» has no «Loc» column (the owner, 2026-11-22: «nu mai afișa coloana de „Loc” pentru elite»): `withPlace` false.
+  const tableOf = (list: typeof rows, tableId: string, rowTestId: string, withPlace = true) => (
   <Box
     component="table"
     id={tableId}
@@ -146,8 +147,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       "& tbody tr": {
         display: { xs: "grid", sm: "table-row" },
         // `minmax(0, 1fr)` and `minWidth: 0` below: a long comment or pace line wraps inside the phone's width, never past its edge (§1038).
-        gridTemplateColumns: { xs: "2.5rem max-content minmax(0, 1fr)", sm: "none" },
-        gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
+        gridTemplateColumns: { xs: withPlace ? "2.5rem max-content minmax(0, 1fr)" : "max-content minmax(0, 1fr)", sm: "none" },
+        gridTemplateAreas: {
+          xs: withPlace ? '"place name name" "place number time" "place category category"' : '"name name" "number time" "category category"',
+          sm: "none",
+        },
         columnGap: { xs: 1, sm: 0 },
         borderBottom: 1,
         borderColor: "divider",
@@ -171,9 +175,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
     </Box>
     <thead>
       <tr>
-        <th scope="col" data-col="place">
-          {t("results.columnPlace")}
-        </th>
+        {withPlace && (
+          <th scope="col" data-col="place">
+            {t("results.columnPlace")}
+          </th>
+        )}
         {/* In the cells' own order — place, name, number (§1035: the owner, «ai încurcat bib cu nume»): a header over its own column. */}
         <th scope="col" data-col="name">
           {t("results.columnName")}
@@ -196,18 +202,20 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
         const finished = row.status === "FINISHED";
         return (
           <tr key={row.bibNumber} data-testid={rowTestId} data-bib={row.bibNumber} data-category={row.sex ?? ""} data-status={row.status} data-order={index} data-pace={paceSeconds(row) ?? undefined}>
-            <td data-col="place" data-testid="result-place">
-              {finished && row.positionOverall !== null ? (
-                row.positionOverall
-              ) : (
-                <>
-                  <span aria-hidden="true">{NO_VALUE}</span>
-                  <Box component="span" sx={SR_ONLY_SX}>
-                    {t("results.noPlace")}
-                  </Box>
-                </>
-              )}
-            </td>
+            {withPlace && (
+              <td data-col="place" data-testid="result-place">
+                {finished && row.positionOverall !== null ? (
+                  row.positionOverall
+                ) : (
+                  <>
+                    <span aria-hidden="true">{NO_VALUE}</span>
+                    <Box component="span" sx={SR_ONLY_SX}>
+                      {t("results.noPlace")}
+                    </Box>
+                  </>
+                )}
+              </td>
+            )}
             <td data-col="name" data-testid="result-name">
               {row.name !== null ? (
                 row.name
@@ -277,12 +285,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   </Box>
   );
 
-  return (
-    // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
-    // names stay out of search snippets (§421); the page itself stays indexed.
-    <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
-      {/* «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat». */}
-      {(results.separateRows ?? []).length > 0 && (
+  // With the elites apart, both tables sit in one «Clasament» fold and their own headings step down to h3 (§1042).
+  const wrapped = (results.separateRows ?? []).length > 0;
+
+  // «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat».
+  const elitesFold = wrapped && (
         <Box
           component="details"
           open
@@ -300,15 +307,17 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           }}
         >
           <Box component="summary">
-            <Typography component="h2" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
+            <Typography component="h3" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
               <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
               {t("results.eliteTitle")}
             </Typography>
           </Box>
           {(results.separateRows ?? []).some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={`${TABLE_ID}-elite`} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
-          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row")}
+          {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row", false)}
         </Box>
-      )}
+  );
+
+  const openFold = (
       <Box
         component="details"
         open
@@ -325,7 +334,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       >
         {/* A real `h2` inside the summary, so the heading stays in a screen reader's list while the fold is shut (§336, the rules' fold). */}
         <Box component="summary">
-          <Typography component="h2" id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+          <Typography component={wrapped ? "h3" : "h2"} id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
             <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
             {results.manualTime ? t("results.titleNoChip") : t("results.title")}
           </Typography>
@@ -369,7 +378,28 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           </Typography>
         )}
       </Box>
+  );
 
+  return (
+    // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
+    // names stay out of search snippets (§421); the page itself stays indexed.
+    <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
+      {wrapped ? (
+        // The whole «Clasament» one fold, open on arrival (§1042 — the owner, 2026-11-22: «toată secțiunea de „Clasament” trebuie să fie
+        // collapsible», «așa e greu de urmărit și de dat scroll pe toată pagina»). No frame of its own: the tables keep a phone's width.
+        <Box component="details" open aria-labelledby="results-all-title" data-testid="results-fold" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 }, ...DISCLOSURE_OPEN_ARROW }}>
+          <Box component="summary">
+            <Typography component="h2" id="results-all-title" variant="h2" data-testid="results-all-title" sx={{ fontSize: "1.375rem" }}>
+              <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+              {t("results.title")}
+            </Typography>
+          </Box>
+          {elitesFold}
+          {openFold}
+        </Box>
+      ) : (
+        openFold
+      )}
     </Box>
   );
 }

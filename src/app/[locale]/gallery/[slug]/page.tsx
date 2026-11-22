@@ -88,7 +88,9 @@ export default async function AlbumPage({ params }: Props) {
         {album.title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
-        {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
+        {/* An album published before its photos (§1041) says they are coming, never «0 fotografii». */}
+        {formatCalendarDay(album.takenOn, { locale, style: "long" })} ·{" "}
+        {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : t("comingSoon")}
         {album.event && (
           <>
             {" · "}
