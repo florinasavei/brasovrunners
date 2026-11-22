@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.17-2026-11-22
+
+- **Albume pe Google Photos** — an album may link its Google Photos album; its page opens it with one button. §1050.
 ## BR-V5.16-2026-11-22
 
 - **Pagina cursei are tab-uri: «Descriere», «Clasament», «Galerie foto»**. Se deschide pe «Descriere»; «Clasament» apare când clasamentul publicat are rânduri, «Galerie foto» când un album al cursei e publicat (cardul albumului, cu linkul spre el). Linkurile spre `#clasament` deschid direct tab-ul clasamentului. §1049.

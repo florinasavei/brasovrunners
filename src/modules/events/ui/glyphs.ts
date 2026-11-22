@@ -190,7 +190,7 @@ export const GLYPHS = {
   // «N vin» on an upcoming turn-up event's card (§815): the group of people the page's own fold «Cine vine (N)» draws (`RsvpCount`) — the
   // same glyph for the same number. Always beside its word.
   coming: GroupsIcon,
-  // «Album foto» on the event's page and an album's «Vezi pozele pe Google Photos» (§NNN): the gallery's own picture stack. Beside its word.
+  // «Album foto» on the event's page and an album's «Vezi pozele pe Google Photos» (§1050): the gallery's own picture stack. Beside its word.
   album: PhotoLibraryIcon,
 };
 

@@ -46,7 +46,7 @@ export const albumFieldsSchema = z
         (value) => value === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
         "the event must be chosen from the list",
       ),
-    /** «Link Google Photos» (§NNN): an `https://` address, or "" for none. */
+    /** «Link Google Photos» (§1050): an `https://` address, or "" for none. */
     externalUrl: z
       .string()
       .trim()

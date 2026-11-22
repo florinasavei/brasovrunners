@@ -110,7 +110,7 @@ export default async function AlbumPage({ params }: Props) {
         </Typography>
       )}
 
-      {/* «Link Google Photos» (§NNN): the photos where they live, one big button, in a new tab. */}
+      {/* «Link Google Photos» (§1050): the photos where they live, one big button, in a new tab. */}
       {album.externalUrl && (
         <Box sx={{ mb: 3 }}>
           <ButtonLink href={album.externalUrl as never} target="_blank" rel="noopener noreferrer" variant="contained" size="large" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="album-external-link">
