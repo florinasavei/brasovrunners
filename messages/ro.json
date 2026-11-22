@@ -920,7 +920,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",
       "until": "Rămâne pe pagină până {until}",
-      "manualTime": "Timpul a fost notat manual.",
+      "manualTime": "Timpul a fost notat manual. Cronometrarea s-a făcut orientativ, ca să putem premia primii alergători; pot exista erori, mai ales la grupurile care au sosit împreună.",
       "live": "Se actualizează singur la 30 de secunde.",
       "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
       "columnPlace": "Loc",
