@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.13-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.14-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.13-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.14-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32105,3 +32105,17 @@ Baseline `BR-V5.12-2026-11-22`.
 **Tests.** `tests/unit/pr-kit/kit.test.ts`, `tests/unit/pr-kit/logo-tile.test.ts`, `tests/unit/theme/brand-kit.test.ts`, `tests/integration/pr-kit/pr-kit.test.ts`, `tests/fork/pr-kit.test.ts`.
 
 Baseline `BR-V5.13-2026-11-22`.
+
+## 1047. «Clasament»: «Salvează tot clasamentul» floats at the top and asks first, naming the rows it changes; the registered lines by time (amending §808)
+
+**The owner, 2026-11-22**, the day after the race, on «Clasament» with 168 registered lines: «salvează clasamentul trebuie să fie sus floating și să confirm modificările salvate» — the one button was at the foot of the page, under every line — and, of the lines themselves, «trebuie să fie ordonați după clasament, efectiv după timp crescător». Asked what «să confirm» should be — a question listing the changes, a plain question, or the button alone — he chose **the question with the list of changes**.
+
+**Decision.**
+
+- The one «Salvează tot clasamentul» moves from the foot of the form to its top, in a bar that floats under the site header while the lines scroll (`position: sticky`, inside the form, so it leaves with the last line). Still one button; Enter in a box still presses the form's hidden default.
+- The press asks first: «Salvezi clasamentul?», its body counting the rows the save changes («Se schimbă 2 rânduri.») and a line per row naming the boxes changed in it — «#210 Ingrid Mutter: Timp, Stare»; at most thirty lines, then «și încă N». The browser compares each posted box with the line as the page drew it (`ConfirmSpec.changedRows`, `resolveChangedRows` in `shared/feedback/notice.ts`, beside `changedFields` of §645); a line «Adaugă un alergător neînscris» added is named by the number and the name typed in it. Nothing changed, nothing asked: the save goes through and the toast says nothing changed. «Importă din CSV» and «Adaugă un alergător neînscris», the form's other buttons, never ask. Without JavaScript there is no question, as everywhere (§384).
+- The registered lines are in the ranking's order: every «Sosit» with a time first, fastest first — an elite out of the ranking among them by its own time —, ties by number; then the lines with no time — no result yet, a dropout, a non-starter, a disqualification — in the order of before the race: the elites, then the checked-in, then by number (the owner's «mai întâi elitele» of 2026-11-19 stays for a race not yet run). The page is drawn again in that order after every save, so a line given a time moves to its place.
+
+**Tests.** `tests/unit/results/save-question.test.ts`, `tests/unit/shared/action-form-confirm.test.ts`, `tests/unit/shared/confirmed-actions.test.ts` (the save is now among the actions that ask), `tests/integration/results/results.test.ts`, `tests/integration/results/page.test.ts`; the e2e specs that press the save answer the question (`race-results`, `race-results-live`, `race-results-public`, `ambassador`).
+
+Baseline `BR-V5.14-2026-11-22`.

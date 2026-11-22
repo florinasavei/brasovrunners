@@ -160,7 +160,7 @@ test.describe("§808 a race's results", () => {
 
     // ---- One save, refused on the line that has no name, with every box kept ------------------------------------------
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
-    // It asks first (§NNN), naming the rows it changes: the three registered ones the import filled and the new line, by its number.
+    // It asks first (§1047), naming the rows it changes: the three registered ones the import filled and the new line, by its number.
     const question = page.getByRole("dialog", { name: "Salvezi clasamentul?" });
     await expect(question).toContainText("Se schimbă 4 rânduri");
     await expect(question.getByTestId("confirm-lines")).toContainText("#555: Nr.");

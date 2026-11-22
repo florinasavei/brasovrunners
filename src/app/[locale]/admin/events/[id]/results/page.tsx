@@ -89,9 +89,9 @@ const TIME_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "CONFLICT", "
  * a page of their own under the event like its bibs and its messages — the event editor is long enough, and its «Înscrieri» card links here.
  *
  * ONE form, ONE «Salvează tot clasamentul» (§791's model) — at the form's top, floating under the site header, and asking first with the
- * rows it changes (§NNN): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the
+ * rows it changes (§1047): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the
  * boxes and save nothing; then a line for every registered runner who holds a race number (the finishers by time, then the elites,
- * then the checked in — §NNN), each with «Timp», «Status»,
+ * then the checked in — §1047), each with «Timp», «Status»,
  * «Timp cip» and «Notă», and the position the last save gave; then the runners the club types by hand. Each line's «Șterge» is the page's
  * one small form beside, asked first. The Administrator's tick «Clasamentul e public pe pagina evenimentului» is a form of its own: the
  * disclosure has its own gate (the privacy notice in force must describe the results) and its own audit row, and does not ride on a save.
@@ -329,7 +329,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     recorded: recordedOf(runner, `#${runner.bibNumber} ${runner.name ?? ""}`.trim()),
   }));
 
-  // «Salvează tot clasamentul» asks first (§NNN; the owner, 2026-11-22: «să confirm modificările salvate»): the rows the press changes,
+  // «Salvează tot clasamentul» asks first (§1047; the owner, 2026-11-22: «să confirm modificările salvate»): the rows the press changes,
   // each with its boxes, compared in the browser with every line as drawn here; nothing changed, it saves unasked. The import and
   // «Adaugă un alergător neînscris» post another `intent` and never ask.
   const saveQuestion: ConfirmSpec = {
@@ -529,7 +529,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {/* The default of the form: Enter in a box saves, and never imports — the import button below comes first in the page. */}
           <Box component="button" type="submit" name="intent" value="save" tabIndex={-1} aria-hidden="true" sx={{ ...VISUALLY_HIDDEN, opacity: 0 }} />
           <Stack spacing={2}>
-            {/* The one «Salvează tot clasamentul», at the top of the form and floating under the site header while the lines scroll (§NNN;
+            {/* The one «Salvează tot clasamentul», at the top of the form and floating under the site header while the lines scroll (§1047;
                 the owner, 2026-11-22: «trebuie să fie sus floating»): sticky inside the form, so it leaves with the last line. */}
             <Box
               sx={{ position: "sticky", top: { xs: HEADER_CLEARANCE_PX.xs, sm: HEADER_CLEARANCE_PX.sm }, zIndex: 3, bgcolor: "background.paper", py: 1, borderBottom: 1, borderColor: "divider" }}

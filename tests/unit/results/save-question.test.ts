@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type ConfirmSpec, resolveChangedRows } from "@/shared/feedback/notice";
 
 /**
- * §NNN — «Salvează tot clasamentul» asks first, naming the rows it changes (the owner, 2026-11-22: «salvează clasamentul trebuie să fie
+ * §1047 — «Salvează tot clasamentul» asks first, naming the rows it changes (the owner, 2026-11-22: «salvează clasamentul trebuie să fie
  * sus floating și să confirm modificările salvate»). The page draws every line as it stands; at the press the browser compares each
  * posted box with it (`resolveChangedRows`) and the question counts the rows and names each with its boxes. Nothing changed, nothing
  * asked — the save goes through and the toast says nothing changed.
@@ -62,7 +62,7 @@ const ask = (changes?: Record<string, string | undefined>) => {
   return resolveChangedRows(spec, valueOf, names);
 };
 
-describe("§NNN «Salvează tot clasamentul» names the rows it changes", () => {
+describe("§1047 «Salvează tot clasamentul» names the rows it changes", () => {
   it("asks nothing when nothing moved — a box typed with spaces around it is the same box", () => {
     expect(ask()).toBeNull();
     expect(ask({ "r[101].note": "  " })).toBeNull();

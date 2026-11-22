@@ -385,7 +385,7 @@ describe("§986 «Clasament»: who wrote each line, «Istoricul sosirilor», and
     await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "50:00", status: "", chip: "", note: "", agreed: "" }, { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "45:12", status: "", chip: "", note: "a trecut linia", agreed: "" }] }, at(60));
     const html = await results(at(61));
     const written = [...html.matchAll(/data-testid="result-written-by"[^>]*>([^<]*)</g)].map((match) => match[1]);
-    // In the page's order, by time (§NNN): 102 (45:12, recorded at the line and changed) before 101 (50:00, as first written).
+    // In the page's order, by time (§1047): 102 (45:12, recorded at the line and changed) before 101 (50:00, as first written).
     expect(written).toEqual(["modificat de Ana Admin", "introdus de Ana Admin"]);
     expect(html).toContain(`href="/ro/admin/checkin/cronometrare?eventId=${raceId}"`);
     expect(text(html)).toContain("Cronometrare");

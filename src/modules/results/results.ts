@@ -516,7 +516,7 @@ export type ResultRunner = {
 export type EventResultsView = {
   event: EventFacts;
   /**
-   * Registered runners with a race number — the finishers first, by time (§NNN), then the elites, then the checked-in, then by number —
+   * Registered runners with a race number — the finishers first, by time (§1047), then the elites, then the checked-in, then by number —
    * each with its result when it has one.
    */
   registered: ResultRunner[];
@@ -531,7 +531,7 @@ export type EventResultsView = {
   ageBandsCustom: boolean;
 };
 
-/** A line's place in «Clasament»'s order (§NNN): a «Sosit»'s time, or null for a line with none — no result, no time, another state. */
+/** A line's place in «Clasament»'s order (§1047): a «Sosit»'s time, or null for a line with none — no result, no time, another state. */
 function finishTimeOf(runner: ResultRunner): number | null {
   return runner.result?.status === "FINISHED" ? runner.result.gunTimeMs : null;
 }
@@ -635,7 +635,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
     });
   }
   // The finishers first, by time, fastest first — the owner, 2026-11-22: «trebuie să fie ordonați după clasament, efectiv după timp
-  // crescător» (§NNN), the elites out of the ranking among them by their own time —; then everybody else as before the race: the elites —
+  // crescător» (§1047), the elites out of the ranking among them by their own time —; then everybody else as before the race: the elites —
   // the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
   registered.sort((a, b) => {
     const [timeA, timeB] = [finishTimeOf(a), finishTimeOf(b)];

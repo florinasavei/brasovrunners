@@ -191,7 +191,7 @@ describe("§948 whose result it is: said on the backoffice's page, never on the 
     await save([...RESULTS, typed(0, { bib: "900", name: "Ion Vasile", sex: "male", time: "41:00" })]);
 
     const view = await readEventResults(db, admin, raceId);
-    // In the page's order, by time (§NNN): 103 (38:00), 102 (42:00), 101 (44:00), 104 (46:00).
+    // In the page's order, by time (§1047): 103 (38:00), 102 (42:00), 101 (44:00), 104 (46:00).
     expect(view.registered.map((runner) => [runner.bibNumber, runner.elite, runner.ambassador])).toEqual([
       [103, false, true],
       [102, true, false],

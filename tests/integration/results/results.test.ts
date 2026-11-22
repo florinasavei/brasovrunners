@@ -552,7 +552,7 @@ describe("§808 the delete and the export", () => {
     await registerRunner(db, raceId, { name: "In asteptare", bibNumber: 160, status: "PENDING_DECLARATION" });
     await save([line(101, { time: "50:00" }), line(103, { status: "DNF" }), typed(0, { bib: "900", name: "Ion Vasile", time: "40:00" })]);
     const view = await readEventResults(db, staff.ADMIN!, raceId);
-    // The finisher first (101, §NNN), then the checked-in (102), then by number; the pending one holds a bib but no result and is not confirmed: not drawn.
+    // The finisher first (101, §1047), then the checked-in (102), then by number; the pending one holds a bib but no result and is not confirmed: not drawn.
     expect(view.registered.map((runner) => [runner.bibNumber, runner.checkedIn])).toEqual([[101, true], [102, true], [103, false], [104, false]]);
     expect(view.typed.map((runner) => [runner.bibNumber, runner.name])).toEqual([[900, "Ion Vasile"]]);
     expect(view.counts).toEqual({ FINISHED: 2, DNF: 1, DNS: 0, DSQ: 0 });
@@ -577,7 +577,7 @@ describe("§808 the delete and the export", () => {
     ]);
   });
 
-  it("reads the finishers first, by time — an elite among them by its own — then the rest as before the race (§NNN)", async () => {
+  it("reads the finishers first, by time — an elite among them by its own — then the rest as before the race (§1047)", async () => {
     const { bia, dan } = await field();
     // The owner, 2026-11-22: «trebuie să fie ordonați după clasament, efectiv după timp crescător».
     await db.update(registrations).set({ elite: true }).where(eq(registrations.id, bia.id));
@@ -611,7 +611,7 @@ describe("§808 the public name is the public list's rule, and one rule more: th
     expect(result?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[102, "Bia Noua"], [101, null]]);
     // The page's own preview says the same: «Participant #101» for the older registration, the name for the newer.
     const view = await readEventResults(db, staff.ADMIN!, raceId);
-    // In the page's order (§NNN): the faster first.
+    // In the page's order (§1047): the faster first.
     expect(view.registered.map((runner) => [runner.bibNumber, runner.ticked, runner.named])).toEqual([[102, true, true], [101, true, false]]);
     // With no notice that describes them there is no line at all: nobody is named.
     expect((await readPublicEventResults(db, raceId, { ...options, firstResultsNoticeVersion: null }))?.rows.map((row) => row.name)).toEqual([null, null]);
@@ -631,7 +631,7 @@ describe("§808 the public name is the public list's rule, and one rule more: th
     // The event shows its special guests publicly (§743): then, and only then, the guest who ticked is named.
     await db.update(events).set({ hiddenListEnabled: true, hiddenListPublic: true }).where(eq(events.id, raceId));
     expect(await names()).toEqual([[103, "Dan Invitat"], [102, null], [101, "Ana Confirmata"]]);
-    // The backoffice preview follows the same rule — in its own order, by time (§NNN).
+    // The backoffice preview follows the same rule — in its own order, by time (§1047).
     const view = await readEventResults(db, staff.ADMIN!, raceId);
     expect(view.registered.map((runner) => [runner.bibNumber, runner.named])).toEqual([[103, true], [102, false], [101, true]]);
   });

@@ -113,7 +113,7 @@ describe("§808 the page, in Romanian", () => {
     await runners();
     const html = await render();
     expect(html.match(/data-testid="result-line"/g)).toHaveLength(3);
-    // By time, fastest first (§NNN): 102 (45:00), 101 (50:00); then 103, checked in but with no result yet.
+    // By time, fastest first (§1047): 102 (45:00), 101 (50:00); then 103, checked in but with no result yet.
     expect([...html.matchAll(/data-testid="result-line" data-bib="(\d+)"/g)].map((match) => match[1])).toEqual(["102", "101", "103"]);
     for (const bib of [101, 102, 103]) for (const box of ["time", "status", "chip", "note"]) expect(html).toContain(`name="r[${bib}].${box}"`);
     expect(inputValue(html, "r[101].time")).toBe("0:50:00");
@@ -247,7 +247,7 @@ describe("§808 the page, in Romanian", () => {
     expect(saves[0]).toContain('tabindex="-1"');
   });
 
-  it("puts «Salvează tot clasamentul» at the top of the form, in the bar that floats under the site header (§NNN)", async () => {
+  it("puts «Salvează tot clasamentul» at the top of the form, in the bar that floats under the site header (§1047)", async () => {
     await runners();
     const html = await render();
     const form = html.slice(html.indexOf('data-testid="results-form"'));
@@ -646,7 +646,7 @@ describe("§948 «Clasament» and «Premii» say whose result it is: «Elită»,
     await mark(102, { elite: true });
     await mark(103, { ambassador: true });
     const html = await render();
-    // Bia (102) is first — the fastest, too, since §NNN orders the finishers by time —; Ana (101, 50:00), then Dan (103, an ambassador
+    // Bia (102) is first — the fastest, too, since §1047 orders the finishers by time —; Ana (101, 50:00), then Dan (103, an ambassador
     // only, no result yet). The elites-first order of the lines with no time is `results.test.ts`'.
     expect([...html.matchAll(/data-testid="result-line" data-bib="(\d+)"/g)].map((match) => match[1])).toEqual(["102", "101", "103"]);
   });

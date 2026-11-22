@@ -305,7 +305,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   resetEventResultsAction: [],
   // «Folosește» under a line's «Timpi la sosire» (§1012): a recorded time made the runner's, every place ranked again — asked first, as «Șterge».
   chooseRecordedTimeAction: [],
-  // «Salvează tot clasamentul» (§NNN; the owner, 2026-11-22: «să confirm modificările salvate»): the question names the rows the save
+  // «Salvează tot clasamentul» (§1047; the owner, 2026-11-22: «să confirm modificările salvate»): the question names the rows the save
   // changes; nothing changed, nothing asked. The import and «Adaugă un alergător neînscris», the form's other two buttons, never ask.
   saveEventResultsAction: [],
 };

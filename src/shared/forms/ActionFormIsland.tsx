@@ -379,7 +379,7 @@ export default function ActionFormIsland({
       const value = data.get(field);
       return typeof value === "string" ? value : null;
     };
-    // A form of many rows (§NNN, «Salvează tot clasamentul»): the rows the press changes, a line each; none changed, nothing to ask.
+    // A form of many rows (§1047, «Salvează tot clasamentul»): the rows the press changes, a line each; none changed, nothing to ask.
     const rowed = resolveChangedRows(named, valueOf, data.keys());
     if (!rowed) return unasked();
     // The event editor's place settings (§914): each change and what it does; none changed, a dialog only for them asks nothing.

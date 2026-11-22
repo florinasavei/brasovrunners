@@ -430,7 +430,7 @@ export type ConfirmSpec = {
    */
   changedFields?: ChangedFields;
   /**
-   * The rows the press changes, one line each with the boxes changed in it (§NNN, «Salvează tot clasamentul»): a form of many
+   * The rows the press changes, one line each with the boxes changed in it (§1047, «Salvează tot clasamentul»): a form of many
    * rows, each box named `<row>.<box>`, compared with every row as the page drew it (`resolveChangedRows`). The body counts them
    * and the lines name them. Nothing changed, no question: the press goes to the server, which says nothing changed.
    */
@@ -621,7 +621,7 @@ export function resolveChangedFields(spec: ConfirmSpec, valueOf: (field: string)
 }
 
 /**
- * `ConfirmSpec.changedRows` (§NNN; the owner, 2026-11-22, of «Salvează tot clasamentul»: «să confirm modificările salvate»): every row
+ * `ConfirmSpec.changedRows` (§1047; the owner, 2026-11-22, of «Salvează tot clasamentul»: «să confirm modificările salvate»): every row
  * as the page drew it, the boxes compared with their words, how a row the page did not draw is named, and the body's three forms.
  */
 export type ChangedRows = {
