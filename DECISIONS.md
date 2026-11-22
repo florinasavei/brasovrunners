@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.17-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.18-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.17-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.18-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32165,3 +32165,11 @@ Baseline `BR-V5.16-2026-11-22`.
 **Tests.** `tests/unit/content/gallery-external-url.test.ts`, `tests/integration/cms`.
 
 Baseline `BR-V5.17-2026-11-22`.
+
+## 1051. The card's «Album foto» opens the event page's «Galerie foto» tab (amending §1039)
+
+**The owner, 2026-11-22:** «butonul ăsta trebuie să mă ducă la „Galerie foto”… nu la ultimul album». An event has several albums (one per photographer and part of the race); the card's «Album foto» opened the newest alone. It now opens the event's page at `#galerie`, the «Galerie foto» tab that lists every published album of the event. The card still draws the button only while the event has a published album.
+
+**Tests.** `tests/unit/events/featured-card.test.ts`.
+
+Baseline `BR-V5.18-2026-11-22`.

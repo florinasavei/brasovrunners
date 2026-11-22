@@ -209,13 +209,13 @@ describe("§1039 the card's doors: «Vezi clasamentul» and «Album foto» besid
     expect(doors(await doorCard({ resultsChip: true, albumSlug: "crosul-2026" }))).toEqual([
       "Descrierea completă a evenimentului → /ro/evenimente/crosul-aniversar",
       "Vezi clasamentul → /ro/evenimente/crosul-aniversar#clasament",
-      "Album foto → /ro/galerie/crosul-2026",
+      "Album foto → /ro/evenimente/crosul-aniversar#galerie",
     ]);
     currentLocale = "en";
     expect(doors(await doorCard({ resultsChip: true, albumSlug: "crosul-2026" }))).toEqual([
       "Full event description → /en/evenimente/crosul-aniversar",
       "See the results → /en/evenimente/crosul-aniversar#clasament",
-      "Photo album → /en/galerie/crosul-2026",
+      "Photo album → /en/evenimente/crosul-aniversar#galerie",
     ]);
   });
 
