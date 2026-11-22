@@ -7782,6 +7782,7 @@
       "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt în „Sarcini” → „Club”, la „Stocarea fotografiilor”.",
       "tableCaption": "Albumele galeriei",
       "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
+      "externalUrlHelp": "Opțional. Adresa albumului de pe Google Photos (începe cu https://). Pe site, albumul îl deschide cu un buton.",
       "eventHelp": "Opțional. Alege evenimentul și pagina albumului va trimite către el. Lasă „Niciunul” pentru un album liber — poze de grup, fără eveniment.",
       "noEvent": "Niciunul — album liber",
       "slugHelp": "Litere mici, cifre și cratime. Devine adresa albumului.",
@@ -7791,6 +7792,7 @@
         "en": "English"
       },
       "fields": {
+        "externalUrl": "Link Google Photos",
         "takenOn": "Data fotografiilor",
         "event": "Legat de un eveniment",
         "title": "Titlu",
@@ -15223,6 +15225,8 @@
     "staffSettings": "Deschide Setări"
   },
   "Gallery": {
+    "openExternal": "Vezi pozele pe Google Photos",
+    "onGooglePhotos": "pe Google Photos",
     "title": "Galerie",
     "loading": "Se încarcă…",
     "intro": "Fotografii de la alergările, concursurile și întâlnirile clubului.",

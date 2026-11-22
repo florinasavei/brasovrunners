@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.16-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.17-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.16-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.17-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32151,3 +32151,17 @@ Baseline `BR-V5.15-2026-11-22`.
 **Tests.** `tests/unit/events/event-tabs.test.ts`; `tests/integration/rsvp/who-comes-page.test.ts` (the turn-up folds last in «Descriere»); the e2e specs that read the published results open the tab (`race-results-public`, `race-results-live`).
 
 Baseline `BR-V5.16-2026-11-22`.
+
+## 1050. «Link Google Photos» on an album (amending §1041)
+
+**The owner, 2026-11-22:** «sunt poze pe Google Photos … vor fi vreo 7 albume! deci trebuie o pagină de galerie foto».
+
+**Decision.**
+
+- **«Link Google Photos»** — an album's optional `https://` address where its photos live (`gallery_albums.external_url`, migration `0232_gallery_external_url`, expand only), on the album's form in «Galerie foto». The photos stay on Google Photos; nothing is copied.
+- **The album's page** shows one big button «Vezi pozele pe Google Photos», opening it in a new tab; an album with a link and no photo here says «pe Google Photos» instead of «Pozele vin în curând» (§1041), on its page and on its card in «Galerie foto».
+- The event page's own albums belong to its «Galerie foto» tab (the event page's tabs), not to this change.
+
+**Tests.** `tests/unit/content/gallery-external-url.test.ts`, `tests/integration/cms`.
+
+Baseline `BR-V5.17-2026-11-22`.

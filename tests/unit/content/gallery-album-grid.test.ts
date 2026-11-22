@@ -28,6 +28,7 @@ function album(overrides: Partial<PublicAlbumSummary>): PublicAlbumSummary {
     description: null,
     takenOn: new Date("2026-09-12T12:00:00.000Z"),
     updatedAt: new Date("2026-09-12T12:00:00.000Z"),
+    externalUrl: null,
     photoCount: 3,
     coverThumbUrl: null,
     coverWebUrl: null,

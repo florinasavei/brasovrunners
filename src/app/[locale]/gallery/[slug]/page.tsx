@@ -1,3 +1,9 @@
+import ButtonLink from "@/shared/ui/ButtonLink";
+import { GLYPHS } from "@/modules/events/ui/glyphs";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
+
+const AlbumIcon = GLYPHS.album;
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -90,7 +96,7 @@ export default async function AlbumPage({ params }: Props) {
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
         {/* An album published before its photos (§1041) says they are coming, never «0 fotografii». */}
         {formatCalendarDay(album.takenOn, { locale, style: "long" })} ·{" "}
-        {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : t("comingSoon")}
+        {album.photoCount > 0 ? t("photoCount", { count: album.photoCount }) : album.externalUrl ? t("onGooglePhotos") : t("comingSoon")}
         {album.event && (
           <>
             {" · "}
@@ -102,6 +108,16 @@ export default async function AlbumPage({ params }: Props) {
         <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, maxWidth: "60rem" }}>
           {album.description}
         </Typography>
+      )}
+
+      {/* «Link Google Photos» (§1050): the photos where they live, one big button, in a new tab. */}
+      {album.externalUrl && (
+        <Box sx={{ mb: 3 }}>
+          <ButtonLink href={album.externalUrl as never} target="_blank" rel="noopener noreferrer" variant="contained" size="large" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="album-external-link">
+            <AlbumIcon aria-hidden="true" sx={glyphSx("medium")} />
+            {t("openExternal")}
+          </ButtonLink>
+        </Box>
       )}
 
       <Box
