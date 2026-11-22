@@ -166,8 +166,15 @@ test.describe("§809 «Clasament» on the race's page", () => {
     // ---- The page of the race, published ----------------------------------------------------------------------------------------
     await page.goto(publicUrl(slug));
     await hydrated(page);
+    // «Descriere | Clasament» (§1049): the page opens on the description; the tab, a 44-pixel link, brings the results forward.
     const section = page.getByTestId("results-section");
+    await expect(section).toBeHidden();
+    const tab = page.locator('[data-testid="event-tab"][data-tab="clasament"]:visible');
+    expect((await tab.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
+    await tab.click();
+    await expect(page).toHaveURL(new RegExp(`${slug}#clasament$`));
     await expect(section).toBeVisible();
+    await expect(page.getByTestId("event-tab-panel-descriere")).toBeHidden();
     await expect(section.getByRole("heading", { name: "Clasament" })).toBeVisible();
     await expect(section.getByTestId("results-published")).toContainText(/^Publicat .+ · rămâne pe pagină până .+/);
     // The finishers by place, the runner who dropped out last.
@@ -222,7 +229,8 @@ test.describe("§809 «Clasament» on the race's page", () => {
     await noHorizontalScroll(page);
 
     // ---- The English page says the same in English -----------------------------------------------------------------------------------
-    await page.goto(`/en/events/results-public-${tag}`);
+    // Opened at `#clasament` — the address the listing's card and the emails use —, the results' tab shows at once.
+    await page.goto(`/en/events/results-public-${tag}#clasament`);
     await hydrated(page);
     await expect(page.getByTestId("results-section").getByRole("heading", { name: "Results" })).toBeVisible();
     await expect(row(page, 104).getByTestId("result-status")).toHaveText("Dropped out");

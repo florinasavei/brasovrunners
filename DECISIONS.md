@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.15-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.16-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.15-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.16-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32136,3 +32136,18 @@ Baseline `BR-V5.14-2026-11-22`.
 **Tests.** `tests/unit/registrations/strava-activity-url.test.ts`, `tests/integration/registrations/strava-activity.test.ts`; the public read's keys in `tests/integration/results/results.test.ts` and `typed-name.test.ts`.
 
 Baseline `BR-V5.15-2026-11-22`.
+
+## 1049. The event page's tabs «Descriere | Clasament | Galerie foto»: the description first, the results and the album's card each a tab of their own (amending §1031)
+
+**The owner, 2026-11-22**, on the race's page the day after: «aici vreau așa: tab-uri: Descriere, Clasament și Galerie Foto» — the tabs he had left for later («acum doar pliabil», §1042). Asked which tab the page opens on once the results are public, he chose **«Descriere»**; asked what «Galerie foto» shows, **the album's card with the way to the album** (not the photographs inline).
+
+**Decision.**
+
+- Under the title, a row of tabs: **«Descriere»** — everything the page drew under the title before: the description, the facts, the registration, the start list, the route, the programme, «Condiții de participare», the turn-up folds last —, **«Clasament»** — the published results (§809), which since §1031 stood right under the title — and **«Galerie foto»** — the card of each published album of this event, the gallery's own (`AlbumGrid`), a link to the album's page. A tab is drawn only when it has something: «Clasament» once the published results have a row (the section's own read), «Galerie foto» once an album of the event is published. With the description alone there is no row of tabs, and the page is exactly as before — every event to come, and the preview before saving.
+- The page opens on «Descriere». Each tab is a plain link to its panel, and each panel carries its key as its anchor and starts with the row of tabs, its own current: `#descriere`, `#clasament`, `#galerie`. So `#clasament` — the address the listing's card, the home page and the emails already use — opens the results' tab.
+- No JavaScript of its own (`events/ui/EventTabs.tsx`): which panel shows is CSS — the first, unless the address's fragment names another panel or something inside one (`:target`, read before any script, so a full load of `…#clasament` shows the results on its first paint and with JavaScript off). What `:target` never sees — a client-side navigation to `…#clasament`, a fragment naming an element inside a panel — the page's one fragment island answers, as it opens a fold (`OpenFoldFromHash` → `showTabsAround`, `shared/ui/fold.ts`); with no fragment left (Back), the first tab again.
+- While the results have no row, nothing changes from before: the section is drawn under the title as it was, at most the silent clock that refreshes the page during the race (§985). The first row brings the row of tabs; the page stays on «Descriere» until the visitor opens «Clasament».
+
+**Tests.** `tests/unit/events/event-tabs.test.ts`; `tests/integration/rsvp/who-comes-page.test.ts` (the turn-up folds last in «Descriere»); the e2e specs that read the published results open the tab (`race-results-public`, `race-results-live`).
+
+Baseline `BR-V5.16-2026-11-22`.
