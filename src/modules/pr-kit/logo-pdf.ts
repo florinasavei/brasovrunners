@@ -1,5 +1,5 @@
 import { CLUB_NAME } from "@/theme/brand";
-import { LOGO_INK_HEX, type LogoInk, type LogoShape } from "./domain/kit";
+import { LOGO_INK_HEX, type LogoGround, type LogoInk, type LogoShape } from "./domain/kit";
 import { mm } from "./domain/sheets";
 import { drawLogo, kitDocument } from "./draw";
 import { readLogoVector } from "./logo-vector";
@@ -8,11 +8,17 @@ import { readLogoVector } from "./logo-vector";
  * The logo as a vector PDF (§1015): one page exactly the size of the kit's SVG — 200 mm wide, as tall as its frame — and on it
  * the SVG's own paths, drawn by pdfkit's `doc.path()` under the file's translation, in the ink's colour, the margin around the
  * drawing kept. Nothing else on the page and no background: a print shop places it as it would the SVG. The white one is white
- * on a white page — it is meant for a dark ground.
+ * on a white page — it is meant for a dark ground — unless it is asked on the club's colour (§1046, `ground: "primary"`): then
+ * the whole page is that colour first, as the `-on-primary` SVG's rectangle fills its frame.
  */
-export async function renderLogoPdf(input: { shape: LogoShape; ink: LogoInk; generatedAt: Date }): Promise<Buffer> {
+export async function renderLogoPdf(input: { shape: LogoShape; ink: LogoInk; ground?: LogoGround; generatedAt: Date }): Promise<Buffer> {
   const vector = await readLogoVector(input.shape, input.ink);
-  const { doc, finished } = await kitDocument({ title: `${CLUB_NAME} — ${input.shape} (${input.ink})`, generatedAt: input.generatedAt }, [mm(vector.widthMm), mm(vector.heightMm)]);
+  const onPrimary = input.ground === "primary";
+  const { doc, finished } = await kitDocument(
+    { title: `${CLUB_NAME} — ${input.shape} (${input.ink}${onPrimary ? " on primary" : ""})`, generatedAt: input.generatedAt },
+    [mm(vector.widthMm), mm(vector.heightMm)],
+  );
+  if (onPrimary) doc.rect(0, 0, mm(vector.widthMm), mm(vector.heightMm)).fill(LOGO_INK_HEX.primary);
   // The page is the frame at its written size, so the drawing sits where the SVG puts it: the frame's margin around it.
   const unit = vector.widthMm / vector.frame.width;
   drawLogo(

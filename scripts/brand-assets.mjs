@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { brandAssetsLock, brandColours, clubConfig } from "./brand-assets-lock.mjs";
-import { KIT_DIR, KIT_PNG_WIDTH, KIT_SHAPES, inPixels, kitColours, kitFileName, kitSvg, measureLogo, parseLogoSvg } from "./brand-kit.mjs";
+import { KIT_DIR, KIT_PNG_WIDTH, KIT_SHAPES, inPixels, kitColours, kitFileName, kitGrounds, kitSvg, measureLogo, parseLogoSvg } from "./brand-kit.mjs";
 
 /**
  * `yarn brand:assets` — the club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174): pdfkit
@@ -156,7 +156,8 @@ for (const { name, crop, pad } of lockOnly ? [] : SQUARES) {
   The «PR Kit»'s logo files (§1015; the owner, 2026-11-20: «also put them in the backoffice website and call it "PR Kit" so we
   can download it at any time, even the volunteers can do that»), in `public/brand/kit/`: the lockup and its mountains alone,
   each in the palette's primary, in white and in black — an SVG whose frame is 4 % outside the drawing as measured from its own
-  path data, 200 mm wide with its height written out, and a transparent PNG 4000 pixels wide drawn from that SVG. Named from
+  path data, 200 mm wide with its height written out, and a transparent PNG 4000 pixels wide drawn from that SVG; the white one
+  also on the primary, the frame filled (§1046, `kitGrounds`). Named from
   the club's slug. The folder is emptied first, so a slug or a shape that changed leaves no file behind. `brand-kit.mjs` says
   how the drawing is measured and which paths are the mountains.
 */
@@ -166,15 +167,22 @@ if (!lockOnly) {
   const measured = measureLogo(source, club.logo.mark.viewBox);
   await rm(path.join(root, KIT_DIR), { recursive: true, force: true });
   await mkdir(path.join(root, KIT_DIR), { recursive: true });
+  const primaryHex = kitColours(club.palette).find(({ key }) => key === "primary").hex;
   for (const { key: shape } of KIT_SHAPES) {
     for (const { key: colour, hex } of kitColours(club.palette)) {
-      const svg = kitSvg(source, measured, shape, hex);
-      await writeFile(path.join(root, KIT_DIR, kitFileName(club.slug, shape, colour, "svg")), svg);
-      // Drawn from the same SVG sized in pixels (`inPixels`): KIT_PNG_WIDTH wide whatever the renderer makes of a millimetre.
-      const png = await sharp(Buffer.from(inPixels(svg, KIT_PNG_WIDTH))).png({ compressionLevel: 9 }).toBuffer();
-      await writeFile(path.join(root, KIT_DIR, kitFileName(club.slug, shape, colour, "png")), png);
-      const { width: w, height: h } = await sharp(png).metadata();
-      console.log(`${kitFileName(club.slug, shape, colour, "png")}: ${w}x${h}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
+      for (const ground of kitGrounds(colour)) {
+        const groundHex = ground === "primary" ? primaryHex : null;
+        const svg = kitSvg(source, measured, shape, hex, groundHex);
+        await writeFile(path.join(root, KIT_DIR, kitFileName(club.slug, shape, colour, "svg", ground)), svg);
+        // Drawn from the same SVG sized in pixels (`inPixels`): KIT_PNG_WIDTH wide whatever the renderer makes of a millimetre.
+        // On a ground, flattened onto it too, so a rounded last row of pixels is never left half transparent.
+        const raster = sharp(Buffer.from(inPixels(svg, KIT_PNG_WIDTH)));
+        const png = await (groundHex === null ? raster : raster.flatten({ background: groundHex })).png({ compressionLevel: 9 }).toBuffer();
+        const pngName = kitFileName(club.slug, shape, colour, "png", ground);
+        await writeFile(path.join(root, KIT_DIR, pngName), png);
+        const { width: w, height: h } = await sharp(png).metadata();
+        console.log(`${pngName}: ${w}x${h}, ${(png.byteLength / 1024).toFixed(1)} KiB`);
+      }
     }
   }
 }

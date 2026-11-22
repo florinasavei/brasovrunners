@@ -4,7 +4,7 @@ import PDFDocument from "pdfkit";
 import { createElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { LOGO_FORMATS, logoFileName, logoVariants, posterFileName, STICKER_SHEET_KEYS, stickerFileName } from "@/modules/pr-kit/domain/kit";
+import { LOGO_FORMATS, logoFileName, logoFiles, logoVariants, posterFileName, STICKER_SHEET_KEYS, stickerFileName } from "@/modules/pr-kit/domain/kit";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { AdminTab } from "@/modules/staff-identity/ui/AdminTabs";
 import { CLUB_HASHTAGS, CLUB_SLUG } from "@/theme/brand";
@@ -209,6 +209,12 @@ describe("BR-REQ-060-01 §1015 the «PR Kit» page", () => {
         expect(html).toContain(`src="/brand/kit/${logoFileName(shape, ink, "svg")}"`);
         for (const format of LOGO_FORMATS) expect(html).toContain(`href="/api/admin/pr-kit/logo/${logoFileName(shape, ink, format)}"`);
       }
+      // §1046: the two white tiles carry the tick, unticked on arrival — transparent files, the picture on the checkerboard.
+      expect(html.match(/data-testid="pr-kit-logo-ground"/g)).toHaveLength(2);
+      expect(html.match(/data-ink="white" data-ground="none"/g)).toHaveLength(2);
+      expect(html.match(/<label\b/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+      expect(html).toContain(ro.Admin.prKit.logo.onPrimary);
+      expect(html).not.toContain("-on-primary");
       expect(html.match(/data-testid="pr-kit-sheet"/g)).toHaveLength(6);
       for (const sheet of STICKER_SHEET_KEYS) expect(html).toContain(`href="/api/admin/pr-kit/stickers/${sheet}"`);
       for (const words of Object.values(ro.Admin.prKit.stickers.sheet)) expect(html).toContain(words);
@@ -314,18 +320,29 @@ describe("§1015 the files", () => {
     expect(await wordsDrawn(() => stickers("logo-40").then((response) => response.arrayBuffer()))).toEqual([]);
   });
 
-  for (const { shape, ink } of logoVariants()) {
-    it(`the ${shape} in ${ink}: the kit's SVG and PNG as committed, and a vector PDF of the SVG's size`, async () => {
-      const svgName = logoFileName(shape, ink, "svg");
+  for (const { shape, ink, ground } of logoFiles()) {
+    it(`the ${shape} in ${ink}${ground === "primary" ? " on the club's colour" : ""}: the kit's SVG and PNG as committed, and a vector PDF of the SVG's size`, async () => {
+      const svgName = logoFileName(shape, ink, "svg", undefined, ground);
       const svg = await logo(svgName);
       expectDownload(svg, "image/svg+xml", svgName);
       expect(Buffer.from(await svg.arrayBuffer()).equals(readFileSync(path.join(ROOT, "public/brand/kit", svgName)))).toBe(true);
-      const pngName = logoFileName(shape, ink, "png");
+      const pngName = logoFileName(shape, ink, "png", undefined, ground);
       const png = await logo(pngName);
       expectDownload(png, "image/png", pngName);
       expect(Buffer.from(await png.arrayBuffer()).equals(readFileSync(path.join(ROOT, "public/brand/kit", pngName)))).toBe(true);
-      const pdfName = logoFileName(shape, ink, "pdf");
+      const pdfName = logoFileName(shape, ink, "pdf", undefined, ground);
+      const rects = vi.spyOn(PDFDocument.prototype, "rect");
       const response = await logo(pdfName);
+      // §1046: on the club's colour the whole page is filled first; transparent, nothing but the logo is drawn.
+      const filled = rects.mock.calls.map((call) => call.map(Number));
+      rects.mockRestore();
+      if (ground === "primary") {
+        expect(filled).toHaveLength(1);
+        expect(filled[0].slice(0, 2)).toEqual([0, 0]);
+        expect(response.status).toBe(200);
+      } else {
+        expect(filled).toEqual([]);
+      }
       expectDownload(response, "application/pdf", pdfName);
       const pdf = await pdfOf(response);
       expect(pdf.pages).toBe(1);

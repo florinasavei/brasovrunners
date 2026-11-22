@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOGO_FORMATS, LOGO_INK_GROUND, LOGO_INK_HEX, logoFileName, logoVariants, posterFileName, STICKER_SHEET_KEYS, stickerFileName } from "@/modules/pr-kit/domain/kit";
+import { LOGO_FORMATS, LOGO_INK_GROUND, LOGO_INK_HEX, logoFileName, logoFiles, posterFileName, STICKER_SHEET_KEYS, stickerFileName } from "@/modules/pr-kit/domain/kit";
 import { CLUB_HASHTAGS, PR_KIT_COLOURS } from "@/theme/brand";
 import fork from "../fixtures/fork-club/club.json";
 import { UPSTREAM_IDENTITY } from "./upstream-identity";
@@ -16,7 +16,7 @@ const upstreamWordsIn = (text: string) =>
 
 describe("BR-REQ-101-01: a fork's PR kit is its own (§1015)", () => {
   const names = [
-    ...logoVariants().flatMap(({ shape, ink }) => LOGO_FORMATS.map((format) => logoFileName(shape, ink, format))),
+    ...logoFiles().flatMap(({ shape, ink, ground }) => LOGO_FORMATS.map((format) => logoFileName(shape, ink, format, undefined, ground))),
     ...STICKER_SHEET_KEYS.map((sheet) => stickerFileName(sheet)),
     posterFileName("ro"),
     posterFileName("en"),

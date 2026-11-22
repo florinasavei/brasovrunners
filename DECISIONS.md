@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.12-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.13-2026-11-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.12-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.13-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32091,3 +32091,17 @@ Baseline `BR-V5.11-2026-11-22`.
 **Tests.** `tests/integration/results/public-section.test.ts`, `tests/unit/events/featured-card.test.ts`.
 
 Baseline `BR-V5.12-2026-11-22`.
+
+## 1046. «PR Kit»: the white logo's tick «Cu fundal în culoarea clubului» — transparent on a checkerboard, or on the club's colour, files and all (amending §1015)
+
+**The owner, 2026-11-22**, looking for the white logo on a transparent background in «PR Kit» → «Logo»: it was there — «Logo complet · alb», its PNG and SVG transparent — but its tile drew it on the club's colour, so it read as a white logo on blue: «a ok, nu știam de ce are fundal albastru, trebe să fie ceva bifă pt fundal, e confusing». Asked whether the tick changes the picture alone or the files as well, he chose **the files as well**.
+
+**Decision.**
+
+- The two white tiles («Logo complet · alb», «Doar munții · alb») carry a real tick box, **«Cu fundal în culoarea clubului»** («On the club's colour»), unticked on arrival. Unticked, the picture lies on a checkerboard of two middle greys — transparency as drawing programs show it, dark enough for the white to stand out — and the SVG, the PNG and the PDF are the transparent files, as before. Ticked, the picture and all three files are on the club's colour, and the tile's name says «… pe culoarea clubului». What the tile shows is what it hands out. The other four tiles have one ground and no tick.
+- The files on the club's colour are the white ones with the stickers' word: `<slug>-logo-white-on-primary.svg`, `…-on-primary-4000px.png`, `….pdf`, and the mountains' alike. `yarn brand:assets` writes the SVG — the white file with one rectangle of the primary filling its frame under the drawing — and its PNG, flattened onto the primary so no pixel is left transparent, and locks both in `club/assets.lock.json`; the PDF is drawn on request, the page filled with the primary before the paths. `kitGrounds` (the script) and `logoGrounds` (the app) say which ink comes on which ground, and a test holds them equal.
+- The tile is a client island (`modules/pr-kit/ui/LogoTile.tsx`) for the tick alone; the page still asserts who may see it, and every download's route again.
+
+**Tests.** `tests/unit/pr-kit/kit.test.ts`, `tests/unit/pr-kit/logo-tile.test.ts`, `tests/unit/theme/brand-kit.test.ts`, `tests/integration/pr-kit/pr-kit.test.ts`, `tests/fork/pr-kit.test.ts`.
+
+Baseline `BR-V5.13-2026-11-22`.
