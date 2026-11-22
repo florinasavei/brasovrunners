@@ -125,7 +125,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
   // «Clasament elite» has no «Loc» column (the owner, 2026-11-22: «nu mai afișa coloana de „Loc” pentru elite»): `withPlace` false.
-  // «Timp (orientativ)» while the times were noted by hand (§NNN — the owner: «la timp, în paranteză, „(orientativ)”»).
+  // «Timp (orientativ)» while the times were noted by hand (§1044 — the owner: «la timp, în paranteză, „(orientativ)”»).
   const timeWord = results.manualTime ? t("results.columnTimeIndicative") : t("results.columnTime");
   const tableOf = (list: typeof rows, tableId: string, rowTestId: string, withPlace = true) => (
   <Box
