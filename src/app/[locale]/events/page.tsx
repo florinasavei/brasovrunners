@@ -249,17 +249,9 @@ export default async function EventsPage({ params, query: asked }: Props) {
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
-      {/* «Clasament» first (§1031 — the owner, race day 2026-11-21: «vreau să mai apară evenimentul pe pagină chiar dacă e în trecut … să fie
-          primul»): a past race whose results are on show leads the page, its card wearing the chip to `#clasament`. */}
-      {resultsFirst.length > 0 && (
-        <Box component="ul" sx={CARD_GRID_SX} data-testid="listing-results-first">
-          {resultsFirst.map((event, index) => (
-            <EventCard key={event.id} event={event} index={index} now={now} resultsChip albumSlug={albums.get(event.id)} />
-          ))}
-        </Box>
-      )}
-
-      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} albums={albums} />
+      {/* «Clasament» first (§1031): a past race whose results are on show leads the page — in the cards' own grid, the first card of its
+          row (§1045 — the owner: «să rămână primul … dar pe același rând ca și celelalte»), never a grid of its own pressed against it. */}
+      <ListingBody leading={resultsFirst} events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} coming={coming} albums={albums} />
 
       {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
       <UndatedEvents rows={undatedShown} now={now} />
@@ -435,6 +427,7 @@ async function readPastEvents(locale: EventLocale, now: Date): Promise<PublicEve
  * cards the way the listing without a lead always was — no fold there either.
  */
 async function ListingBody({
+  leading = [],
   events,
   hasUpcoming,
   filter,
@@ -445,6 +438,8 @@ async function ListingBody({
   coming,
   albums,
 }: Listing & {
+  /** Past races whose results are on show (§1031): the first cards of the grid, each wearing «Vezi clasamentul». */
+  leading?: readonly PublicEvent[];
   /** The filters the address names (§413), the same the panel was given. */
   filter: ListingFilter;
   facts: FilterFacts<PublicEventPage>;
@@ -496,14 +491,17 @@ async function ListingBody({
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // The lead takes the first place in the rise-in order, so the cards after it keep theirs.
-  const offset = featured ? 1 : 0;
+  const offset = (featured ? 1 : 0) + leading.length;
 
   return (
     <Box component="ul" sx={CARD_GRID_SX} data-testid="listing-cards">
+      {leading.map((event, index) => (
+        <EventCard key={event.id} event={event} index={index} now={now} resultsChip albumSlug={albums.get(event.id)} />
+      ))}
       {featured && raceWeekDays !== null && (
         <EventCard
           event={featured}
-          index={0}
+          index={leading.length}
           now={now}
           weather={weatherOf(featured)}
           featured={{ raceWeekDays }}

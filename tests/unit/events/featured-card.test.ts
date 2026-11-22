@@ -260,7 +260,7 @@ describe("§470 the listing draws the lead as the first card of its one grid", (
   it("gives the upcoming grid, the «Data se anunță» section (§533) and the past fold one grid (`CARD_GRID_SX`): one to three equal columns", () => {
     // The past fold moved to a module of its own (§602), the same grid.
     const pastFold = readFileSync("src/modules/events/ui/PastEvents.tsx", "utf8");
-    expect(page.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(3); // §NNN: the results-first grid, a past race whose results are on show, leads the page
+    expect(page.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(2); // §1045: a past race with results leads inside the upcoming grid, never a grid of its own
     expect(pastFold.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(1);
     expect(page).toContain("<PastEvents");
     // The grid itself lives beside the card's shape since §579, where the editor's preview draws it too.

@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.12-2026-11-22
+
+- **Clasament: de ce timpii sunt orientativi; în «Alergări», cursa cu clasament e primul card din același grid.** §1045.
+## BR-V5.11-2026-11-22
+
+- **Clasament: «Timp (orientativ)» cât timp timpii sunt notați manual.** §1044.
 ## BR-V5.10-2026-11-22
 
 - **Cardul cursei: «Vezi clasamentul» și «Album foto» ca butoane, pe rând separat.** §1043.
