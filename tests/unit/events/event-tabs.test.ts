@@ -6,7 +6,7 @@ import EventTabs, { type EventTabLinks, EventTabPanel } from "@/modules/events/u
 import { showTabsAround, type TabNode } from "@/shared/ui/fold";
 
 /**
- * §NNN — the event page's tabs «Descriere | Clasament | Galerie foto» (the owner, 2026-11-22: «aici vreau așa: tab-uri: Descriere,
+ * §1049 — the event page's tabs «Descriere | Clasament | Galerie foto» (the owner, 2026-11-22: «aici vreau așa: tab-uri: Descriere,
  * Clasament și Galerie Foto»; «Descriere» opens the page, «Galerie foto» is the album's card). Server-rendered links, each panel its own
  * anchor with the row of tabs at its top; which panel shows is CSS — `:target` before any script — and the page's one fragment island
  * once it ran (`showTabsAround`). With the description alone there is no row of tabs at all.
@@ -27,7 +27,7 @@ function render(tabs: EventTabLinks): string {
   );
 }
 
-describe("§NNN the event page's tabs", () => {
+describe("§1049 the event page's tabs", () => {
   it("draws no row of tabs with the description alone: the page is as it was", () => {
     const html = render([ALL[0]]);
     expect(html).toBe("<p>conținut descriere</p>");
@@ -76,7 +76,7 @@ function node(attributes: Record<string, string>, parentElement: TabNode | null 
   };
 }
 
-describe("§NNN showTabsAround: the tab that holds the fragment's target comes forward", () => {
+describe("§1049 showTabsAround: the tab that holds the fragment's target comes forward", () => {
   it("marks the box with the panel that holds the target, and says it changed something once", () => {
     const box = node({ "data-tabs": "" });
     const panel = node({ "data-tab-panel": "clasament", id: "clasament" }, box);
@@ -93,7 +93,7 @@ describe("§NNN showTabsAround: the tab that holds the fragment's target comes f
   });
 });
 
-describe("§NNN the event page decides its tabs", () => {
+describe("§1049 the event page decides its tabs", () => {
   const page = readFileSync("src/modules/events/ui/EventPageView.tsx", "utf8").replace(/\r\n/g, "\n");
 
   it("draws «Clasament» only once the published results have a row, and «Galerie foto» only with a published album of this event", () => {

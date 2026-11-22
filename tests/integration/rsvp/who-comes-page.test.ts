@@ -370,7 +370,7 @@ describe("§825 amended (the owner, 2026-10-20): the two turn-up folds are the l
       expect(index, section).toBeGreaterThan(-1);
       expect(index, section).toBeLessThan(folds);
     }
-    // ... and after the folds only the closing of their own fragment and of the «Descriere» tab remain (§NNN): the page's other tabs,
+    // ... and after the folds only the closing of their own fragment and of the «Descriere» tab remain (§1049): the page's other tabs,
     // «Clasament» and «Galerie foto», are panels of their own, one shown at a time, and draw none of the sections above.
     const tail = source.slice(source.indexOf("<RsvpCount ", folds));
     const description = tail.slice(0, tail.indexOf("</EventTabPanel>"));

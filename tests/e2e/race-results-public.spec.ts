@@ -166,7 +166,7 @@ test.describe("§809 «Clasament» on the race's page", () => {
     // ---- The page of the race, published ----------------------------------------------------------------------------------------
     await page.goto(publicUrl(slug));
     await hydrated(page);
-    // «Descriere | Clasament» (§NNN): the page opens on the description; the tab, a 44-pixel link, brings the results forward.
+    // «Descriere | Clasament» (§1049): the page opens on the description; the tab, a 44-pixel link, brings the results forward.
     const section = page.getByTestId("results-section");
     await expect(section).toBeHidden();
     const tab = page.locator('[data-testid="event-tab"][data-tab="clasament"]:visible');

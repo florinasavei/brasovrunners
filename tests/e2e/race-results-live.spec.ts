@@ -110,7 +110,7 @@ async function textsNameResults(): Promise<boolean> {
 const resultsUrl = (eventId: string) => `/ro/admin/events/${eventId}/results`;
 const publicUrl = (slug: string) => `/ro/evenimente/${slug}`;
 const row = (page: Page, bib: number) => page.locator(`[data-testid="result-row"][data-bib="${bib}"]`);
-/** «Clasament» is a tab of the race's page (§NNN): the page opens on «Descriere», and the tab brings the results forward. */
+/** «Clasament» is a tab of the race's page (§1049): the page opens on «Descriere», and the tab brings the results forward. */
 const openResultsTab = (page: Page, timeout = 15_000) => page.locator('[data-testid="event-tab"][data-tab="clasament"]:visible').click({ timeout });
 
 /** Every request the page makes from now on, and those to its own address — what `router.refresh()` asks. */
@@ -282,7 +282,7 @@ test.describe("§985 «Clasament» public from the start, and live while the rac
       await expect(page.getByTestId("results-section")).toHaveCount(0);
       await page.clock.fastForward(30_000);
       await page.clock.resume();
-      // The first row brings the row of tabs (§NNN); the page stays on «Descriere» until the visitor opens «Clasament».
+      // The first row brings the row of tabs (§1049); the page stays on «Descriere» until the visitor opens «Clasament».
       await openResultsTab(page, 30_000);
       const section = page.getByTestId("results-section");
       await expect(section).toBeVisible({ timeout: 30_000 });

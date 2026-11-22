@@ -21,7 +21,7 @@ import { fragmentId, openFoldsAround, showTabsAround } from "./fold";
  * first wheel, touch, pointer press or key, so a reader who scrolls on is never pulled back. Everything else about a fold
  * stays a `<details>` that works with JavaScript off.
  *
- * The event page's tabs (§NNN, `events/ui/EventTabs.tsx`) are brought forward the same way: the tab that holds the fragment's target
+ * The event page's tabs (§1049, `events/ui/EventTabs.tsx`) are brought forward the same way: the tab that holds the fragment's target
  * (`showTabsAround`) — `#clasament` from the listing's card or the home page, `#rules` from an email — and, when the address loses its
  * fragment (Back to the page's own address), the page's first tab again.
  */

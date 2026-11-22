@@ -79,7 +79,7 @@ export function openFoldsAround(node: FoldNode | null): number {
 export type TabNode = { parentElement: TabNode | null; getAttribute(name: string): string | null; setAttribute(name: string, value: string): void };
 
 /**
- * Brings forward every tab panel from `node` up, and says how many tab boxes it changed (§NNN, the event page's «Descriere | Clasament |
+ * Brings forward every tab panel from `node` up, and says how many tab boxes it changed (§1049, the event page's «Descriere | Clasament |
  * Galerie foto», `events/ui/EventTabs.tsx`): a panel is a child marked `data-tab-panel="<key>"` of a box marked `data-tabs`, and the
  * box's `data-tab-active` names the panel the page's CSS shows. The CSS shows the panel the address's fragment names on its own, before
  * any script (`:target`); this answers what `:target` never sees — a client-side navigation to `…#clasament` — the way

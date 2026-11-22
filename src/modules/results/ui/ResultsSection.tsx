@@ -74,7 +74,7 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "resu
  * window's start and end (`resultsLiveInstants`): a copy made before the race is made again at its start, and one made during it is
  * made again at its end, without the island.
  */
-export default async function ResultsSection({ event, inTab = false }: { event: ResultsEvent; /** In the page's «Clasament» tab (§NNN): the tab's panel is `#clasament`, so the section is not, and sits right under the tabs. */ inTab?: boolean }) {
+export default async function ResultsSection({ event, inTab = false }: { event: ResultsEvent; /** In the page's «Clasament» tab (§1049): the tab's panel is `#clasament`, so the section is not, and sits right under the tabs. */ inTab?: boolean }) {
   const now = new Date();
   const holds = resultsLiveInstants(event, now);
   if (holds.length > 0) await holdPageUntil(holds, now);

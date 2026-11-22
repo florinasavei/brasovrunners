@@ -19,7 +19,7 @@ const TAB_GLYPH: Record<EventTabKey, typeof LeaderboardIcon> = {
 };
 
 /**
- * Which panel shows (§NNN). The first, «Descriere», unless the address's fragment names another panel or something inside one —
+ * Which panel shows (§1049). The first, «Descriere», unless the address's fragment names another panel or something inside one —
  * `:target`, read by the browser before any script, so `…#clasament` opens on the results with JavaScript off and on the first paint —
  * and, once the page's one fragment island ran (`OpenFoldFromHash` → `showTabsAround`), the panel it chose (`data-tab-active`), which
  * also answers a client-side navigation `:target` never sees. No commas inside a pseudo-class: one rule each.
@@ -37,7 +37,7 @@ const TABS_SX = {
 } as const;
 
 /**
- * **«Descriere | Clasament | Galerie foto»** — the event page's tabs (§NNN; the owner, 2026-11-22, of the race's page the day after:
+ * **«Descriere | Clasament | Galerie foto»** — the event page's tabs (§1049; the owner, 2026-11-22, of the race's page the day after:
  * «aici vreau așa: tab-uri: Descriere, Clasament și Galerie Foto»). Server-rendered and plain links, no JavaScript of their own.
  *
  * Each panel (`EventTabPanel`) starts with the row of tabs, its own drawn current (`aria-current`), and carries its key as its `id`: a

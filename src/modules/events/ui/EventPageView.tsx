@@ -205,7 +205,7 @@ export default async function EventPageView({
       ? await readStartListCount(dated).then((count) => (count !== null && count > 0 ? { count, href: "#start-list-title" } : null))
       : null;
   /*
-    The tabs (§NNN): «Clasament» once the published results have a row — the section's own read (`readEventResultsForPage`, the public
+    The tabs (§1049): «Clasament» once the published results have a row — the section's own read (`readEventResultsForPage`, the public
     cache, so the section below reads it again for nothing) —, «Galerie foto» with a published album of this event (the gallery's own
     cached list, filtered here). A visit's page only, never a members' event (§552) or the preview before saving (§579); while the
     database is away, neither.
@@ -286,11 +286,11 @@ export default async function EventPageView({
       </Typography>
 
       {/* «Clasament» (§809) under the title while it has no row yet: nothing to see — at most the silent clock that refreshes the page
-          while the race runs (§985). Once it has rows it is the «Clasament» tab below (§NNN). */}
+          while the race runs (§985). Once it has rows it is the «Clasament» tab below (§1049). */}
       {dated && !membersOnly && visit && !resultsTab && <ResultsSection event={dated} />}
 
       {/*
-        «Descriere | Clasament | Galerie foto» (§NNN; the owner, 2026-11-22: «aici vreau așa: tab-uri: Descriere, Clasament și Galerie
+        «Descriere | Clasament | Galerie foto» (§1049; the owner, 2026-11-22: «aici vreau așa: tab-uri: Descriere, Clasament și Galerie
         Foto»): everything below the title is «Descriere», the tab the page opens on; «Clasament» only once the published results have
         a row, «Galerie foto» only with a published album of this event — the album's card, a link to its page. With the description
         alone there is no row of tabs and the page is as it was.
