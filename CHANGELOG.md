@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.08-2026-11-22
+
+- **Un album se poate publica și gol** — scrie «Pozele vin în curând» până urci pozele, așa că link-ul lui merge de la început. §1041.
 ## BR-V5.07-2026-11-22
 
 - **Clasament: «(introdus manual)» în loc de «(fără cip)»** in the open and elite headings. §1040.

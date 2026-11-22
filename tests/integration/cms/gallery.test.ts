@@ -29,7 +29,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * derives `STORAGE_MODE=fake`).
  *
  * What is protected: a photo is two objects and two rows and the first one is the cover; an
- * album with no photo cannot be published; a public query sees only published albums in its
+ * album with no photo can be published and reads as having none (§1041); a public query sees only published albums in its
  * own locale; removing a photo or an album removes its objects; and the roles.
  */
 describe("BR-REQ-054-01 the photo gallery", () => {
@@ -66,11 +66,7 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     const album = await createAlbum(db, { actor: editor, fields: FIELDS });
     expect(album.editorialStatus).toBe("DRAFT");
 
-    // No photo, no publication.
-    const refused = await transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: album.version, to: "IN_REVIEW" })
-      .then((a) => transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: a.version, to: "PUBLISHED" }))
-      .catch((e: unknown) => e);
-    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+    await transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: album.version, to: "IN_REVIEW" });
 
     const first = await addPhoto(db, { actor: editor, albumId: album.id, file: await photo(), originalFilename: "IMG_0001.JPG" });
     const second = await addPhoto(db, { actor: editor, albumId: album.id, file: await photo("#ff3355"), originalFilename: "IMG_0002.JPG" });
@@ -93,6 +89,22 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     const published = await transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: current.version, to: "PUBLISHED" });
     expect(published.editorialStatus).toBe("PUBLISHED");
     expect(published.publishedAt).not.toBeNull();
+  });
+
+  it("§1041 publishes an album with no photo yet: it is listed with none and no cover, and a photo added later shows", async () => {
+    const draft = await createAlbum(db, { actor: editor, fields: FIELDS });
+    const reviewed = await transitionAlbum(db, { actor: editor, albumId: draft.id, expectedVersion: draft.version, to: "IN_REVIEW" });
+    const published = await transitionAlbum(db, { actor: editor, albumId: draft.id, expectedVersion: reviewed.version, to: "PUBLISHED" });
+    expect(published.editorialStatus).toBe("PUBLISHED");
+
+    const [listed] = await listPublishedAlbums(db, "ro");
+    expect({ photoCount: listed.photoCount, cover: listed.coverThumbUrl }).toEqual({ photoCount: 0, cover: null });
+    expect((await findPublishedAlbumBySlug(db, "ro", "crosul-2026"))?.photos).toEqual([]);
+
+    await addPhoto(db, { actor: editor, albumId: draft.id, file: await photo(), originalFilename: "a.jpg" });
+    const [later] = await listPublishedAlbums(db, "ro");
+    expect(later.photoCount).toBe(1);
+    expect(later.coverThumbUrl).toMatch(/thumb\.webp$/);
   });
 
   it("shows a published album only, in its own locale, with its photos in order", async () => {
