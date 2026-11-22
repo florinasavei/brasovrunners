@@ -285,12 +285,11 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   </Box>
   );
 
-  return (
-    // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
-    // names stay out of search snippets (§421); the page itself stays indexed.
-    <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
-      {/* «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat». */}
-      {(results.separateRows ?? []).length > 0 && (
+  // With the elites apart, both tables sit in one «Clasament» fold and their own headings step down to h3 (§NNN).
+  const wrapped = (results.separateRows ?? []).length > 0;
+
+  // «Clasament elite» (§1031), a section of its own, FIRST, above the open one — «vreau să fie TOP!» — the owner, race day: «nu e clară secțiunea … trebuie pus separat».
+  const elitesFold = wrapped && (
         <Box
           component="details"
           open
@@ -308,7 +307,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           }}
         >
           <Box component="summary">
-            <Typography component="h2" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
+            <Typography component="h3" id="results-elite-title" variant="h2" data-testid="results-elite-title" sx={{ fontSize: "1.25rem" }}>
               <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
               {t("results.eliteTitle")}
             </Typography>
@@ -316,7 +315,9 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           {(results.separateRows ?? []).some((row) => paceSeconds(row) !== null) && <ResultsSort tableId={`${TABLE_ID}-elite`} words={{ label: t("results.sort.label"), time: t("results.sort.time"), pace: t("results.sort.pace") }} />}
           {tableOf(results.separateRows ?? [], `${TABLE_ID}-elite`, "result-elite-row", false)}
         </Box>
-      )}
+  );
+
+  const openFold = (
       <Box
         component="details"
         open
@@ -333,7 +334,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       >
         {/* A real `h2` inside the summary, so the heading stays in a screen reader's list while the fold is shut (§336, the rules' fold). */}
         <Box component="summary">
-          <Typography component="h2" id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+          <Typography component={wrapped ? "h3" : "h2"} id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
             <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
             {results.manualTime ? t("results.titleNoChip") : t("results.title")}
           </Typography>
@@ -377,7 +378,28 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           </Typography>
         )}
       </Box>
+  );
 
+  return (
+    // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
+    // names stay out of search snippets (§421); the page itself stays indexed.
+    <Box component="section" id="clasament" data-nosnippet="" data-testid="results-section" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
+      {wrapped ? (
+        // The whole «Clasament» one fold, open on arrival (§NNN — the owner, 2026-11-22: «toată secțiunea de „Clasament” trebuie să fie
+        // collapsible», «așa e greu de urmărit și de dat scroll pe toată pagina»). No frame of its own: the tables keep a phone's width.
+        <Box component="details" open aria-labelledby="results-all-title" data-testid="results-fold" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 }, ...DISCLOSURE_OPEN_ARROW }}>
+          <Box component="summary">
+            <Typography component="h2" id="results-all-title" variant="h2" data-testid="results-all-title" sx={{ fontSize: "1.375rem" }}>
+              <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+              {t("results.title")}
+            </Typography>
+          </Box>
+          {elitesFold}
+          {openFold}
+        </Box>
+      ) : (
+        openFold
+      )}
     </Box>
   );
 }

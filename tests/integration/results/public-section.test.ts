@@ -403,7 +403,11 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     const [ana] = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.bibNumber, 101));
     await db.update(registrations).set({ elite: true }).where(eq(registrations.id, ana.id));
     expect(await names()).toHaveProperty("101");
-    expect(await section()).not.toContain("Timpul a fost notat manual.");
+    const alone = await section();
+    expect(alone).not.toContain("Timpul a fost notat manual.");
+    // No elites apart: the one table is the fold itself, no wrapper around it, its heading the h2.
+    expect(alone).not.toContain('data-testid="results-fold"');
+    expect(alone).toMatch(/<h2[^>]*id="results-title"/);
     await setResultsAllNames(db, admin, raceId, true, AFTER_THE_RACE);
     const html = await section();
     expect(Object.keys(Object.fromEntries(rowsOf(html).map((row) => [row.bib, row.name])))).not.toContain("101");
@@ -416,6 +420,11 @@ describe("§1029 «Toate numele în clasament» — the Administrator names ever
     expect(elites).toContain('data-testid="result-elite-row"');
     expect(elites).not.toContain('data-col="place"');
     expect(html.slice(openAt)).toContain('data-col="place"');
+    // With the elites apart, the whole «Clasament» is one fold, open on arrival, the two tables' headings under its h2 (§NNN).
+    expect(html).toMatch(/<details[^>]*open=""[^>]*data-testid="results-fold"/);
+    expect(html).toMatch(/<h2[^>]*data-testid="results-all-title"[^>]*>[\s\S]*?Clasament<\/h2>/);
+    expect(html).toMatch(/<h3[^>]*id="results-elite-title"/);
+    expect(html).toMatch(/<h3[^>]*id="results-title"/);
     // The note about the tick says who is named: untrue while everybody is, so it is not drawn.
     expect(html).not.toContain('data-testid="results-note"');
     await setResultsAllNames(db, admin, raceId, false, AFTER_THE_RACE);
