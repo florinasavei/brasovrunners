@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { stravaActivityUrl } from "@/modules/registrations/social-links";
 
 /**
- * §NNN — «Activitatea ta pe Strava»: what the runner may paste, and the one address the platform keeps and prints. An activity on
+ * §1048 — «Activitatea ta pe Strava»: what the runner may paste, and the one address the platform keeps and prints. An activity on
  * strava.com, however it was copied — never the app's `strava.app.link` redirector (§500), a profile, or another site.
  */
-describe("§NNN a Strava activity, normalised", () => {
+describe("§1048 a Strava activity, normalised", () => {
   it("keeps an activity on strava.com as `https://www.strava.com/activities/<id>`, however it was copied", () => {
     for (const typed of [
       "https://www.strava.com/activities/16512345678",

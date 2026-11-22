@@ -107,7 +107,7 @@ type Props = {
     reconfirm?: string;
     /** The raffle card's outcome (§984): 1 signed up, w withdrawn, a the rules' tick missing, 0 refused. */
     raffle?: string;
-    /** «Activitatea ta pe Strava»'s outcome (§NNN): 1 saved, i not a strava.com activity, 0 refused. */
+    /** «Activitatea ta pe Strava»'s outcome (§1048): 1 saved, i not a strava.com activity, 0 refused. */
     strava?: string;
   }>;
 };
@@ -664,7 +664,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  «Activitatea ta pe Strava» (§NNN): the person's own link to their race on Strava, printed in the published results beside a
+                  «Activitatea ta pe Strava» (§1048): the person's own link to their race on Strava, printed in the published results beside a
                   name they print. Asked of a confirmed runner from the race's start; a link already written is always offered the way out.
                   Another adult's row offers only that: the link is theirs (§421). The token is read, never spent; one write and an audit
                   row without the link.

@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approveResultsTexts, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Activitatea ta pe Strava» (the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava din
+ * §1048 — «Activitatea ta pe Strava» (the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava din
  * aplicație?», then «da» to the shape). What is protected:
  *
  * - the runner writes the link from their own registration page, through the manage link — read, never spent; GET writes nothing —,
@@ -126,7 +126,7 @@ async function publicLinks() {
   return Object.fromEntries((result?.rows ?? []).map((row) => [row.bibNumber, [row.name, row.stravaActivityUrl]]));
 }
 
-describe("§NNN «Activitatea ta pe Strava» on the runner's own page", () => {
+describe("§1048 «Activitatea ta pe Strava» on the runner's own page", () => {
   it("asks a confirmed runner at a race after its start, the box empty — and rendering writes nothing", async () => {
     const ana = await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });
     const token = await manageLink(ana);
@@ -202,7 +202,7 @@ describe("§NNN «Activitatea ta pe Strava» on the runner's own page", () => {
   });
 });
 
-describe("§NNN the published results print the link only beside a name they print", () => {
+describe("§1048 the published results print the link only beside a name they print", () => {
   it("links Ana, named, and not Bia, who is «Participant #102»", async () => {
     await approveResultsTexts(db);
     const ana = await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });

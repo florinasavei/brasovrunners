@@ -2001,7 +2001,7 @@ export type PublicResultRow = {
    */
   name: string | null;
   /**
-   * «Activitatea ta pe Strava» (§NNN): the runner's own link, `https://www.strava.com/activities/<id>` — only on a registered runner's
+   * «Activitatea ta pe Strava» (§1048): the runner's own link, `https://www.strava.com/activities/<id>` — only on a registered runner's
    * row that `name` names; null otherwise.
    */
   stravaActivityUrl: string | null;
@@ -2118,7 +2118,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       chipTimeMs: eventResults.chipTimeMs,
       publicNote: eventResults.publicNote,
       distanceMeters: eventResults.distanceMeters,
-      // «Activitatea ta pe Strava» (§NNN): read for a row the page names, and printed only there.
+      // «Activitatea ta pe Strava» (§1048): read for a row the page names, and printed only there.
       stravaActivityUrl: registrations.stravaActivityUrl,
     })
     .from(eventResults)
@@ -2166,7 +2166,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       distanceMeters: row.distanceMeters ?? found.distanceMeters ?? null,
       ownDistance: row.distanceMeters !== null,
     };
-    // The runner's own link (§NNN), only on a registered runner's row the rule above names — on a «Participant #bib» row it would say who
+    // The runner's own link (§1048), only on a registered runner's row the rule above names — on a «Participant #bib» row it would say who
     // that is —, and only a strava.com activity, checked again rather than trusted from the row.
     return { ...published, stravaActivityUrl: registered && published.name !== null ? stravaActivityUrl(row.stravaActivityUrl) : null };
   };

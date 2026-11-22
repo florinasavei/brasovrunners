@@ -31,7 +31,7 @@ export function publicStravaUrl(value: string | null | undefined): string | null
 }
 
 /**
- * One activity on strava.com itself (§NNN, «Activitatea ta pe Strava»): with or without the scheme and `www.`, anything after the
+ * One activity on strava.com itself (§1048, «Activitatea ta pe Strava»): with or without the scheme and `www.`, anything after the
  * number — `/overview`, a share query — dropped. Never the app's `strava.app.link` share links: a public page never prints a
  * redirector beside a runner's name (§500), so the runner is told to open it and copy the strava.com address.
  */

@@ -280,7 +280,7 @@ export type AuditAction =
    */
   | "registration.results_name_consent_changed"
   /**
-   * «Activitatea ta pe Strava» written or taken off by the runner from their own manage link (§NNN, `registrations/strava-activity.ts`):
+   * «Activitatea ta pe Strava» written or taken off by the runner from their own manage link (§1048, `registrations/strava-activity.ts`):
    * `to` — `set` or `cleared` — and the door. Never the link, which names its athlete.
    */
   | "registration.strava_activity_changed"

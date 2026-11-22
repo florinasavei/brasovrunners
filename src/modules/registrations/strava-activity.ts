@@ -14,7 +14,7 @@ import { eventTypeOf } from "./results-consent";
 import { stravaActivityUrl } from "./social-links";
 
 /**
- * «Activitatea ta pe Strava» (§NNN; the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava din
+ * «Activitatea ta pe Strava» (§1048; the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava din
  * aplicație?» — and «da» to the shape: a box on the runner's own registration page, the link beside their name in the results).
  *
  * The shape of `results-consent.ts`: the `MANAGE_REGISTRATION` token is read, never spent, POST only, and the token says which

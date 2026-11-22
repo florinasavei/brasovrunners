@@ -223,7 +223,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
               {row.name !== null ? (
                 <>
                   {row.name}
-                  {/* «Activitatea ta pe Strava» (§NNN): the runner's own link, beside a name the page prints — the read gives it only there. */}
+                  {/* «Activitatea ta pe Strava» (§1048): the runner's own link, beside a name the page prints — the read gives it only there. */}
                   <StartListSocials stravaActivity={row.stravaActivityUrl} stravaLabel={t("results.stravaActivity", { name: row.name })} />
                 </>
               ) : (

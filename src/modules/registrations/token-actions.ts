@@ -791,7 +791,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
     /** «Toate numele în clasament» on the event (§1029): what the list's block says of the results for a person off the list. Display only. */
     resultsAllNames: event.resultsAllNames,
     /**
-     * «Activitatea ta pe Strava» is asked (§NNN): a race not cancelled, from its start — before it there is no activity to link. The
+     * «Activitatea ta pe Strava» is asked (§1048): a race not cancelled, from its start — before it there is no activity to link. The
      * write asks its own gate again (`strava-activity.ts`); this only decides whether the card is drawn.
      */
     stravaActivityAsked: !eventCancelled && eventTakesResults(event.type) && event.startsAt.getTime() <= now.getTime(),

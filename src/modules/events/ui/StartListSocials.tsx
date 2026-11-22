@@ -16,7 +16,7 @@ import SocialIcon, { type SocialNetwork } from "@/shared/ui/SocialIcon";
  * profile is somebody else's page the club does not vouch for: `nofollow ugc`, a new tab, no referrer.
  * Server-rendered, no JavaScript; the labels come from the caller, which has the page's translator.
  *
- * The published results draw the same mark beside a named runner for their race on Strava (§NNN, «Activitatea ta pe Strava»):
+ * The published results draw the same mark beside a named runner for their race on Strava (§1048, «Activitatea ta pe Strava»):
  * `stravaActivity`, an activity on strava.com and nothing else (`stravaActivityUrl`), in the profile's place.
  */
 export default function StartListSocials({

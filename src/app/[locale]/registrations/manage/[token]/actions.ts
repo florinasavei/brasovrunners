@@ -154,7 +154,7 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
 }
 
 /**
- * «Activitatea ta pe Strava» from the participant's own link (§NNN), per person like the switches above: read, not spent. The box's
+ * «Activitatea ta pe Strava» from the participant's own link (§1048), per person like the switches above: read, not spent. The box's
  * text as typed — empty takes the link off. Back at `#strava` with `strava=1` saved, `i` not a strava.com activity, `0` refused.
  */
 export async function setStravaActivityFromManageAction(form: FormData): Promise<void> {

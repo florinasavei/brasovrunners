@@ -394,7 +394,7 @@ export const registrations = pgTable(
     resultsConsentVersion: integer("results_consent_version").notNull(),
 
     /**
-     * «Activitatea ta pe Strava» (§NNN; the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava
+     * «Activitatea ta pe Strava» (§1048; the owner, 2026-11-22: «cât de greu ar fi să-i las să-și pună link către activitate strava
      * din aplicație?»): the runner's own link to their race on Strava, `https://www.strava.com/activities/<id>`, written only from
      * their own registration page (`registrations/strava-activity.ts`). The published results print it beside the runner's name —
      * only where the name is printed, since the link names its athlete. Not the profile of §106 (`strava_url`), which the platform

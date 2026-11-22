@@ -59,7 +59,7 @@ export type ManagedPerson = {
   /** «Vreau să apar cu numele în clasament» (§879): the answer of an older notice's runner, and the notice it was given under. */
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
-  /** «Activitatea ta pe Strava» (§NNN): the person's own link, `https://www.strava.com/activities/<id>`, or null. */
+  /** «Activitatea ta pe Strava» (§1048): the person's own link, `https://www.strava.com/activities/<id>`, or null. */
   stravaActivityUrl: string | null;
   /** The birth date, read only so a minor's row never says a partner may receive it (§570). */
   birthDate: string | null;
