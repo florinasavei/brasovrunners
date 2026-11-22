@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.18-2026-11-22
+
+- **Cardul cursei: «Album foto» deschide tab-ul «Galerie foto», cu toate albumele.** §1051.
 ## BR-V5.17-2026-11-22
 
 - **Albume pe Google Photos** — an album may link its Google Photos album; its page opens it with one button. §1050.
