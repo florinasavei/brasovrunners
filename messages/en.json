@@ -7774,6 +7774,7 @@
       "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are under “Tasks” → “Club”, at “Photo storage”.",
       "tableCaption": "The gallery's albums",
       "takenOnHelp": "The day the photos were taken. Albums are ordered by it.",
+      "externalUrlHelp": "Optional. The album's address on Google Photos (starts with https://). On the site, the album opens it with a button.",
       "eventHelp": "Optional. Choose the event and the album page will link to it. Leave “None” for a free album — group photos, no event.",
       "noEvent": "None — free album",
       "slugHelp": "Lowercase letters, digits and hyphens. Becomes the album's address.",
@@ -7783,6 +7784,7 @@
         "en": "English"
       },
       "fields": {
+        "externalUrl": "Google Photos link",
         "takenOn": "Date of the photos",
         "event": "Linked to an event",
         "title": "Title",
@@ -15193,6 +15195,9 @@
     "staffSettings": "Open Settings"
   },
   "Gallery": {
+    "eventAlbumsTitle": "Photo album",
+    "openExternal": "See the photos on Google Photos",
+    "onGooglePhotos": "on Google Photos",
     "title": "Gallery",
     "loading": "Loading…",
     "intro": "Photos from the club's runs, races and meetups.",

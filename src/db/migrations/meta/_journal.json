@@ -1548,6 +1548,13 @@
       "when": 1795295700677,
       "tag": "0230_results_distance",
       "breakpoints": true
+    },
+    {
+      "idx": 221,
+      "version": "7",
+      "when": 1795355017289,
+      "tag": "0231_gallery_external_url",
+      "breakpoints": true
     }
   ]
 }

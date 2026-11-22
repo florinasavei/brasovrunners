@@ -43,6 +43,8 @@ export type PublicAlbumSummary = {
   eventTitle: string | null;
   /** That event's id under the same rule as `eventTitle` — null unless its title is shown — for the card's «Album foto» (§1039). */
   eventId: string | null;
+  /** «Link Google Photos» (§NNN): where the photos live, or null. */
+  externalUrl: string | null;
 };
 
 /**
@@ -91,6 +93,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
       eventTitle: publishedEventTitle(locale),
       eventId: galleryAlbums.eventId,
+      externalUrl: galleryAlbums.externalUrl,
     })
     .from(galleryAlbums)
     .innerJoin(
@@ -113,6 +116,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     ...coverOf(row),
     eventTitle: row.eventTitle ?? null,
     eventId: row.eventTitle ? row.eventId : null,
+    externalUrl: row.externalUrl,
   }));
 }
 
@@ -148,6 +152,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
       takenOn: galleryAlbums.takenOn,
       updatedAt: galleryAlbums.updatedAt,
       eventId: galleryAlbums.eventId,
+      externalUrl: galleryAlbums.externalUrl,
       coverKeyPrefix: cover.keyPrefix,
       coverWidth: cover.width,
       coverHeight: cover.height,
@@ -187,6 +192,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
     ...coverOf(row),
     eventTitle: event?.title ?? null,
     eventId: event ? row.eventId : null,
+    externalUrl: row.externalUrl,
     photos,
     event,
   };

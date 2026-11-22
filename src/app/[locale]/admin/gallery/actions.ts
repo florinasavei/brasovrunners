@@ -53,6 +53,7 @@ function readFields(form: FormData) {
   return {
     takenOn: text(form, "takenOn"),
     eventId: text(form, "eventId"),
+    externalUrl: text(form, "externalUrl"),
     translations: Object.fromEntries(
       routing.locales.map((locale) => [
         locale,

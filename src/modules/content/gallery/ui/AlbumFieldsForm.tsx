@@ -26,6 +26,7 @@ export type EditableAlbumTranslation = {
 export default async function AlbumFieldsForm({
   takenOn,
   eventId,
+  externalUrl = null,
   events,
   translations,
   slugLocked,
@@ -33,6 +34,8 @@ export default async function AlbumFieldsForm({
   /** `YYYY-MM-DD`, or "" on the create form. */
   takenOn: string;
   eventId: string | null;
+  /** «Link Google Photos» (§NNN), or null. */
+  externalUrl?: string | null;
   events: readonly { id: string; title: string; startsAt: Date; timezone: string }[];
   translations: readonly EditableAlbumTranslation[];
   slugLocked: boolean;
@@ -70,6 +73,16 @@ export default async function AlbumFieldsForm({
           ))}
         </RecallField>
       </Stack>
+
+      {/* «Link Google Photos» (§NNN): where the photos live; the site's album opens it. */}
+      <RecallField
+        name="externalUrl"
+        label={t("gallery.fields.externalUrl")}
+        helperText={t("gallery.externalUrlHelp")}
+        defaultValue={externalUrl ?? ""}
+        type="url"
+        fullWidth
+      />
 
       {/* §464, §482. */}
       <TranslateAllButton />
