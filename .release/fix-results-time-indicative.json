@@ -1,9 +1,0 @@
-{
-  "branch": "fix/results-time-indicative",
-  "decisionsTitle": "«Timp (orientativ)» while the times were noted by hand (amending §809)",
-  "decisionsSection": "**The owner, 2026-11-22:** «la clasament, musai să scriem la timp, în paranteză, „(orientativ)”». While «Toate numele în clasament» is on — the switch that already says «Timpul a fost notat manual.» — the public results' time column reads «Timp (orientativ)», on a wide screen in its header and on a phone before each time. Otherwise it reads «Timp», as before.\n\n**Tests.** `tests/integration/results/public-section.test.ts`.",
-  "changelogLine": "- **Clasament: «Timp (orientativ)» cât timp timpii sunt notați manual.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "«Timp (orientativ)» on hand-noted results"
-}
