@@ -347,7 +347,7 @@ describe("«Distanța parcursă» and «Ritm mediu» — the pace from the race'
     expect(html).not.toContain("a parcurs");
     expect(await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: 11_000 }, AFTER_THE_RACE)).toEqual({ changed: true });
     html = await section();
-    expect(html).toContain("a parcurs 11 km");
+    expect(html).toContain("a parcurs aproximativ 11 km");
     expect(await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: 11_000 }, AFTER_THE_RACE)).toEqual({ changed: false });
     await setResultDistance(db, admin, { eventId: raceId, bibNumber: 101, distanceMeters: null }, AFTER_THE_RACE);
     expect(await section()).not.toContain("a parcurs");

@@ -929,7 +929,7 @@
       "columnCategory": "Categorie",
       "sort": {"label": "Ordonează:", "time": "după timp", "pace": "după ritm mediu"},
       "pace": "Ritm mediu: {pace} min/km",
-      "ownDistance": "a parcurs {km} km",
+      "ownDistance": "a parcurs aproximativ {km} km",
       "chipTime": "Timp cip: {time}",
       "categoryPlace": "loc {position}",
       "noCategory": "Fără categorie",
