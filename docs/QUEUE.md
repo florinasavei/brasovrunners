@@ -142,6 +142,8 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.05` | «Clasament» on a phone: long lines wrap (§1038) |
+| `BR-V5.04` | «Clasament»: the sex alone in «Categorie» without a birth date (§1037) |
 | `BR-V5.03` | «Clasament»'s note about the tick hidden under «Toate numele» (§1036) |
 | `BR-V5.02` | «Clasament»'s headers in the cells' order (§1035) |
 | `BR-V5.01` | «Clasament»'s filter: Feminin and Masculin alone (§1033) · «Ritm mediu» on the results, «Distanța parcursă» on one result (§1034) |

@@ -243,8 +243,9 @@ describe("§809 «Clasament» on the event page — in Romanian", () => {
     // No chip time typed: no caption.
     expect(rows.find((row) => row.bib === 102)?.time).toBe("0:45:00");
     expect(rows.find((row) => row.bib === 102)?.categoryText).toBe("Feminin, 40-49 ani · loc 1");
-    // The typed runner has a sex but no birth date: no category, a dash for the eye and the words for a reader.
-    expect(rows.find((row) => row.bib === 900)?.categoryText).toContain("Fără categorie");
+    // The typed runner has a sex but no birth date: the sex alone — no band, no place by category, never a dash (the owner: «doar zi sexul măcar»).
+    expect(rows.find((row) => row.bib === 900)?.categoryText).toBe("Masculin");
+    expect(rows.find((row) => row.bib === 900)?.category).toBe("MALE");
     // A runner who did not finish keeps their category and has no place in it.
     expect(rows.find((row) => row.bib === 104)?.categoryText).toBe("Masculin, 30-39 ani");
   });
@@ -329,7 +330,7 @@ describe("§809 «Clasament» on the event page — in English", () => {
     expect(rows.find((row) => row.bib === 102)?.name).toBe("Participant #102");
     expect(rows.find((row) => row.bib === 101)?.time).toBe("0:50:00 Chip time: 0:49:58");
     expect(rows.find((row) => row.bib === 101)?.categoryText).toBe("Female, 30-39 · place 1");
-    expect(rows.find((row) => row.bib === 900)?.categoryText).toContain("No category");
+    expect(rows.find((row) => row.bib === 900)?.categoryText).toBe("Men");
     expect(/data-testid="results-published"[^>]*>([^<]*)</.exec(html)![1]).toMatch(/^Published .+ · on this page until .+/);
     expect(html).toContain("I want to appear on the participants &amp; results list");
     expect(html).toContain("Search by number");

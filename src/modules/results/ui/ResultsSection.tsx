@@ -145,7 +145,8 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       "& tbody": { display: { xs: "block", sm: "table-row-group" } },
       "& tbody tr": {
         display: { xs: "grid", sm: "table-row" },
-        gridTemplateColumns: { xs: "2.5rem max-content 1fr", sm: "none" },
+        // `minmax(0, 1fr)` and `minWidth: 0` below: a long comment or pace line wraps inside the phone's width, never past its edge (§1038).
+        gridTemplateColumns: { xs: "2.5rem max-content minmax(0, 1fr)", sm: "none" },
         gridTemplateAreas: { xs: '"place name name" "place number time" "place category category"', sm: "none" },
         columnGap: { xs: 1, sm: 0 },
         borderBottom: 1,
@@ -157,9 +158,9 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
       "& th": { textAlign: "left", fontSize: "0.875rem", fontWeight: 600, color: "text.secondary", whiteSpace: "nowrap", py: 1, px: 1, borderBottom: 1, borderColor: "divider" },
       "& td": { textAlign: "left", verticalAlign: "top", fontSize: "0.9375rem", py: { xs: 0, sm: 1 }, px: { xs: 0, sm: 1 } },
       "& td[data-col='place']": { gridArea: "place", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "text.secondary", width: { sm: "3rem" } },
-      "& td[data-col='name']": { gridArea: "name", overflowWrap: "anywhere" },
+      "& td[data-col='name']": { gridArea: "name", overflowWrap: "anywhere", minWidth: 0 },
       "& td[data-col='number']": { gridArea: "number", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", textAlign: { sm: "right" }, width: { sm: "1%" } },
-      "& td[data-col='time']": { gridArea: "time", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" },
+      "& td[data-col='time']": { gridArea: "time", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", minWidth: 0 },
       "& td[data-col='category']": { gridArea: "category", color: "text.secondary" },
       // The column's word before the cell on a phone, where there is no header to read it from.
       "& td[data-label]::before": { content: "attr(data-label) ' '", display: { xs: "inline", sm: "none" }, fontSize: "0.8125rem", fontWeight: 600, color: "text.secondary" },
@@ -219,7 +220,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
               {row.publicNote !== null && (
                 <>
                   {" *"}
-                  <Box component="span" data-testid="result-public-note" sx={{ display: "block", typography: "body2", color: "text.secondary" }}>
+                  <Box component="span" data-testid="result-public-note" sx={{ display: "block", typography: "body2", color: "text.secondary", whiteSpace: "normal", overflowWrap: "anywhere" }}>
                     {`* ${row.publicNote}`}
                   </Box>
                 </>
@@ -240,7 +241,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   )}
                   {/* «Ritm mediu» (§1034): the gun time over the distance covered — the race's, or the runner's own when an Administrator set one. */}
                   {row.gunTimeMs !== null && row.distanceMeters !== null && row.distanceMeters > 0 && (
-                    <Typography component="span" variant="caption" color="text.secondary" data-testid="result-pace" sx={{ display: "block", fontWeight: 400 }}>
+                    <Typography component="span" variant="caption" color="text.secondary" data-testid="result-pace" sx={{ display: "block", fontWeight: 400, whiteSpace: "normal" }}>
                       {t("results.pace", { pace: formatPace(row.gunTimeMs, row.distanceMeters) })}
                       {row.ownDistance ? ` · ${t("results.ownDistance", { km: formatKm(row.distanceMeters, locale) })}` : null}
                     </Typography>
@@ -257,6 +258,9 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
                   {categoryLabel(row.categoryKey)}
                   {finished && row.positionCategory !== null ? ` · ${t("results.categoryPlace", { position: row.positionCategory })}` : null}
                 </>
+              ) : row.sex !== null ? (
+                // The sex alone, no band and no place by category, when the birth date is missing (§1037 — the owner: «doar zi sexul măcar»).
+                <span data-testid="result-category-sex">{row.sex === "FEMALE" ? t("results.sexFemale") : t("results.sexMale")}</span>
               ) : (
                 <>
                   <span aria-hidden="true">{NO_VALUE}</span>
