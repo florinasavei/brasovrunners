@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.05-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.06-2026-11-22 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V5.05-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.06-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -467,6 +467,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 259. Given `/admin/events/[id]/plan-voluntari` on a 320-pixel screen and on a desktop, when the Organizer writes a point's «Notă pentru voluntari» in «Modifică punctul» — a note in one language alone refused at the page's alert —, then the two boxes are at least 44 pixels tall and inside the screen, the note shows under the point's name on «Pe puncte» and in «Punctele, pe scurt» and on paper, the point's people are numbered with their names in bold and a line between two, nothing is wider than the screen, and the email of each person at that point carries the note in both halves. Verification: e2e `volunteer-plan-mail.spec.ts` under both Playwright viewport projects (2026-11-20, `DECISIONS.md` §1009).
 260. Amends criterion 259 in where a refused note is said. Given `/admin/events/[id]/plan-voluntari` on a 320-pixel screen and on a desktop, when the Organizer adds a point with «Notă pentru voluntari», has a «Modifică punctul» refused, reads «Pe puncte» and changes a point's note after a send, then the add's note boxes are at least 44 pixels tall and inside the screen, the refusal is said at the form with everything typed — the note included — still in the boxes, the pencil open and the address unchanged, each point's people are numbered with their names in bold capitals and a one-pixel line between two on the screen and on paper, the line under the changed note says how many get the new one, the next press writes to that point's people alone, and nothing is wider than the screen. Verification: e2e `volunteer-plan-mail.spec.ts` under both Playwright viewport projects (2026-11-20, `DECISIONS.md` §1011).
 261. Given a desk Voluntar on a 320-pixel phone or a desktop, when they open «PR Kit» from the top bar, then nothing scrolls sideways, every download is a link of at least 44 × 44 pixels, and a sticker sheet, a logo's PDF and the poster each save as a PDF named from the club's slug without leaving the page (2026-11-20, `DECISIONS.md` §1015). Verification: e2e `pr-kit.spec.ts`.
+262. Given an event's card on the listing, then beside «Descrierea completă a evenimentului» it shows «Vezi clasamentul» to the page's `#clasament` exactly when its «Clasament» chip shows, and «Album foto» to the event's newest album published in that language exactly when there is one (2026-11-22, `DECISIONS.md` §1039). Verification: unit `events/featured-card.test.ts`.
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

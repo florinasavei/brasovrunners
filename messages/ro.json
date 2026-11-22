@@ -599,7 +599,9 @@
       "lastLabel": "Ultima:",
       "allDatesCount": "Următoarele date ({count})",
       "pastDatesCount": "Datele ({count})",
-      "fullDescription": "Descrierea completă a evenimentului"
+      "fullDescription": "Descrierea completă a evenimentului",
+      "seeResults": "Vezi clasamentul",
+      "photoAlbum": "Album foto"
     },
     "route": "Traseu",
     "routeSection": "Traseul",

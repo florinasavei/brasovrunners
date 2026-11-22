@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.06-2026-11-22
+
+- **«Vezi clasamentul» and «Album foto» on the race's card** — beside «Descrierea completă a evenimentului», the first while the results are on show, the second once the event's album is published. §1039.
 ## BR-V5.05-2026-11-22
 
 - **Clasament pe telefon: comentariul și ritmul se încadrează în ecran.** §1038.
