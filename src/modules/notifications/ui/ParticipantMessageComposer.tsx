@@ -167,6 +167,15 @@ export type ComposerLabels = {
     bodyRo: string;
     bodyEn: string;
   };
+  /** «Completează cu mulțumirea de după cursă» (§NNN): the same press, another ready text; it ticks nothing. */
+  thanksFill?: {
+    button: string;
+    confirmBody: string;
+    subjectRo: string;
+    subjectEn: string;
+    bodyRo: string;
+    bodyEn: string;
+  };
 };
 
 export type PreviewInput = {
@@ -399,6 +408,17 @@ export default function ParticipantMessageComposer({
     if (reminderOverwrites(readWords())) setAskingFill(true);
     else fill();
   };
+  const [askingThanks, setAskingThanks] = useState(false);
+  const thanks = labels.thanksFill;
+  const fillThanks = () => {
+    if (!thanks) return;
+    const texts = { subjectRo: thanks.subjectRo, subjectEn: thanks.subjectEn, bodyRo: thanks.bodyRo, bodyEn: thanks.bodyEn };
+    fillReminderBoxes((name) => root.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`), texts, writePlainBox);
+  };
+  const pressThanks = () => {
+    if (reminderOverwrites(readWords())) setAskingThanks(true);
+    else fillThanks();
+  };
 
   const SendIcon = ACTION_ICONS.send;
   const unknown = shown.result?.unknown ?? [];
@@ -494,10 +514,31 @@ export default function ParticipantMessageComposer({
       </Box>
 
       {/* The ready reminder (the decision «Cere reconfirmarea»): the four boxes and the tick in one press. */}
-      <Box data-testid="participant-message-reminder-fill">
+      <Box data-testid="participant-message-reminder-fill" sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
         <GlyphButton icon="template" variant="outlined" onClick={pressFill} sx={TAP_TARGET}>
           {labels.reminderFill.button}
         </GlyphButton>
+        {thanks && (
+          <GlyphButton icon="template" variant="outlined" onClick={pressThanks} sx={TAP_TARGET} data-testid="participant-message-thanks-fill">
+            {thanks.button}
+          </GlyphButton>
+        )}
+        {thanks && (
+          <ConfirmDialog
+            open={askingThanks}
+            spec={{
+              title: labels.reminderFill.confirmTitle,
+              body: thanks.confirmBody,
+              confirmLabel: labels.reminderFill.confirmGo,
+              cancelLabel: labels.reminderFill.confirmCancel,
+            }}
+            onCancel={() => setAskingThanks(false)}
+            onConfirm={() => {
+              setAskingThanks(false);
+              fillThanks();
+            }}
+          />
+        )}
         <ConfirmDialog
           open={askingFill}
           spec={{

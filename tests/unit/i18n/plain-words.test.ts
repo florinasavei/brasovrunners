@@ -86,6 +86,12 @@ const ALLOWED_LONG: Record<string, string> = {
   // The registrations list's «Pași» column legend: the six steps of a registration, one line each,
   // drawn as the column's «?». Like the token legend, it IS the help; a step cut out is a step unexplained.
   "Admin.registrations.journey.legend": "the «Pași» column legend names each of a registration's six steps on its own line",
+  // «Completează cu mulțumirea de după cursă» (§NNN): an email's paragraphs the club approved, written into the boxes, never drawn
+  // on the screen as a label — the club's own words, not a help to shorten.
+  "Admin.participantMessages.thanksText.p3": "a paragraph of the club's approved after-race email, not a screen string",
+  "Admin.participantMessages.thanksText.p6": "a paragraph of the club's approved after-race email, not a screen string",
+  "Admin.participantMessages.thanksText.p7": "a paragraph of the club's approved after-race email, not a screen string",
+  "Admin.participantMessages.thanksText.p10": "a paragraph of the club's approved after-race email, not a screen string",
 };
 
 /**
