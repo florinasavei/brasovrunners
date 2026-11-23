@@ -1,7 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { registrations } from "@/db/schema/registrations";
-import { AUDIENCE_STATUSES, CHOSEN_AUDIENCE, chosenRegistrationIds, isMessageReach } from "@/modules/notifications/domain/organizer-message";
+import { AUDIENCE_RACE_DAY, AUDIENCE_STATUSES, CHOSEN_AUDIENCE, chosenRegistrationIds, isMessageReach } from "@/modules/notifications/domain/organizer-message";
 import type { SendParticipantMessageInput } from "@/modules/notifications/participant-messages";
+import { raceDayCondition } from "@/modules/registrations/admin-repository";
 import { isUuid } from "@/shared/ids";
 import type { TestDatabase } from "./db";
 
@@ -23,6 +24,8 @@ export async function typedCountFor(db: TestDatabase, eventId: string, audience:
         eq(registrations.eventId, eventId),
         eq(registrations.kind, "REAL"),
         inArray(registrations.status, [...AUDIENCE_STATUSES[audience === CHOSEN_AUDIENCE ? "ALL_ACTIVE" : audience]]),
+        // The two groups of the day after (§1055): «Ziua cursei»'s own definition, as the send narrows them.
+        audience !== CHOSEN_AUDIENCE && AUDIENCE_RACE_DAY[audience] ? raceDayCondition(AUDIENCE_RACE_DAY[audience]) : undefined,
       ),
     );
   if (audience !== CHOSEN_AUDIENCE) return String(rows.length);

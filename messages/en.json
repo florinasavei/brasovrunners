@@ -11396,13 +11396,17 @@
         "ALL_ACTIVE": "Everyone registered: confirmed, on the waiting list and those who have not signed the declaration yet",
         "CONFIRMED": "Only the confirmed",
         "WAITLIST": "Only the waiting list, and those offered a place",
-        "PENDING_DECLARATION": "Only those registered who have not signed the declaration yet"
+        "PENDING_DECLARATION": "Only those registered who have not signed the declaration yet",
+        "PRESENT": "Only those who came: checked in or in the results",
+        "NO_SHOW": "Only those who did not come: confirmed, no check-in and no result"
       },
       "audiencesShort": {
         "ALL_ACTIVE": "Everyone registered",
         "CONFIRMED": "Confirmed",
         "WAITLIST": "Waiting list",
         "PENDING_DECLARATION": "Declaration not signed",
+        "PRESENT": "Present",
+        "NO_SHOW": "Did not come",
         "CHOSEN": "Chosen participants"
       },
       "chosen": {
@@ -13447,13 +13451,13 @@
       "dialog": "The registrations will be marked «Partner: {name}» — internal, the people are not told."
     },
     "raceDayList": {
+      "column": "Time",
       "filter": "Race day",
       "filterAll": "Everyone",
       "filterPresent": "Present",
       "filterFinished": "Finished",
       "filterDns": "DNS: did not come",
       "filterHelp": "Present: checked in or a result. DNS: confirmed, no check-in and no result, not cancelled.",
-      "finished": "Time {time}",
       "present": "Present",
       "status": "{status}"
     },

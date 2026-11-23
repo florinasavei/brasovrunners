@@ -25,7 +25,7 @@ import { type EmailCopyPlaceholder, placeholdersIn } from "./email-copy";
  * registrations"), and never `PENDING_EMAIL_CONFIRMATION` — an address nobody has vouched for
  * gets the confirmation and nothing else, the reason §331 gives for its own notices.
  */
-export const PARTICIPANT_MESSAGE_AUDIENCES = ["ALL_ACTIVE", "CONFIRMED", "WAITLIST", "PENDING_DECLARATION"] as const;
+export const PARTICIPANT_MESSAGE_AUDIENCES = ["ALL_ACTIVE", "CONFIRMED", "WAITLIST", "PENDING_DECLARATION", "PRESENT", "NO_SHOW"] as const;
 export type ParticipantMessageAudience = (typeof PARTICIPANT_MESSAGE_AUDIENCES)[number];
 
 /**
@@ -39,7 +39,17 @@ export const AUDIENCE_STATUSES: Readonly<Record<ParticipantMessageAudience, read
   CONFIRMED: ["CONFIRMED"],
   WAITLIST: ["WAITLISTED", "WAITLIST_OFFERED"],
   PENDING_DECLARATION: ["PENDING_DECLARATION"],
+  // «Doar cei care au fost prezenți» and «Doar cei care n-au ajuns» (§1055 — the owner, 2026-11-23): narrowed further by
+  // «Ziua cursei»'s own definition (`AUDIENCE_RACE_DAY`), so a message after the race reaches who came, or who never did.
+  PRESENT: ["PENDING_DECLARATION", "WAITLIST_OFFERED", "CONFIRMED", "WAITLISTED"],
+  NO_SHOW: ["CONFIRMED"],
 };
+
+/**
+ * The two groups of the day after (§1055): the registrations list's «Ziua cursei» filter, the one definition — present is a
+ * check-in or a result that is not DNS; no-show is confirmed, never checked in, no result but DNS.
+ */
+export const AUDIENCE_RACE_DAY: Partial<Record<ParticipantMessageAudience, "present" | "dns">> = { PRESENT: "present", NO_SHOW: "dns" };
 
 export function isParticipantMessageAudience(value: unknown): value is ParticipantMessageAudience {
   return typeof value === "string" && (PARTICIPANT_MESSAGE_AUDIENCES as readonly string[]).includes(value);

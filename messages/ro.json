@@ -11396,13 +11396,17 @@
         "ALL_ACTIVE": "Toți cei înscriși: confirmați, pe lista de așteptare și cei care nu au semnat încă declarația",
         "CONFIRMED": "Doar confirmații",
         "WAITLIST": "Doar cei de pe lista de așteptare, și cei cărora li s-a oferit un loc",
-        "PENDING_DECLARATION": "Doar cei înscriși care nu au semnat încă declarația"
+        "PENDING_DECLARATION": "Doar cei înscriși care nu au semnat încă declarația",
+        "PRESENT": "Doar cei care au fost prezenți: check-in sau rezultat în clasament",
+        "NO_SHOW": "Doar cei care n-au ajuns: confirmați, fără check-in și fără rezultat"
       },
       "audiencesShort": {
         "ALL_ACTIVE": "Toți cei înscriși",
         "CONFIRMED": "Confirmați",
         "WAITLIST": "Lista de așteptare",
         "PENDING_DECLARATION": "Declarație nesemnată",
+        "PRESENT": "Prezenți",
+        "NO_SHOW": "N-au ajuns",
         "CHOSEN": "Participanți aleși"
       },
       "chosen": {
@@ -13447,13 +13451,13 @@
       "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
     },
     "raceDayList": {
+      "column": "Timp",
       "filter": "Ziua cursei",
       "filterAll": "Toți",
       "filterPresent": "Prezenți",
       "filterFinished": "Au terminat",
       "filterDns": "DNS: n-au venit",
       "filterHelp": "Prezent: check-in sau rezultat. DNS: confirmat, fără check-in și fără rezultat, neanulat.",
-      "finished": "Timp {time}",
       "present": "Prezent",
       "status": "{status}"
     },

@@ -55,7 +55,7 @@ const WORDS = {
 
 describe("§364 who a message can go to", () => {
   it("offers everybody active and its three parts, and 'everybody' is exactly the §331 notices' set", () => {
-    expect(PARTICIPANT_MESSAGE_AUDIENCES).toEqual(["ALL_ACTIVE", "CONFIRMED", "WAITLIST", "PENDING_DECLARATION"]);
+    expect(PARTICIPANT_MESSAGE_AUDIENCES).toEqual(["ALL_ACTIVE", "CONFIRMED", "WAITLIST", "PENDING_DECLARATION", "PRESENT", "NO_SHOW"]);
     expect([...AUDIENCE_STATUSES.ALL_ACTIVE].sort()).toEqual([...EVENT_NOTICE_STATUSES].sort());
   });
 
