@@ -167,7 +167,7 @@ export type ComposerLabels = {
     bodyRo: string;
     bodyEn: string;
   };
-  /** «Completează cu mulțumirea de după cursă» (§NNN): the same press, another ready text; it ticks nothing. */
+  /** «Completează cu mulțumirea de după cursă» (§1054): the same press, another ready text; it ticks nothing. */
   thanksFill?: {
     button: string;
     confirmBody: string;
@@ -380,7 +380,7 @@ export default function ParticipantMessageComposer({
   };
 
   /*
-    Enter in a one-line box (the subject, a name looked for, the count) never sends (§NNN — the owner, 2026-11-23: «când fac o
+    Enter in a one-line box (the subject, a name looked for, the count) never sends (§1054 — the owner, 2026-11-23: «când fac o
     acțiune se dă submit»): the browser's implicit submission sent the form from the subject. Only «Trimite mesajul» sends.
   */
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

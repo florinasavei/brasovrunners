@@ -139,7 +139,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   };
   const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
   /*
-    «Completează cu mulțumirea de după cursă» (§NNN — the owner, 2026-11-23: «pune și ca template pentru viitor»): the thank-you
+    «Completează cu mulțumirea de după cursă» (§1054 — the owner, 2026-11-23: «pune și ca template pentru viitor»): the thank-you
     the club sent after the anniversary race, made general — `{club}` written with the club's name here, every other
     `{placeholder}` literal for the send to fill.
   */
