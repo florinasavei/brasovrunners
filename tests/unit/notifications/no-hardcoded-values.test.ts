@@ -144,6 +144,11 @@ describe("§369 the club's name leaves the platform only through the constant", 
           // «Pune bifa» on a row of the members' list (§645): the club the list will name.
           "Admin.confirm.memberSetBody",
           "Admin.pages.intro",
+          // «Completează cu mulțumirea de după cursă» (§1054): filled with the constant by the composer's page (`afterRaceOf`).
+          "Admin.participantMessages.thanksText.p10",
+          "Admin.participantMessages.thanksText.p17",
+          "Admin.participantMessages.thanksText.p18",
+          "Admin.participantMessages.thanksText.p4",
           // «Datele înscrierii» (§645): the club box's help, the tick's label and its help.
           "Admin.registrations.answers.clubNameHelp",
           "Admin.registrations.answers.fields.clubMemberDeclared",

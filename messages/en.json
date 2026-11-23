@@ -11504,6 +11504,31 @@
         "confirmGo": "Replace",
         "confirmCancel": "Cancel"
       },
+      "thanksText": {
+        "subject": "Thank you for celebrating with us! 💙",
+        "p1": "Hi!",
+        "p2": "What a beautiful day we had together! 💙",
+        "p3": "Thank you for joining us at {eventTitle}! You took the start and all made it safely to the finish. And for that, you deserve our congratulations! A big thank-you also to our volunteers, who were with you along the course and made sure everything went safely.",
+        "p4": "But {club} is more than an event.",
+        "p5": "We are, above all, a community of people who meet at least twice a week to run together, support each other and enjoy moving.",
+        "p6": "We don't aim to be race organisers, but to build a community that promotes movement, education through sport and a healthy form of competitiveness. We believe in competing with ourselves, in personal progress and in supporting those around us, not in aggressive competition with others.",
+        "p7": "We want to show that you don't need a big organisation to make a change. A small group, united around shared values, can have a real impact and inspire more and more people to discover the joy of movement.",
+        "p8": "We believe in volunteering, in team spirit and in the principle that guides us: No One Left Behind.",
+        "p9": "You'll see us at other races too, either running alongside you or cheering you on from the side. Because we like being part of this community, not just building it.",
+        "p10": "{eventTitle} was free to enter, and that was possible thanks to our sponsors and partners, and to everyone who chose to redirect part of their income tax to {club}. Thank you for helping us make things like this possible!",
+        "p11": "A few things you can still access:",
+        "p12": "🏆 The results and 📸 the photo gallery – on the event's page (the “See the event's page” button), under “Results” and “Photo gallery”.",
+        "p13": "💬 How was it for you? It would help us a lot to know! We've prepared an anonymous form that takes about a minute:\n{feedbackLink}",
+        "p14": "🏃 Want to see us again? You're welcome at our weekly runs. The schedule is on the site, under “All our events”, below this message.",
+        "p15": "We hope you enjoyed this day as much as we enjoyed preparing it for you.",
+        "p16": "See you at the next run!",
+        "p17": "We run. We celebrate. We are {club}. 💙",
+        "p18": "The {club} team"
+      },
+      "thanksFill": {
+        "button": "Fill in the after-race thank-you",
+        "confirmBody": "The subject and the message, in both languages, will be replaced with the after-race thank-you."
+      },
       "reminderText": {
         "subject": "See you at {eventTitle}? Tell us if you're coming",
         "p1": "Hi {participantName}!",

@@ -1,3 +1,4 @@
+import { CLUB_NAME } from "@/theme/brand";
 import { randomUUID } from "node:crypto";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -137,6 +138,18 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     return { subject: raw("subject"), body: ["p1", "p2", "p3", "p4", "p5", "p6", "p7"].map(raw).join("\n\n") };
   };
   const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
+  /*
+    «Completează cu mulțumirea de după cursă» (§1054 — the owner, 2026-11-23: «pune și ca template pentru viitor»): the thank-you
+    the club sent after the anniversary race, made general — `{club}` written with the club's name here, every other
+    `{placeholder}` literal for the send to fill.
+  */
+  const afterRaceOf = async (language: "ro" | "en") => {
+    const words = await getTranslations({ locale: language, namespace: "Admin" });
+    const raw = (key: string) => (words.raw(`participantMessages.thanksText.${key}`) as string).replaceAll("{club}", CLUB_NAME);
+    // The paragraphs p1…p18, a blank line between each, as `organizerParagraphs` reads them.
+    return { subject: raw("subject"), body: Array.from({ length: 18 }, (_, index) => raw(`p${index + 1}`)).join("\n\n") };
+  };
+  const [thanksRo, thanksEn] = await Promise.all([afterRaceOf("ro"), afterRaceOf("en")]);
 
   /*
     What a send costs, how it leaves and how much of it waits (§100, §40; the decision «Cere reconfirmarea», part two),
@@ -522,6 +535,14 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 subjectEn: reminderEn.subject,
                 bodyRo: reminderRo.body,
                 bodyEn: reminderEn.body,
+              },
+              thanksFill: {
+                button: t("participantMessages.thanksFill.button"),
+                confirmBody: t("participantMessages.thanksFill.confirmBody"),
+                subjectRo: thanksRo.subject,
+                subjectEn: thanksEn.subject,
+                bodyRo: thanksRo.body,
+                bodyEn: thanksEn.body,
               },
             }}
           />
