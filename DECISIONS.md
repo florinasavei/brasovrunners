@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.19-2026-11-23 -->
+<!-- PROJECT_BASELINE: BR-V5.20-2026-11-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.19-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.20-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32181,3 +32181,11 @@ Baseline `BR-V5.18-2026-11-22`.
 **Tests.** `tests/unit/events/event-tabs.test.ts`.
 
 Baseline `BR-V5.19-2026-11-23`.
+
+## 1053. «Ziua cursei» on the registrations list: present, finished, DNS, and each row's time
+
+**The owner, 2026-11-23:** «trebuie să văd cine a fost prezent și cine a terminat cursa, pe lista de participanți… vreau să văd și timpul din clasament… și separat cine a fost DNS (nici măcar nu și-a anulat înscrierea)». The list gains the filter «Ziua cursei», which the export follows: «Prezenți» means checked in at the desk or with a result line that is not DNS; «Au terminat» means a FINISHED line; «DNS: n-au venit» means confirmed, never checked in, no result line but DNS, and never cancelled. Each row shows a chip: «Timp h:mm:ss» from «Clasament» (chip time, else gun time), else the result's status (DNF, DNS, DSQ), else «Prezent» after a check-in. It is information read by every role that reads the list, never a state, and nothing is sent.
+
+**Tests.** `tests/integration/registrations/race-day-filter.test.ts`.
+
+Baseline `BR-V5.20-2026-11-23`.

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.20-2026-11-23
+
+- **Lista de înscrieri: filtrul «Ziua cursei» (prezenți · au terminat · DNS) și timpul din clasament pe fiecare rând.** §1053.
 ## BR-V5.19-2026-11-23
 
 - **Pagina evenimentului: tab-urile «Descriere · Clasament · Galerie foto» arată ca butoane, cel deschis colorat.** §1052.
