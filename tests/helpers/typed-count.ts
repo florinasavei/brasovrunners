@@ -24,7 +24,7 @@ export async function typedCountFor(db: TestDatabase, eventId: string, audience:
         eq(registrations.eventId, eventId),
         eq(registrations.kind, "REAL"),
         inArray(registrations.status, [...AUDIENCE_STATUSES[audience === CHOSEN_AUDIENCE ? "ALL_ACTIVE" : audience]]),
-        // The two groups of the day after (§NNN): «Ziua cursei»'s own definition, as the send narrows them.
+        // The two groups of the day after (§1055): «Ziua cursei»'s own definition, as the send narrows them.
         audience !== CHOSEN_AUDIENCE && AUDIENCE_RACE_DAY[audience] ? raceDayCondition(AUDIENCE_RACE_DAY[audience]) : undefined,
       ),
     );

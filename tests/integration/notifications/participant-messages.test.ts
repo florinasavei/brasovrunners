@@ -181,7 +181,7 @@ describe("§364 the organizer's message to an event's participants", () => {
       CONFIRMED: { real: 2, test: 1 },
       WAITLIST: { real: 2, test: 0 },
       PENDING_DECLARATION: { real: 1, test: 0 },
-      // §NNN: nobody checked in or in the results yet — every confirmed one has not come.
+      // §1055: nobody checked in or in the results yet — every confirmed one has not come.
       PRESENT: { real: 0, test: 0 },
       NO_SHOW: { real: 2, test: 1 },
     });

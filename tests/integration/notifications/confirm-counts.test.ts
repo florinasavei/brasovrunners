@@ -135,7 +135,7 @@ describe("§384 the dialog's count is the send's recipients", () => {
     }
     // And the number the dialog states is the real one, which is not the whole queue.
     expect(counts.ALL_ACTIVE).toEqual({ real: 5, test: 1 });
-    // §NNN: who came is the one checked in; who did not is the other confirmed one — «Ziua cursei»'s definition.
+    // §1055: who came is the one checked in; who did not is the other confirmed one — «Ziua cursei»'s definition.
     expect(counts.PRESENT.real).toBe(1);
     expect(counts.NO_SHOW.real).toBe(1);
   });

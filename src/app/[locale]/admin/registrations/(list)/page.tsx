@@ -823,7 +823,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Timp» (§NNN, amending §1053 — the owner, 2026-11-23: «aici timpul aș vrea să fie în coloană separată»): the row's time
+        «Timp» (§1055, amending §1053 — the owner, 2026-11-23: «aici timpul aș vrea să fie în coloană separată»): the row's time
         from «Clasament» (chip, else gun), else its result's status (DNF, DNS, DSQ), else «Prezent» after a check-in.
       */
       key: "raceTime",

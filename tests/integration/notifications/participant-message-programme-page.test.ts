@@ -272,7 +272,7 @@ describe("§958 «Include programul evenimentului» on the composer's page", () 
       const { words } = cataloguesOf(locale);
       const specs = specsOf(await messagesPage(race.id));
       // Every question of the form carries the line, on the one condition: the box posted `1`.
-      // The six groups and the people ticked (§NNN added «Prezenți» and «N-au ajuns»).
+      // The six groups and the people ticked (§1055 added «Prezenți» and «N-au ajuns»).
       expect(specs.length, locale).toBe(7);
       for (const spec of specs) {
         const lines = (spec.also ?? []).filter((line) => line.text === words.confirmProgramme);

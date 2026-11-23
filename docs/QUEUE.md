@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.22` | Present and no-show message groups; the «Timp» column (§1055) |
 | `BR-V5.21` | Enter never sends the participant message; the after-race thank-you template (§1054) |
 | `BR-V5.20` | «Ziua cursei» on the registrations list (§1053) |
 | `BR-V5.19` | The event page's tabs drawn as buttons (§1052) |

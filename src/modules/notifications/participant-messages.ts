@@ -93,7 +93,7 @@ export async function countParticipantMessageAudiences<T extends Record<string, 
       else counts[audience].real += row.count;
     }
   }
-  // The two groups of the day after (§NNN): their own count, by «Ziua cursei»'s definition.
+  // The two groups of the day after (§1055): their own count, by «Ziua cursei»'s definition.
   for (const audience of PARTICIPANT_MESSAGE_AUDIENCES) {
     const raceDay = AUDIENCE_RACE_DAY[audience];
     if (!raceDay) continue;
