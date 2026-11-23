@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V5.20` | «Ziua cursei» on the registrations list (§1053) |
 | `BR-V5.19` | The event page's tabs drawn as buttons (§1052) |
 | `BR-V5.18` | The card's «Album foto» opens the «Galerie foto» tab (§1051) |
 | `BR-V5.17` | «Link Google Photos» on albums (§1050) |

@@ -296,7 +296,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     fromPartner: partner === "1" || undefined,
     // «Reconfirmare» (the decision «Cere reconfirmarea»): one of three answers — in the same `WHERE`, so its count and pages too.
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
-    // «Ziua cursei» (§NNN): who came, who finished, who never came — in the same `WHERE`, so its count and pages too.
+    // «Ziua cursei» (§1053): who came, who finished, who never came — in the same `WHERE`, so its count and pages too.
     raceDay: isRaceDayFilter(ziua) ? ziua : undefined,
     search: q || undefined,
   };
@@ -641,7 +641,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state;
               the answer «yes», as the filter keeps it and the export writes it (§1019). */}
           {reconfirmAnswers.get(row.id) === "yes" && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
-          {/* «Ziua cursei» (§NNN): the row's time from «Clasament», else its result's status, else «Prezent» after a check-in. */}
+          {/* «Ziua cursei» (§1053): the row's time from «Clasament», else its result's status, else «Prezent» after a check-in. */}
           {row.resultStatus === "FINISHED" && row.resultTimeMs !== null ? (
             <StatusChip glyph="done" color="success" label={t("raceDayList.finished", { time: formatResultTime(row.resultTimeMs) })} testId="race-day-chip" />
           ) : row.resultStatus && row.resultStatus !== "FINISHED" ? (
@@ -2060,7 +2060,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             «Reconfirmare» (the decision «Cere reconfirmarea»): among the people an organizer's message asked — who said «Vin»,
             who cancelled since, who did not answer. Answering is optional; none of the three is a state.
           */}
-          {/* «Ziua cursei» (§NNN — the owner, 2026-11-23): who came, who finished, who never came and never cancelled (DNS). */}
+          {/* «Ziua cursei» (§1053 — the owner, 2026-11-23): who came, who finished, who never came and never cancelled (DNS). */}
           <TextField
             select
             name="ziua"

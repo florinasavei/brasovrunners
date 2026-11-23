@@ -91,7 +91,7 @@ export type RegistrationListRow = {
    * public page (`reconfirmation-never-leaves.test.ts`).
    */
   reconfirmedAt: Date | null;
-  /** «Ziua cursei» (§NNN): the registration's line in the results — FINISHED, DNF, DNS, DSQ — or null, and its time (chip, else gun). */
+  /** «Ziua cursei» (§1053): the registration's line in the results — FINISHED, DNF, DNS, DSQ — or null, and its time (chip, else gun). */
   resultStatus: string | null;
   resultTimeMs: number | null;
   /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
@@ -279,12 +279,12 @@ export type RegistrationListFilters = {
    * «none» those still registered who did not answer. Information, never a state. Narrows only.
    */
   reconfirm?: ReconfirmFilter;
-  /** «Ziua cursei» (§NNN): who came, who finished, who never came (DNS). Narrows only. */
+  /** «Ziua cursei» (§1053): who came, who finished, who never came (DNS). Narrows only. */
   raceDay?: RaceDayFilter;
 };
 
 /**
- * «Ziua cursei» (§NNN — the owner, 2026-11-23: «cine a fost prezent… cine a terminat… cine a fost DNS»), over the registration's
+ * «Ziua cursei» (§1053 — the owner, 2026-11-23: «cine a fost prezent… cine a terminat… cine a fost DNS»), over the registration's
  * check-in and its line in the results:
  * - «present»: checked in at the desk, or a result line that is not DNS (somebody who ran came, checked in or not);
  * - «finished»: a FINISHED result line;
@@ -305,7 +305,7 @@ function raceDayCondition(filter: RaceDayFilter): SQL {
   return sql`(${registrations.status} = 'CONFIRMED' and ${registrations.checkedInAt} is null and not ${ranOrStarted})`;
 }
 
-/** The registration's own result line, for the list's «Timp» (§NNN): its status, and its time — chip, else gun. */
+/** The registration's own result line, for the list's «Timp» (§1053): its status, and its time — chip, else gun. */
 const resultStatusOfRow = sql<string | null>`(select er."status"::text from ${eventResults} er where er."registration_id" = ${registrations}."id" order by er."created_at" desc limit 1)`;
 const resultTimeOfRow = sql<number | null>`(select coalesce(er."chip_time_ms", er."gun_time_ms") from ${eventResults} er where er."registration_id" = ${registrations}."id" order by er."created_at" desc limit 1)`;
 

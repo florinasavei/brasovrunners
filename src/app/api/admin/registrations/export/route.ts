@@ -92,7 +92,7 @@ export async function GET(request: Request): Promise<Response> {
   const partner = url.searchParams.get("partner");
   // «Reconfirmare» (the decision «Cere reconfirmarea»): the list's filter, so the file is the rows on screen.
   const reconfirm = url.searchParams.get("reconfirm");
-  // «Ziua cursei» (§NNN): the list's filter, so the file is the rows on screen.
+  // «Ziua cursei» (§1053): the list's filter, so the file is the rows on screen.
   const ziua = url.searchParams.get("ziua");
   // The reader's language (§785), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
   const lang = url.searchParams.get("lang");

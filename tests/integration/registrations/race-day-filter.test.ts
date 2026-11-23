@@ -18,7 +18,7 @@ import {
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN «Ziua cursei» (BR-REQ-037-05): the registrations list's filter — present, finished, DNS — and each row's time.
+ * §1053 «Ziua cursei» (BR-REQ-037-05): the registrations list's filter — present, finished, DNS — and each row's time.
  *
  * Kept from the club-member test's set-up:  — "I am a Brașov Runners team member".
  *
@@ -108,7 +108,7 @@ function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-describe("§NNN the registrations list's «Ziua cursei»", () => {
+describe("§1053 the registrations list's «Ziua cursei»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
