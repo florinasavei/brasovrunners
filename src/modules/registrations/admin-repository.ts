@@ -299,7 +299,7 @@ export function isRaceDayFilter(value: unknown): value is RaceDayFilter {
 
 const ranOrStarted = sql`exists (select 1 from ${eventResults} er where er."registration_id" = ${registrations}."id" and er."status" <> 'DNS')`;
 
-function raceDayCondition(filter: RaceDayFilter): SQL {
+export function raceDayCondition(filter: RaceDayFilter): SQL {
   if (filter === "finished") return sql`exists (select 1 from ${eventResults} er where er."registration_id" = ${registrations}."id" and er."status" = 'FINISHED')`;
   if (filter === "present") return sql`(${registrations.checkedInAt} is not null or ${ranOrStarted})`;
   return sql`(${registrations.status} = 'CONFIRMED' and ${registrations.checkedInAt} is null and not ${ranOrStarted})`;

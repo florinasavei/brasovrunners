@@ -641,14 +641,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state;
               the answer «yes», as the filter keeps it and the export writes it (§1019). */}
           {reconfirmAnswers.get(row.id) === "yes" && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
-          {/* «Ziua cursei» (§1053): the row's time from «Clasament», else its result's status, else «Prezent» after a check-in. */}
-          {row.resultStatus === "FINISHED" && row.resultTimeMs !== null ? (
-            <StatusChip glyph="done" color="success" label={t("raceDayList.finished", { time: formatResultTime(row.resultTimeMs) })} testId="race-day-chip" />
-          ) : row.resultStatus && row.resultStatus !== "FINISHED" ? (
-            <StatusChip glyph="droppedOut" color="warning" variant="outlined" label={t("raceDayList.status", { status: row.resultStatus })} testId="race-day-chip" />
-          ) : row.checkedInAt ? (
-            <StatusChip glyph="checkedIn" color="primary" variant="outlined" label={t("raceDayList.present")} testId="race-day-chip" />
-          ) : null}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -828,6 +820,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </>
         );
       },
+    },
+    {
+      /*
+        «Timp» (§1055, amending §1053 — the owner, 2026-11-23: «aici timpul aș vrea să fie în coloană separată»): the row's time
+        from «Clasament» (chip, else gun), else its result's status (DNF, DNS, DSQ), else «Prezent» after a check-in.
+      */
+      key: "raceTime",
+      label: t("raceDayList.column"),
+      render: (row) =>
+        row.resultStatus === "FINISHED" && row.resultTimeMs !== null ? (
+          <Box component="span" data-testid="race-day-time" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+            {formatResultTime(row.resultTimeMs)}
+          </Box>
+        ) : row.resultStatus && row.resultStatus !== "FINISHED" ? (
+          <StatusChip glyph="droppedOut" color="warning" variant="outlined" label={t("raceDayList.status", { status: row.resultStatus })} testId="race-day-chip" />
+        ) : row.checkedInAt ? (
+          <StatusChip glyph="checkedIn" color="primary" variant="outlined" label={t("raceDayList.present")} testId="race-day-chip" />
+        ) : (
+          "—"
+        ),
     },
     {
       // The owner's "what step each participant is in" (§145): steps done out of six and the

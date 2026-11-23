@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.21-2026-11-23 -->
+<!-- PROJECT_BASELINE: BR-V5.22-2026-11-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.21-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.22-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32201,3 +32201,11 @@ Baseline `BR-V5.20-2026-11-23`.
 **Tests.** `tests/unit/i18n` (four paragraphs allowed long in `plain-words.test.ts`: an email's approved words, not a screen string).
 
 Baseline `BR-V5.21-2026-11-23`.
+
+## 1055. «Cui îi trimiți»: «Doar cei care au fost prezenți» and «Doar cei care n-au ajuns»; «Timp» its own column (amending §1053)
+
+**The owner, 2026-11-23:** «aici lipește „doar cei care au fost prezenți” și pentru anul viitor „cei care nu au mai ajuns”» and «aici timpul aș vrea să fie în coloană separată». «Trimite un mesaj participanților» gains two groups, both read by the registrations list's «Ziua cursei» definition (§1053), one SQL condition for the count, the send and the test helper alike. «Doar cei care au fost prezenți» means an active registration checked in, or with a result that is not DNS. «Doar cei care n-au ajuns» means confirmed, never checked in, no result but DNS. Neither ever reaches a cancelled, expired or unconfirmed-address registration. On the registrations list the time leaves the name's chips for a column «Timp» beside «Unde a ajuns»: the time from «Clasament», else the result's status, else «Prezent» after a check-in, else «—».
+
+**Tests.** `tests/integration/notifications/confirm-counts.test.ts` (each group's count is what its send queues; one present, one no-show), `tests/unit/notifications/organizer-message.test.ts`.
+
+Baseline `BR-V5.22-2026-11-23`.
