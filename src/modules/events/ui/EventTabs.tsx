@@ -44,6 +44,9 @@ const TABS_SX = {
  * tab is a link to its panel, so the browser's own jump lands on the row of tabs, which stays in view, and `#clasament` — the address
  * the listing's card, the home page and the emails already use — opens the results. A tab is drawn only when it has something (the
  * caller decides); with the description alone there is no row at all and the page is drawn as before.
+ *
+ * Drawn as one bar of equal buttons, the current one filled (§1052 — the owner, 2026-11-22: «trebuie să fie mai clar aici că sunt
+ * taburi»): an underline under plain words read as a heading, not as something to tap.
  */
 export default function EventTabs({ tabs, children }: { tabs: EventTabLinks; children?: ReactNode }) {
   if (tabs.length < 2) return <>{children}</>;
@@ -59,7 +62,7 @@ export function EventTabPanel({ tab, tabs, label, children }: { tab: EventTabKey
   if (tabs.length < 2) return <>{children}</>;
   return (
     <Box component="section" id={tab} data-tab-panel={tab} data-testid={`event-tab-panel-${tab}`} sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
-      <Box component="nav" aria-label={label} sx={{ display: "flex", gap: 0.5, borderBottom: 1, borderColor: "divider", mb: { xs: DENSITY.gapSm, sm: 2 }, overflowX: "auto" }}>
+      <Box component="nav" aria-label={label} sx={{ display: "flex", gap: 0.5, p: 0.5, bgcolor: "action.selected", borderRadius: 2, mb: { xs: DENSITY.gapSm, sm: 2 } }}>
         {tabs.map((link) => {
           const Glyph = TAB_GLYPH[link.key];
           const current = link.key === tab;
@@ -72,19 +75,26 @@ export function EventTabPanel({ tab, tabs, label, children }: { tab: EventTabKey
               data-testid="event-tab"
               data-tab={link.key}
               sx={{
-                display: "inline-flex",
+                flex: "1 1 0",
+                minWidth: 0,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
                 alignItems: "center",
-                gap: 0.75,
+                justifyContent: "center",
+                columnGap: 0.75,
+                rowGap: 0.25,
                 minHeight: 44,
-                px: 1.5,
-                mb: "-1px",
-                whiteSpace: "nowrap",
+                px: 1,
+                py: 0.5,
+                borderRadius: 1.5,
+                textAlign: "center",
+                lineHeight: 1.2,
                 textDecoration: "none",
-                fontWeight: 600,
-                color: current ? "primary.main" : "text.secondary",
-                borderBottom: 2,
-                borderColor: current ? "primary.main" : "transparent",
-                "&:hover": { color: "primary.main" },
+                fontWeight: 700,
+                color: current ? "primary.contrastText" : "text.primary",
+                bgcolor: current ? "primary.main" : "background.paper",
+                boxShadow: current ? 2 : 0,
+                "&:hover": current ? undefined : { color: "primary.main" },
               }}
             >
               <Glyph aria-hidden="true" sx={{ fontSize: 20 }} />
