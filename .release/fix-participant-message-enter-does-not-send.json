@@ -1,0 +1,9 @@
+{
+  "branch": "fix/participant-message-enter-does-not-send",
+  "decisionsTitle": "Enter in «Trimite un mesaj participanților» never sends",
+  "decisionsSection": "**The owner, 2026-11-23:** «am un mare bug în asta: când fac o acțiune se dă submit». Enter in a one-line box (the subject, a name looked for, the count to confirm) submitted the form, because that is the browser's implicit submission. In the composer Enter on a one-line box now does nothing; only «Trimite mesajul» sends, through its confirmation as before. The body boxes keep Enter for a new line.\n\n**Tests.** None new: the composer has no DOM test harness; `tests/unit/notifications` and `tests/integration/notifications` still pass.",
+  "changelogLine": "- **Mesaj către participanți: Enter într-o căsuță nu mai trimite formularul.** §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "Enter in the participant message never sends"
+}

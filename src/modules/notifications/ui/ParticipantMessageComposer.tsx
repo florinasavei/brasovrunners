@@ -11,7 +11,7 @@ import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { NeverKeptField, useRecall } from "@/shared/forms/recall";
@@ -371,6 +371,15 @@ export default function ParticipantMessageComposer({
   };
 
   /*
+    Enter in a one-line box (the subject, a name looked for, the count) never sends (§NNN — the owner, 2026-11-23: «când fac o
+    acțiune se dă submit»): the browser's implicit submission sent the form from the subject. Only «Trimite mesajul» sends.
+  */
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (event.key === "Enter" && target instanceof HTMLInputElement) event.preventDefault();
+  };
+
+  /*
     «Completează cu textul de reminder» (the decision «Cere reconfirmarea»): the four boxes written from the catalogues'
     ready text, each as if typed — so the identical-text check and the preview run — and the tick ticked. A box that
     already holds words is not replaced without asking first (§384).
@@ -395,7 +404,7 @@ export default function ParticipantMessageComposer({
   const unknown = shown.result?.unknown ?? [];
 
   return (
-    <Stack spacing={3} ref={root} onInput={onInput}>
+    <Stack spacing={3} ref={root} onInput={onInput} onKeyDown={onKeyDown}>
       <Box>
         <Typography id="participant-message-audience" variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.audience}
