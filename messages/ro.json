@@ -11500,6 +11500,31 @@
         "confirmGo": "Înlocuiește",
         "confirmCancel": "Renunță"
       },
+      "thanksText": {
+        "subject": "Mulțumim că ați sărbătorit alături de noi! 💙",
+        "p1": "Salut!",
+        "p2": "Ce zi frumoasă am avut împreună! 💙",
+        "p3": "Vă mulțumim că ați fost alături de noi la {eventTitle}! Ați luat startul și ați ajuns cu toții cu bine la finish. Iar pentru asta merită să vă felicităm! Un mare mulțumesc și voluntarilor noștri, care au fost alături de voi pe traseu și au avut grijă ca totul să se desfășoare în siguranță.",
+        "p4": "Dar {club} înseamnă mai mult decât un eveniment.",
+        "p5": "Suntem, înainte de toate, o comunitate de oameni care se întâlnesc de cel puțin două ori pe săptămână pentru a alerga împreună, pentru a se susține și pentru a se bucura de mișcare.",
+        "p6": "Nu ne propunem să fim organizatori de concursuri de alergare, ci să construim o comunitate care promovează mișcarea, educația prin sport și o formă sănătoasă de competitivitate. Credem în competiția cu noi înșine, în progresul individual și în susținerea celor din jur, nu în competiția agresivă cu ceilalți.",
+        "p7": "Vrem să arătăm că nu este nevoie de o organizație mare pentru a produce o schimbare. Un grup mic, unit în jurul unor valori comune, poate avea un impact real și poate inspira tot mai mulți oameni să descopere bucuria mișcării.",
+        "p8": "Credem în voluntariat, în spiritul de echipă și în principiul după care ne ghidăm: No One Left Behind.",
+        "p9": "Ne veți întâlni și la alte curse, fie alergând alături de voi, fie încurajându-vă de pe margine. Pentru că ne place să fim parte din comunitatea aceasta, nu doar să o construim.",
+        "p10": "{eventTitle} a fost un eveniment cu participare gratuită, iar acest lucru a fost posibil datorită sponsorilor și partenerilor noștri, dar și tuturor celor care au ales să redirecționeze o parte din impozit către {club}. Vă mulțumim că ne ajutați să facem astfel de lucruri posibile!",
+        "p11": "Câteva lucruri pe care le puteți accesa în continuare:",
+        "p12": "🏆 Clasamentul și 📸 galeria foto – pe pagina evenimentului (butonul „Vezi pagina evenimentului”), la „Clasament” și „Galerie foto”.",
+        "p13": "💬 Cum vi s-a părut experiența? Ne-ar ajuta mult să ne spuneți! Am pregătit un formular anonim care durează aproximativ un minut:\n{feedbackLink}",
+        "p14": "🏃 Vreți să ne revedem? Sunteți bineveniți la alergările noastre săptămânale. Programul e pe site, la „Toate evenimentele”, sub acest mesaj.",
+        "p15": "Sperăm că v-ați bucurat de această zi la fel de mult cum ne-am bucurat noi să o pregătim pentru voi.",
+        "p16": "Ne revedem la alergare!",
+        "p17": "Alergăm. Sărbătorim. Suntem {club}. 💙",
+        "p18": "Echipa {club}"
+      },
+      "thanksFill": {
+        "button": "Completează cu mulțumirea de după cursă",
+        "confirmBody": "Subiectul și mesajul, în ambele limbi, vor fi înlocuite cu mulțumirea de după cursă."
+      },
       "reminderText": {
         "subject": "Ne vedem la {eventTitle}? Spune-ne dacă vii",
         "p1": "Bună, {participantName}!",
