@@ -7,6 +7,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
+import { eventResults } from "@/db/schema/event-results";
 import {
   ACTIVE_REGISTRATION_STATUSES,
   type RegistrationCancelReasonKind,
@@ -90,6 +91,9 @@ export type RegistrationListRow = {
    * public page (`reconfirmation-never-leaves.test.ts`).
    */
   reconfirmedAt: Date | null;
+  /** «Ziua cursei» (§NNN): the registration's line in the results — FINISHED, DNF, DNS, DSQ — or null, and its time (chip, else gun). */
+  resultStatus: string | null;
+  resultTimeMs: number | null;
   /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -275,7 +279,35 @@ export type RegistrationListFilters = {
    * «none» those still registered who did not answer. Information, never a state. Narrows only.
    */
   reconfirm?: ReconfirmFilter;
+  /** «Ziua cursei» (§NNN): who came, who finished, who never came (DNS). Narrows only. */
+  raceDay?: RaceDayFilter;
 };
+
+/**
+ * «Ziua cursei» (§NNN — the owner, 2026-11-23: «cine a fost prezent… cine a terminat… cine a fost DNS»), over the registration's
+ * check-in and its line in the results:
+ * - «present»: checked in at the desk, or a result line that is not DNS (somebody who ran came, checked in or not);
+ * - «finished»: a FINISHED result line;
+ * - «dns»: confirmed, never checked in and no result line but DNS — registered, never came, never cancelled.
+ */
+export const RACE_DAY_FILTERS = ["present", "finished", "dns"] as const;
+export type RaceDayFilter = (typeof RACE_DAY_FILTERS)[number];
+
+export function isRaceDayFilter(value: unknown): value is RaceDayFilter {
+  return typeof value === "string" && (RACE_DAY_FILTERS as readonly string[]).includes(value);
+}
+
+const ranOrStarted = sql`exists (select 1 from ${eventResults} er where er."registration_id" = ${registrations}."id" and er."status" <> 'DNS')`;
+
+function raceDayCondition(filter: RaceDayFilter): SQL {
+  if (filter === "finished") return sql`exists (select 1 from ${eventResults} er where er."registration_id" = ${registrations}."id" and er."status" = 'FINISHED')`;
+  if (filter === "present") return sql`(${registrations.checkedInAt} is not null or ${ranOrStarted})`;
+  return sql`(${registrations.status} = 'CONFIRMED' and ${registrations.checkedInAt} is null and not ${ranOrStarted})`;
+}
+
+/** The registration's own result line, for the list's «Timp» (§NNN): its status, and its time — chip, else gun. */
+const resultStatusOfRow = sql<string | null>`(select er."status"::text from ${eventResults} er where er."registration_id" = ${registrations}."id" order by er."created_at" desc limit 1)`;
+const resultTimeOfRow = sql<number | null>`(select coalesce(er."chip_time_ms", er."gun_time_ms") from ${eventResults} er where er."registration_id" = ${registrations}."id" order by er."created_at" desc limit 1)`;
 
 /** The three answers of «Reconfirmare», as the list's URL carries them — and the export's «Reconfirmare» column (§1019). */
 export const RECONFIRM_FILTERS = ["yes", "cancelled", "none"] as const;
@@ -465,6 +497,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
     filters.partner ? sql`lower(${registrations.partnerName}) = lower(${filters.partner})` : undefined,
     filters.reconfirm ? reconfirmCondition(filters.reconfirm) : undefined,
+    filters.raceDay ? raceDayCondition(filters.raceDay) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box
@@ -627,6 +660,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       inRaffle: registrations.inRaffle,
       partnerName: registrations.partnerName,
       reconfirmedAt: latestReconfirmedAt,
+      resultStatus: resultStatusOfRow,
+      resultTimeMs: resultTimeOfRow.mapWith(Number),
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       eventHiddenListEnabled: events.hiddenListEnabled,

@@ -1,0 +1,9 @@
+{
+  "branch": "feat/registrations-race-day-filter",
+  "decisionsTitle": "«Ziua cursei» on the registrations list: present, finished, DNS, and each row's time",
+  "decisionsSection": "**The owner, 2026-11-23:** «trebuie să văd cine a fost prezent și cine a terminat cursa, pe lista de participanți… vreau să văd și timpul din clasament… și separat cine a fost DNS (nici măcar nu și-a anulat înscrierea)». The list gains the filter «Ziua cursei», which the export follows: «Prezenți» means checked in at the desk or with a result line that is not DNS; «Au terminat» means a FINISHED line; «DNS: n-au venit» means confirmed, never checked in, no result line but DNS, and never cancelled. Each row shows a chip: «Timp h:mm:ss» from «Clasament» (chip time, else gun time), else the result's status (DNF, DNS, DSQ), else «Prezent» after a check-in. It is information read by every role that reads the list, never a state, and nothing is sent.\n\n**Tests.** `tests/integration/registrations/race-day-filter.test.ts`.",
+  "changelogLine": "- **Lista de înscrieri: filtrul «Ziua cursei» (prezenți · au terminat · DNS) și timpul din clasament pe fiecare rând.** §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "«Ziua cursei» on the registrations list"
+}

@@ -31,11 +31,14 @@ import {
   readPlaceDeadlines,
   readPlaceOutlook,
   isReconfirmFilter,
+  isRaceDayFilter,
+  type RaceDayFilter,
   type ReconfirmFilter,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
 } from "@/modules/registrations/admin-repository";
+import { formatResultTime } from "@/modules/results/domain/result-time";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
@@ -244,7 +247,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, partner, reconfirm, ziua, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -277,6 +280,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     fromPartner?: true;
     partner?: string;
     reconfirm?: ReconfirmFilter;
+    raceDay?: RaceDayFilter;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -292,6 +296,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     fromPartner: partner === "1" || undefined,
     // «Reconfirmare» (the decision «Cere reconfirmarea»): one of three answers — in the same `WHERE`, so its count and pages too.
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
+    // «Ziua cursei» (§NNN): who came, who finished, who never came — in the same `WHERE`, so its count and pages too.
+    raceDay: isRaceDayFilter(ziua) ? ziua : undefined,
     search: q || undefined,
   };
 
@@ -476,6 +482,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     [PARTNER_FILTER_PARAM]: chosenPartner ?? undefined,
     // «Reconfirmare»: rides with every sort, page and export link, as the partner filter does.
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
+    ziua: isRaceDayFilter(ziua) ? ziua : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -492,7 +499,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || isRaceDayFilter(ziua) || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -634,6 +641,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state;
               the answer «yes», as the filter keeps it and the export writes it (§1019). */}
           {reconfirmAnswers.get(row.id) === "yes" && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
+          {/* «Ziua cursei» (§NNN): the row's time from «Clasament», else its result's status, else «Prezent» after a check-in. */}
+          {row.resultStatus === "FINISHED" && row.resultTimeMs !== null ? (
+            <StatusChip glyph="done" color="success" label={t("raceDayList.finished", { time: formatResultTime(row.resultTimeMs) })} testId="race-day-chip" />
+          ) : row.resultStatus && row.resultStatus !== "FINISHED" ? (
+            <StatusChip glyph="droppedOut" color="warning" variant="outlined" label={t("raceDayList.status", { status: row.resultStatus })} testId="race-day-chip" />
+          ) : row.checkedInAt ? (
+            <StatusChip glyph="checkedIn" color="primary" variant="outlined" label={t("raceDayList.present")} testId="race-day-chip" />
+          ) : null}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -1084,7 +1099,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     the results.
   */
   // A filter an invitation cannot answer hides the invitations; with «Stare» on an invitation state the search box is theirs.
-  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
+  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || isRaceDayFilter(ziua) || (q && !invitationFilter));
   // With «Stare» on an invitation state (§943) the invitations are the list itself: every one of that state, whatever the page.
   const leadEvent = filters.eventId && !otherFilters && (invitationFilter || query.page === 1) ? filters.eventId : null;
   const leadNow = new Date();
@@ -2045,6 +2060,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             «Reconfirmare» (the decision «Cere reconfirmarea»): among the people an organizer's message asked — who said «Vin»,
             who cancelled since, who did not answer. Answering is optional; none of the three is a state.
           */}
+          {/* «Ziua cursei» (§NNN — the owner, 2026-11-23): who came, who finished, who never came and never cancelled (DNS). */}
+          <TextField
+            select
+            name="ziua"
+            label={t("raceDayList.filter")}
+            defaultValue={isRaceDayFilter(ziua) ? ziua : ""}
+            helperText={t("raceDayList.filterHelp")}
+            sx={{ minWidth: 220, maxWidth: 320 }}
+            data-testid="registrations-filter-race-day"
+          >
+            <MenuItem value="">{t("raceDayList.filterAll")}</MenuItem>
+            <MenuItem value="present">{t("raceDayList.filterPresent")}</MenuItem>
+            <MenuItem value="finished">{t("raceDayList.filterFinished")}</MenuItem>
+            <MenuItem value="dns">{t("raceDayList.filterDns")}</MenuItem>
+          </TextField>
           <TextField
             select
             name="reconfirm"
