@@ -13421,6 +13421,17 @@
       "save": "Salvează partenerul",
       "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
     },
+    "raceDayList": {
+      "filter": "Ziua cursei",
+      "filterAll": "Toți",
+      "filterPresent": "Prezenți",
+      "filterFinished": "Au terminat",
+      "filterDns": "DNS: n-au venit",
+      "filterHelp": "Prezent: check-in sau rezultat. DNS: confirmat, fără check-in și fără rezultat, neanulat.",
+      "finished": "Timp {time}",
+      "present": "Prezent",
+      "status": "{status}"
+    },
     "reconfirm": {
       "chip": "A reconfirmat",
       "filter": "Reconfirmare",

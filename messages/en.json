@@ -13421,6 +13421,17 @@
       "save": "Save the partner",
       "dialog": "The registrations will be marked «Partner: {name}» — internal, the people are not told."
     },
+    "raceDayList": {
+      "filter": "Race day",
+      "filterAll": "Everyone",
+      "filterPresent": "Present",
+      "filterFinished": "Finished",
+      "filterDns": "DNS: did not come",
+      "filterHelp": "Present: checked in or a result. DNS: confirmed, no check-in and no result, not cancelled.",
+      "finished": "Time {time}",
+      "present": "Present",
+      "status": "{status}"
+    },
     "reconfirm": {
       "chip": "Reconfirmed",
       "filter": "Reconfirmation",
