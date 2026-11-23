@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.19-2026-11-23
+
+- **Pagina evenimentului: tab-urile «Descriere · Clasament · Galerie foto» arată ca butoane, cel deschis colorat.** §1052.
 ## BR-V5.18-2026-11-22
 
 - **Cardul cursei: «Album foto» deschide tab-ul «Galerie foto», cu toate albumele.** §1051.

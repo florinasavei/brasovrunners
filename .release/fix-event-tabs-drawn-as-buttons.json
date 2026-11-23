@@ -1,9 +1,0 @@
-{
-  "branch": "fix/event-tabs-drawn-as-buttons",
-  "decisionsTitle": "The event page's tabs drawn as one bar of buttons (amending §1049)",
-  "decisionsSection": "**The owner, 2026-11-22:** «trebuie să fie mai clar aici că sunt taburi». An underline under plain words read as a heading, not as something to tap. The row of tabs is now one grey bar of equal buttons, the current one filled in the primary colour, icon above the word on a phone and beside it from `sm`. The tabs are still plain links to their panels, 44 pixels tall at least, with no script of their own.\n\n**Tests.** `tests/unit/events/event-tabs.test.ts`.",
-  "changelogLine": "- **Pagina evenimentului: tab-urile «Descriere · Clasament · Galerie foto» arată ca butoane, cel deschis colorat.** §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "The event page's tabs drawn as buttons"
-}

@@ -45,7 +45,7 @@ const TABS_SX = {
  * the listing's card, the home page and the emails already use — opens the results. A tab is drawn only when it has something (the
  * caller decides); with the description alone there is no row at all and the page is drawn as before.
  *
- * Drawn as one bar of equal buttons, the current one filled (§NNN — the owner, 2026-11-22: «trebuie să fie mai clar aici că sunt
+ * Drawn as one bar of equal buttons, the current one filled (§1052 — the owner, 2026-11-22: «trebuie să fie mai clar aici că sunt
  * taburi»): an underline under plain words read as a heading, not as something to tap.
  */
 export default function EventTabs({ tabs, children }: { tabs: EventTabLinks; children?: ReactNode }) {

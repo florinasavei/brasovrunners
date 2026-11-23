@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.18-2026-11-22 -->
+<!-- PROJECT_BASELINE: BR-V5.19-2026-11-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.18-2026-11-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.19-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32173,3 +32173,11 @@ Baseline `BR-V5.17-2026-11-22`.
 **Tests.** `tests/unit/events/featured-card.test.ts`.
 
 Baseline `BR-V5.18-2026-11-22`.
+
+## 1052. The event page's tabs drawn as one bar of buttons (amending §1049)
+
+**The owner, 2026-11-22:** «trebuie să fie mai clar aici că sunt taburi». An underline under plain words read as a heading, not as something to tap. The row of tabs is now one grey bar of equal buttons, the current one filled in the primary colour, icon above the word on a phone and beside it from `sm`. The tabs are still plain links to their panels, 44 pixels tall at least, with no script of their own.
+
+**Tests.** `tests/unit/events/event-tabs.test.ts`.
+
+Baseline `BR-V5.19-2026-11-23`.
