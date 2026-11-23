@@ -1,3 +1,4 @@
+import { raceDayCondition } from "@/modules/registrations/admin-repository";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
@@ -26,6 +27,7 @@ import { isReconfirmStatus, RECONFIRM_STATUSES } from "./domain/cannot-come";
 import { EMAIL_SAMPLE } from "./domain/email-sample";
 import { fillPlaceholders } from "./domain/email-copy";
 import {
+  AUDIENCE_RACE_DAY,
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
   CHOSEN_AUDIENCE,
@@ -85,7 +87,22 @@ export async function countParticipantMessageAudiences<T extends Record<string, 
   >;
   for (const row of rows) {
     for (const audience of PARTICIPANT_MESSAGE_AUDIENCES) {
+      if (AUDIENCE_RACE_DAY[audience]) continue;
       if (!AUDIENCE_STATUSES[audience].includes(row.status)) continue;
+      if (row.kind === "TEST") counts[audience].test += row.count;
+      else counts[audience].real += row.count;
+    }
+  }
+  // The two groups of the day after (§NNN): their own count, by «Ziua cursei»'s definition.
+  for (const audience of PARTICIPANT_MESSAGE_AUDIENCES) {
+    const raceDay = AUDIENCE_RACE_DAY[audience];
+    if (!raceDay) continue;
+    const byKind = await db
+      .select({ kind: registrations.kind, count: sql<number>`count(*)::int` })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[audience]]), raceDayCondition(raceDay)))
+      .groupBy(registrations.kind);
+    for (const row of byKind) {
       if (row.kind === "TEST") counts[audience].test += row.count;
       else counts[audience].real += row.count;
     }
@@ -290,7 +307,13 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       })
       .from(registrations)
       .innerJoin(participants, eq(participants.id, registrations.participantId))
-      .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[group]])));
+      .where(
+        and(
+          eq(registrations.eventId, input.eventId),
+          inArray(registrations.status, [...AUDIENCE_STATUSES[group]]),
+          AUDIENCE_RACE_DAY[group] ? raceDayCondition(AUDIENCE_RACE_DAY[group]) : undefined,
+        ),
+      );
     /*
       «Doar anumiți participanți» (§945): of this event's active registrations, read under the lock as for a group, the
       ticked ones. Matched here rather than in the query, so a posted list of any length is never a statement's

@@ -233,7 +233,8 @@ describe("§987 «Atașează traseul (GPX)» on the composer's page", () => {
       state.locale = locale;
       const words = wordsIn(locale);
       const specs = specsOf(await messagesPage(race.id));
-      expect(specs.length, locale).toBe(5);
+      // The six groups and the people ticked (§NNN added «Prezenți» and «N-au ajuns»).
+      expect(specs.length, locale).toBe(7);
       for (const spec of specs) {
         const found = (spec.also ?? []).filter((line) => line.text === words.confirmRouteGpx);
         expect(found, `${locale} ${JSON.stringify(spec.when)}`).toEqual([{ text: words.confirmRouteGpx, when: [{ field: "includeRouteGpx", equals: "1" }] }]);
