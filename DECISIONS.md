@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.20-2026-11-23 -->
+<!-- PROJECT_BASELINE: BR-V5.21-2026-11-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.20-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.21-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32189,3 +32189,15 @@ Baseline `BR-V5.19-2026-11-23`.
 **Tests.** `tests/integration/registrations/race-day-filter.test.ts`.
 
 Baseline `BR-V5.20-2026-11-23`.
+
+## 1054. Enter in «Trimite un mesaj participanților» never sends; «Completează cu mulțumirea de după cursă»
+
+**The owner, 2026-11-23:** «am un mare bug în asta: când fac o acțiune se dă submit». Enter in a one-line box (the subject, a name looked for, the count to confirm) submitted the form, because that is the browser's implicit submission. In the composer Enter on a one-line box now does nothing; only «Trimite mesajul» sends, through its confirmation as before. The body boxes keep Enter for a new line.
+
+**Tests.** None new: the composer has no DOM test harness; `tests/unit/notifications` and `tests/integration/notifications` still pass.
+
+**«Completează cu mulțumirea de după cursă».** The owner, 2026-11-23: «păstrează asta și pune și ca template pentru viitor». This is the thank-you the club sent after the anniversary race, approved by the club, made general and kept in the catalogues as paragraphs (`participantMessages.thanksText`). The event's name is `{eventTitle}`, the club's name is written in from `club.json`, and the form is `{feedbackLink}`. The results and the gallery are named as the event page's tabs, under the email's own button, because the message has no field for an event address. The athletes' names and the course's kind are the event's own and are left for the club to add. The press writes the four boxes as the reminder press does, asks first before replacing typed words, and ticks nothing.
+
+**Tests.** `tests/unit/i18n` (four paragraphs allowed long in `plain-words.test.ts`: an email's approved words, not a screen string).
+
+Baseline `BR-V5.21-2026-11-23`.
