@@ -64,16 +64,24 @@ export default async function ClubIdentity({ place }: Props) {
       ? t("line", { legalName: identity.legalName, club: CLUB_NAME, cif: identity.cif })
       : t("lineNoCif", { legalName: identity.legalName, club: CLUB_NAME })
     : null;
+  // The president's name the club typed, under the name (§1056).
+  const president =
+    showsAt(shown, "president", place) && shown.presidentName ? t("president", { name: shown.presidentName }) : null;
   // The address the club typed for the site, never `CLUB_REGISTERED_ADDRESS` (its building, staircase and flat).
   const seat = showsAt(shown, "seat", place) && shown.seatAddress ? t("seat", { address: shown.seatAddress }) : null;
   const emails = showsAt(shown, "email", place) ? await cachedShownContactAddresses() : [];
   const email = emails.length > 0 ? t("email", { email: emails.join(", ") }) : null;
-  if (!name && !seat && !email) return null;
+  if (!name && !president && !seat && !email) return null;
 
   // Each line its own: the name as the element's own words when it is alone, as it always was.
   const lines = (
     <>
-      {name && !seat && !email ? name : name && <Box component="span" sx={{ display: "block" }}>{name}</Box>}
+      {name && !president && !seat && !email ? name : name && <Box component="span" sx={{ display: "block" }}>{name}</Box>}
+      {president && (
+        <Box component="span" data-testid="club-identity-president" sx={{ display: "block" }}>
+          {president}
+        </Box>
+      )}
       {seat && (
         <Box component="span" data-testid="club-identity-seat" sx={{ display: "block" }}>
           {seat}

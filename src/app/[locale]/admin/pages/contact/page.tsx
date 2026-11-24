@@ -130,7 +130,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
       <ClubIdentityPanel
         locale={locale}
         state={clubIdentity}
-        valueSet={{ name: Boolean(facts.legalName), seat: clubIdentity.seatAddress !== null, email: shownAddresses.length > 0 }}
+        valueSet={{ name: Boolean(facts.legalName), president: clubIdentity.presidentName !== null, seat: clubIdentity.seatAddress !== null, email: shownAddresses.length > 0 }}
         mayEdit={mayEdit}
         openWhen={{ primary: true, saved: saved === "clubIdentity" }}
       />

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.22-2026-11-23 -->
+<!-- PROJECT_BASELINE: BR-V5.23-2026-11-24 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V5.22-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.23-2026-11-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.

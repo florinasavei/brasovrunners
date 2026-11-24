@@ -9,6 +9,7 @@ import type { ClubIdentityState } from "@/modules/contact/club-identity";
 import {
   CLUB_IDENTITY_ITEMS,
   CLUB_IDENTITY_PLACES,
+  CLUB_IDENTITY_PRESIDENT_MAX,
   CLUB_IDENTITY_SEAT_MAX,
   type ClubIdentityItem,
   showsAt,
@@ -33,7 +34,7 @@ type Props = {
 };
 
 /** The box's posted name for each line. */
-const FIELD: Record<ClubIdentityItem, string> = { name: "showName", seat: "showSeat", email: "showEmail" };
+const FIELD: Record<ClubIdentityItem, string> = { name: "showName", president: "showPresident", seat: "showSeat", email: "showEmail" };
 
 /**
  * «Ce arată site-ul despre asociație» (§890): a grid of real tick boxes — a row per line (the name
@@ -52,7 +53,7 @@ export default async function ClubIdentityPanel({ locale, state, valueSet, mayEd
       glyph="clubIdentity"
       title={t("emails.clubIdentity.title")}
       intro={t("emails.clubIdentity.intro")}
-      aside={t("emails.clubIdentity.aside", { name: count("name"), seat: count("seat"), email: count("email"), all: CLUB_IDENTITY_PLACES.length })}
+      aside={t("emails.clubIdentity.aside", { name: count("name"), president: count("president"), seat: count("seat"), email: count("email"), all: CLUB_IDENTITY_PLACES.length })}
       collapsible
       openWhen={openWhen}
       id="club-identity"
@@ -77,6 +78,7 @@ export default async function ClubIdentityPanel({ locale, state, valueSet, mayEd
             messages={await refusalMessages({
               ...Object.fromEntries(CLUB_IDENTITY_ITEMS.map((item) => [item, t(`emails.clubIdentity.items.${item}`)])),
               seatAddress: t("emails.clubIdentity.seatAddress"),
+              presidentName: t("emails.clubIdentity.presidentName"),
             })}
             confirm={{
               title: t("confirm.clubIdentityTitle"),
@@ -106,6 +108,18 @@ export default async function ClubIdentityPanel({ locale, state, valueSet, mayEd
                     ))}
                   </Box>
                   {/* The seat the site prints: typed here, one value for both languages, never the configuration's (its flat). */}
+                  {item === "president" && (
+                    <RecallField
+                      name="presidentName"
+                      label={t("emails.clubIdentity.presidentName")}
+                      defaultValue={state.presidentName ?? ""}
+                      size="small"
+                      fullWidth
+                      helperText={t("emails.clubIdentity.presidentNameHelp")}
+                      slotProps={{ htmlInput: { maxLength: CLUB_IDENTITY_PRESIDENT_MAX, autoComplete: "off" } }}
+                      sx={{ mt: 1, maxWidth: 560 }}
+                    />
+                  )}
                   {item === "seat" && (
                     <RecallField
                       name="seatAddress"
