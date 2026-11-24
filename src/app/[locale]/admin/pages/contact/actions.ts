@@ -108,7 +108,7 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Ce arată site-ul despre asociație» (§890): for each line — the name and CIF, the seat, the email —
+ * «Ce arată site-ul despre asociație» (§890): for each line — the name and CIF, the president, the seat, the email —
  * the places it is ticked for; a box posts its place under the line's name, an unticked one nothing;
  * and «Adresa afișată pe site», the seat the site prints (empty, none). Administrator at the door,
  * the service asserting it again.
@@ -121,10 +121,18 @@ export async function updateClubIdentityAction(_previous: FormOutcome | null, fo
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
     const seatAddress = form.get("seatAddress");
+    const presidentName = form.get("presidentName");
     await updateClubIdentityShown(
       getDb(),
       actor,
-      { name: ticked("showName"), seat: ticked("showSeat"), email: ticked("showEmail"), seatAddress: typeof seatAddress === "string" ? seatAddress : null },
+      {
+        name: ticked("showName"),
+        president: ticked("showPresident"),
+        seat: ticked("showSeat"),
+        email: ticked("showEmail"),
+        seatAddress: typeof seatAddress === "string" ? seatAddress : null,
+        presidentName: typeof presidentName === "string" ? presidentName : null,
+      },
       new Date(),
     );
   } catch (error) {

@@ -65,8 +65,22 @@ export async function updateClubIdentityShown<T extends Record<string, unknown>>
       entityId: CLUB_IDENTITY_SETTING_ENTITY_ID,
       // The ticks, and whether a seat was typed before and after — never the address (the phone's rule, §565).
       metadata: {
-        from: { name: before.name, seat: before.seat, email: before.email, seatAddress: { set: before.seatAddress !== null } },
-        to: { name: next.name, seat: next.seat, email: next.email, seatAddress: { set: next.seatAddress !== null } },
+        from: {
+          name: before.name,
+          president: before.president,
+          seat: before.seat,
+          email: before.email,
+          seatAddress: { set: before.seatAddress !== null },
+          presidentName: { set: before.presidentName !== null },
+        },
+        to: {
+          name: next.name,
+          president: next.president,
+          seat: next.seat,
+          email: next.email,
+          seatAddress: { set: next.seatAddress !== null },
+          presidentName: { set: next.presidentName !== null },
+        },
       },
       now,
     });

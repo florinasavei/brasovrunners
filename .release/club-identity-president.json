@@ -1,0 +1,7 @@
+{
+  "branch": "club-identity-president",
+  "decisionsTitle": "The association's president under its name on the site",
+  "decisionsSection": "**The owner, 2026-11-24:** «trebuie musai să scrie pe site, sub \"ASOCIAȚIA SPORTIVĂ ALERGĂTORI CU JUMĂTATE DE NORMĂ\", președinte asociație …».\n\n**Decision.** «Ce arată site-ul despre asociație» (§890) gains a fourth line, «Președintele asociației», right under «Denumirea și CIF-ul»: a row of the same four place ticks and one text box, «Numele președintelui», one value for both languages like the seat's. The identity prints «Președinte asociație: <name>» («President of the association: <name>») on its own line under the name, where ticked and while the box holds a name. The ticks default to every place, the name's own default, so a stored row from before reads as the president wherever the name is, and nothing shows until the Administrator types the name. Audited like the seat: the ticks and whether a name is typed, never the name.\n\n**Refused.** The name in the repository or the environment: the repository is public, and §890's rule is that what the site prints about the association is the club's to type and tick. No migration (the same `platform_settings` row), no dependency.",
+  "changelogLine": "- **«Ce arată site-ul despre asociație»: rândul «Președinte asociație: …» sub denumire, scris și bifat de Administrator.** §NNN.",
+  "batchLine": "the association's president under its name"
+}

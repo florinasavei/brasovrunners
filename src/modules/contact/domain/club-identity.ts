@@ -14,8 +14,12 @@ import { z } from "zod";
  * shows where its box is ticked and its value is set.
  */
 
-/** What: the three lines the identity can carry. */
-export const CLUB_IDENTITY_ITEMS = ["name", "seat", "email"] as const;
+/**
+ * What: the lines the identity can carry. «Președinte» (§NNN; the owner, 2026-11-24: «trebuie musai să
+ * scrie pe site, sub denumirea asociației, președinte asociație …») sits right under the name; like
+ * the seat, its value is typed in the card, never in this public repository.
+ */
+export const CLUB_IDENTITY_ITEMS = ["name", "president", "seat", "email"] as const;
 export type ClubIdentityItem = (typeof CLUB_IDENTITY_ITEMS)[number];
 
 /** Where: the listing (the site's home page), «Contact», «Echipa» and the club's pages, the footer's fold. */
@@ -24,9 +28,14 @@ export type ClubIdentityPlace = (typeof CLUB_IDENTITY_PLACES)[number];
 
 /** The longest seat address the box takes. */
 export const CLUB_IDENTITY_SEAT_MAX = 200;
+/** The longest president's name the box takes. */
+export const CLUB_IDENTITY_PRESIDENT_MAX = 120;
 
-/** For each line, the places it is ticked for; and the seat as the site prints it, or null. */
-export type ClubIdentityShown = Record<ClubIdentityItem, ClubIdentityPlace[]> & { seatAddress: string | null };
+/** For each line, the places it is ticked for; and the seat and the president's name as the site prints them, or null. */
+export type ClubIdentityShown = Record<ClubIdentityItem, ClubIdentityPlace[]> & {
+  seatAddress: string | null;
+  presidentName: string | null;
+};
 
 /**
  * Nothing stored: the name and the CIF everywhere, as the site showed them before the setting
@@ -35,9 +44,12 @@ export type ClubIdentityShown = Record<ClubIdentityItem, ClubIdentityPlace[]> & 
  */
 export const DEFAULT_CLUB_IDENTITY_SHOWN: ClubIdentityShown = {
   name: [...CLUB_IDENTITY_PLACES],
+  // Wherever the name is: nothing shows until a name is typed.
+  president: [...CLUB_IDENTITY_PLACES],
   seat: [],
   email: [],
   seatAddress: null,
+  presidentName: null,
 };
 
 /** A line's places: known ones only, each once, in the grid's order. */
@@ -46,19 +58,28 @@ const places = z
   .max(CLUB_IDENTITY_PLACES.length * 2)
   .transform((ticked) => CLUB_IDENTITY_PLACES.filter((place) => ticked.includes(place)));
 
-/** The stored value's shape: the ticks, and the seat as typed (trimmed, inner runs of spaces made one), or null. */
+/** A typed value: trimmed, inner runs of spaces made one, empty as null. */
+const typed = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .default(null)
+    .transform((value) => (value ? value.replace(/\s+/g, " ") : null));
+
+/**
+ * The stored value's shape: the ticks, and the seat and the president as typed. A row saved before
+ * «Președinte» existed reads as the president wherever the name is, and no name typed.
+ */
 export const clubIdentityShownSchema = z
   .object({
     name: places,
+    president: places.default([...CLUB_IDENTITY_PLACES]),
     seat: places,
     email: places,
-    seatAddress: z
-      .string()
-      .trim()
-      .max(CLUB_IDENTITY_SEAT_MAX)
-      .nullable()
-      .default(null)
-      .transform((value) => (value ? value.replace(/\s+/g, " ") : null)),
+    seatAddress: typed(CLUB_IDENTITY_SEAT_MAX),
+    presidentName: typed(CLUB_IDENTITY_PRESIDENT_MAX),
   })
   .strict();
 

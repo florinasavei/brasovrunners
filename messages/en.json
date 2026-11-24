@@ -934,7 +934,11 @@
       "columnTime": "Time",
       "columnTimeIndicative": "Time (indicative)",
       "columnCategory": "Category",
-      "sort": {"label": "Order:", "time": "by time", "pace": "by average pace"},
+      "sort": {
+        "label": "Order:",
+        "time": "by time",
+        "pace": "by average pace"
+      },
       "pace": "Average pace: {pace} min/km",
       "ownDistance": "covered about {km} km",
       "chipTime": "Chip time: {time}",
@@ -9202,24 +9206,29 @@
       "clubIdentity": {
         "title": "What the site shows about the association",
         "intro": "For each line, tick the pages it shows at the foot of; you type the registered office yourself, under its row. A line with no value shows nowhere.",
-        "aside": "On the site — name: {name} of {all}, registered office: {seat} of {all}, email: {email} of {all}",
+        "aside": "On the site — name: {name} of {all}, president: {president} of {all}, registered office: {seat} of {all}, email: {email} of {all}",
         "items": {
           "name": "Name and CIF",
+          "president": "President of the association",
           "seat": "Registered office",
           "email": "Contact email"
         },
         "help": {
           "name": "The legal name, the site's name and the CIF, from the configuration.",
+          "president": "The name typed below, under the association's name.",
           "seat": "The address typed below, never the full one from the configuration.",
           "email": "The contact address shown, chosen above."
         },
         "notSet": {
           "name": "Without the legal name in the configuration nothing in this card shows, whatever is ticked.",
+          "president": "The box below is empty: the line shows nowhere, whatever is ticked.",
           "seat": "The box below is empty: the line shows nowhere, whatever is ticked.",
           "email": "No contact address shown: the line shows nowhere, whatever is ticked."
         },
         "seatAddress": "Address shown on the site",
         "seatAddressHelp": "Street and number, town, county — no building, staircase or flat.",
+        "presidentName": "The president's name",
+        "presidentNameHelp": "As the site shows it, under the name: “President of the association: …”.",
         "places": {
           "home": "Home page (the events list)",
           "contact": "Contact",
@@ -13955,6 +13964,7 @@
   "Identity": {
     "line": "{legalName} ({club}) · CIF {cif}",
     "lineNoCif": "{legalName} ({club})",
+    "president": "President of the association: {name}",
     "seat": "Registered office: {address}",
     "email": "Email: {email}"
   },
