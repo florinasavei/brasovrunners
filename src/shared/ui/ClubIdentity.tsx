@@ -64,7 +64,7 @@ export default async function ClubIdentity({ place }: Props) {
       ? t("line", { legalName: identity.legalName, club: CLUB_NAME, cif: identity.cif })
       : t("lineNoCif", { legalName: identity.legalName, club: CLUB_NAME })
     : null;
-  // The president's name the club typed, under the name (§NNN).
+  // The president's name the club typed, under the name (§1056).
   const president =
     showsAt(shown, "president", place) && shown.presidentName ? t("president", { name: shown.presidentName }) : null;
   // The address the club typed for the site, never `CLUB_REGISTERED_ADDRESS` (its building, staircase and flat).

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V5.23-2026-11-24
+
+- **«Ce arată site-ul despre asociație»: rândul «Președinte asociație: …» sub denumire, scris și bifat de Administrator.** §1056.
 ## BR-V5.22-2026-11-23
 
 - **Mesaje către participanți: grupurile «Doar cei prezenți» și «Doar cei care n-au ajuns». Lista de înscrieri: timpul într-o coloană «Timp».** §1055.

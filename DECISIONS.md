@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V5.22-2026-11-23 -->
+<!-- PROJECT_BASELINE: BR-V5.23-2026-11-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V5.22-2026-11-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V5.23-2026-11-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -32209,3 +32209,13 @@ Baseline `BR-V5.21-2026-11-23`.
 **Tests.** `tests/integration/notifications/confirm-counts.test.ts` (each group's count is what its send queues; one present, one no-show), `tests/unit/notifications/organizer-message.test.ts`.
 
 Baseline `BR-V5.22-2026-11-23`.
+
+## 1056. The association's president under its name on the site
+
+**The owner, 2026-11-24:** «trebuie musai să scrie pe site, sub "ASOCIAȚIA SPORTIVĂ ALERGĂTORI CU JUMĂTATE DE NORMĂ", președinte asociație …».
+
+**Decision.** «Ce arată site-ul despre asociație» (§890) gains a fourth line, «Președintele asociației», right under «Denumirea și CIF-ul»: a row of the same four place ticks and one text box, «Numele președintelui», one value for both languages like the seat's. The identity prints «Președinte asociație: <name>» («President of the association: <name>») on its own line under the name, where ticked and while the box holds a name. The ticks default to every place, the name's own default, so a stored row from before reads as the president wherever the name is, and nothing shows until the Administrator types the name. Audited like the seat: the ticks and whether a name is typed, never the name.
+
+**Refused.** The name in the repository or the environment: the repository is public, and §890's rule is that what the site prints about the association is the club's to type and tick. No migration (the same `platform_settings` row), no dependency.
+
+Baseline `BR-V5.23-2026-11-24`.

@@ -15,7 +15,7 @@ import { z } from "zod";
  */
 
 /**
- * What: the lines the identity can carry. «Președinte» (§NNN; the owner, 2026-11-24: «trebuie musai să
+ * What: the lines the identity can carry. «Președinte» (§1056; the owner, 2026-11-24: «trebuie musai să
  * scrie pe site, sub denumirea asociației, președinte asociație …») sits right under the name; like
  * the seat, its value is typed in the card, never in this public repository.
  */
