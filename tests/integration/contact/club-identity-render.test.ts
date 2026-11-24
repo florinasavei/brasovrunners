@@ -112,7 +112,7 @@ describe("§565 the identity line", () => {
 
 describe("§890 each line where it is ticked", () => {
   it("shows the seat and the email only in the places ticked for them, and the name only in its own", async () => {
-    state.shown = { name: ["contact", "footer"], seat: ["contact"], email: ["contact", "pages"], seatAddress: SHOWN_SEAT } satisfies ClubIdentityShown;
+    state.shown = { name: ["contact", "footer"], seat: ["contact"], email: ["contact", "pages"], seatAddress: SHOWN_SEAT, president: [], presidentName: null } satisfies ClubIdentityShown;
     expect(text(await render("contact"))).toBe(`${LINE} Sediul: ${SHOWN_SEAT} Email: ${EMAIL}`);
     expect(text(await render("pages"))).toBe(`Email: ${EMAIL}`);
     expect(text(await render("footer"))).toBe(LINE);
@@ -120,12 +120,27 @@ describe("§890 each line where it is ticked", () => {
   });
 
   it("prints the seat typed in the card, never CLUB_REGISTERED_ADDRESS, and none while the box is empty", async () => {
-    state.shown = { name: [], seat: ["home"], email: [], seatAddress: SHOWN_SEAT } satisfies ClubIdentityShown;
+    state.shown = { name: [], seat: ["home"], email: [], seatAddress: SHOWN_SEAT, president: [], presidentName: null } satisfies ClubIdentityShown;
     const html = await render("home");
     expect(text(html)).toBe(`Sediul: ${SHOWN_SEAT}`);
     expect(html).not.toContain(SEAT);
-    state.shown = { name: [], seat: ["home"], email: [], seatAddress: null } satisfies ClubIdentityShown;
+    state.shown = { name: [], seat: ["home"], email: [], seatAddress: null, president: [], presidentName: null } satisfies ClubIdentityShown;
     expect(await render("home")).toBe("");
+  });
+});
+
+describe("the president under the name (the owner, 2026-11-24)", () => {
+  it("prints «Președinte asociație: <name>» right under the name where ticked, and nothing while the box is empty", async () => {
+    const PRESIDENT = "Persoană Exemplu";
+    state.shown = { ...DEFAULT_CLUB_IDENTITY_SHOWN, president: ["home", "footer"], presidentName: PRESIDENT } satisfies ClubIdentityShown;
+    const html = await render("home");
+    expect(html).toContain('data-testid="club-identity-president"');
+    expect(text(html)).toBe(`${LINE} Președinte asociație: ${PRESIDENT}`);
+    expect(text(await render("contact"))).toBe(LINE);
+    state.locale = "en";
+    expect(text(await render("footer"))).toBe(`${LINE} President of the association: ${PRESIDENT}`);
+    state.shown = { ...DEFAULT_CLUB_IDENTITY_SHOWN, presidentName: null } satisfies ClubIdentityShown;
+    expect(text(await render("home"))).toBe(LINE);
   });
 });
 

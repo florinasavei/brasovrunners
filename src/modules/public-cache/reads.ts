@@ -1178,8 +1178,8 @@ export async function cachedPublicPhone(): Promise<string | null> {
 export async function cachedClubIdentityShown(): Promise<ClubIdentityShown> {
   try {
     return await publicRead(["settings.club-identity"], ["settings"], async () => {
-      const { name, seat, email, seatAddress } = await readClubIdentityShown(getDb());
-      return { name, seat, email, seatAddress };
+      const { name, president, seat, email, seatAddress, presidentName } = await readClubIdentityShown(getDb());
+      return { name, president, seat, email, seatAddress, presidentName };
     });
   } catch {
     return DEFAULT_CLUB_IDENTITY_SHOWN;

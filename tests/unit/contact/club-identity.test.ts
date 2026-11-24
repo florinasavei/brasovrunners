@@ -15,7 +15,14 @@ import {
  */
 describe("§890 what the site shows about the association", () => {
   it("defaults to the name and the CIF in all four places, the seat and the email in none, and no seat typed", () => {
-    expect(DEFAULT_CLUB_IDENTITY_SHOWN).toEqual({ name: ["home", "contact", "pages", "footer"], seat: [], email: [], seatAddress: null });
+    expect(DEFAULT_CLUB_IDENTITY_SHOWN).toEqual({
+      name: ["home", "contact", "pages", "footer"],
+      president: ["home", "contact", "pages", "footer"],
+      seat: [],
+      email: [],
+      seatAddress: null,
+      presidentName: null,
+    });
     for (const place of CLUB_IDENTITY_PLACES) {
       expect(showsAt(DEFAULT_CLUB_IDENTITY_SHOWN, "name", place), place).toBe(true);
       expect(showsAt(DEFAULT_CLUB_IDENTITY_SHOWN, "seat", place), place).toBe(false);
@@ -26,9 +33,12 @@ describe("§890 what the site shows about the association", () => {
   it("keeps each ticked place once, in the grid's order", () => {
     expect(clubIdentityShownSchema.parse({ name: ["footer", "home", "home"], seat: ["contact"], email: [] })).toEqual({
       name: ["home", "footer"],
+      // A row saved before «Președinte» existed: wherever the name is, and no name typed.
+      president: ["home", "contact", "pages", "footer"],
       seat: ["contact"],
       email: [],
       seatAddress: null,
+      presidentName: null,
     });
   });
 
