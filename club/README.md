@@ -24,6 +24,9 @@ nothing under `src/` (`tests/unit/club/import-surface.test.ts`; `DECISIONS.md` �
 - `releaseAuthor` — the name on the release workflow's commits (`.github/workflows/release.yml`);
   without the file, the repository's name.
 
+`ORGANISATION.md` is the club as a legal person — its registered name, CIF and seat, from its fiscal
+registration certificate — for whoever fills in a form on the club's behalf. Nothing reads it.
+
 The release archive's and the ship times file's names come from `club.json`'s `slug`, the idle and
 backstop clocks from `place.timeZone`. The local database, its role, the container and the package
 name keep the old spelling (renaming wipes local volumes).
