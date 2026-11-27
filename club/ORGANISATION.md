@@ -15,4 +15,4 @@ club's name, seat and CIF from what the club approves in `/admin/legal`.
 | Certificate | Seria A nr. 1562631, issued 23.07.2025 by DGRFP Brașov |
 | Registered seat (domiciliul fiscal) | Jud. Brașov, sat Sânpetru, com. Sânpetru, str. Drumul cu Plopi nr. 116, vila 35, sc. B, ap. 35 |
 | Country of registration | Romania |
-| President (legal representative) | Amalia |
+| President (legal representative) | Enescu Ardeleanu Amalia Florentina |
