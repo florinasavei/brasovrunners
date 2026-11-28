@@ -51,6 +51,13 @@ export const envSchema = z
       .transform((value) => value.replace(/\/+$/, "")),
     // Optional only until WEEKEND.md step 2 lands the first table; then it is required.
     DATABASE_URL: z.url().optional(),
+    /**
+     * How many connections one function instance's pool holds (`src/db/client.ts`, `docs/AZURE.md`
+     * Part 2). Ten by default, which is what Neon's pooled host has always had. A server with no
+     * pooler in front of it — Azure Database for PostgreSQL on Burstable, where PgBouncer does not
+     * run and B1ms takes 35 user connections — sets 3, so that warm instances times 3 stays under it.
+     */
+    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
 
     /**
      * How a member of staff proves who they are (AGENTS.md §8, §13.1).

@@ -202,3 +202,20 @@ describe("E2E_DISABLE_NEON never reaches production", () => {
     warn.mockRestore();
   });
 });
+
+/** docs/AZURE.md Part 2: a database with no pooler in front takes a smaller pool per instance. */
+describe("DATABASE_POOL_MAX (docs/AZURE.md Part 2)", () => {
+  it("is ten when unset, so Neon's pooled host is unchanged", () => {
+    expect(envSchema.parse({}).DATABASE_POOL_MAX).toBe(10);
+  });
+
+  it("reads the number an Azure deployment sets", () => {
+    expect(envSchema.parse({ DATABASE_POOL_MAX: "3" }).DATABASE_POOL_MAX).toBe(3);
+  });
+
+  it("refuses zero, a fraction and a word, which would leave every request without a connection", () => {
+    for (const value of ["0", "2.5", "three", "51"]) {
+      expect(() => envSchema.parse({ DATABASE_POOL_MAX: value })).toThrow();
+    }
+  });
+});

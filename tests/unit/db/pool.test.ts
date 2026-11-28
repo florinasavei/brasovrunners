@@ -24,7 +24,7 @@ vi.mock("pg", () => ({
   },
 }));
 vi.mock("@/shared/config/env", () => ({
-  env: { DATABASE_URL: "postgres://user@example.test:5432/db", APP_ENV: "qa" },
+  env: { DATABASE_URL: "postgres://user@example.test:5432/db", APP_ENV: "qa", DATABASE_POOL_MAX: 10 },
 }));
 
 const { getDb } = await import("@/db/client");
@@ -47,7 +47,8 @@ describe("the application's connection pool", () => {
   it("keeps the per-instance pool size, which is not per deployment", () => {
     // Vercel's pool is per function instance. `1` is explicitly the wrong correction — it
     // does not lower the total and removes concurrency within the instance. The reasoning,
-    // and why ten is safe against Neon's pooler, is in `docs/PLATFORM.md`.
+    // and why ten is safe against Neon's pooler, is in `docs/PLATFORM.md`. The number is
+    // `DATABASE_POOL_MAX`, ten unless a database with no pooler sets less (`docs/AZURE.md` Part 2).
     expect(constructed[0]?.max).toBe(10);
   });
 });

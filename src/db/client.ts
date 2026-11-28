@@ -64,7 +64,8 @@ type Schema = typeof schema;
  * `BEGIN … SELECT … FOR UPDATE … COMMIT`. Choosing the wrong driver now would only be
  * discovered when that transaction is written.
  *
- * Point DATABASE_URL at Neon's pooled host (the one containing `-pooler`).
+ * Point DATABASE_URL at Neon's pooled host (the one containing `-pooler`). On a server with no
+ * pooler in front of it (Azure's Burstable tier, `docs/AZURE.md` Part 2) set DATABASE_POOL_MAX too.
  *
  * Connection is established on first use, never at import. Importing this module must stay
  * free: Next evaluates page modules while collecting build data, and an eager pool made
@@ -85,8 +86,11 @@ type Schema = typeof schema;
  *
  * Vercel's own guidance is also explicit that `max: 1` is the wrong correction — it does not
  * reduce total connections and destroys concurrency within an instance.
+ *
+ * `DATABASE_POOL_MAX` overrides it, and only for a database with no pooler in front: on Azure's
+ * Burstable B1ms every pool connection is a real one and the server takes 35, so it is set to 3
+ * there (`docs/AZURE.md` Part 2). Unset, it is ten and Neon is unchanged.
  */
-const MAX_CONNECTIONS_PER_INSTANCE = 10;
 
 /**
  * The guard that matters: no statement may run longer than this.
@@ -138,7 +142,7 @@ export function getDb(): NodePgDatabase<Schema> {
 
   const pool = new Pool({
     connectionString: env.DATABASE_URL,
-    max: MAX_CONNECTIONS_PER_INSTANCE,
+    max: env.DATABASE_POOL_MAX,
     statement_timeout: STATEMENT_TIMEOUT_MS,
     idle_in_transaction_session_timeout: IDLE_IN_TRANSACTION_TIMEOUT_MS,
   });
