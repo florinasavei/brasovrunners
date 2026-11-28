@@ -148,7 +148,7 @@ describe("the calendar file", () => {
     expect(ics).not.toContain("📍");
   });
 
-  it("adds one VEVENT per programme row, at the row's time and place, under the event's UID (§117)", () => {
+  it("keeps the programme in the one entry's description, never one entry per row (2026-11-28, amending §117)", () => {
     const programme = [
       { startsAt: new Date("2026-10-10T13:00:00.000Z"), endsAt: new Date("2026-10-10T16:00:00.000Z"), label: "Kit pickup", place: "Start tent" },
       { startsAt: new Date("2026-10-11T05:30:00.000Z"), endsAt: null, label: "Briefing", place: null },
@@ -160,12 +160,8 @@ describe("the calendar file", () => {
       labels: labelsEn,
     });
     const unfolded = ics.replace(/\r\n /g, "");
-    expect(unfolded.match(/BEGIN:VEVENT/g)).toHaveLength(3);
-    expect(unfolded).toContain("UID:11111111-1111-1111-1111-111111111111-1@example.test");
-    expect(unfolded).toContain("DTSTART:20261010T130000Z\r\nDTEND:20261010T160000Z\r\nSUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Kit pickup");
-    expect(unfolded).toContain("LOCATION:Start tent");
-    // The briefing has no place of its own, so it is at the event's.
-    expect(unfolded).toContain("SUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Briefing\r\nDESCRIPTION:https://example.test/ro/evenimente/crosul-aniversar\r\nURL:https://example.test/ro/evenimente/crosul-aniversar\r\nLOCATION:Parcul Tractorul\\, intrarea principală");
+    expect(unfolded.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(unfolded).not.toContain("-1@example.test");
     // The event's own description lists the rows before the text, with the day since they span two, under the page's heading.
     expect(unfolded).toContain("Event programme:\\nSat\\, 10 Oct 2026\\, 16:00–19:00 — Kit pickup (Start tent)\\nSun\\, 11 Oct 2026\\, 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
   });
@@ -493,8 +489,8 @@ describe("the calendar file", () => {
     const programme = [{ startsAt: new Date("2026-10-11T05:30:00.000Z"), endsAt: null, label: "Briefing", place: null }];
     const cancelled = buildCalendar({ events: [{ ...event, programme, eventStatus: "CANCELLED" }], baseUrl: "https://example.test", name: "x", labels: labelsRo });
     const unfolded = cancelled.replace(/\r\n /g, "");
-    // The event's entry and the row's: both cancelled.
-    expect(unfolded.match(/STATUS:CANCELLED/g)).toHaveLength(2);
+    // The one entry, cancelled; the rows are words in its description (2026-11-28).
+    expect(unfolded.match(/STATUS:CANCELLED/g)).toHaveLength(1);
     expect(unfolded).toContain("DTEND:20261011T090000Z\r\nSTATUS:CANCELLED\r\nSUMMARY:");
     expect(unfolded).toContain("DESCRIPTION:Acest eveniment a fost anulat.\\n\\n📍 Parcul Tractorul");
     expect(calendarDescriptionHtml({ ...event, eventStatus: "CANCELLED" }, labelsEn)).toContain("<html><body><p>This event has been cancelled.</p><p>📍 ");
