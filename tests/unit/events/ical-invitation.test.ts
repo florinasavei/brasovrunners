@@ -76,17 +76,6 @@ const TODAY = [
   "URL:https://example.test/ro/evenimente/crosul-aniversar",
   "LOCATION:Parcul Tractorul\\, intrarea principală",
   "END:VEVENT",
-  "BEGIN:VEVENT",
-  "UID:11111111-1111-1111-1111-111111111111-1@example.test",
-  "DTSTAMP:20260919T100000Z",
-  "LAST-MODIFIED:20260919T100000Z",
-  "DTSTART:20261011T050000Z",
-  "DTEND:20261011T050000Z",
-  "SUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Ridicarea numerelor",
-  "DESCRIPTION:https://example.test/ro/evenimente/crosul-aniversar",
-  "URL:https://example.test/ro/evenimente/crosul-aniversar",
-  "LOCATION:Cort",
-  "END:VEVENT",
   "END:VCALENDAR",
   "",
 ].join("\r\n");
@@ -125,7 +114,8 @@ describe("BR-REQ-020-01 criterion 7 the calendar entry as an invitation (§672)"
     expect(description).toContain("Programul evenimentului:\\n08:00 — Ridicarea numerelor (Cort)");
     // And buildVEvent alone says the same.
     expect(buildVEvent(event, "https://example.test", labels, { rsvp: request }).filter((line) => line === "BEGIN:VEVENT")).toHaveLength(1);
-    expect(buildVEvent(event, "https://example.test", labels).filter((line) => line === "BEGIN:VEVENT")).toHaveLength(2);
+    // The file too, since 2026-11-28: one entry per event, the rows in its description.
+    expect(buildVEvent(event, "https://example.test", labels).filter((line) => line === "BEGIN:VEVENT")).toHaveLength(1);
   });
 
   it("cancels: METHOD:CANCEL, STATUS:CANCELLED, the sequence it was given, and an attendee asked nothing", () => {

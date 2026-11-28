@@ -104,7 +104,7 @@ export type CalendarEvent = {
   scheduleJson: unknown;
   /** The rules (§96), as a rich-text document or null; only their presence matters here — the line links `#rules`. */
   rulesJson?: unknown;
-  /** The programme's rows (§117), in the calendar's language: one VEVENT each, and lines in the description. */
+  /** The programme's rows (§117), in the calendar's language: lines in the entry's description (one VEVENT each until 2026-11-28). */
   programme?: readonly ProgrammeRow[];
   /** The event's own zone, for the programme lines' clock. */
   timezone?: string;
@@ -697,32 +697,12 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: Calen
   ];
   if (place.location) lines.push(`LOCATION:${icalText(place.location)}`);
   lines.push("END:VEVENT");
-  // An invitation is one entry (§672): each further VEVENT would be one more invitation to answer.
-  // Its programme is already in the description, under «Programul evenimentului».
-  if (rsvp) return lines;
-
-  /**
-   * One entry per programme row (§117): "Crosul aniversar — Kit pickup", at the row's own
-   * time and place, so the phone rings for the briefing and not only for the start. The UID
-   * carries the row's index after the event's id, stable across edits like the event's own.
-   */
-  rows.forEach((row, index) => {
-    lines.push(
-      "BEGIN:VEVENT",
-      `UID:${event.id}-${index + 1}@${uidHost(baseUrl)}`,
-      `DTSTAMP:${icalUtc(stamp)}`,
-      `LAST-MODIFIED:${icalUtc(stamp)}`,
-      `DTSTART:${icalUtc(row.startsAt)}`,
-      `DTEND:${icalUtc(row.endsAt ?? row.startsAt)}`,
-      ...status,
-      `SUMMARY:${icalText(qaMarked(`${event.title} — ${row.label}`))}`,
-      `DESCRIPTION:${icalText(event.url)}`,
-      `URL:${event.url}`,
-    );
-    const rowPlace = row.place ?? place.location;
-    if (rowPlace) lines.push(`LOCATION:${icalText(rowPlace)}`);
-    lines.push("END:VEVENT");
-  });
+  /*
+    One entry per event, file and invitation alike. Until 2026-11-28 the file and the feed added one
+    more entry per programme row (§117, amended by §NNN); a race with eight rows filled the runner's day with nine
+    copies of its title (the owner, from a phone: «There were way too many invites on the calendar»).
+    The programme is in the description, under «Programul evenimentului», with each row's time and place.
+  */
   return lines;
 }
 

@@ -14,7 +14,8 @@ name: migrate
 # and observable", and a required reviewer on the `production` environment is the only one of
 # those three that a repository secret cannot provide. Each environment holds one secret named
 # `DATABASE_URL`, pointing at that environment's own database — Neon's direct (non-pooled) URL,
-# which is what migration tooling wants.
+# which is what migration tooling wants; on Azure Database for PostgreSQL, the server's own URL on
+# port 5432 with `sslmode=require` (`docs/AZURE.md` Part 2).
 #
 # Both environments apply when a migration lands on their branch — `qa` unattended, `main`
 # only after the `production` environment's required reviewer approves the run, which is the

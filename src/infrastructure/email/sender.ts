@@ -1,4 +1,5 @@
 import type { Env } from "@/shared/config/env";
+import { createAcsAdapter } from "./acs-adapter";
 import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
 import type { GmailAtCap, GmailLedger } from "@/modules/notifications/domain/email-transport";
@@ -79,6 +80,7 @@ export function createEmailSenderForEnvironment(
     | "EMAIL_FROM_NAME"
     | "EMAIL_REPLY_TO"
   > &
+    Partial<Pick<Env, "ACS_SMTP_HOST" | "ACS_SMTP_PORT" | "ACS_SMTP_USERNAME" | "ACS_SMTP_PASSWORD">> &
     Pick<Env, "CONTACT_SMTP_HOST" | "CONTACT_SMTP_PORT" | "CONTACT_SMTP_USER" | "CONTACT_SMTP_PASSWORD">,
   options: {
     /**
@@ -137,7 +139,21 @@ export function createEmailSenderForEnvironment(
      * explicitly authorized.
      */
     live: () =>
-      createMailgunAdapter({
+      /*
+        Azure takes the provider's road when its two variables are set (`docs/AZURE.md` Part 1);
+        startup validation required a verified From address with them. Unset them and redeploy, and
+        the road is Mailgun's again: that is the whole rollback.
+      */
+      config.ACS_SMTP_USERNAME && config.ACS_SMTP_PASSWORD && config.EMAIL_FROM_ADDRESS
+        ? createAcsAdapter({
+            host: config.ACS_SMTP_HOST ?? "",
+            port: config.ACS_SMTP_PORT ?? 587,
+            user: config.ACS_SMTP_USERNAME,
+            password: config.ACS_SMTP_PASSWORD,
+            from: { name: config.EMAIL_FROM_NAME.replace(/["\\]/g, ""), address: config.EMAIL_FROM_ADDRESS },
+            ...(replyTo ? { replyTo } : {}),
+          })
+        : createMailgunAdapter({
         apiKey: config.MAILGUN_API_KEY ?? "",
         domain: config.MAILGUN_DOMAIN ?? "",
         apiBaseUrl: config.MAILGUN_API_BASE_URL ?? "",

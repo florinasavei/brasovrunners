@@ -1,7 +1,9 @@
 # Moving to Azure: the plan (2026-11-08)
 
-**Status: a plan. Nothing is provisioned, no code is changed, and nothing moves before the 21 November
-race.** Written for the owner, who decides, and for the session that later carries it out. The facts below
+**Status: a plan, with its code prepared (2026-11-28).** Nothing is provisioned and nothing has moved. The two
+code changes Parts 1 and 2 describe exist and stay off until their variables are set: `DATABASE_POOL_MAX`
+and the Azure email road (`ACS_SMTP_USERNAME`, `ACS_SMTP_PASSWORD`, `ACS_WEBHOOK_KEY`). Part 0 is the free
+bridge until then. Written for the owner, who decides, and for the session that later carries it out. The facts below
 were read from the providers' own pages on 2026-11-08 (§ Sources); a price or a limit is re-read before
 anyone relies on it. Where this plan and `docs/PLATFORM.md` disagree, PLATFORM records what runs and this
 records what is proposed.
@@ -18,6 +20,70 @@ Microsoft Nonprofits **Azure Grant** gives $2,000 of Azure credit a year (PLATFO
 | **Database** | Neon Launch, about $11 a month | **Azure Database for PostgreSQL, Burstable B1ms, if the grant is approved**; Neon Free if not | Azure gives 7 to 35 days of point-in-time restore, is never suspended for hours used, and costs $0 cash inside the grant. Neon Free needs no migration but caps at 100 CU-hours per project and 6 hours of restore | Decided in December; moved in January |
 | **Hosting** | Vercel Pro, $20 a month | **Stays on Vercel** | PLATFORM § (c) already has the rule for returning to Hobby. Moving hosting is the biggest change on this list and saves nothing that rule does not | Only if Hobby does not fit (Part 3) |
 | **Staff sign-in** | Zitadel Free, $0 | **Stays on Zitadel** | Microsoft Entra ID would also cost $0, but every staff member would have to be invited again and `DECISIONS.md` §26 would change, for no saving | Not planned (Part 4) |
+
+## Part 0: the free bridge, before anything moves (2026-11-28)
+
+The owner, 2026-11-28: «We need to prepare for the azure migration so we can have free Vercel and free
+DB». Until the grant is approved and Azure is set up, two of the three bills can go to $0 without moving
+anything: Neon to its Free plan, and Vercel back to Hobby once it fits. Mailgun is already going to Free on
+30 November (`docs/OWNER-TODO.md` row 24).
+
+### Neon Free, in December: no migration, no code
+
+| | Launch, today | Free | Fits? |
+| --- | --- | --- | --- |
+| Compute | about 89 CU-hours a month for both projects (the 2026-11-09 snapshot below); production capped at 100, QA at 30 (`SETUP.md` §40) | 100 CU-hours **per project** | **Yes.** Production alone is the larger share, under 100. Production is already capped at 100 today, so reaching it suspends the project until the next month on both plans |
+| Storage | 0.04 GB | 1 GB per project (Neon's plans page, dated 2026-11-04; PLATFORM still says 0.5 GB from an earlier read) | **Yes**, many times over |
+| Restore | 7 days of history | **6 hours** | **The one real loss.** A mistake noticed the next morning cannot be undone from Neon's history |
+| Monthly cost | about $9 to $11 | $0 | |
+
+**The steps.** On 1 December, once November's bill has closed: Neon console → Billing → Free. Then
+«Setări» → the Neon plan setting to Free, which is only the fallback; the pages read the plan from
+Neon's own answer (`DECISIONS.md` §326). Also lower each project's compute limits to what Free allows,
+if the console asks for it.
+
+**What covers the 6 hours.** A nightly logical dump of production, kept outside Neon, is the replacement
+for the lost week of history. It does not exist yet. It is a small workflow (a `pg_dump` of the direct URL
+on a schedule, encrypted, kept for 14 days) and needs its own PR and a decision on where the dump lives.
+The repository is public, so a dump must never be a workflow artifact anyone can download. **Until it
+exists, keep Launch, or accept that the restore window is six hours.**
+
+### Vercel Hobby: the rule stands, and November is the first month it is read
+
+The plan is per team, so both projects go together. Moving only QA to a Hobby team saves nothing,
+because Pro is billed per seat, not per project. PLATFORM § (c) decides: Hobby again only after **two
+consecutive months under 3 Active CPU-hours** (Hobby's limit is 4, and going over pauses the site for
+about 30 days).
+
+**What can be read here (2026-11-28).** The 2026-11-09 snapshot below shows $0.28 of Fluid Active CPU in
+about nine days, inside a cycle that also held the race's registration peak. At Vercel's per-hour rate
+that pace is above 3 hours a month, the same picture as October's 6.9. A cloud session has no Vercel
+token (local values only), so the reading for the decision is the owner's: `/devs` → «Vercel: consumul
+lunii» at the end of November and again at the end of December. Two readings under 3 hours means
+Hobby in January; otherwise Pro stays and the levers in PLATFORM § (c) come first, starting with one
+release a day and the Basic build machine.
+
+**What else Hobby needs, and how it stands:**
+
+| Hobby condition | State |
+| --- | --- |
+| Active CPU under 4 hours (rule: 3) | **Not shown yet.** Read November and December |
+| Non-commercial use | **Open.** The members' shop and sponsors' logos are the owner's or a lawyer's call (PLATFORM § (c)) |
+| No team members | Fits: one seat today |
+| Cron at most once a day | Fits: the pingers are external |
+| The repository on a personal account, not a Git organisation | Fits |
+
+**If Hobby still does not fit by February**, Part 3 below is the way to free hosting inside the grant.
+It is the largest change on this page.
+
+### The order
+
+1. **30 November:** Mailgun to Free (already planned).
+2. **December:** decide on the nightly dump; with it, Neon to Free. Apply for the Azure Grant if that has not
+   been done.
+3. **January:** Vercel to Hobby if November and December both read under 3 Active CPU-hours.
+4. **When the grant is approved:** Part 1 (email), then Part 2 (the database), QA first each time. Neon
+   Free is the fallback if the grant is refused, and it is already in place by then.
 
 ## The bill before the move, measured
 
@@ -112,7 +178,22 @@ builds its own body.
 7. Put the values on each Vercel project: the SMTP username, the secret and the webhook key.
    `.env.local` gets QA's.
 
-### The code: one PR, medium-sized
+### The code: prepared (2026-11-28)
+
+**What was built**, differing from the table below in one place: the Azure adapter (`acs-adapter.ts`)
+takes **the provider's road**, the one Mailgun holds, when `ACS_SMTP_USERNAME` and `ACS_SMTP_PASSWORD`
+are set. `sender.ts` builds it in Mailgun's place. The road keeps its internal name `"mailgun"` in
+`email_outbox.transport`. The screens, the Gmail spill (§443, §622) and the road status read that name
+as «the provider's road», and a third name would touch all of them for no change in behaviour. A wording
+sweep comes after Mailgun is closed. Startup refuses Azure without `EMAIL_FROM_ADDRESS`, a sender verified
+on the Azure domain. The webhook (`/api/webhooks/acs?key=…`) answers Event Grid's handshake and applies
+`Delivered`, `Bounced`, `Suppressed`, `FilteredSpam` and `Quarantined` through `applyMailgunEvent`. It
+matches by `internetMessageId`, falling back to Azure's `messageId`, which is still open question 1.
+`email-plan.ts` and `hourly-pace.ts` were not changed: Azure's quota refusals come back as `throttled`
+and are retried a minute later. A plan entry for Azure's pace is a follow-up once QA shows what the
+raised quota is.
+
+The table below is the original plan.
 
 The provider boundary was built for this. `src/infrastructure/email/adapter.ts` says a new provider is
 «a new file next to `mailgun-adapter.ts` and one line in `createEmailSender`». In practice:
@@ -196,7 +277,7 @@ email. That is under a quarter of the grant.
    server that runs out of CPU credits is slowed, not stopped.
 5. Put the grant's renewal date on `/admin/tasks`.
 
-### The code: one small PR
+### The code: one small PR (prepared 2026-11-28: `DATABASE_POOL_MAX`, default 10)
 
 | Where | What |
 | --- | --- |
