@@ -193,6 +193,12 @@ export function createEmailSender(config: {
   */
   let gmailAdapter: EmailAdapter | null = null;
   const gmailAdapterOnce = (road: GmailRoad): EmailAdapter => (gmailAdapter ??= road.adapter());
+  /*
+    The provider's adapter, the same way: Mailgun's holds nothing and costs nothing to keep, and
+    Azure's (`acs-adapter.ts`, `docs/AZURE.md` Part 1) holds one pooled SMTP connection for the batch.
+  */
+  let liveAdapter: EmailAdapter | null = null;
+  const liveAdapterOnce = (): EmailAdapter => (liveAdapter ??= config.live());
 
   /**
    * Gmail's answer for one message: carried, handed back (the pace, the cap the club chose to wait
@@ -300,12 +306,15 @@ export function createEmailSender(config: {
 
   return {
     close() {
-      const opened = gmailAdapter;
+      const opened = [gmailAdapter, liveAdapter];
       gmailAdapter = null;
-      try {
-        opened?.close?.();
-      } catch {
-        // Letting go of a connection must never be what fails the batch that used it.
+      liveAdapter = null;
+      for (const adapter of opened) {
+        try {
+          adapter?.close?.();
+        } catch {
+          // Letting go of a connection must never be what fails the batch that used it.
+        }
       }
     },
 
@@ -317,7 +326,7 @@ export function createEmailSender(config: {
 
       const decision = decideDelivery(config.mode, marked.to, config.allowlist);
       const transmit = decision === "send";
-      const adapter = transmit ? config.live() : config.capture;
+      const adapter = transmit ? liveAdapterOnce() : config.capture;
 
       /*
         A copy is a recipient (`DECISIONS.md` §244).

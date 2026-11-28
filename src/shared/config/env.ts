@@ -361,6 +361,20 @@ export const envSchema = z
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.
     MAILGUN_WEBHOOK_SIGNING_KEY: z.string().min(1).optional(),
+    /**
+     * Azure Communication Services Email over SMTP (`docs/AZURE.md` Part 1). Set the username and
+     * the password together and the provider's road goes through Azure instead of Mailgun
+     * (`infrastructure/email/sender.ts`); unset, Mailgun as before. The username is the «SMTP
+     * Username» resource linked to an Entra application; the password is that application's client
+     * secret. The host and port are Microsoft's relay and stay configuration (§8), as Gmail's do.
+     * `ACS_WEBHOOK_KEY` is the long random key in the Event Grid subscription's URL: Event Grid does
+     * not sign its deliveries the way Mailgun does, so the key is the proof.
+     */
+    ACS_SMTP_HOST: z.string().trim().min(1).default("smtp.azurecomm.net"),
+    ACS_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
+    ACS_SMTP_USERNAME: z.string().min(1).optional(),
+    ACS_SMTP_PASSWORD: z.string().min(1).optional(),
+    ACS_WEBHOOK_KEY: z.string().min(32).optional(),
   })
   /**
    * BR-REQ-080-03 criterion 3: an unsafe combination fails at startup.
@@ -481,14 +495,32 @@ export const envSchema = z
 
     // A mode that can transmit needs credentials. Missing ones would surface as a failed send
     // per message rather than as a deployment that did not start.
+    // Either provider answers it (`docs/AZURE.md` Part 1): Azure's two SMTP variables, or Mailgun's three.
+    const acsConfigured = Boolean(value.ACS_SMTP_USERNAME && value.ACS_SMTP_PASSWORD);
+    if (Boolean(value.ACS_SMTP_USERNAME) !== Boolean(value.ACS_SMTP_PASSWORD)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["ACS_SMTP_USERNAME"],
+        message: "ACS_SMTP_USERNAME and ACS_SMTP_PASSWORD are set together or not at all.",
+      });
+    }
+    // Azure sends only from a MailFrom address verified on its domain; there is no `noreply@<MAILGUN_DOMAIN>` to fall back to.
+    if (acsConfigured && !value.EMAIL_FROM_ADDRESS) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EMAIL_FROM_ADDRESS"],
+        message: "ACS_SMTP_USERNAME requires EMAIL_FROM_ADDRESS, a sender address verified on the Azure email domain.",
+      });
+    }
     if (
       EMAIL_DELIVERY_MODE !== "capture" &&
+      !acsConfigured &&
       (!value.MAILGUN_API_KEY || !value.MAILGUN_DOMAIN || !value.MAILGUN_API_BASE_URL)
     ) {
       ctx.addIssue({
         code: "custom",
         path: ["MAILGUN_API_KEY"],
-        message: `EMAIL_DELIVERY_MODE=${EMAIL_DELIVERY_MODE} requires MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL.`,
+        message: `EMAIL_DELIVERY_MODE=${EMAIL_DELIVERY_MODE} requires MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL, or ACS_SMTP_USERNAME and ACS_SMTP_PASSWORD.`,
       });
     }
 
